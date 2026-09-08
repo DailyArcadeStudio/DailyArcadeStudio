@@ -74,25 +74,55 @@ def showcase_overlay(scene):
     return img
 
 
-def image_overlay(scene, caption):
-    """Lower third over an SDXL still, for the story beats."""
-    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-    d = ImageDraw.Draw(img)
-    f = _font("sans", 50)
-    lines = _wrap(d, caption, f, int(W * 0.80))
-    band_h = 70 + len(lines) * 64
-    grad = Image.new("RGBA", (W, band_h + 90), (0, 0, 0, 0))
-    gd = ImageDraw.Draw(grad)
-    for i in range(band_h + 90):          # fade the band into the picture
-        a = int(232 * min(1.0, i / 90))
-        gd.line([(0, i), (W, i)], fill=PANEL + (a,))
-    img.alpha_composite(grad, (0, H - band_h - 90))
+STORY_W = 1180          # width of the story picture, left side of frame
 
-    y = H - band_h - 10
+
+def story_overlay(scene, caption, still_path):
+    """Story picture + caption on the left; gameplay shows through on the right.
+
+    The gameplay never stops for a static photo — the picture is inset with
+    a soft edge so the running game stays visible beside it.
+    """
+    img = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+
+    still = Image.open(still_path).convert("RGB")
+    # cover STORY_W x H, then centre-crop
+    sc = max(STORY_W / still.width, H / still.height)
+    still = still.resize((int(still.width * sc) + 1, int(still.height * sc) + 1),
+                         Image.LANCZOS)
+    left = (still.width - STORY_W) // 2
+    top = (still.height - H) // 2
+    still = still.crop((left, top, left + STORY_W, top + H)).convert("RGBA")
+
+    # feather the right edge so it blends into the gameplay instead of
+    # ending on a hard seam
+    mask = Image.new("L", (STORY_W, H), 255)
+    md = ImageDraw.Draw(mask)
+    for i in range(180):
+        md.line([(STORY_W - 180 + i, 0), (STORY_W - 180 + i, H)],
+                fill=int(255 * (1 - i / 180)))
+    still.putalpha(mask)
+    img.alpha_composite(still, (0, 0))
+
+    # caption sits over the picture, bottom-left
+    d = ImageDraw.Draw(img)
+    f = _font("sans", 44)
+    lines = _wrap(d, caption, f, STORY_W - 150)
+    band_h = 60 + len(lines) * 58
+    grad = Image.new("RGBA", (STORY_W, band_h + 80), (0, 0, 0, 0))
+    gd = ImageDraw.Draw(grad)
+    for i in range(band_h + 80):
+        a = int(236 * min(1.0, i / 80))
+        gd.line([(0, i), (STORY_W, i)], fill=PANEL + (a,))
+    grad.putalpha(Image.composite(
+        grad.getchannel("A"), Image.new("L", grad.size, 0),
+        mask.crop((0, 0, STORY_W, band_h + 80))))
+    img.alpha_composite(grad, (0, H - band_h - 80))
+
+    y = H - band_h - 4
     for ln in lines:
-        w = d.textlength(ln, font=f)
-        d.text(((W - w) / 2, y), ln, font=f, fill=FG + (255,))
-        y += 64
+        d.text((70, y), ln, font=f, fill=FG + (255,))
+        y += 58
     return img
 
 

@@ -396,6 +396,8 @@ const QS = new URLSearchParams(location.search);
 const AUTO = QS.get('auto')==='1';
 // recording holds the K.O. longer than play does: ?hold=9000
 const RETRY_MS = Math.max(1200, parseInt(QS.get('hold')||'4200', 10));
+// ?noev=1 records a calm run with no events, for narration beds
+const NOEV = QS.get('noev')==='1';
 if(AUTO){ setTimeout(()=>{ titleEl.classList.add('hidden'); reset(); running=true; }, 1200); }
 
 function autoPilot(){
@@ -551,7 +553,7 @@ function tick(){
     if(AUTO) autoPilot();
 
     // --- events ---
-    if(t > nextEventAt) triggerEvent();
+    if(t > nextEventAt && !NOEV) triggerEvent();
 
     // SPEED SURGE: extra speed + streaking lines
     if(surge>0){

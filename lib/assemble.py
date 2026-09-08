@@ -26,6 +26,7 @@ XFADE = 0.4
 RAW = Path("/tmp/ninja_raw.mp4")
 MARKS = Path("/tmp/ninja_marks.json")
 SHOWCASE_DIR = Path("/tmp/showcase_clips")
+BED = Path("/tmp/ninja_bed.mp4")   # long event-free run, recorded with ?noev=1
 
 # Which recorded beat each gameplay scene starts from, plus lead-in.
 CLIP_SOURCE = {
@@ -35,6 +36,10 @@ CLIP_SOURCE = {
     "events": ("surge", -0.6),       # rolls through surge -> wall -> blackout
     "death":  ("death", -2.2),       # lead in before the hit, then K.O.
 }
+
+# Where in the calm bed each story beat starts. The bed has no events and
+# no deaths, so nothing under the narration pulls the eye off the story.
+STORY_BED_AT = [2.0, 14.0, 28.0, 45.0]
 
 
 def run(cmd):
@@ -64,9 +69,19 @@ def seg_image(img, overlay_png, dur, dst):
              "-map", "[v]", "-t", f"{dur:.3f}"], dst)
 
 
-def seg_clip(src, start, dur, overlay_png, dst):
-    """Cut gameplay/showcase footage, upscale, and lay text over it."""
+def seg_clip(src, start, dur, overlay_png, dst, pan=0.0):
+    """Cut gameplay/showcase footage, upscale, and lay text over it.
+
+    pan shifts the picture sideways as a fraction of width (negative moves
+    the content right), for when an overlay covers one side of frame.
+    """
     fit = f"scale={W}:{H}:flags=lanczos"
+    if pan:
+        # zoom slightly so the shift does not expose an empty edge
+        zw, zh = int(W * 1.22), int(H * 1.22)
+        off = int(W * pan) + (zw - W) // 2
+        fit = (f"scale={zw}:{zh}:flags=lanczos,"
+               f"crop={W}:{H}:{max(0, min(zw - W, off))}:{(zh - H) // 2}")
     if overlay_png:
         _encode(["-ss", f"{max(start,0):.3f}", "-i", str(src),
                  "-loop", "1", "-i", str(overlay_png),
@@ -109,16 +124,23 @@ def main(scenes_path, work_dir, out_path):
     mk = marks_map()
 
     segs = []
+    story_i = 0
     for i, (sc, tm) in enumerate(zip(scenes, timing)):
         dur = max(tm["dur"] + 0.5, 2.0) + XFADE
         dst = segdir / f"seg{i:02d}.mp4"
         kind = sc["kind"]
 
         if kind == "image":
+            # story beats play over live gameplay so nothing sits static
             ov = ov_dir / f"{i:02d}.png"
-            overlays.image_overlay(sc, sc["narration"]).save(ov)
-            seg_image(work / "imgs" / f"{i:02d}.png", ov, dur, dst)
-            what = "image"
+            overlays.story_overlay(sc, sc["narration"],
+                                   work / "imgs" / f"{i:02d}.png").save(ov)
+            at = STORY_BED_AT[story_i % len(STORY_BED_AT)]
+            story_i += 1
+            # The story panel covers the left, and the runner sits mid-frame,
+            # so pan the gameplay right to keep the ninja in the clear part.
+            seg_clip(BED, at, dur, ov, dst, pan=-0.28)
+            what = "story"
 
         elif kind == "showcase":
             ov = ov_dir / f"{i:02d}.png"
