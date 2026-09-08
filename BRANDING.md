@@ -158,22 +158,27 @@ YouTubeが問題にするのは対象が現実の人物・集団に向いてい�
 「Daily Arcade (ゲーム)」ボタンで1本分を手動実行できる。
 在庫日数・次のお題もこの画面に出る。
 
-### 自動実行
+### 自動実行 ✅ 有効
 
-**現在このチャンネルは日次バッチに入れていない。**
-`daily_batch.sh` は3チャンネルのままで、`loop3.py` の `ORDER` にも入っていない。
+**毎日 JST 4:00 に4チャンネル分が順に走る**（2026-09-09 に組み込み）。
 
-組み込むときは両方に `arcade` を足す:
+- `daily_batch.sh`: `for ch in mosuke japanpuzzle algogym arcade`
+- `loop3.py`: `ORDER = [..., "arcade"]`
+- launchd: `com.algogym.dailybatch`（登録済み）
+
+arcade は録画に headless Chromium とローカルHTTPサーバ(:8901)を使うので、
+バッチの先頭で 8901 を掴んでいるプロセスを掃除している
+（前回が異常終了するとポートが残るため）。
+
+停止したいとき:
 ```bash
-for ch in mosuke japanpuzzle algogym arcade; do   # daily_batch.sh
-ORDER = ["mosuke", "japanpuzzle", "algogym", "arcade"]   # loop3.py
+launchctl bootout gui/501/com.algogym.dailybatch     # 停止
+launchctl bootstrap gui/501 ~/Library/LaunchAgents/com.algogym.dailybatch.plist  # 再開
 ```
 
-なお **4:00の launchd ジョブ自体が現在無効化されている**（3チャンネルとも停止中）。
-再開:
-```bash
-launchctl bootstrap gui/501 ~/Library/LaunchAgents/com.algogym.dailybatch.plist
-```
+**所要時間の目安**: arcade は「ゲーム生成 → 検証 → 録画 → SDXL挿絵 →
+ナレーション → 動画2本 → サムネ」まで走るので、1本あたり **40〜60分**程度。
+4チャンネル合計では2〜3時間かかる想定。
 
 ### 1本作る
 
