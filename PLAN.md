@@ -4,14 +4,29 @@
 
 ## コンセプト
 
-**「AIに毎日ゲームを作らせてみた」チャンネル**
+**「毎日1本、遊べるブラウザゲームを出すチャンネル」**
 
-毎日1本、テーマの違うブラウザゲームをAI（Claude）が生成し、
-GitHub Pages で公開しつつ、制作解説＋プレイ動画をYouTubeに投稿する。
+毎日1本、テーマの違うブラウザゲームを公開し、
+そのゲームの**世界観を物語として語る**動画をYouTubeに投稿する。
+
+> **方針変更（2026-09-09）**: 「AIが作った」という切り口は使わない。
+> 視聴者にとってはどう作ったかより**どんなゲームか**が重要。
+> 制作背景は毎回「そのゲームが生まれた理由」の物語として創作する
+> （史実である必要はない。ぶっ飛んでいてよい）。
 
 - ゲームが**資産として残る**（動画は流れるが、遊べるURLは残り続ける）
 - 全部Macローカル・完全無料で生成できる
 - 既存3チャンネル（MosukeStudio / The Japan Puzzle / Algo-Gym）と同じ量産の型を使う
+
+### 動画の作り方（重要）
+
+- **スライドに文字を並べない**。ゲーム内のキャラ・物体を実際に映しながら話す
+  （`?showcase=` モード）。文字だけのスライドは離脱の原因
+- **動画内にURLを出さない**。「概要欄のリンクから」と言う
+  （URLを変えるときに動画を作り直さずに済む）
+- 最後は**チャンネル登録・高評価のお願い**で締める
+- 技術選定（なぜThree.jsか等）の話はしない。**ゲームの設計**の話をする
+- 面白い部分だけ見せる。コードも「へえ」と思う部分だけ
 
 ## 技術スタック（全部フリー）
 
@@ -19,11 +34,13 @@ GitHub Pages で公開しつつ、制作解説＋プレイ動画をYouTubeに投
 |---|---|---|
 | ゲーム本体 | **Three.js**（単一HTML・CDN読み込み） | ✅ 動作確認済 |
 | 3Dキャラ | 現状: Three.jsプリミティブ / 将来: **Blender MCP → .glb** | ✅ / ⏸ Blender不調 |
-| ホスティング | **GitHub Pages**（appuppu/TFgamestudio） | ⏳ Pages有効化待ち |
+| ホスティング | **GitHub Pages**（appuppu/TFgamestudio） | ✅ 公開中 |
 | プレイ録画 | **Playwright**（chromium headless・autoplay AI操作） | ✅ 動作確認済 |
 | ナレーション | **Kokoro TTS**（am_adam・英語） | ✅ 動作確認済 |
 | 動画合成 | **ffmpeg** | ✅ 動作確認済 |
-| スライド | **PIL**（Algo-Gym資産を流用・GitHub-darkテーマ） | ⏸ これから |
+| スライド/字幕 | **PIL**（Algo-Gym資産を流用・GitHub-darkテーマ） | ✅ |
+| 物語の絵 | **SDXL**（MosukeStudioの gen_images.py を流用） | ✅ |
+| ショート | **ffmpeg**（16:9を縦にレターボックス） | ✅ |
 
 ## 第1作: Ninja Dash
 
@@ -111,7 +128,11 @@ GitHub Pages で公開しつつ、制作解説＋プレイ動画をYouTubeに投
 
 ### C. 公開まわり
 
-- [x] **GitHub Pages 有効化済み** → https://appuppu.github.io/TFgamestudio/
+- [x] **GitHub Pages 公開中**
+      - 一覧: https://appuppu.github.io/TFgamestudio/
+      - Ninja Dash: https://appuppu.github.io/TFgamestudio/games/ninja-dash/
+      - **ゲームごとに `games/<名前>/` を切る**。将来ドメインを変えるときも
+        動画は概要欄のURLを差し替えるだけで済む
 - [ ] README（遊び方・技術構成）
 - [ ] 動画説明欄に遊べるURLを入れる
 - [ ] ショート（縦・30〜60秒）の切り出し
