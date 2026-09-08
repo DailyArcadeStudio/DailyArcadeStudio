@@ -197,7 +197,7 @@ def base_canvas():
     img = Image.new("RGB", (W, H), BG)
     d = ImageDraw.Draw(img)
     # 下部に薄いブランドバー
-    d.text((W - 330, H - 56), "TF Game Studio", font=_font("sans_bold", 30), fill=(70, 78, 88))
+    d.text((W - 420, H - 56), "Daily Arcade Studio", font=_font("sans_bold", 30), fill=(70, 78, 88))
     return img, d
 
 

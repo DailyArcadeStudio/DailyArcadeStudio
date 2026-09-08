@@ -34,7 +34,7 @@
 |---|---|---|
 | ゲーム本体 | **Three.js**（単一HTML・CDN読み込み） | ✅ 動作確認済 |
 | 3Dキャラ | 現状: Three.jsプリミティブ / 将来: **Blender MCP → .glb** | ✅ / ⏸ Blender不調 |
-| ホスティング | **GitHub Pages**（appuppu/TFgamestudio） | ✅ 公開中 |
+| ホスティング | **GitHub Pages**（DailyArcadeStudio/DailyArcadeStudio） | ✅ 公開中 |
 | プレイ録画 | **Playwright**（chromium headless・autoplay AI操作） | ✅ 動作確認済 |
 | ナレーション | **Kokoro TTS**（am_adam・英語） | ✅ 動作確認済 |
 | 動画合成 | **ffmpeg** | ✅ 動作確認済 |
@@ -58,7 +58,7 @@
 - [x] スコア・当たり判定・ゲームオーバー・リトライ
 - [x] 自動プレイAI（autoPilot: 前方の障害物を見て回避/ジャンプ）
 - [x] カメラ追従・ヒーローライト・月・鳥居の柱（パララックス）
-- [x] GitHubへpush（git@github.com:appuppu/TFgamestudio.git）
+- [x] GitHubへpush（git@github.com:DailyArcadeStudio/DailyArcadeStudio.git）
 
 ---
 
@@ -129,8 +129,8 @@
 ### C. 公開まわり
 
 - [x] **GitHub Pages 公開中**
-      - 一覧: https://appuppu.github.io/TFgamestudio/
-      - Ninja Dash: https://appuppu.github.io/TFgamestudio/games/ninja-dash/
+      - 一覧: https://dailyarcadestudio.github.io/DailyArcadeStudio/
+      - Ninja Dash: https://dailyarcadestudio.github.io/DailyArcadeStudio/games/ninja-dash/
       - **ゲームごとに `games/<名前>/` を切る**。将来ドメインを変えるときも
         動画は概要欄のURLを差し替えるだけで済む
 - [ ] README（遊び方・技術構成）
