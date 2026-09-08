@@ -442,7 +442,7 @@ const showcase = {group:null, spin:.55, label:''};
 
 function buildShowcase(name){
   const g = new THREE.Group();
-  let label = '', spin = .55, y = 0;
+  let label = '', spin = .55, y = 0, flat = false;
   if(name==='ninja'){
     const n = buildNinja();
     n.group.scale.set(1.35,1.35,1.35);
@@ -453,6 +453,7 @@ function buildShowcase(name){
   } else if(name==='shuriken'){
     const m = new THREE.Mesh(shurikenGeo, shurikenMat);
     m.scale.set(2.2,2.2,2.2); g.add(m); label = 'SHURIKEN'; spin = 1.5;
+    g.rotation.x = -0.42; flat = true;   // tilt so the face reads, spin on Z
   } else if(name==='rock'){
     const m = new THREE.Mesh(new THREE.DodecahedronGeometry(.75), rockMat);
     m.scale.set(1.7,1.7,1.7); g.add(m); label = 'ROCK';
@@ -465,6 +466,7 @@ function buildShowcase(name){
     const m = new THREE.Mesh(shurikenGeo, new THREE.MeshStandardMaterial({
       color:0xd8dce8, metalness:.9, roughness:.15, emissive:0x441018}));
     m.scale.set(3.2,3.2,3.2); g.add(m); label = 'BOSS SHURIKEN'; spin = 1.1;
+    g.rotation.x = -0.42; flat = true;
   }
   g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
   scene.add(g);
@@ -479,7 +481,17 @@ function buildShowcase(name){
   const fov = THREE.MathUtils.degToRad(camera.fov);
   const dist = (reach / Math.tan(fov/2)) * 1.75 + 1.0;   // 1.75 = breathing room
   camera.position.set(0, size.y*0.10, dist);
-  showcase.group = g; showcase.spin = spin; showcase.label = label;
+
+  // Slide the subject sideways so a text panel can own the other half.
+  // The offset lives on a parent so the turntable still spins in place —
+  // rotating an offset group would make it orbit instead.
+  const bias = parseFloat(QS.get('sx') || '0');
+  const pivot = new THREE.Group();
+  pivot.position.x = -bias * reach * 1.15;
+  scene.add(pivot);
+  pivot.add(g);
+  showcase.group = g; showcase.pivot = pivot;
+  showcase.spin = spin; showcase.label = label; showcase.flat = flat;
 }
 
 if(SHOWCASE){
@@ -487,7 +499,7 @@ if(SHOWCASE){
   camera.fov = 46; camera.updateProjectionMatrix();   // set before fitting
   buildShowcase(SHOWCASE);
   scoreEl.textContent = '';
-  msgEl.textContent = showcase.label;
+  msgEl.textContent = QS.get('nolabel')==='1' ? '' : showcase.label;
   msgEl.style.fontSize = '30px';
   msgEl.style.letterSpacing = '6px';
   // a plain dark stage: nothing on screen but the subject
@@ -498,14 +510,17 @@ if(SHOWCASE){
   for(const m of speedLines) m.visible = false;
   scene.fog = null;
   scene.background = new THREE.Color(0x0b0d16);
-  heroLight.position.set(2.4, 3.6, 3.4);
-  heroLight.intensity = 90;
-  hemi.intensity = 2.2;
-  sun.intensity = 3.0; sun.position.set(3, 7, 5);
+  heroLight.position.set(2.6, 3.2, 4.2);
+  heroLight.intensity = 140;
+  hemi.intensity = 3.4;
+  sun.intensity = 4.2; sun.position.set(2.5, 6, 6);
+  // a second light from the other side so the far face is not pure black
+  const fill = new THREE.PointLight(0x88aaff, 45, 26);
+  fill.position.set(-4.5, 2.4, 3.6); scene.add(fill);
 }
 // let the capture script drive the turntable and swap subjects
 window.__showcase = name => {
-  if(showcase.group) scene.remove(showcase.group);
+  if(showcase.pivot) scene.remove(showcase.pivot);   // pivot owns the group
   buildShowcase(name);
   msgEl.textContent = showcase.label;
 };
@@ -518,8 +533,11 @@ function tick(){
   const dt = raw * timeScale;
 
   if(SHOWCASE){
-    if(showcase.group) showcase.group.rotation.y += raw*showcase.spin;
-    camera.lookAt(0, 0, 0);        // the subject is centred on the origin
+    if(showcase.group){
+      if(showcase.flat) showcase.group.rotation.z += raw*showcase.spin;
+      else showcase.group.rotation.y += raw*showcase.spin;
+    }
+    camera.lookAt(0, 0, 0);        // subject is offset, camera stays on axis
     renderer.render(scene, camera);
     return;
   }
