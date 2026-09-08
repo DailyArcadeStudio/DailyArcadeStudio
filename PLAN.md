@@ -65,7 +65,7 @@ GitHub Pages で公開しつつ、制作解説＋プレイ動画をYouTubeに投
 イベントはシャッフルキューで管理（同じ順番にならない）。
 初回8秒後 → 以降はイベント終了+5〜9秒間隔。
 
-### B. 動画を「ちゃんとした解説動画」にする ← 今ここ
+### B. 動画を「ちゃんとした解説動画」にする ✅ 完了
 
 現状は「プレイ動画＋ナレ」だけ。以下の構成に作り直す。
 
@@ -92,12 +92,29 @@ GitHub Pages で公開しつつ、制作解説＋プレイ動画をYouTubeに投
 - 障害物のリサイクル方式（後方に流れたら前方へ再配置＝生成しっぱなしにしない）
 - 自動プレイAIの仕組み（前方14ユニットを見て、同レーンなら回避）
 
+本編は **1920x1080 / 1分56秒** で生成済み: `output/ninja_dash_ep1.mp4`
+
+構成（10シーン・ナレ長に合わせて各カットを自動伸縮＋0.4秒クロスフェード）:
+
+| # | 種別 | 内容 |
+|---|---|---|
+| 0 | 録画 | フック（BOSS SHURIKENの瞬間） |
+| 1 | スライド | タイトル「I Made an AI Build a 3D Game」 |
+| 2 | 録画 | キャラ紹介（走行カット） |
+| 3 | スライド | なぜThree.jsか（Unity比較） |
+| 4 | スライド | ゲームループ（コード＋解説） |
+| 5 | スライド | 障害物リサイクル方式 |
+| 6 | 録画 | 4イベント本編 |
+| 7 | スライド | 自動プレイAI（コード＋解説） |
+| 8 | 録画 | 被弾〜K.O. |
+| 9 | スライド | 遊べるURL |
+
 ### C. 公開まわり
 
-- [ ] **GitHub Pages 有効化**（Settings → Pages → main / root）
-      → https://appuppu.github.io/TFgamestudio/
+- [x] **GitHub Pages 有効化済み** → https://appuppu.github.io/TFgamestudio/
 - [ ] README（遊び方・技術構成）
 - [ ] 動画説明欄に遊べるURLを入れる
+- [ ] ショート（縦・30〜60秒）の切り出し
 
 ### D. 量産化（第2作以降）
 
@@ -122,12 +139,32 @@ GitHub Pages で公開しつつ、制作解説＋プレイ動画をYouTubeに投
 - ナレ生成: `/tmp/narr_game.py`
 - 生成済み動画: `/tmp/ninja_dash_video.mp4`（38秒・旧構成）
 
+### パイプライン（`lib/`）
+
+Algo-Gymのスライド資産を流用。3ステップの型は既存チャンネルと同じ:
+
+```
+python lib/render_slides.py scenes.json work/slides   # .venv     PIL
+python lib/narrate.py       scenes.json work          # .venv-kokoro
+python lib/assemble.py      scenes.json work out.mp4  # .venv     ffmpeg
+```
+
+- `scenes.json` — 絵コンテ。`clip` キーがあるシーンは録画から切り出し、
+  無いシーンはスライドを描く
+- `lib/slides.py` — Algo-Gymからコピーし、ブランド名のみ変更。
+  **太字直後に空文字が入って豆腐(□)になるバグ**と、
+  **太字の直後に句読点が来ると空白が入るバグ**をこのコピーで修正済み
+- 収録は `/tmp/capture_ninja.py`（イベントを狙って発火させて録る）
+
 ### 収録用デバッグフック（index.html 内）
 
 動画の「一番派手な瞬間」を狙って撮るために、コンソールから叩ける:
 
-- `window.__ev('boss'|'wall'|'surge'|'blackout')` — イベントを任意のタイミングで発火
+- `window.__ev('boss'|'wall'|'surge'|'blackout')` — イベントを発火。
+  **死亡中は false を返して発火しない**（K.O.画面の上にバナーが出た事故の対策）
 - `window.__kill()` — その場で被弾させ、K.O.演出を再生
+- `window.__alive()` — プレイ中かどうか。収録側はこれを見て復活を待つ
+- `?hold=11000` — 自動リトライまでの待ち時間(ms)。K.O.を長く映したい収録用
 
 Playwright から `page.evaluate("()=>window.__ev('boss')")` で呼べる。
 運任せに長回しせず、狙ったカットだけ収録できる。
