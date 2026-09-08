@@ -329,7 +329,13 @@ const EVENTS = {
 };
 const EVENT_NAMES = Object.keys(EVENTS);
 // recording/debug hook: fire a named event on cue (used by the capture script)
-window.__ev = name => { if(EVENTS[name]){ const busy=EVENTS[name](); nextEventAt = t + busy + 5; } };
+// returns false if the run is already over, so a capture script can wait
+// for the next run instead of firing an event onto the K.O. screen
+window.__ev = name => {
+  if(!running || dead || !EVENTS[name]) return false;
+  const busy = EVENTS[name](); nextEventAt = t + busy + 5; return true;
+};
+window.__alive = () => running && !dead;
 window.__kill = () => { if(running && !dead){ dead=true; gameOver(); } };
 window.__probe = () => ({t:+t.toFixed(2), gap:+boss.gap.toFixed(2), active:boss.active,
   bz:+(boss.group.position.z - camera.position.z).toFixed(2), next:+nextEventAt.toFixed(2)});
@@ -386,7 +392,10 @@ addEventListener('keydown', e=>{
 });
 
 // autoplay mode for recording: ?auto=1
-const AUTO = new URLSearchParams(location.search).get('auto')==='1';
+const QS = new URLSearchParams(location.search);
+const AUTO = QS.get('auto')==='1';
+// recording holds the K.O. longer than play does: ?hold=9000
+const RETRY_MS = Math.max(1200, parseInt(QS.get('hold')||'4200', 10));
 if(AUTO){ setTimeout(()=>{ titleEl.classList.add('hidden'); reset(); running=true; }, 1200); }
 
 function autoPilot(){
@@ -576,7 +585,7 @@ function gameOver(hitBy){
   koScoreEl.textContent = finalScore;
   msgEl.textContent = '';
   setTimeout(()=>{ koEl.classList.add('on'); }, 620);   // K.O. lands after the slow-mo
-  if(AUTO){ setTimeout(()=>{ reset(); running=true; }, 4200); }
+  if(AUTO){ setTimeout(()=>{ reset(); running=true; }, RETRY_MS); }
   else setTimeout(()=>{ msgEl.textContent='Space to retry'; }, 1800);
 }
 tick();

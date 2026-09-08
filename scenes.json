@@ -1,0 +1,116 @@
+{
+  "id": "0001_ninja_dash",
+  "title": "Ninja Dash",
+  "lang": "python",
+  "voice": "am_adam",
+  "url": "https://appuppu.github.io/TFgamestudio/",
+  "scenes": [
+    {
+      "kind": "hook",
+      "clip": "hook",
+      "narration": "I asked an AI to build a 3D game in a single HTML file. This is what came out."
+    },
+    {
+      "kind": "title",
+      "kicker": "DAY 1",
+      "title": "I Made an AI Build a 3D Game",
+      "bullets": [
+        "**Ninja Dash** — a 3D endless runner",
+        "Runs in your browser. **No install, no build step**",
+        "Every asset generated locally on a Mac"
+      ],
+      "narration": "Meet Ninja Dash. A 3D endless runner that runs entirely in your browser, with no install and no build step."
+    },
+    {
+      "kind": "character",
+      "clip": "run",
+      "kicker": "THE CHARACTER",
+      "title": "One Ninja, Zero Modeling Software",
+      "bullets": [
+        "Built from **primitives**: spheres, boxes, capsules",
+        "Headband, belt and eyes are just stacked shapes",
+        "Limbs swing on a **sine wave** — that's the whole run cycle"
+      ],
+      "narration": "The ninja is not a 3D model. He is a pile of spheres, boxes and capsules stacked together in code. His arms and legs swing on a sine wave, and that is the entire running animation."
+    },
+    {
+      "kind": "why",
+      "kicker": "DESIGN CHOICE 1",
+      "title": "Why Three.js, Not Unity",
+      "bullets": [
+        "Unity WebGL builds are **tens of megabytes**",
+        "Three.js loads from a CDN in **one script tag**",
+        "A game the AI can write, run and test in **one file**"
+      ],
+      "narration": "Why Three.js instead of Unity? A Unity WebGL build is tens of megabytes and needs an export step. Three.js loads from a CDN in a single script tag, so the AI can write, run and test the whole game as one file."
+    },
+    {
+      "kind": "loop",
+      "kicker": "DESIGN CHOICE 2",
+      "title": "The Game Loop",
+      "code": "function tick() {\n  requestAnimationFrame(tick);\n  const dt = clock.getDelta() * timeScale;\n\n  ninja.position.z -= speed * dt;   // move\n  for (const o of obstacles) {\n    if (o.z > ninja.z + 6) recycle(o);  // reuse\n    if (hits(o, ninja)) gameOver();     // collide\n  }\n  renderer.render(scene, camera);       // draw\n}",
+      "code_title": "game-loop.js",
+      "bullets": [
+        "**requestAnimationFrame**, update, collide, draw",
+        "**timeScale** is what makes the slow-motion death",
+        "Obstacles are **recycled**, never re-created"
+      ],
+      "narration": "The loop is the classic four steps. Request animation frame, update, check collisions, draw. One detail matters for the video: every delta is multiplied by a time scale, and easing that toward zero is what produces the slow motion death."
+    },
+    {
+      "kind": "recycle",
+      "kicker": "DESIGN CHOICE 3",
+      "title": "26 Obstacles, Forever",
+      "bullets": [
+        "The track is endless. The **object count is not**",
+        "Anything that falls behind is **moved back to the front**",
+        "No allocation during play, so **no garbage-collection stutter**"
+      ],
+      "narration": "The track is endless but the object count is not. There are twenty six obstacles, and any that fall behind the player get moved back out to the front. Nothing is allocated while you play, so there is no garbage collection stutter."
+    },
+    {
+      "kind": "events",
+      "clip": "events",
+      "kicker": "MAKING IT DRAMATIC",
+      "title": "Four Events That Break the Rhythm",
+      "bullets": [
+        "**BOSS SHURIKEN** — a giant blade overtakes you",
+        "**TRIPLE WALL** — two of three lanes slam shut",
+        "**SPEED SURGE** — speed and field of view spike",
+        "**BLACKOUT** — the lights go out for two seconds"
+      ],
+      "narration": "A runner that never changes gets boring fast, so four events break the rhythm. A giant boss shuriken overtakes you. Two of the three lanes slam shut. The speed and the field of view spike together. And the lights go out completely for two seconds."
+    },
+    {
+      "kind": "autopilot",
+      "kicker": "DESIGN CHOICE 4",
+      "title": "It Plays Itself",
+      "code": "function autoPilot() {\n  const near = nearestObstacleAhead(16);\n  if (!near) return;\n\n  if (near.type === 'rock' && grounded)\n    jump();                  // jump the rock\n  else\n    targetLane = openLane();  // walls need a dodge\n}",
+      "code_title": "autopilot.js",
+      "bullets": [
+        "Looks **16 units ahead** in the current lane",
+        "Rocks get jumped, **walls must be dodged**",
+        "**?auto=1** and the game records itself"
+      ],
+      "narration": "Nobody played this footage. The game has an autopilot that looks sixteen units ahead, jumps the rocks and dodges the walls. Add auto equals one to the URL and it records itself."
+    },
+    {
+      "kind": "death",
+      "clip": "death",
+      "kicker": "THE PAYOFF",
+      "title": "Getting Hit Should Hurt",
+      "bullets": [
+        "Time eases to a **freeze**, not a hard cut",
+        "Camera **punches in** from 7.5 to 3.6 units",
+        "Red flash, vignette, then **K.O.**"
+      ],
+      "narration": "And when you finally get hit, it should hurt. Time eases down to a freeze instead of cutting. The camera punches in. Red flash, vignette, and K.O."
+    },
+    {
+      "kind": "outro",
+      "title": "Play It Right Now",
+      "subtitle": "appuppu.github.io/TFgamestudio",
+      "narration": "The game is live right now, link in the description. Tomorrow, the AI builds another one."
+    }
+  ]
+}
