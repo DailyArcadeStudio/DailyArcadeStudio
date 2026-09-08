@@ -119,5 +119,45 @@
       "subtitle": "Subscribe — a new game every day",
       "narration": "It is playable right now, and the link is in the description. Subscribe and drop a like, because there is a new one of these tomorrow."
     }
+  ],
+  "slug": "ninja-dash",
+  "channel": "Daily Arcade Studio",
+  "events": [
+    "surge",
+    "wall",
+    "blackout",
+    "boss"
+  ],
+  "short": [
+    {
+      "mark": "surge",
+      "lead": -0.5,
+      "dur": 7.0,
+      "headline": "The road speeds up"
+    },
+    {
+      "mark": "wall",
+      "lead": -0.5,
+      "dur": 7.0,
+      "headline": "Two lanes slam shut"
+    },
+    {
+      "mark": "blackout",
+      "lead": -0.5,
+      "dur": 6.5,
+      "headline": "Then the lights go out"
+    },
+    {
+      "mark": "boss",
+      "lead": -0.3,
+      "dur": 9.0,
+      "headline": "And this comes up behind you"
+    },
+    {
+      "mark": "death",
+      "lead": -2.0,
+      "dur": 9.5,
+      "headline": "Every run ends the same way"
+    }
   ]
 }

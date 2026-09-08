@@ -23,10 +23,12 @@ FPS = 30
 W, H = 1920, 1080
 XFADE = 0.4
 
-RAW = Path("/tmp/ninja_raw.mp4")
-MARKS = Path("/tmp/ninja_marks.json")
-SHOWCASE_DIR = Path("/tmp/showcase_clips")
-BED = Path("/tmp/ninja_bed.mp4")   # long event-free run, recorded with ?noev=1
+# All footage lives in the work dir, written by lib/capture.py.
+def _paths(work):
+    return {"raw": work / "raw.mp4", "marks": work / "marks.json",
+            "showcase": work / "showcase",
+            # long event-free run, recorded with ?noev=1
+            "bed": work / "bed.mp4"}
 
 # Which recorded beat each gameplay scene starts from, plus lead-in.
 CLIP_SOURCE = {
@@ -46,8 +48,8 @@ def run(cmd):
     subprocess.run(cmd, check=True, capture_output=True)
 
 
-def marks_map():
-    return {name: t for name, t in json.loads(MARKS.read_text())["marks"]}
+def marks_map(marks_path):
+    return {name: t for name, t in json.loads(Path(marks_path).read_text())["marks"]}
 
 
 def _encode(extra, dst):
@@ -121,7 +123,8 @@ def main(scenes_path, work_dir, out_path):
     ov_dir.mkdir(parents=True, exist_ok=True)
     segdir = work / "segments"
     segdir.mkdir(parents=True, exist_ok=True)
-    mk = marks_map()
+    P = _paths(work)
+    mk = marks_map(P['marks'])
 
     segs = []
     story_i = 0
@@ -139,20 +142,20 @@ def main(scenes_path, work_dir, out_path):
             story_i += 1
             # The story panel covers the left, and the runner sits mid-frame,
             # so pan the gameplay right to keep the ninja in the clear part.
-            seg_clip(BED, at, dur, ov, dst, pan=-0.28)
+            seg_clip(P['bed'], at, dur, ov, dst, pan=-0.28)
             what = "story"
 
         elif kind == "showcase":
             ov = ov_dir / f"{i:02d}.png"
             overlays.showcase_overlay(sc).save(ov)
-            seg_clip(SHOWCASE_DIR / f"{sc['subject']}.mp4", 1.0, dur, ov, dst)
+            seg_clip(P['showcase'] / f"{sc['subject']}.mp4", 1.0, dur, ov, dst)
             what = "showcase:" + sc["subject"]
 
         elif kind == "outro":
             ov = ov_dir / f"{i:02d}.png"
             overlays.title_card(sc["title"], sc.get("subtitle")).save(ov)
             beat, lead = CLIP_SOURCE["run"]
-            seg_clip(RAW, mk[beat] + lead, dur, ov, dst)
+            seg_clip(P['raw'], mk[beat] + lead, dur, ov, dst)
             what = "outro"
 
         elif sc.get("clip"):
@@ -166,7 +169,7 @@ def main(scenes_path, work_dir, out_path):
             elif sc.get("title"):
                 ov = ov_dir / f"{i:02d}.png"
                 overlays.showcase_overlay(sc).save(ov)
-            seg_clip(RAW, mk[beat] + lead, dur, ov, dst)
+            seg_clip(P['raw'], mk[beat] + lead, dur, ov, dst)
             what = "clip:" + clip
 
         else:

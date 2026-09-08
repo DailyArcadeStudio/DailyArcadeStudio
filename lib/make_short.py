@@ -7,6 +7,7 @@ straight out of the same screen recording the main video uses.
 usage: python lib/make_short.py work_dir out.mp4
 """
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -23,10 +24,10 @@ FPS = 30
 VID_W, VID_H = SW, 810
 VID_TOP = 940 - VID_H // 2
 
-RAW = Path("/tmp/ninja_raw.mp4")
-MARKS = Path("/tmp/ninja_marks.json")
 
-# (mark, lead-in, seconds, headline) — the four events plus the K.O.
+
+# Fallback beats. A game supplies its own via scenes.json "short":
+#   [{"mark": "...", "lead": -0.5, "dur": 7.0, "headline": "..."}, ...]
 BEATS = [
     ("surge",    -0.5, 7.0, "The road speeds up"),
     ("wall",     -0.5, 7.0, "Two lanes slam shut"),
@@ -36,11 +37,25 @@ BEATS = [
 ]
 
 
+def load_beats(slug):
+    """A game's own short beats, when its storyboard defines them."""
+    if not slug:
+        return BEATS
+    f = Path(__file__).resolve().parent.parent / "games" / slug / "scenes.json"
+    if not f.exists():
+        return BEATS
+    spec = json.loads(f.read_text()).get("short")
+    if not spec:
+        return BEATS
+    return [(b["mark"], b.get("lead", -0.5), b.get("dur", 7.0), b["headline"])
+            for b in spec]
+
+
 def run(cmd):
     subprocess.run(cmd, check=True, capture_output=True)
 
 
-def band(headline, dst):
+def band(headline, dst, title="NINJA DASH"):
     """Top headline + bottom game name, transparent in the middle."""
     img = Image.new("RGBA", (SW, SH), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
@@ -56,7 +71,7 @@ def band(headline, dst):
         y += 92
 
     fn = _font("sans_bold", 78)
-    name = "NINJA DASH"
+    name = title
     w = d.textlength(name, font=fn)
     d.text(((SW - w) / 2, VID_TOP + VID_H + 60), name, font=fn, fill=FG + (255,))
     fs = _font("sans", 42)
@@ -70,12 +85,16 @@ def main(work_dir, out_path):
     work = Path(work_dir)
     tmp = work / "short"
     tmp.mkdir(parents=True, exist_ok=True)
-    marks = {n: t for n, t in json.loads(MARKS.read_text())["marks"]}
+    raw = work / "raw.mp4"
+    marks = {n: t for n, t in json.loads((work / "marks.json").read_text())["marks"]}
+    slug = os.environ.get("GAME_SLUG")
+    title = os.environ.get("GAME_TITLE", "NINJA DASH")
+    beats = [b for b in load_beats(slug) if b[0] in marks]
 
     segs = []
-    for i, (mark, lead, dur, headline) in enumerate(BEATS):
+    for i, (mark, lead, dur, headline) in enumerate(beats):
         ov = tmp / f"band{i}.png"
-        band(headline, ov)
+        band(headline, ov, title)
         seg = tmp / f"seg{i}.mp4"
         # scale so the crop box is filled in both axes, then take the centre
         fc = (f"color=c=black:s={SW}x{SH}:r={FPS}[base];"
@@ -84,7 +103,7 @@ def main(work_dir, out_path):
               f"[base][vid]overlay=0:{VID_TOP}[tmp];"
               f"[tmp][1:v]overlay=0:0[v]")
         run(["ffmpeg", "-y", "-loglevel", "error",
-             "-ss", f"{max(marks[mark] + lead, 0):.3f}", "-i", str(RAW),
+             "-ss", f"{max(marks[mark] + lead, 0):.3f}", "-i", str(raw),
              "-loop", "1", "-i", str(ov),
              "-filter_complex", fc, "-map", "[v]",
              "-t", f"{dur:.3f}", "-r", str(FPS),
