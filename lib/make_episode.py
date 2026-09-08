@@ -73,10 +73,16 @@ def main(slug, work_dir=None):
         short_mp4 = out / f"short_{slug}.mp4"
         log("building short")
         run([PY, str(ROOT / "lib/make_short.py"), str(work), str(short_mp4)], env=env)
+
+        # 6. thumbnails (main 16:9 and short 9:16)
+        log("making thumbnails")
+        run([PY, str(ROOT / "lib/make_thumbnail.py"), slug, str(work), str(out)])
     finally:
         srv.terminate()
 
-    print(json.dumps({"main": str(main_mp4), "short": str(short_mp4)}))
+    print(json.dumps({"main": str(main_mp4), "short": str(short_mp4),
+                      "thumb": str(out / f"thumb_{slug}.png"),
+                      "sthumb": str(out / f"sthumb_{slug}.png")}))
     log(f"EPISODE_OK {slug}")
 
 

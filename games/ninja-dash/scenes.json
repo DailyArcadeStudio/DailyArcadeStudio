@@ -159,5 +159,11 @@
       "dur": 9.5,
       "headline": "Every run ends the same way"
     }
-  ]
+  ],
+  "thumb": {
+    "hook": "Dodge or die",
+    "sub": "3 lanes. No brakes. Free in your browser.",
+    "frame_mark": "wall",
+    "frame_lead": 1.0
+  }
 }

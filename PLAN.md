@@ -1,4 +1,4 @@
-# TFgamestudio — 企画・実装プラン
+# Daily Arcade Studio — 企画・実装プラン
 
 最終更新: 2026-09-09
 

@@ -1,4 +1,4 @@
-"""TFgamestudio: SDXLで物語シーンの絵を生成。
+"""Daily Arcade Studio: SDXLで物語シーンの絵を生成。
 problem.json の kind=="image" シーンの prompt から <out>/imgs/<idx>.png を作る。
 usage: python gen_images.py <problem.json> <out_dir>
 16:9 (1344x768) で生成。MPS/16GB対策で attention slicing。
