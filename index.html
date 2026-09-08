@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ninja Dash</title>
+<style>
+  html,body{margin:0;padding:0;overflow:hidden;background:#0a0a12;font-family:'Helvetica Neue',Arial,sans-serif;}
+  #ui{position:fixed;top:16px;left:0;right:0;text-align:center;color:#fff;z-index:10;pointer-events:none;}
+  #score{font-size:34px;font-weight:800;text-shadow:0 2px 8px #000;}
+  #msg{font-size:20px;margin-top:6px;opacity:.9;text-shadow:0 2px 6px #000;}
+  #title{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:rgba(6,6,14,.72);z-index:20;color:#fff;transition:opacity .4s;}
+  #title h1{font-size:64px;margin:0 0 8px;letter-spacing:2px;text-shadow:0 4px 18px #e33;}
+  #title p{font-size:20px;opacity:.85;margin:4px 0;}
+  #title .btn{margin-top:26px;padding:14px 44px;font-size:22px;font-weight:700;color:#fff;
+    background:linear-gradient(180deg,#e33845,#a3202c);border:none;border-radius:12px;cursor:pointer;
+    box-shadow:0 6px 24px rgba(227,56,69,.5);}
+  #title .btn:hover{transform:scale(1.05);}
+  .hidden{opacity:0;pointer-events:none;}
+</style>
+</head>
+<body>
+<div id="ui"><div id="score">0</div><div id="msg"></div></div>
+<div id="title">
+  <h1>NINJA DASH</h1>
+  <p>Dodge the shuriken. Survive the run.</p>
+  <p>← → / A D : move &nbsp;&nbsp; Space : jump</p>
+  <button class="btn" id="startBtn">START</button>
+</div>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+// ---------- renderer / scene ----------
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.shadowMap.enabled = true;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0e0e1c);
+scene.fog = new THREE.Fog(0x0e0e1c, 22, 60);
+
+const camera = new THREE.PerspectiveCamera(62, innerWidth/innerHeight, .1, 100);
+camera.position.set(0, 4.6, 8.5);
+camera.lookAt(0, 1, -4);
+
+addEventListener('resize', ()=>{ camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight); });
+
+// ---------- lights ----------
+scene.add(new THREE.HemisphereLight(0x99aaff, 0x332222, 1.5));
+const sun = new THREE.DirectionalLight(0xffeecc, 2.4);
+sun.position.set(6, 12, 4); sun.castShadow = true;
+sun.shadow.camera.left=-14; sun.shadow.camera.right=14;
+sun.shadow.camera.top=14; sun.shadow.camera.bottom=-14;
+scene.add(sun);
+
+// ---------- track ----------
+const LANES = [-2.4, 0, 2.4];
+const trackGeo = new THREE.PlaneGeometry(9, 400);
+const trackMat = new THREE.MeshStandardMaterial({color:0x3c3c52, roughness:.85});
+const track = new THREE.Mesh(trackGeo, trackMat);
+track.rotation.x = -Math.PI/2; track.position.z = -180; track.receiveShadow = true;
+scene.add(track);
+// lane lines
+for(const x of [-1.2, 1.2]){
+  const line = new THREE.Mesh(new THREE.PlaneGeometry(.08, 400),
+    new THREE.MeshBasicMaterial({color:0x55f0c0, transparent:true, opacity:.35}));
+  line.rotation.x = -Math.PI/2; line.position.set(x, .01, -180);
+  scene.add(line);
+}
+// side walls (torii-red posts, parallax)
+const posts = [];
+const postMat = new THREE.MeshStandardMaterial({color:0xc22b35, roughness:.6});
+for(let i=0;i<24;i++){
+  for(const sx of [-4.6, 4.6]){
+    const p = new THREE.Mesh(new THREE.BoxGeometry(.4, 3.4, .4), postMat);
+    p.position.set(sx, 1.7, -i*16 - 4); p.castShadow = true;
+    scene.add(p); posts.push(p);
+  }
+}
+// moon
+const moon = new THREE.Mesh(new THREE.CircleGeometry(3.4, 40),
+  new THREE.MeshBasicMaterial({color:0xfff3d0}));
+moon.position.set(-7, 11, -55); scene.add(moon);
+
+// ---------- ninja (primitive build, swappable with Blender glb) ----------
+function buildNinja(){
+  const g = new THREE.Group();
+  const body = new THREE.MeshStandardMaterial({color:0x1a1c2b, roughness:.7});
+  const skin = new THREE.MeshStandardMaterial({color:0xe8c19e, roughness:.6});
+  const red  = new THREE.MeshStandardMaterial({color:0xc22b35, roughness:.5});
+  const white= new THREE.MeshStandardMaterial({color:0xf5f5fa, roughness:.3});
+  const torso = new THREE.Mesh(new THREE.SphereGeometry(.5, 24, 18), body);
+  torso.scale.set(1,.85,1.1); torso.position.y = .9; g.add(torso);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(.42, 24, 18), body);
+  head.position.y = 1.75; g.add(head);
+  const face = new THREE.Mesh(new THREE.BoxGeometry(.62,.24,.2), skin);
+  face.position.set(0,1.78,.32); g.add(face);
+  for(const s of [1,-1]){
+    const eye = new THREE.Mesh(new THREE.SphereGeometry(.07,12,10), white);
+    eye.scale.set(1,1.3,.5); eye.position.set(.16*s,1.8,.42); g.add(eye);
+    const pupil = new THREE.Mesh(new THREE.SphereGeometry(.032,10,8),
+      new THREE.MeshBasicMaterial({color:0x101018}));
+    pupil.position.set(.16*s,1.8,.465); g.add(pupil);
+  }
+  const band = new THREE.Mesh(new THREE.BoxGeometry(.72,.15,.5), red);
+  band.position.set(0,2.02,.1); g.add(band);
+  const knot = new THREE.Mesh(new THREE.BoxGeometry(.12,.3,.08), red);
+  knot.position.set(.28,1.95,-.32); knot.rotation.z=.5; g.add(knot);
+  const belt = new THREE.Mesh(new THREE.BoxGeometry(1.04,.14,.9), red);
+  belt.position.y = .68; g.add(belt);
+  const mkLimb=(x,y,len)=>{ const m=new THREE.Mesh(new THREE.CapsuleGeometry(.13,len,6,12), body);
+    m.position.set(x,y,0); return m; };
+  const armL=mkLimb(.62,1.02,.3), armR=mkLimb(-.62,1.02,.3);
+  const legL=mkLimb(.22,.3,.28), legR=mkLimb(-.22,.3,.28);
+  g.add(armL,armR,legL,legR);
+  g.traverse(o=>{ if(o.isMesh) o.castShadow=true; });
+  return {group:g, armL, armR, legL, legR};
+}
+const ninja = buildNinja();
+scene.add(ninja.group);
+// hero light follows the ninja
+const heroLight = new THREE.PointLight(0xfff0dd, 30, 18);
+heroLight.position.set(0, 5, 3);
+scene.add(heroLight);
+
+// ---------- obstacles ----------
+const obstacles = [];
+const shurikenGeo = (()=>{  // 4-point star
+  const shape = new THREE.Shape();
+  const R=.55, r=.18;
+  for(let i=0;i<8;i++){
+    const ang = i*Math.PI/4, rad = i%2===0 ? R : r;
+    const x=Math.cos(ang)*rad, y=Math.sin(ang)*rad;
+    i===0 ? shape.moveTo(x,y) : shape.lineTo(x,y);
+  }
+  shape.closePath();
+  return new THREE.ExtrudeGeometry(shape, {depth:.1, bevelEnabled:false});
+})();
+const shurikenMat = new THREE.MeshStandardMaterial({color:0xb8bcc8, metalness:.85, roughness:.25});
+const rockMat = new THREE.MeshStandardMaterial({color:0x4a3f38, roughness:.9});
+
+function spawnObstacle(z){
+  const lane = LANES[Math.floor(Math.random()*3)];
+  let mesh, type;
+  if(Math.random()<.6){
+    type='shuriken';
+    mesh = new THREE.Mesh(shurikenGeo, shurikenMat);
+    mesh.position.set(lane, 1.0, z);
+  } else {
+    type='rock';
+    mesh = new THREE.Mesh(new THREE.DodecahedronGeometry(.75), rockMat);
+    mesh.position.set(lane, .75, z);
+  }
+  mesh.castShadow=true; scene.add(mesh);
+  obstacles.push({mesh, type, lane});
+}
+
+// ---------- game state ----------
+let running=false, dead=false, t=0, speed=14, score=0, targetLane=1, jumpV=0, grounded=true;
+const scoreEl = document.getElementById('score');
+const msgEl = document.getElementById('msg');
+const titleEl = document.getElementById('title');
+
+function reset(){
+  for(const o of obstacles) scene.remove(o.mesh);
+  obstacles.length=0;
+  let z=-24;
+  for(let i=0;i<26;i++){ spawnObstacle(z); z -= 10 + Math.random()*8; }
+  ninja.group.position.set(0,0,0); targetLane=1;
+  t=0; speed=14; score=0; dead=false;
+  msgEl.textContent='';
+}
+
+document.getElementById('startBtn').onclick=()=>{
+  titleEl.classList.add('hidden'); reset(); running=true;
+};
+
+addEventListener('keydown', e=>{
+  if(!running){
+    if(e.code==='Space'||e.code==='Enter'){ titleEl.classList.add('hidden'); reset(); running=true; }
+    return;
+  }
+  if(e.code==='ArrowLeft'||e.code==='KeyA')  targetLane=Math.max(0,targetLane-1);
+  if(e.code==='ArrowRight'||e.code==='KeyD') targetLane=Math.min(2,targetLane+1);
+  if((e.code==='Space'||e.code==='ArrowUp'||e.code==='KeyW') && grounded){ jumpV=10.5; grounded=false; }
+});
+
+// autoplay mode for recording: ?auto=1
+const AUTO = new URLSearchParams(location.search).get('auto')==='1';
+if(AUTO){ setTimeout(()=>{ titleEl.classList.add('hidden'); reset(); running=true; }, 1200); }
+
+function autoPilot(){
+  // find nearest obstacle ahead in current lane; dodge or jump
+  const nz = ninja.group.position.z;
+  let nearest=null;
+  for(const o of obstacles){
+    const dz = nz - o.mesh.position.z;
+    if(o.mesh.position.z < nz && o.mesh.position.z > nz-14){
+      if(!nearest || o.mesh.position.z > nearest.mesh.position.z) nearest=o;
+    }
+  }
+  if(nearest){
+    const curX = LANES[targetLane];
+    if(Math.abs(nearest.mesh.position.x - curX) < 1.0){
+      const dz = Math.abs(nz - nearest.mesh.position.z);
+      if(dz < 9){
+        if(nearest.type==='rock' && grounded && dz<6){ jumpV=10.5; grounded=false; }
+        else {
+          const options=[0,1,2].filter(l=>Math.abs(LANES[l]-nearest.mesh.position.x)>1.0);
+          if(options.length) targetLane = options[Math.floor(Math.random()*options.length)];
+        }
+      }
+    }
+  }
+}
+
+// ---------- loop ----------
+const clock = new THREE.Clock();
+function tick(){
+  requestAnimationFrame(tick);
+  const dt = Math.min(clock.getDelta(), .05);
+  if(running && !dead){
+    t += dt; speed = 14 + t*.5; score += dt*speed;
+    scoreEl.textContent = Math.floor(score);
+    if(AUTO) autoPilot();
+    // forward
+    ninja.group.position.z -= speed*dt;
+    // lane
+    const tx = LANES[targetLane];
+    ninja.group.position.x += (tx - ninja.group.position.x)*Math.min(1, dt*12);
+    ninja.group.rotation.z = (tx - ninja.group.position.x)*-.15;
+    // jump
+    if(!grounded){
+      jumpV -= 28*dt; ninja.group.position.y += jumpV*dt;
+      if(ninja.group.position.y<=0){ ninja.group.position.y=0; grounded=true; }
+    }
+    // run cycle (bob is a scale effect on limbs only — never accumulate into position.y)
+    const run = Math.sin(t*14);
+    ninja.armL.rotation.x =  run*.9; ninja.armR.rotation.x = -run*.9;
+    ninja.legL.rotation.x = -run*.8; ninja.legR.rotation.x =  run*.8;
+    // camera follow
+    camera.position.z = ninja.group.position.z + 7.5;
+    camera.position.y = 4.2 + ninja.group.position.y*.3;
+    camera.position.x += (ninja.group.position.x*.55 - camera.position.x)*Math.min(1,dt*6);
+    camera.lookAt(ninja.group.position.x*.7, 1.0, ninja.group.position.z - 2);
+    // obstacles
+    for(const o of obstacles){
+      if(o.type==='shuriken') o.mesh.rotation.z += dt*9;
+      // recycle behind player
+      if(o.mesh.position.z > ninja.group.position.z + 6){
+        o.mesh.position.z -= 26*10 + Math.random()*40;
+        o.mesh.position.x = LANES[Math.floor(Math.random()*3)];
+      }
+      // collision
+      const dx = Math.abs(o.mesh.position.x - ninja.group.position.x);
+      const dz = Math.abs(o.mesh.position.z - ninja.group.position.z);
+      const dy = o.type==='shuriken' ? Math.abs(1.0 - (ninja.group.position.y+1.0)) : ninja.group.position.y;
+      if(dx<.8 && dz<.7){
+        const cleared = (o.type==='rock' && ninja.group.position.y > .9) ||
+                        (o.type==='shuriken' && ninja.group.position.y > 1.4);
+        if(!cleared){ dead=true; gameOver(); }
+      }
+    }
+    // hero light follows
+    heroLight.position.set(ninja.group.position.x, 5, ninja.group.position.z + 3);
+    // moon parallax
+    moon.position.z = ninja.group.position.z - 55;
+    moon.position.x = -7 + ninja.group.position.x*.3;
+  }
+  renderer.render(scene, camera);
+}
+function gameOver(){
+  msgEl.textContent = 'GAME OVER — Space to retry';
+  running=false;
+  if(AUTO){ setTimeout(()=>{ reset(); running=true; }, 1500); }
+}
+tick();
+</script>
+</body>
+</html>
