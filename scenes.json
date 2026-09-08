@@ -3,114 +3,121 @@
   "title": "Ninja Dash",
   "lang": "python",
   "voice": "am_adam",
-  "url": "https://appuppu.github.io/TFgamestudio/",
   "scenes": [
     {
       "kind": "hook",
-      "clip": "hook",
-      "narration": "I asked an AI to build a 3D game in a single HTML file. This is what came out."
+      "clip": "boss",
+      "narration": "This game exists because of a complaint filed in 1687."
     },
     {
-      "kind": "title",
-      "kicker": "DAY 1",
-      "title": "I Made an AI Build a 3D Game",
-      "bullets": [
-        "**Ninja Dash** — a 3D endless runner",
-        "Runs in your browser. **No install, no build step**",
-        "Every asset generated locally on a Mac"
-      ],
-      "narration": "Meet Ninja Dash. A 3D endless runner that runs entirely in your browser, with no install and no build step."
+      "kind": "image",
+      "prompt": "a dusty archive room in an old Japanese temple, wooden shelves stacked with rolled paper scrolls, dim warm lantern light, dust motes floating in a shaft of light, cinematic, highly detailed, muted earth tones",
+      "narration": "In a temple archive outside Kyoto, there is a box of scrolls nobody has ever catalogued. Most of them are tax records. One of them is not."
     },
     {
-      "kind": "character",
-      "clip": "run",
-      "kicker": "THE CHARACTER",
-      "title": "One Ninja, Zero Modeling Software",
-      "bullets": [
-        "Built from **primitives**: spheres, boxes, capsules",
-        "Headband, belt and eyes are just stacked shapes",
-        "Limbs swing on a **sine wave** — that's the whole run cycle"
-      ],
-      "narration": "The ninja is not a 3D model. He is a pile of spheres, boxes and capsules stacked together in code. His arms and legs swing on a sine wave, and that is the entire running animation."
+      "kind": "image",
+      "prompt": "an ancient Japanese scroll unrolled on a dark wooden floor, dense brush calligraphy, one corner burned away, lit by a single candle, moody dramatic lighting, highly detailed",
+      "narration": "It is a formal complaint, filed by a courier named Sabu. The subject line, roughly translated, reads: the road is too long, and the shuriken are unreasonable."
     },
     {
-      "kind": "why",
-      "kicker": "DESIGN CHOICE 1",
-      "title": "Why Three.js, Not Unity",
-      "bullets": [
-        "Unity WebGL builds are **tens of megabytes**",
-        "Three.js loads from a CDN in **one script tag**",
-        "A game the AI can write, run and test in **one file**"
-      ],
-      "narration": "Why Three.js instead of Unity? A Unity WebGL build is tens of megabytes and needs an export step. Three.js loads from a CDN in a single script tag, so the AI can write, run and test the whole game as one file."
+      "kind": "image",
+      "prompt": "a night road lined with hundreds of red torii gates receding into darkness, wet stone path, low mist, moonlight, atmospheric cinematic wide shot, deep shadows, highly detailed",
+      "narration": "Sabu's job was to carry messages down a road lined with a thousand torii gates. His complaint lists the hazards in order. Gates. Rocks. And, quote, the throwing stars, which nobody will explain to me."
     },
     {
-      "kind": "loop",
-      "kicker": "DESIGN CHOICE 2",
-      "title": "The Game Loop",
-      "code": "function tick() {\n  requestAnimationFrame(tick);\n  const dt = clock.getDelta() * timeScale;\n\n  ninja.position.z -= speed * dt;   // move\n  for (const o of obstacles) {\n    if (o.z > ninja.z + 6) recycle(o);  // reuse\n    if (hits(o, ninja)) gameOver();     // collide\n  }\n  renderer.render(scene, camera);       // draw\n}",
-      "code_title": "game-loop.js",
-      "bullets": [
-        "**requestAnimationFrame**, update, collide, draw",
-        "**timeScale** is what makes the slow-motion death",
-        "Obstacles are **recycled**, never re-created"
-      ],
-      "narration": "The loop is the classic four steps. Request animation frame, update, check collisions, draw. One detail matters for the video: every delta is multiplied by a time scale, and easing that toward zero is what produces the slow motion death."
+      "kind": "image",
+      "prompt": "a huge ornate metal shuriken embedded deep in a cracked stone wall at night, moonlight glinting along the blade, faint red glow, dramatic low angle, cinematic, highly detailed",
+      "narration": "The complaint was denied. The stated reason was that the throwing stars were a traditional feature of the road. Sabu ran it for eleven more years."
     },
     {
-      "kind": "recycle",
-      "kicker": "DESIGN CHOICE 3",
-      "title": "26 Obstacles, Forever",
+      "kind": "showcase",
+      "subject": "ninja",
+      "kicker": "THE RUNNER",
+      "title": "Sabu",
       "bullets": [
-        "The track is endless. The **object count is not**",
-        "Anything that falls behind is **moved back to the front**",
-        "No allocation during play, so **no garbage-collection stutter**"
+        "Carries nothing. **Speed is the whole job**",
+        "Three lanes: left, middle, right",
+        "He gets **faster the longer he survives** — not a reward"
       ],
-      "narration": "The track is endless but the object count is not. There are twenty six obstacles, and any that fall behind the player get moved back out to the front. Nothing is allocated while you play, so there is no garbage collection stutter."
+      "narration": "So this is Sabu. He carries nothing, because the job is speed. The road is three lanes wide. And the longer he stays alive, the faster he runs, which is not something he asked for."
+    },
+    {
+      "kind": "showcase",
+      "subject": "shuriken",
+      "kicker": "HAZARD ONE",
+      "title": "The Unexplained Throwing Stars",
+      "bullets": [
+        "Spinning, waist height, **cannot be jumped**",
+        "Roughly sixty percent of everything out there",
+        "Still nobody will explain them"
+      ],
+      "narration": "The throwing stars hover at waist height and spin. You cannot jump them. They make up about sixty percent of everything on that road, and to this day, nobody will explain them."
+    },
+    {
+      "kind": "showcase",
+      "subject": "rock",
+      "kicker": "HAZARD TWO",
+      "title": "Rocks",
+      "bullets": [
+        "The only honest obstacle on the road",
+        "**Jump it.** That is the entire interaction",
+        "Sabu's complaint raises no objection to these"
+      ],
+      "narration": "The rocks are the only honest hazard out there. You jump them. That is the entire interaction. Notably, Sabu's complaint raises no objection whatsoever to the rocks."
+    },
+    {
+      "kind": "showcase",
+      "subject": "wall",
+      "kicker": "HAZARD THREE",
+      "title": "The Wall",
+      "bullets": [
+        "Blocks a lane **completely** — jumping does nothing",
+        "They arrive **two at a time**, leaving one gap",
+        "You get about a second to pick"
+      ],
+      "narration": "Walls block a lane completely. Jumping does nothing at all. And they arrive two at a time, which leaves exactly one gap, and about one second to decide which one it is."
+    },
+    {
+      "kind": "showcase",
+      "subject": "boss",
+      "kicker": "HAZARD FOUR",
+      "title": "The Thing Behind You",
+      "bullets": [
+        "Overtakes from **behind the camera**",
+        "Tuned so it can **never actually reach you**",
+        "It does not need to. It only has to be visible"
+      ],
+      "narration": "And then there is this. It comes up from behind you and sweeps past. Here is the honest part. It is tuned so that it can never actually reach you. It does not need to. It only has to be visible."
     },
     {
       "kind": "events",
       "clip": "events",
-      "kicker": "MAKING IT DRAMATIC",
-      "title": "Four Events That Break the Rhythm",
+      "kicker": "THE ROAD",
+      "title": "It Does Not Stay Calm",
       "bullets": [
-        "**BOSS SHURIKEN** — a giant blade overtakes you",
-        "**TRIPLE WALL** — two of three lanes slam shut",
-        "**SPEED SURGE** — speed and field of view spike",
-        "**BLACKOUT** — the lights go out for two seconds"
+        "**SPEED SURGE** — the road stretches the whole view",
+        "**TRIPLE WALL** — two lanes shut at once",
+        "**BLACKOUT** — the lanterns go out for two seconds"
       ],
-      "narration": "A runner that never changes gets boring fast, so four events break the rhythm. A giant boss shuriken overtakes you. Two of the three lanes slam shut. The speed and the field of view spike together. And the lights go out completely for two seconds."
-    },
-    {
-      "kind": "autopilot",
-      "kicker": "DESIGN CHOICE 4",
-      "title": "It Plays Itself",
-      "code": "function autoPilot() {\n  const near = nearestObstacleAhead(16);\n  if (!near) return;\n\n  if (near.type === 'rock' && grounded)\n    jump();                  // jump the rock\n  else\n    targetLane = openLane();  // walls need a dodge\n}",
-      "code_title": "autopilot.js",
-      "bullets": [
-        "Looks **16 units ahead** in the current lane",
-        "Rocks get jumped, **walls must be dodged**",
-        "**?auto=1** and the game records itself"
-      ],
-      "narration": "Nobody played this footage. The game has an autopilot that looks sixteen units ahead, jumps the rocks and dodges the walls. Add auto equals one to the URL and it records itself."
+      "narration": "The road does not stay calm. It surges, and the entire view stretches out. Two lanes slam shut at the same time. And sometimes the lanterns simply go out, for two full seconds, while you are still running."
     },
     {
       "kind": "death",
       "clip": "death",
-      "kicker": "THE PAYOFF",
-      "title": "Getting Hit Should Hurt",
+      "kicker": "THE END OF A RUN",
+      "title": "Every Run Ends the Same Way",
       "bullets": [
-        "Time eases to a **freeze**, not a hard cut",
-        "Camera **punches in** from 7.5 to 3.6 units",
-        "Red flash, vignette, then **K.O.**"
+        "Time **eases to a stop** instead of cutting",
+        "The camera pushes in as it happens",
+        "Then it tells you exactly how far you got"
       ],
-      "narration": "And when you finally get hit, it should hurt. Time eases down to a freeze instead of cutting. The camera punches in. Red flash, vignette, and K.O."
+      "narration": "Every run ends the same way. Time eases to a stop instead of cutting, the camera pushes in, and then it tells you exactly how far you got. Sabu ran this road for eleven years. You will last about forty seconds."
     },
     {
       "kind": "outro",
-      "title": "Play It Right Now",
-      "subtitle": "appuppu.github.io/TFgamestudio",
-      "narration": "The game is live right now, link in the description. Tomorrow, the AI builds another one."
+      "title": "Link in the description",
+      "subtitle": "Subscribe — a new game every day",
+      "narration": "It is playable right now, and the link is in the description. Subscribe and drop a like, because there is a new one of these tomorrow."
     }
   ]
 }
