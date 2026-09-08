@@ -331,6 +331,8 @@ const EVENT_NAMES = Object.keys(EVENTS);
 // recording/debug hook: fire a named event on cue (used by the capture script)
 window.__ev = name => { if(EVENTS[name]){ const busy=EVENTS[name](); nextEventAt = t + busy + 5; } };
 window.__kill = () => { if(running && !dead){ dead=true; gameOver(); } };
+window.__probe = () => ({t:+t.toFixed(2), gap:+boss.gap.toFixed(2), active:boss.active,
+  bz:+(boss.group.position.z - camera.position.z).toFixed(2), next:+nextEventAt.toFixed(2)});
 
 function refillEventQueue(){
   eventQueue = EVENT_NAMES.slice();
@@ -477,11 +479,13 @@ function tick(){
     // BOSS SHURIKEN: overtakes from behind the camera, looms over the player, then peels off
     if(boss.active){
       boss.gap -= dt*3.4;                      // relentless approach
-      if(boss.gap < 4.4) boss.gap = 4.4;       // hovers at the player's back — never catches up
-      // rises and drifts aside as it closes, so it looms without hiding the player
-      const pass = THREE.MathUtils.clamp((16 - boss.gap)/11.6, 0, 1);
-      boss.group.position.set(ninja.group.position.x*.35 - pass*2.0,
-                              2.4 + pass*1.1,
+      // Hold it a little ahead of the player but still behind the camera, so the
+      // blade looms large at the side of frame without blanketing the lens.
+      if(boss.gap < 2.0) boss.gap = 2.0;
+      // rises and slides to the left edge as it closes, keeping the player clear
+      const pass = THREE.MathUtils.clamp((16 - boss.gap)/14, 0, 1);
+      boss.group.position.set(ninja.group.position.x*.35 - pass*4.6,
+                              2.4 + pass*2.0,
                               ninja.group.position.z + boss.gap);
       boss.blade.rotation.z += dt*7;
       shake = Math.max(shake, .08 + pass*.22);
