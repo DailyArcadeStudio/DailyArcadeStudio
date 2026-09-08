@@ -120,6 +120,19 @@ A new browser game every day on Daily Arcade Studio.
 `frame_mark` は録画のどのイベント時点を背景に使うか（`marks.json` のキー）。
 夜のゲームは暗いので、`stage()` が明るさを持ち上げ、文字の帯だけ暗くしている。
 
+### 煽り文句の言葉選び
+
+`die` / `dead` / `kill` は**ゲームの失敗を指す動詞なら問題ない**
+（"Dodge or die" / "you died" は定着したゲーム用語）。
+YouTubeが問題にするのは対象が現実の人物・集団に向いている場合で、
+ゲーム内の描写は広告主フレンドリー ガイドラインでも許容されている。
+
+避けるもの:
+- 実在の人物・団体を対象にした表現
+- 自傷を想起させる言い回し（"kill yourself" など）
+- 「Made for Kids」に設定する場合はより保守的に
+  （現在は `selfDeclaredMadeForKids: False` で運用）
+
 ### ⚠ 電話番号認証が必要
 
 **カスタムサムネはチャンネルの電話番号認証が済むまでAPIから設定できない。**
