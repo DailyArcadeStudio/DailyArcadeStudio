@@ -68,12 +68,17 @@
   #ko.on .finalLabel{animation:fadeUp .5s .75s forwards;}
   #ko.on .finalScore{animation:fadeUp .5s .9s forwards;}
   @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+  #back{position:fixed;top:14px;left:14px;z-index:30;text-decoration:none;
+    background:rgba(12,16,26,.72);color:#fff;font:600 15px/1 'Helvetica Neue',Arial,sans-serif;
+    padding:0 16px;height:44px;display:flex;align-items:center;border-radius:12px;}
+  #back:hover{background:rgba(30,38,56,.9);}
   #mute{position:fixed;top:14px;right:14px;z-index:30;border:none;cursor:pointer;
     background:rgba(12,16,26,.72);color:#fff;font-size:20px;line-height:1;
     width:44px;height:44px;border-radius:12px;}
 </style>
 </head>
 <body>
+<a id="back" href="../../" title="all games">‹ All games</a>
 <button id="mute" title="sound on/off">🔊</button>
 <div id="ui"><div id="score">0</div><div id="msg"></div></div>
 <div id="lean"><div id="leanFill"></div></div>
@@ -480,12 +485,14 @@ const startBtn = document.getElementById('startBtn');
 // stinger, and the whole thing ducks out on a game over.
 const SND = (() => {
   let ctx = null, master = null, musicGain = null, on = true, started = false;
-  let step = 0, timer = null, tempo = 0.25;
+  let step = 0, timer = null, tempo = 0.34;
 
   // A pentatonic scale never sounds wrong against itself, which matters
   // when the tempo drifts with the player's speed.
-  const SCALE = [0, 3, 5, 7, 10];
-  const ROOT = 220;
+  // major pentatonic, sparse — patient, hanging in the air
+  const SCALE = [0, 2, 4, 7, 9];
+  const ROOT = 294;
+  const BASS = 'triangle', LEAD = 'sine';
   const hz = (deg, oct = 0) =>
     ROOT * Math.pow(2, oct + Math.floor(deg / SCALE.length)) *
     Math.pow(2, SCALE[((deg % SCALE.length) + SCALE.length) % SCALE.length] / 12);
@@ -534,10 +541,11 @@ const SND = (() => {
   // --- the loop: a walking bass plus an offbeat blip ---
   function tick() {
     if (!ctx || !on) return;
-    const bar = step % 16;
-    if (bar % 4 === 0) blip(hz(bar === 0 ? 0 : 2, -1), tempo * 1.6, 'triangle', 0.30, musicGain);
-    if (bar % 8 === 4) blip(hz(4, 0), tempo * 0.7, 'square', 0.10, musicGain);
-    if (bar % 4 === 2) noise(0.05, 0.05, 4000);           // hat
+    const bar = step % 24;
+    // sparse and floating: long low notes, a slow arpeggio above
+    if (bar % 8 === 0) blip(hz(bar === 0 ? 0 : 3, -1), tempo * 2.4, BASS, 0.26, musicGain);
+    if (bar % 6 === 3) blip(hz(2 + (step / 6 | 0) % 3, 1), tempo * 1.3, LEAD, 0.13, musicGain);
+    if (bar % 12 === 9) noise(0.05, 0.03, 6000);
     step++;
     timer = setTimeout(tick, tempo * 1000);
   }
@@ -565,10 +573,10 @@ const SND = (() => {
       musicGain.gain.exponentialRampToValueAtTime(1, ctx.currentTime + 0.4);
     },
     // --- one-shots ---
-    move()  { ensure(); blip(660, 0.07, 'square', 0.12); },
-    jump()  { ensure(); blip(420, 0.16, 'square', 0.18, null, 900); },
+    move()  { ensure(); blip(hz(3, 1), 0.07, LEAD, 0.12); },
+    jump()  { ensure(); blip(hz(0, 0), 0.16, LEAD, 0.18, null, hz(4, 1)); },
     land()  { ensure(); noise(0.06, 0.10, 500); },
-    place() { ensure(); blip(520, 0.10, 'triangle', 0.22, null, 700); },
+    place() { ensure(); blip(hz(2, 0), 0.10, BASS, 0.22, null, hz(4, 1)); },
     event() { ensure(); [0, 90, 180].forEach((ms, i) =>
                 setTimeout(() => blip(hz(2 + i, 0), 0.18, 'sawtooth', 0.20), ms)); },
     hit()   { ensure(); noise(0.35, 0.30, 200);

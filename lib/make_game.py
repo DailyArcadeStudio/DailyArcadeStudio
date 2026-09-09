@@ -62,6 +62,9 @@ implementation for this channel. In particular you MUST reproduce:
   into frame, plus a game-over sequence with slow motion, a camera push
   in, a red flash and a large K.O. with the final score.
 - A visible score that increases while alive.
+- A **`‹ All games` link back to the gallery** at `../../`, top-left,
+  matching the reference's styling. Players arrive on one game from a
+  video description and need a route to the others.
 - **Sound, synthesised with WebAudio — never an audio file.** Copy the
   SND block from {ref} verbatim and wire it up: a short looping bass
   line that speeds up with the game (`SND.setPace`), a blip per input,
