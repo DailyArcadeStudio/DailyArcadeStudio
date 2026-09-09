@@ -14,6 +14,8 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageEnhance, ImageFilter
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(0, "/Users/fukushimatakumi/develop")
+from thumb_text import fit_lines      # 全チャンネル共通のタイトル自動フィット
 from slides import _font, FG, YELLOW, ACCENT
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -87,16 +89,16 @@ def make_main(hook, sub, frame, dst):
     img = stage(frame.resize((TW, TH)))
     d = ImageDraw.Draw(img)
 
-    f = fit_font(d, max(hook.split(" "), key=len), 132, TW - 120, 68)
-    lines = wrap_words(d, hook.upper(), f, TW - 120)
-    total = len(lines) * int(f.size * 1.08)
+    f, lines, lh = fit_lines(d, lambda sz: _font("sans_bold", sz), hook.upper(),
+                             TW - 120, TH * 0.46, max_lines=2, hi=150, lo=56)
+    total = len(lines) * lh
     y = 96                                  # sit high, leave the track visible
     scrim(img, (0, y - 40, TW, y + total + 130))
     d = ImageDraw.Draw(img)
     for ln in lines:
         w = d.textlength(ln, font=f)
-        stroked(d, ((TW - w) / 2, y), ln, f, YELLOW, width=9)
-        y += int(f.size * 1.08)
+        stroked(d, ((TW - w) / 2, y), ln, f, YELLOW, width=max(7, int(f.size*.07)))
+        y += lh
 
     if sub:
         fs = fit_font(d, sub, 54, TW - 200, 34)
@@ -113,16 +115,16 @@ def make_short(hook, title, frame, dst):
     img = stage(frame.resize((SW, SH)))
     d = ImageDraw.Draw(img)
 
-    f = fit_font(d, max(hook.split(" "), key=len), 150, SW - 90, 72)
-    lines = wrap_words(d, hook.upper(), f, SW - 90)
+    f, lines, lh = fit_lines(d, lambda sz: _font("sans_bold", sz), hook.upper(),
+                             SW - 90, 620, max_lines=2, hi=190, lo=72)
     y = 300
-    scrim(img, (0, y - 60, SW, y + len(lines) * int(f.size * 1.10) + 60))
+    scrim(img, (0, y - 60, SW, y + len(lines) * lh + 60))
     scrim(img, (0, SH - 460, SW, SH - 250))
     d = ImageDraw.Draw(img)
     for ln in lines:
         w = d.textlength(ln, font=f)
-        stroked(d, ((SW - w) / 2, y), ln, f, YELLOW, width=10)
-        y += int(f.size * 1.10)
+        stroked(d, ((SW - w) / 2, y), ln, f, YELLOW, width=max(8, int(f.size*.07)))
+        y += lh
 
     fn = fit_font(d, title.upper(), 82, SW - 120, 48)
     w = d.textlength(title.upper(), font=fn)
