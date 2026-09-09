@@ -133,17 +133,18 @@ YouTubeが問題にするのは対象が現実の人物・集団に向いてい�
 - 「Made for Kids」に設定する場合はより保守的に
   （現在は `selfDeclaredMadeForKids: False` で運用）
 
-### ⚠ 電話番号認証が必要
+### 電話番号認証 ✅ 完了（2026-09-09）
 
-**カスタムサムネはチャンネルの電話番号認証が済むまでAPIから設定できない。**
-現状は403で弾かれるため、画像だけ生成して手動設定待ちに登録している。
+カスタムサムネには電話番号認証が要る。未認証だと 403
+（`doesn't have permissions to upload and set custom video thumbnails`）。
+認証は https://www.youtube.com/verify で行う。
 
-1. https://www.youtube.com/verify で電話番号認証（DailyArcadeStudio でログイン）
-2. 認証後は本編サムネがAPIから自動設定される
-3. **ショートのサムネはYouTube仕様で永久にAPI不可** — 常に手動
+**認証後は本編・ショートとも API から設定できる。**
+（当初「ショートはAPI不可」と考えていたが、実際には `thumbnails().set()` が
+ショートにも通った。手動設定は不要。）
 
-手動設定が必要な動画は管理アプリ（`dashboard.py`）の
-「⚠ 手動でサムネ設定が必要な動画」に一覧表示される。
+API設定が失敗した場合だけ、管理アプリ（`dashboard.py`）の
+「⚠ 手動でサムネ設定が必要な動画」に積まれる。
 
 ---
 
