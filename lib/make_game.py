@@ -115,6 +115,16 @@ def generate(slug, title, idea):
     return dst
 
 
+def _lit_pixels(png_bytes):
+    """描画されたピクセルの割合。背景はほぼ黒なので、明るい画素を数える。"""
+    import io
+    from PIL import Image
+    im = Image.open(io.BytesIO(png_bytes)).convert("RGB").resize((160, 90))
+    px = list(im.getdata())
+    lit = sum(1 for r, g, b in px if r + g + b > 150)
+    return lit / len(px)
+
+
 def verify(slug, port=8901):
     """Load the game in a real browser and confirm it is actually playable."""
     from playwright.sync_api import sync_playwright
@@ -170,12 +180,17 @@ def verify(slug, port=8901):
         # Every declared subject must actually render. Subject names differ
         # per game (ninja / lantern / ...), so read them from the game
         # rather than assuming one.
-        for subj in (state["subjects"] or [])[:6]:
+        for subj in (state["subjects"] or [])[:8]:
             pg.goto(f"{base}?showcase={subj}&sx=1&nolabel=1")
             pg.wait_for_timeout(2200)
-            shot = pg.screenshot()
-            if len(shot) < 12000:             # a blank dark frame compresses tiny
-                problems.append(f"showcase '{subj}' looks empty")
+            # Count lit pixels rather than trusting the PNG size: a wide flat
+            # subject (a bridge) fills little of a 16:9 frame and compresses
+            # small, which read as "empty" even though it rendered fine.
+            # The canvas cannot be read from JS (preserveDrawingBuffer is off),
+            # so measure the screenshot instead.
+            lit = _lit_pixels(pg.screenshot())
+            if lit < 0.004:                   # 0.4% of the frame
+                problems.append(f"showcase '{subj}' looks empty ({lit:.3%})")
 
         if errs:
             problems.append(f"js errors: {errs[:2]}")
