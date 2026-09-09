@@ -62,6 +62,15 @@ implementation for this channel. In particular you MUST reproduce:
   into frame, plus a game-over sequence with slow motion, a camera push
   in, a red flash and a large K.O. with the final score.
 - A visible score that increases while alive.
+- **Sound, synthesised with WebAudio — never an audio file.** Copy the
+  SND block from {ref} verbatim and wire it up: a short looping bass
+  line that speeds up with the game (`SND.setPace`), a blip per input,
+  a stinger on each event, and a hit plus descending motif on the game
+  over (`SND.duck`). Add the same mute button (also bound to `M`).
+  **Every automated mode must be silent**: declare
+  `SILENT = AUTO || !!SHOWCASE_Q || QS.get('mute')==='1'` and guard every
+  SND call with it, or the music ends up in the recorded footage. Declare
+  the url flags at the TOP of the module, before anything reads them.
 
 Keep it readable and comment the parts that are not obvious. Match the
 reference's visual language: dark background, a strong accent colour,
