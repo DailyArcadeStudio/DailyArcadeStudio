@@ -153,4 +153,15 @@ if __name__ == "__main__":
         EVENTS = data.get("events", EVENTS)
         subs = [s["subject"] for s in data["scenes"] if s.get("subject")]
         SUBJECTS = subs or SUBJECTS
+    else:
+        # no storyboard yet: fall back to what the game itself declares
+        from playwright.sync_api import sync_playwright as _sp
+        with _sp() as _p:
+            _b = _p.chromium.launch(args=["--enable-unsafe-swiftshader"])
+            _pg = _b.new_page()
+            _pg.goto(f"http://localhost:{PORT}/games/{slug}/index.html")
+            _pg.wait_for_timeout(1500)
+            EVENTS = _pg.evaluate("()=>window.__events") or EVENTS
+            SUBJECTS = _pg.evaluate("()=>window.__subjects") or SUBJECTS
+            _b.close()
     main(slug, work, SUBJECTS)

@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lantern Drop</title>
+<style>
+  html,body{margin:0;padding:0;overflow:hidden;background:#0a0a12;font-family:'Helvetica Neue',Arial,sans-serif;}
+  #ui{position:fixed;top:16px;left:0;right:0;text-align:center;color:#fff;z-index:10;pointer-events:none;}
+  #score{font-size:clamp(26px,6vw,34px);font-weight:800;text-shadow:0 2px 8px #000;}
+  #msg{font-size:20px;margin-top:6px;opacity:.9;text-shadow:0 2px 6px #000;}
+  /* lean meter: how close the pile is to falling over */
+  #lean{position:fixed;left:50%;transform:translateX(-50%);bottom:22px;width:min(58vw,320px);
+    height:10px;border-radius:6px;background:rgba(255,255,255,.14);z-index:10;pointer-events:none;
+    box-shadow:0 2px 10px #000;overflow:hidden;}
+  #leanFill{width:0%;height:100%;background:#ffb03b;transition:width .12s linear,background .2s;}
+  #title{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:rgba(6,6,14,.72);z-index:20;color:#fff;transition:opacity .4s;}
+  #title h1{font-size:clamp(38px,11vw,64px);margin:0 0 8px;letter-spacing:2px;text-shadow:0 4px 18px #ffb03b;}
+  #title p{font-size:clamp(14px,3.6vw,20px);opacity:.85;margin:4px 0;}
+  #title .btn{margin-top:26px;padding:14px 44px;font-size:22px;font-weight:700;color:#2a1400;
+    background:linear-gradient(180deg,#ffc44f,#e0862a);border:none;border-radius:12px;cursor:pointer;
+    box-shadow:0 6px 24px rgba(255,176,59,.5);}
+  #title .btn:hover{transform:scale(1.05);}
+  .hidden{opacity:0;pointer-events:none;}
+  /* show the hint that matches the device */
+  .tc{display:none;}
+  @media (pointer:coarse){ .kb{display:none;} .tc{display:block;} }
+  /* a finger-sized START button on touch devices */
+  @media (pointer:coarse){ #title .btn{padding:18px 56px;font-size:24px;} }
+
+  /* --- event banner: slams into the middle of the screen --- */
+  #banner{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    z-index:15;pointer-events:none;opacity:0;}
+  #banner .b{font-size:clamp(32px,8.5vw,74px);font-weight:900;letter-spacing:.08em;color:#fff;
+    padding:10px 4vw;max-width:94vw;text-align:center;transform:scale(2.4);opacity:0;
+    text-shadow:0 0 26px currentColor, 0 6px 20px #000;
+    border-top:5px solid currentColor;border-bottom:5px solid currentColor;}
+  #banner.go .b{animation:slam .62s cubic-bezier(.12,.85,.2,1) forwards;}
+  @keyframes slam{
+    0%  {transform:scale(2.4) rotate(-4deg);opacity:0;}
+    22% {transform:scale(1)   rotate(0deg); opacity:1;}
+    70% {transform:scale(1)   rotate(0deg); opacity:1;}
+    100%{transform:scale(1.12);opacity:0;}
+  }
+
+  /* --- full-screen colour flashes --- */
+  #flash{position:fixed;inset:0;z-index:14;pointer-events:none;opacity:0;background:#fff;}
+  #vignette{position:fixed;inset:0;z-index:13;pointer-events:none;opacity:0;
+    background:radial-gradient(ellipse at center,rgba(0,0,0,0) 32%,rgba(120,0,10,.85) 100%);}
+
+  /* --- K.O. screen --- */
+  #ko{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    z-index:22;pointer-events:none;opacity:0;color:#fff;transition:opacity .3s;}
+  #ko.on{opacity:1;}
+  #ko .koText{font-size:clamp(96px,26vw,190px);font-weight:900;letter-spacing:10px;color:#fff;
+    text-shadow:0 0 40px #ffb03b,0 0 90px #e0522a,0 10px 30px #000;
+    transform:scale(3);opacity:0;}
+  #ko.on .koText{animation:koSlam .8s cubic-bezier(.1,.9,.2,1) forwards;}
+  @keyframes koSlam{
+    0%  {transform:scale(3) rotate(-8deg);opacity:0;}
+    30% {transform:scale(1) rotate(0deg);opacity:1;}
+    36% {transform:scale(1.06);}
+    100%{transform:scale(1);opacity:1;}
+  }
+  #ko .finalLabel{font-size:22px;letter-spacing:5px;opacity:0;margin-top:6px;text-shadow:0 2px 8px #000;}
+  #ko .finalScore{font-size:clamp(52px,14vw,82px);font-weight:800;opacity:0;text-shadow:0 4px 20px #000;}
+  #ko.on .finalLabel{animation:fadeUp .5s .75s forwards;}
+  #ko.on .finalScore{animation:fadeUp .5s .9s forwards;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+</style>
+</head>
+<body>
+<div id="ui"><div id="score">0</div><div id="msg"></div></div>
+<div id="lean"><div id="leanFill"></div></div>
+<div id="vignette"></div>
+<div id="flash"></div>
+<div id="banner"><div class="b"></div></div>
+<div id="ko">
+  <div class="koText">K.O.</div>
+  <div class="finalLabel">FINAL SCORE</div>
+  <div class="finalScore">0</div>
+</div>
+<div id="title">
+  <h1>LANTERN DROP</h1>
+  <p>Stack the paper lanterns. Do not topple the pile.</p>
+  <p class="kb">← → / A D : steer &nbsp;&nbsp; Space : drop</p>
+  <p class="tc">Swipe to steer &nbsp;&nbsp; Tap to drop</p>
+  <button class="btn" id="startBtn">START</button>
+</div>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+// ---------- renderer / scene ----------
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.shadowMap.enabled = true;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const SKY = new THREE.Color(0x0e0e1c);
+scene.background = SKY.clone();
+scene.fog = new THREE.Fog(0x0e0e1c, 26, 78);
+
+const camera = new THREE.PerspectiveCamera(58, innerWidth/innerHeight, .1, 200);
+
+// Portrait and landscape both have to work. A phone held upright is far
+// narrower than 16:9, and with a fixed FOV the tower and the swinging
+// carrier fall outside the frame — so widen the vertical FOV as the
+// screen gets taller.
+const BASE_FOV = 58;
+function fitCamera(){
+  const aspect = innerWidth / innerHeight;
+  camera.aspect = aspect;
+  if(typeof SHOWCASE !== 'undefined' && SHOWCASE){
+    camera.fov = aspect < 1 ? 62 : 46;
+  } else {
+    // keep the horizontal field roughly constant across aspect ratios
+    const ref = 16/9;
+    camera.fov = aspect >= ref ? BASE_FOV
+      : Math.min(96, THREE.MathUtils.radToDeg(
+          2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(BASE_FOV)/2) * (ref/aspect))));
+  }
+  camera.__base = camera.fov;    // GALE / FEVER return to this
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+}
+addEventListener('resize', fitCamera);
+addEventListener('orientationchange', ()=>setTimeout(fitCamera, 120));
+
+// ---------- lights ----------
+const hemi = new THREE.HemisphereLight(0x8899ff, 0x2a1a10, 1.3);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xffe0b0, 2.0);
+sun.position.set(7, 16, 8); sun.castShadow = true;
+sun.shadow.camera.left=-14; sun.shadow.camera.right=14;
+sun.shadow.camera.top=22; sun.shadow.camera.bottom=-6;
+scene.add(sun);
+
+// ---------- stage ----------
+const BASE_W = 2.6;                     // width of the stone base the pile sits on
+const ground = new THREE.Mesh(new THREE.CylinderGeometry(9, 9, .6, 48),
+  new THREE.MeshStandardMaterial({color:0x2a2c40, roughness:.9}));
+ground.position.y = -.3; ground.receiveShadow = true;
+scene.add(ground);
+// the plinth: the first lantern lands on this
+const plinth = new THREE.Mesh(new THREE.BoxGeometry(BASE_W, .5, BASE_W),
+  new THREE.MeshStandardMaterial({color:0x4a3f52, roughness:.8}));
+plinth.position.y = .25; plinth.castShadow = plinth.receiveShadow = true;
+scene.add(plinth);
+// a warm ring painted on the plinth marks dead centre
+const centreRing = new THREE.Mesh(new THREE.RingGeometry(.36, .5, 32),
+  new THREE.MeshBasicMaterial({color:0xffb03b, transparent:true, opacity:.5, side:THREE.DoubleSide}));
+centreRing.rotation.x = -Math.PI/2; centreRing.position.y = .51;
+scene.add(centreRing);
+
+// distant torii posts for parallax / depth
+const posts = [];
+const postMat = new THREE.MeshStandardMaterial({color:0x7c2230, roughness:.7});
+for(let i=0;i<14;i++){
+  const ang = (i/14)*Math.PI*2;
+  const p = new THREE.Mesh(new THREE.BoxGeometry(.5, 9, .5), postMat);
+  p.position.set(Math.cos(ang)*15, 4.5, Math.sin(ang)*15 - 3);
+  scene.add(p); posts.push(p);
+}
+// moon
+const moon = new THREE.Mesh(new THREE.CircleGeometry(4.2, 40),
+  new THREE.MeshBasicMaterial({color:0xfff3d0}));
+moon.position.set(-11, 17, -46); scene.add(moon);
+
+// drifting embers — always on, they sell the night air
+const embers = [];
+const emberMat = new THREE.MeshBasicMaterial({color:0xffca77, transparent:true, opacity:.55});
+for(let i=0;i<70;i++){
+  const m = new THREE.Mesh(new THREE.SphereGeometry(.045, 6, 5), emberMat);
+  m.position.set((Math.random()-.5)*22, Math.random()*22, (Math.random()-.5)*16 - 2);
+  m.userData.rise = .5 + Math.random()*.9;
+  scene.add(m); embers.push(m);
+}
+
+// rain drops — only visible during the STORM event
+const drops = [];
+const dropMat = new THREE.MeshBasicMaterial({color:0xaad4ff, transparent:true, opacity:0});
+for(let i=0;i<160;i++){
+  const m = new THREE.Mesh(new THREE.BoxGeometry(.03,.7,.03), dropMat);
+  m.position.set((Math.random()-.5)*20, Math.random()*26, (Math.random()-.5)*14 - 2);
+  scene.add(m); drops.push(m);
+}
+
+// ---------- lantern (primitive build, swappable with a Blender glb) ----------
+const PAPER = [0xff6b4a, 0xffb03b, 0xff4f7a, 0xffe27a, 0xff8a3d];
+const capMat  = new THREE.MeshStandardMaterial({color:0x2b2130, roughness:.75});
+const ribMat  = new THREE.MeshStandardMaterial({color:0x3a2c22, roughness:.8});
+const tailMat = new THREE.MeshStandardMaterial({color:0xd8443a, roughness:.7});
+
+// A lantern is a squashed sphere of glowing paper between two dark caps,
+// with three thin ribs and a tassel. `hue` picks the paper colour.
+function buildLantern(hue){
+  const g = new THREE.Group();
+  const paper = new THREE.MeshStandardMaterial({
+    color:hue, roughness:.55, emissive:new THREE.Color(hue), emissiveIntensity:.55});
+  const body = new THREE.Mesh(new THREE.SphereGeometry(.62, 24, 18), paper);
+  body.scale.set(1, .8, 1); body.position.y = .5; g.add(body);
+  for(const y of [.06, .94]){          // top and bottom caps
+    const cap = new THREE.Mesh(new THREE.CylinderGeometry(.26, .26, .12, 18), capMat);
+    cap.position.y = y; g.add(cap);
+  }
+  for(let i=0;i<3;i++){                 // vertical ribs around the paper
+    const rib = new THREE.Mesh(new THREE.TorusGeometry(.6, .022, 6, 24), ribMat);
+    rib.rotation.y = i*Math.PI/3; rib.rotation.x = Math.PI/2;
+    rib.position.y = .5; rib.scale.y = .82; g.add(rib);
+  }
+  const tail = new THREE.Mesh(new THREE.ConeGeometry(.09, .34, 10), tailMat);
+  tail.position.y = -.13; tail.rotation.x = Math.PI; g.add(tail);
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  g.userData.paper = paper;
+  return g;
+}
+
+const LANTERN_H = 1.0;        // stacking pitch: one lantern per unit of height
+const LANTERN_R = 0.62;
+
+// ---------- crane: the carrier that swings the next lantern overhead ----------
+const crane = new THREE.Group();
+const craneBeam = new THREE.Mesh(new THREE.BoxGeometry(9.5, .22, .3),
+  new THREE.MeshStandardMaterial({color:0x555a70, roughness:.6}));
+crane.add(craneBeam);
+const wire = new THREE.Mesh(new THREE.CylinderGeometry(.02, .02, 1, 6),
+  new THREE.MeshBasicMaterial({color:0x8a8fa8}));
+crane.add(wire);
+scene.add(crane);
+let carrier = null;           // the lantern currently hanging from the crane
+
+// ---------- gust arrow: shows which way the wind is pushing ----------
+const gustArrow = (()=>{
+  const g = new THREE.Group();
+  const mat = new THREE.MeshBasicMaterial({color:0x7fe3ff, transparent:true, opacity:0});
+  const shaft = new THREE.Mesh(new THREE.BoxGeometry(1.6,.1,.1), mat);
+  const head  = new THREE.Mesh(new THREE.ConeGeometry(.24,.5,4), mat);
+  head.position.x = 1.05; head.rotation.z = -Math.PI/2;
+  g.add(shaft, head); g.visible = false;
+  scene.add(g);
+  return {group:g, mat};
+})();
+
+// ---------- game state ----------
+let running=false, dead=false, t=0, score=0;
+const stack = [];             // placed lanterns, bottom first: {mesh, x, y}
+let stackTop = 0.5;           // y of the surface the next lantern lands on
+let lean = 0;                 // signed centre-of-mass offset (metres) — topples past LEAN_MAX
+const LEAN_MAX = 1.35;
+let falling = null;           // the lantern in mid-air after a drop
+let swingPhase = 0, swingSpeed = 1.1, swingWidth = 3.4;
+let dropCooldown = 0;         // small delay so a held key cannot spam drops
+let timeScale = 1;            // slow-motion multiplier
+let deadAt = 0;               // when the run ended (touch retry gate)
+let shake = 0;                // camera shake amount
+let camY = 4.0, camYTarget = 4.0;     // camera rides up with the tower
+let camDist = 11, camDistTarget = 11; // death zoom pulls the camera in
+let wind = 0, windTime = 0;   // GALE: sideways push on the falling lantern
+let fever = 0;                // FEVER: the crane swings much faster
+let storm = 0;                // STORM: rain, dark sky, wobbling tower
+let fog = 0;                  // LANTERN FOG: the pile dims and hides
+let quake = 0;                // NIGHT QUAKE: the ground shoves the pile
+const scoreEl = document.getElementById('score');
+const msgEl = document.getElementById('msg');
+const titleEl = document.getElementById('title');
+const leanEl = document.getElementById('lean');
+const leanFillEl = document.getElementById('leanFill');
+const bannerEl = document.getElementById('banner');
+const bannerText = bannerEl.querySelector('.b');
+const flashEl = document.getElementById('flash');
+const vignetteEl = document.getElementById('vignette');
+const koEl = document.getElementById('ko');
+const koScoreEl = koEl.querySelector('.finalScore');
+
+// ---------- presentation helpers ----------
+function banner(text, color){
+  bannerText.textContent = text;
+  bannerText.style.color = color;
+  bannerEl.classList.remove('go');
+  void bannerEl.offsetWidth;      // restart the CSS animation
+  bannerEl.style.opacity = 1;
+  bannerEl.classList.add('go');
+}
+function flash(color, strength, ms){
+  flashEl.style.background = color;
+  flashEl.style.transition = 'none';
+  flashEl.style.opacity = strength;
+  requestAnimationFrame(()=>{
+    flashEl.style.transition = `opacity ${ms}ms ease-out`;
+    flashEl.style.opacity = 0;
+  });
+}
+
+// ---------- events ----------
+// Each one changes a different part of the loop: the wind pushes the
+// lantern in flight, the fever speeds the crane, the storm shoves the
+// whole tower, the fog blinds you, the quake spikes the lean meter.
+const EVENTS = {
+  gale(){
+    banner('NIGHT GALE', '#7fe3ff');
+    wind = (Math.random()<.5 ? -1 : 1) * (2.2 + Math.random()*1.4);
+    windTime = 7;
+    gustArrow.group.visible = true;
+    flash('#7fe3ff', .22, 400);
+    return 7;
+  },
+  fever(){
+    banner('LANTERN FEVER', '#ff4f7a');
+    fever = 6.5;
+    flash('#ff4f7a', .3, 420);
+    shake = Math.max(shake, .18);
+    return 6.5;
+  },
+  storm(){
+    banner('PAPER STORM', '#aad4ff');
+    storm = 8;
+    return 8;
+  },
+  fog(){
+    banner('EMBER FOG', '#9b6bff');
+    fog = 5.5;
+    return 5.5;
+  },
+  quake(){
+    banner('NIGHT QUAKE', '#ffd23b');
+    quake = 3.2;
+    shake = Math.max(shake, .5);
+    // a real shove: the pile lurches toward the side it already leans
+    lean += (lean >= 0 ? 1 : -1) * (0.22 + Math.random()*0.16);
+    flash('#ffd23b', .35, 500);
+    return 4.5;
+  },
+};
+const EVENT_NAMES = Object.keys(EVENTS);
+let nextEventAt = 9;          // seconds until the first event
+let eventQueue = [];          // event names not yet used in this run
+
+// recording/debug hook: fire a named event on cue (used by the capture script)
+// returns false if the run is already over, so a capture script can wait
+// for the next run instead of firing an event onto the K.O. screen
+window.__ev = name => {
+  if(!running || dead || !EVENTS[name]) return false;
+  const busy = EVENTS[name](); nextEventAt = t + busy + 5; return true;
+};
+window.__alive = () => running && !dead;
+window.__kill = () => { if(running && !dead){ topple('manual'); } };
+window.__lean = () => +lean.toFixed(3);
+window.__height = () => stack.length;
+window.__fov = () => +camera.fov.toFixed(1);
+window.__probe = () => ({t:+t.toFixed(2), lean:+lean.toFixed(3), h:stack.length,
+  next:+nextEventAt.toFixed(2), wind:+wind.toFixed(2)});
+
+function refillEventQueue(){
+  eventQueue = EVENT_NAMES.slice();
+  for(let i=eventQueue.length-1;i>0;i--){        // shuffle so the order varies per run
+    const j = Math.floor(Math.random()*(i+1));
+    [eventQueue[i],eventQueue[j]]=[eventQueue[j],eventQueue[i]];
+  }
+}
+
+function triggerEvent(){
+  if(!eventQueue.length) refillEventQueue();
+  const name = eventQueue.pop();
+  const busy = EVENTS[name]();
+  nextEventAt = t + busy + 5 + Math.random()*4;  // breathing room between events
+}
+
+// ---------- stacking ----------
+// Hang a fresh lantern from the crane.
+function spawnCarrier(){
+  carrier = buildLantern(PAPER[stack.length % PAPER.length]);
+  carrier.position.set(0, stackTop + 4.2, 0);
+  scene.add(carrier);
+}
+
+// Release it: from here gravity and the wind own it until it lands.
+function dropLantern(){
+  if(!running || dead || !carrier || falling || dropCooldown > 0) return;
+  falling = {mesh:carrier, vy:0, vx:0};
+  carrier = null;
+  dropCooldown = .25;
+}
+
+// Land the falling lantern on the pile. The further from the pile's own
+// centre it sits, the more the tower leans — a perfect drop nudges the
+// lean back toward zero, which is the only way to recover.
+function placeLantern(m){
+  const supportX = stack.length ? stack[stack.length-1].x : 0;
+  const off = m.position.x - supportX;
+
+  // Miss the stack entirely and the lantern tumbles off — that ends the run.
+  if(Math.abs(off) > LANTERN_R*1.55){
+    falling = {mesh:m, vy:-6, vx:Math.sign(off)*3.2, doomed:true};
+    topple('miss');
+    return;
+  }
+
+  m.position.set(m.position.x, stackTop, 0);
+  m.rotation.z = THREE.MathUtils.clamp(off*.25, -.3, .3);   // sits slightly askew
+  stack.push({mesh:m, x:m.position.x, y:stackTop});
+  stackTop += LANTERN_H;
+
+  // lean bookkeeping: overhang adds, a centred landing bleeds it off
+  lean += off * .62;
+  const accuracy = 1 - Math.min(1, Math.abs(off)/(LANTERN_R*1.55));
+  if(accuracy > .82){
+    lean *= .74;                       // near-perfect: the tower straightens
+    flash('#ffe27a', .18, 300);
+    score += 60;
+  }
+  score += 40 + Math.round(accuracy*60);
+
+  camYTarget = stackTop + 3.0;
+  shake = Math.max(shake, .06 + Math.abs(off)*.25);
+  swingSpeed = 1.1 + stack.length*.045;      // the crane gets harder over time
+  swingWidth = Math.max(2.2, 3.4 - stack.length*.03);
+
+  if(Math.abs(lean) > LEAN_MAX){ topple('lean'); return; }
+  spawnCarrier();
+}
+
+// ---------- topple / game over ----------
+function topple(cause){
+  if(dead) return;
+  dead = true;
+  gameOver(cause);
+}
+
+// ---------- reset ----------
+function reset(){
+  for(const s of stack) scene.remove(s.mesh);
+  stack.length = 0;
+  if(carrier){ scene.remove(carrier); carrier = null; }
+  if(falling){ scene.remove(falling.mesh); falling = null; }
+  stackTop = 0.5; lean = 0;
+  t=0; score=0; dead=false;
+  swingPhase = 0; swingSpeed = 1.1; swingWidth = 3.4; dropCooldown = 0;
+  timeScale=1; shake=0;
+  camY = 4.0; camYTarget = 4.0; camDist = 11; camDistTarget = 11;
+  wind=0; windTime=0; fever=0; storm=0; fog=0; quake=0;
+  gustArrow.group.visible = false; gustArrow.mat.opacity = 0;
+  dropMat.opacity = 0;
+  hemi.intensity=1.3; sun.intensity=2.0;
+  scene.background.copy(SKY); scene.fog.color.copy(SKY);
+  scene.fog.near = 26; scene.fog.far = 78;
+  nextEventAt = 9;
+  refillEventQueue();
+  msgEl.textContent='';
+  leanEl.style.opacity = 1;
+  koEl.classList.remove('on');
+  vignetteEl.style.transition='opacity .3s'; vignetteEl.style.opacity=0;
+  spawnCarrier();
+}
+
+const startBtn = document.getElementById('startBtn');
+
+// --- one place for every action, so touch and keyboard stay in step ---
+function startRun(){ titleEl.classList.add('hidden'); reset(); running=true; }
+// Steering nudges the crane's swing phase, which slides the carrier
+// sideways without breaking the pendulum motion.
+function steerLeft(){  swingPhase -= .22; }
+function steerRight(){ swingPhase += .22; }
+
+startBtn.addEventListener('click', startRun);
+// a touch on the button must start too — click alone is unreliable on touch
+startBtn.addEventListener('touchend', e=>{ e.preventDefault(); startRun(); },
+                          {passive:false});
+
+addEventListener('keydown', e=>{
+  if(!running){
+    if(e.code==='Space'||e.code==='Enter') startRun();
+    return;
+  }
+  if(e.code==='ArrowLeft'||e.code==='KeyA')  steerLeft();
+  if(e.code==='ArrowRight'||e.code==='KeyD') steerRight();
+  if(e.code==='Space'||e.code==='ArrowDown'||e.code==='KeyS') dropLantern();
+});
+
+// --- touch: swipe to steer, tap to drop ---
+// Most viewers arrive from a phone, so the game has to be playable
+// without a keyboard. Both paths call the same action functions above.
+(function(){
+  let sx=0, sy=0, st=0, moved=false;
+  const SWIPE = 26;          // px before a drag counts as a swipe
+  const canvas = renderer.domElement;
+
+  canvas.addEventListener('touchstart', e=>{
+    const p = e.changedTouches[0];
+    sx=p.clientX; sy=p.clientY; st=Date.now(); moved=false;
+  }, {passive:true});
+
+  canvas.addEventListener('touchmove', e=>{
+    if(!running || dead) return;
+    const p = e.changedTouches[0];
+    const dx = p.clientX-sx, dy = p.clientY-sy;
+    if(Math.abs(dx) > SWIPE && Math.abs(dx) > Math.abs(dy)){
+      dx < 0 ? steerLeft() : steerRight();
+      sx = p.clientX;             // re-anchor so a long drag keeps steering
+      moved = true;
+    } else if(dy > SWIPE && Math.abs(dy) > Math.abs(dx)){
+      dropLantern();              // swipe down also drops
+      moved = true;
+    }
+  }, {passive:true});
+
+  canvas.addEventListener('touchend', e=>{
+    if(dead){
+      // give the K.O. animation time to read, then a tap retries
+      if(!AUTO && Date.now()-deadAt > 1500) startRun();
+      return;
+    }
+    if(!running){ startRun(); return; }
+    // a short touch that never became a swipe is a tap → drop
+    if(!moved && Date.now()-st < 350) dropLantern();
+  }, {passive:true});
+
+  // The title overlay sits above the canvas, so a tap anywhere on it never
+  // reaches the canvas handler. Start from the overlay itself.
+  titleEl.addEventListener('touchend', e=>{
+    if(!running){ e.preventDefault(); startRun(); }
+  }, {passive:false});
+
+  // stop the browser treating game taps as scroll / double-tap zoom
+  canvas.addEventListener('touchmove', e=>e.preventDefault(), {passive:false});
+})();
+
+// autoplay mode for recording: ?auto=1
+const QS = new URLSearchParams(location.search);
+const AUTO = QS.get('auto')==='1';
+// recording holds the K.O. longer than play does: ?hold=9000
+const RETRY_MS = Math.max(1200, parseInt(QS.get('hold')||'4200', 10));
+// ?noev=1 records a calm run with no events, for narration beds
+const NOEV = QS.get('noev')==='1';
+if(AUTO){ setTimeout(()=>{ titleEl.classList.add('hidden'); reset(); running=true; }, 1200); }
+
+// The autopilot aims for the top of the pile, but has to release early:
+// the lantern takes time to fall, and the crane keeps moving while it does.
+function autoPilot(){
+  if(!carrier || falling || dropCooldown > 0) return;
+  const targetX = stack.length ? stack[stack.length-1].x : 0;
+  // If the tower already leans, aim slightly to the other side so the
+  // landing bleeds lean off instead of adding to it.
+  const bias = THREE.MathUtils.clamp(-lean*.30, -.34, .34);
+  const aim = THREE.MathUtils.clamp(targetX + bias, -swingWidth, swingWidth);
+
+  // Predict where the lantern lands. Once released it keeps no sideways
+  // speed from the swing — its x is frozen at the release point — so the
+  // only drift comes from the gale accelerating it during the fall.
+  const fallH = Math.max(.6, carrier.position.y - stackTop);
+  const flight = Math.sqrt(2*fallH/GRAVITY);
+  const drift = wind * flight * flight * .5;              // gale pushes it sideways
+  const landX = carrier.position.x + drift;
+
+  // Release on the swing pass that lands closest to the aim point. The
+  // carrier moves ~swingSpeed*swingWidth per second, so the window has to
+  // be at least one frame wide or a fast crane steps straight over it.
+  const windowX = Math.max(.09, Math.abs(Math.cos(swingPhase))*swingWidth*swingSpeed*(fever>0?2.3:1)/45);
+  if(Math.abs(landX - aim) < windowX) dropLantern();
+}
+
+// ---------- showcase mode (?showcase=lantern|crane|gale|storm|quake|tower) ----------
+// Puts one object on a turntable against an empty stage so the video can
+// talk about it while the real thing is on screen. Uses the game's own
+// builders, so what the narration describes is exactly what ships.
+const SHOWCASE = QS.get('showcase');
+const showcase = {group:null, spin:.55, label:''};
+
+function buildShowcase(name){
+  const g = new THREE.Group();
+  let label = '', spin = .55;
+  if(name==='lantern'){
+    const m = buildLantern(0xff6b4a);
+    m.scale.set(1.8,1.8,1.8); g.add(m); label = 'PAPER LANTERN'; spin = .6;
+  } else if(name==='tower'){
+    // a short sample pile, each one nudged over like a real stack
+    for(let i=0;i<5;i++){
+      const m = buildLantern(PAPER[i % PAPER.length]);
+      m.position.set((i-2)*.16, i*LANTERN_H, 0);
+      m.rotation.z = (i-2)*.05;
+      g.add(m);
+    }
+    label = 'THE PILE'; spin = .45;
+  } else if(name==='crane'){
+    const beam = new THREE.Mesh(new THREE.BoxGeometry(5.2, .22, .3),
+      new THREE.MeshStandardMaterial({color:0x555a70, roughness:.6}));
+    beam.position.y = 1.6; g.add(beam);
+    const w = new THREE.Mesh(new THREE.CylinderGeometry(.03,.03,1.4,8),
+      new THREE.MeshBasicMaterial({color:0x8a8fa8}));
+    w.position.set(1.1, .9, 0); g.add(w);
+    const hung = buildLantern(0xffb03b);
+    hung.position.set(1.1, -.85, 0); g.add(hung);
+    label = 'THE CRANE'; spin = .5;
+  } else if(name==='gale'){
+    // the wind arrow, tripled into a gust
+    const mat = new THREE.MeshStandardMaterial({color:0x7fe3ff, emissive:0x2b6a80});
+    for(let i=0;i<3;i++){
+      const shaft = new THREE.Mesh(new THREE.BoxGeometry(2.4,.16,.16), mat);
+      const head  = new THREE.Mesh(new THREE.ConeGeometry(.36,.7,4), mat);
+      head.position.x = 1.55; head.rotation.z = -Math.PI/2;
+      const a = new THREE.Group(); a.add(shaft, head);
+      a.position.set((i%2)*.5 - .25, (i-1)*.85, 0);
+      g.add(a);
+    }
+    label = 'NIGHT GALE'; spin = .5;
+  } else if(name==='storm'){
+    // a cluster of rain streaks around one lantern
+    const m = buildLantern(0xff8a3d);
+    m.scale.set(1.3,1.3,1.3); g.add(m);
+    const rm = new THREE.MeshStandardMaterial({color:0xaad4ff, emissive:0x2a4a70});
+    for(let i=0;i<26;i++){
+      const d = new THREE.Mesh(new THREE.BoxGeometry(.05,.9,.05), rm);
+      const ang = Math.random()*Math.PI*2, rad = 1.1 + Math.random()*.9;
+      d.position.set(Math.cos(ang)*rad, Math.random()*2.4 - .4, Math.sin(ang)*rad);
+      d.rotation.z = .28; g.add(d);
+    }
+    label = 'PAPER STORM'; spin = .7;
+  } else if(name==='quake'){
+    // the plinth cracking under the pile
+    const p = new THREE.Mesh(new THREE.BoxGeometry(BASE_W*1.6, .6, BASE_W*1.6),
+      new THREE.MeshStandardMaterial({color:0x4a3f52, roughness:.8}));
+    g.add(p);
+    const crackMat = new THREE.MeshStandardMaterial({color:0xffd23b, emissive:0x7a5a10});
+    for(let i=0;i<7;i++){
+      const c = new THREE.Mesh(new THREE.BoxGeometry(.08, .05, .7 + Math.random()*.9), crackMat);
+      c.position.set((Math.random()-.5)*3, .31, (Math.random()-.5)*2.6);
+      c.rotation.y = Math.random()*Math.PI; g.add(c);
+    }
+    const m = buildLantern(0xff4f7a);
+    m.position.y = .3; m.rotation.z = .34; g.add(m);
+    label = 'NIGHT QUAKE'; spin = .5;
+  } else if(name==='fever'){
+    // the crane's swing arc, drawn as a trail of ghost lanterns
+    const lit = buildLantern(0xff4f7a);
+    lit.position.y = -1.2; g.add(lit);
+    for(let i=1;i<=4;i++){
+      const ghost = buildLantern(0xff4f7a);
+      ghost.scale.setScalar(1 - i*.06);
+      ghost.position.set(-i*.62, -1.2 + i*.1, -i*.12);
+      ghost.rotation.z = i*.13;
+      // fading copies read as motion blur on a still turntable
+      ghost.traverse(o=>{ if(o.isMesh){
+        o.material = o.material.clone();
+        o.material.transparent = true;
+        o.material.opacity = .55 - i*.11;
+      }});
+      g.add(ghost);
+    }
+    label = 'LANTERN FEVER'; spin = .55;
+  } else if(name==='fog'){
+    // a lantern smothered by translucent shells — the blind event
+    const m = buildLantern(0x9b6bff);
+    m.scale.set(1.4,1.4,1.4); g.add(m);
+    for(let i=0;i<4;i++){
+      const s = new THREE.Mesh(new THREE.SphereGeometry(1.1 + i*.32, 18, 14),
+        new THREE.MeshBasicMaterial({color:0x9b6bff, transparent:true,
+          opacity:.09, side:THREE.BackSide}));
+      s.position.y = .7; g.add(s);
+    }
+    label = 'EMBER FOG'; spin = .4;
+  }
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  scene.add(g);
+
+  // Centre the subject on the origin and pull the camera back to fit it,
+  // so every object is framed the same way regardless of its size.
+  const box = new THREE.Box3().setFromObject(g);
+  const size = box.getSize(new THREE.Vector3());
+  const mid = box.getCenter(new THREE.Vector3());
+  g.position.sub(mid);                       // sit centred at the origin
+  const reach = Math.max(size.x, size.y) * 0.5;
+  const fov = THREE.MathUtils.degToRad(camera.fov);
+  const dist = (reach / Math.tan(fov/2)) * 1.75 + 1.0;   // 1.75 = breathing room
+  camera.position.set(0, size.y*0.10, dist);
+
+  // Slide the subject sideways so a text panel can own the other half.
+  // The offset lives on a parent so the turntable still spins in place —
+  // rotating an offset group would make it orbit instead.
+  const bias = parseFloat(QS.get('sx') || '0');
+  const pivot = new THREE.Group();
+  pivot.position.x = -bias * reach * 1.15;
+  scene.add(pivot);
+  pivot.add(g);
+  showcase.group = g; showcase.pivot = pivot;
+  showcase.spin = spin; showcase.label = label;
+}
+
+fitCamera();          // SHOWCASE is known by here
+if(SHOWCASE){
+  titleEl.classList.add('hidden');
+  buildShowcase(SHOWCASE);
+  scoreEl.textContent = '';
+  msgEl.textContent = QS.get('nolabel')==='1' ? '' : showcase.label;
+  msgEl.style.fontSize = '30px';
+  msgEl.style.letterSpacing = '6px';
+  // a plain dark stage: nothing on screen but the subject
+  leanEl.style.display = 'none';
+  ground.visible = false; plinth.visible = false; centreRing.visible = false;
+  moon.visible = false; crane.visible = false;
+  if(carrier){ scene.remove(carrier); carrier = null; }
+  for(const p of posts) p.visible = false;
+  for(const e of embers) e.visible = false;
+  for(const d of drops) d.visible = false;
+  scene.fog = null;
+  scene.background = new THREE.Color(0x0b0d16);
+  hemi.intensity = 3.0;
+  sun.intensity = 3.6; sun.position.set(2.5, 6, 6);
+  const key = new THREE.PointLight(0xfff0dd, 120, 26);
+  key.position.set(2.6, 3.2, 4.2); scene.add(key);
+  // a second light from the other side so the far face is not pure black
+  const fill = new THREE.PointLight(0x88aaff, 45, 26);
+  fill.position.set(-4.5, 2.4, 3.6); scene.add(fill);
+}
+// let the capture script drive the turntable and swap subjects
+// Declared for the recording and verification tooling: it reads these
+// rather than guessing per-game names.
+window.__subjects = ['lantern','crane','tower','fog','gale','quake','storm','fever'];
+window.__events   = EVENT_NAMES;
+
+window.__showcase = name => {
+  if(showcase.pivot) scene.remove(showcase.pivot);   // pivot owns the group
+  buildShowcase(name);
+  msgEl.textContent = showcase.label;
+};
+
+// ---------- loop ----------
+const GRAVITY = 19;
+const clock = new THREE.Clock();
+function tick(){
+  requestAnimationFrame(tick);
+  const raw = Math.min(clock.getDelta(), .05);
+  const dt = raw * timeScale;
+
+  if(SHOWCASE){
+    if(showcase.group) showcase.group.rotation.y += raw*showcase.spin;
+    camera.lookAt(0, 0, 0);        // subject is offset, camera stays on axis
+    renderer.render(scene, camera);
+    return;
+  }
+
+  // embers drift upward at all times, even on the title screen
+  for(const e of embers){
+    e.position.y += e.userData.rise*raw;
+    e.position.x += Math.sin(clock.elapsedTime*.7 + e.position.z)*raw*.3;
+    if(e.position.y > 24){ e.position.y = -1; e.position.x = (Math.random()-.5)*22; }
+  }
+
+  if(running && !dead){
+    t += dt;
+    score += dt*6;                        // a slow trickle just for staying alive
+    scoreEl.textContent = Math.floor(score);
+    if(dropCooldown > 0) dropCooldown -= dt;
+    if(AUTO) autoPilot();
+
+    // --- events ---
+    if(t > nextEventAt && !NOEV) triggerEvent();
+
+    // NIGHT GALE: a steady sideways push on anything in the air
+    if(windTime > 0){
+      windTime -= dt;
+      gustArrow.mat.opacity = Math.min(.75, gustArrow.mat.opacity + dt*2);
+      gustArrow.group.position.set(-Math.sign(wind)*3.2, stackTop + 2.2, 0);
+      gustArrow.group.scale.x = Math.sign(wind);
+      if(windTime <= 0){ wind = 0; }
+    } else if(gustArrow.mat.opacity > 0){
+      gustArrow.mat.opacity = Math.max(0, gustArrow.mat.opacity - dt*2);
+      if(gustArrow.mat.opacity <= 0) gustArrow.group.visible = false;
+    }
+
+    // LANTERN FEVER: the crane races, and the camera widens to sell the speed
+    if(fever > 0){
+      fever -= dt;
+      camera.fov += (camera.__base*1.10 - camera.fov)*Math.min(1, dt*4);
+      camera.updateProjectionMatrix();
+    } else if(camera.fov > camera.__base + 0.05){
+      camera.fov += (camera.__base - camera.fov)*Math.min(1, dt*3);
+      camera.updateProjectionMatrix();
+    }
+
+    // PAPER STORM: rain falls, the sky darkens, the whole pile sways
+    if(storm > 0){
+      storm -= dt;
+      dropMat.opacity = Math.min(.5, dropMat.opacity + dt*2);
+      for(const d of drops){
+        d.position.y -= 26*raw;
+        if(d.position.y < -1){
+          d.position.y = 22 + Math.random()*6;
+          d.position.x = (Math.random()-.5)*20;
+        }
+      }
+      const k = Math.min(1, storm);                 // fade the gloom back out
+      scene.background.copy(SKY).lerp(new THREE.Color(0x05060d), k*.8);
+      scene.fog.color.copy(scene.background);
+      hemi.intensity = 1.3 - .5*k; sun.intensity = 2.0 - .9*k;
+      // the sway pushes the lean around without ever being instantly fatal
+      lean += Math.sin(t*3.1)*dt*.34;
+      if(storm <= 0){
+        scene.background.copy(SKY); scene.fog.color.copy(SKY);
+        hemi.intensity = 1.3; sun.intensity = 2.0;
+      }
+    } else if(dropMat.opacity > 0){
+      dropMat.opacity = Math.max(0, dropMat.opacity - dt*1.2);
+    }
+
+    // EMBER FOG: the fog closes in until you can barely see the top of the pile
+    if(fog > 0){
+      fog -= dt;
+      const k = Math.min(1, fog/1.2) * Math.min(1, (5.5-fog)/.6);
+      scene.fog.near = 26 - 24*k;
+      scene.fog.far  = 78 - 66*k;
+      scene.fog.color.copy(SKY).lerp(new THREE.Color(0x3a2a5a), k);
+      if(fog <= 0){ scene.fog.near = 26; scene.fog.far = 78; scene.fog.color.copy(SKY); }
+    }
+
+    // NIGHT QUAKE: the ground keeps shoving while it lasts
+    if(quake > 0){
+      quake -= dt;
+      shake = Math.max(shake, .28*Math.min(1, quake));
+      lean += Math.sin(t*11)*dt*.5;
+      plinth.position.x = Math.sin(t*23)*.05;
+    } else if(plinth.position.x !== 0){
+      plinth.position.x = 0;
+    }
+
+    // --- crane swing: a pendulum the player nudges with steering ---
+    swingPhase += swingSpeed * (fever>0 ? 2.3 : 1) * dt;
+    const cx = Math.sin(swingPhase) * swingWidth;
+    crane.position.set(0, stackTop + 5.0, 0);
+    if(carrier){
+      carrier.position.x = cx;
+      carrier.position.y = stackTop + 3.9;
+      carrier.rotation.z = Math.cos(swingPhase)*.18;   // swings like it hangs
+      // wire runs from the beam down to the lantern's cap
+      const len = crane.position.y - (carrier.position.y + 1.0);
+      wire.position.set(cx, -len/2, 0);
+      wire.scale.y = Math.max(.01, len);
+      wire.visible = true;
+    } else {
+      wire.visible = false;
+    }
+
+    // --- the falling lantern ---
+    if(falling){
+      falling.vy -= GRAVITY*dt;
+      falling.vx += wind*dt;
+      falling.mesh.position.y += falling.vy*dt;
+      falling.mesh.position.x += falling.vx*dt;
+      falling.mesh.rotation.z += falling.vx*dt*.5;
+      if(!falling.doomed && falling.mesh.position.y <= stackTop){
+        const m = falling.mesh;
+        falling = null;
+        placeLantern(m);
+      } else if(falling.mesh.position.y < -6){
+        scene.remove(falling.mesh); falling = null;
+      }
+    }
+
+    // --- the pile itself leans over as the centre of mass drifts ---
+    const tilt = (lean/LEAN_MAX) * .17;               // radians at the base
+    for(let i=0;i<stack.length;i++){
+      const s = stack[i];
+      // each lantern rotates about the base, so the tower bends as one piece
+      const h = s.y - .5;
+      s.mesh.position.x = s.x + Math.sin(tilt)*h;
+      s.mesh.rotation.z = -tilt;
+    }
+    const leanPct = Math.min(1, Math.abs(lean)/LEAN_MAX);
+    leanFillEl.style.width = (leanPct*100).toFixed(1) + '%';
+    leanFillEl.style.background = leanPct > .75 ? '#ff3b4a'
+      : leanPct > .5 ? '#ffd23b' : '#ffb03b';
+    if(leanPct >= 1) topple('lean');
+
+    // moon and camera follow the tower up
+    moon.position.y = 17 + stackTop*.35;
+  }
+
+  // --- death sequence: slow-mo unwinds while the pile scatters ---
+  if(dead){
+    timeScale += (0 - timeScale)*Math.min(1, raw*1.1);   // ease down to a near-freeze
+    const dir = lean >= 0 ? 1 : -1;
+    for(let i=0;i<stack.length;i++){
+      const s = stack[i];
+      // higher lanterns fly further — the top of the pile whips over first
+      const w = .4 + (i/Math.max(1,stack.length))*2.2;
+      s.mesh.position.x += dir*w*raw*3.4;
+      s.mesh.position.y -= w*raw*2.2;
+      s.mesh.rotation.z -= dir*raw*(1.2 + w);
+      s.mesh.rotation.x += raw*w*.6;
+    }
+    if(falling){                             // the missed lantern keeps tumbling
+      falling.vy -= GRAVITY*raw;
+      falling.mesh.position.y += falling.vy*raw;
+      falling.mesh.position.x += falling.vx*raw;
+      falling.mesh.rotation.z += raw*3;
+    }
+    if(carrier) carrier.position.y -= raw*2;
+  }
+
+  // --- camera (runs even while dead, so the zoom and shake still play) ---
+  camY += (camYTarget - camY)*Math.min(1, raw*2.2);
+  camDist += (camDistTarget - camDist)*Math.min(1, raw*2.4);
+  camera.position.set(0, camY, camDist);
+  let lookY = camY - 1.4;
+  if(shake > 0){
+    shake = Math.max(0, shake - raw*.9);
+    camera.position.x += (Math.random()-.5)*shake;
+    camera.position.y += (Math.random()-.5)*shake;
+  }
+  camera.lookAt(0, lookY, 0);
+
+  renderer.render(scene, camera);
+}
+
+function gameOver(cause){
+  running=false; deadAt=Date.now();
+  // hit feedback: red flash, red vignette, hard shake, camera punches in
+  flash('#ff2b3a', .8, 500);
+  vignetteEl.style.transition='opacity .5s'; vignetteEl.style.opacity=1;
+  shake = .9;
+  camDistTarget = 6.0;                       // push in on the collapse
+  camYTarget = stackTop*.5 + 2.0;            // and drop to watch it fall
+  const finalScore = Math.floor(score);
+  koScoreEl.textContent = finalScore;
+  msgEl.textContent = '';
+  leanEl.style.opacity = 0;
+  setTimeout(()=>{ koEl.classList.add('on'); }, 620);   // K.O. lands after the slow-mo
+  if(AUTO){ setTimeout(()=>{ reset(); running=true; }, RETRY_MS); }
+  else setTimeout(()=>{
+    msgEl.textContent = matchMedia('(pointer:coarse)').matches
+      ? 'Tap to retry' : 'Space to retry';
+  }, 1800);
+}
+tick();
+</script>
+</body>
+</html>

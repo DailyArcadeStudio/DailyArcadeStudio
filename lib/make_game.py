@@ -55,6 +55,9 @@ implementation for this channel. In particular you MUST reproduce:
   hides the caption. Subjects must cover the player and every hazard.
 - window.__ev(name), window.__kill(), window.__alive(), window.__showcase(name).
   __ev must return false when the run is already over.
+- `window.__subjects` = an array of every valid `?showcase=` name, and
+  `window.__events` = an array of every valid `__ev()` name. The recording
+  and verification tooling reads these; it cannot guess the names.
 - Named events that fire on a shuffled queue, each slamming a banner
   into frame, plus a game-over sequence with slow motion, a camera push
   in, a red flash and a large K.O. with the final score.
@@ -109,12 +112,18 @@ def verify(slug, port=8901):
           hasKill: typeof window.__kill === 'function',
           hasShowcase: typeof window.__showcase === 'function',
           score: (document.querySelector('#score')||{}).textContent || '',
+          subjects: Array.isArray(window.__subjects) ? window.__subjects : null,
+          events: Array.isArray(window.__events) ? window.__events : null,
         })""")
         if not state["alive"]:
             problems.append("autopilot did not start")
         for hook in ("hasEv", "hasKill", "hasShowcase"):
             if not state[hook]:
                 problems.append(f"missing hook {hook}")
+        if not state["subjects"]:
+            problems.append("window.__subjects not declared")
+        if not state["events"]:
+            problems.append("window.__events not declared")
         try:
             if int("".join(c for c in state["score"] if c.isdigit()) or 0) <= 0:
                 problems.append("score never increased")
@@ -136,12 +145,15 @@ def verify(slug, port=8901):
             problems.append("not playable in portrait on touch")
         mob.close()
 
-        # the showcase stage must render something, not a blank frame
-        pg.goto(base + "?showcase=player&sx=1&nolabel=1")
-        pg.wait_for_timeout(2500)
-        shot = pg.screenshot()
-        if len(shot) < 12000:                 # a blank dark frame compresses tiny
-            problems.append("showcase looks empty")
+        # Every declared subject must actually render. Subject names differ
+        # per game (ninja / lantern / ...), so read them from the game
+        # rather than assuming one.
+        for subj in (state["subjects"] or [])[:6]:
+            pg.goto(f"{base}?showcase={subj}&sx=1&nolabel=1")
+            pg.wait_for_timeout(2200)
+            shot = pg.screenshot()
+            if len(shot) < 12000:             # a blank dark frame compresses tiny
+                problems.append(f"showcase '{subj}' looks empty")
 
         if errs:
             problems.append(f"js errors: {errs[:2]}")
