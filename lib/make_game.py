@@ -81,6 +81,9 @@ implementation for this channel. In particular you MUST reproduce:
   {ref} verbatim.
 - The `?auto=1` start path MUST go through `startRun()`, not a separate
   inline copy — otherwise sound and recording never start.
+- Keep the game's sounds distinct and readable on their own: they are
+  mixed under narration in both the main video and the short, so a
+  wash of noise is useless. Short, pitched, recognisable events.
 
 Keep it readable and comment the parts that are not obvious. Match the
 reference's visual language: dark background, a strong accent colour,

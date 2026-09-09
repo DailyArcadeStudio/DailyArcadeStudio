@@ -67,6 +67,41 @@ def marks_map(marks_path):
     return {name: t for name, t in json.loads(Path(marks_path).read_text())["marks"]}
 
 
+GAME_VOL = 0.34     # ナレーションの下に敷く音量（本編はナレが主役）
+
+
+def has_audio(path):
+    r = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "a",
+                        "-show_entries", "stream=codec_type", "-of", "csv=p=0",
+                        str(path)], capture_output=True, text=True)
+    return "audio" in r.stdout
+
+
+def game_audio_track(cuts, total, work, dst):
+    """プレイカットのゲーム音だけを並べた1本のトラックを作る。
+
+    本編は全セグメントを無音で作ってから最後にナレーションを乗せる構造。
+    プレイ部分にだけゲーム音を入れたいので、各カットの音声を
+    タイムライン上の位置に遅延させて重ねた別トラックを作り、
+    最後にナレーションとミックスする。
+    """
+    if not cuts:
+        return None
+    inputs, filters, labels = [], [], []
+    for n, (src, start, dur, at) in enumerate(cuts):
+        inputs += ["-ss", f"{max(start,0):.3f}", "-t", f"{dur:.3f}", "-i", str(src)]
+        filters.append(f"[{n}:a]adelay={int(at*1000)}|{int(at*1000)},"
+                       f"volume={GAME_VOL}[g{n}]")
+        labels.append(f"[g{n}]")
+    mix = (f"{''.join(labels)}amix=inputs={len(labels)}:"
+           f"duration=longest:dropout_transition=0,apad[out]")
+    run(["ffmpeg", "-y", "-loglevel", "error", *inputs,
+         "-filter_complex", ";".join(filters + [mix]),
+         "-map", "[out]", "-t", f"{total:.3f}",
+         "-c:a", "aac", "-b:a", "160k", str(dst)])
+    return dst
+
+
 def _encode(extra, dst):
     run(["ffmpeg", "-y", "-loglevel", "error", *extra, "-r", str(FPS),
          "-pix_fmt", "yuv420p", "-c:v", "libx264", "-preset", "medium",
@@ -154,6 +189,8 @@ def main(scenes_path, work_dir, out_path):
 
     segs = []
     story_i = 0
+    cuts = []            # (src, start, dur, timeline位置) プレイカットのゲーム音
+    timeline = 0.0
     for i, (sc, tm) in enumerate(zip(scenes, timing)):
         dur = max(tm["dur"] + 0.5, 2.0) + XFADE
         dst = segdir / f"seg{i:02d}.mp4"
@@ -169,12 +206,14 @@ def main(scenes_path, work_dir, out_path):
             # The story panel covers the left, and the runner sits mid-frame,
             # so pan the gameplay right to keep the ninja in the clear part.
             seg_clip(P['bed'], at, dur, ov, dst, pan=-0.28)
+            game_src = None          # 物語カットは静かに
             what = "story"
 
         elif kind == "showcase":
             ov = ov_dir / f"{i:02d}.png"
             overlays.showcase_overlay(sc).save(ov)
             seg_clip(P['showcase'] / f"{sc['subject']}.mp4", 1.0, dur, ov, dst)
+            game_src = None          # showcase は無音で撮っている
             what = "showcase:" + sc["subject"]
 
         elif kind == "outro":
@@ -182,6 +221,7 @@ def main(scenes_path, work_dir, out_path):
             overlays.title_card(sc["title"], sc.get("subtitle")).save(ov)
             beat, lead = clip_source("run", mk, events)
             seg_clip(P['raw'], mk[beat] + lead, dur, ov, dst)
+            game_src = (P['raw'], mk[beat] + lead)
             what = "outro"
 
         elif sc.get("clip"):
@@ -196,19 +236,38 @@ def main(scenes_path, work_dir, out_path):
                 ov = ov_dir / f"{i:02d}.png"
                 overlays.showcase_overlay(sc).save(ov)
             seg_clip(P['raw'], mk[beat] + lead, dur, ov, dst)
+            game_src = (P['raw'], mk[beat] + lead)
             what = "clip:" + clip
 
         else:
             raise SystemExit(f"scene {i} ({kind}) has nothing to render")
 
         segs.append((dst, dur))
+        # ゲーム音を入れるのはプレイ映像のカットだけ（静止画やshowcaseは無音）
+        if game_src:      # プレイ映像を使ったカットすべて（outro含む）
+            if game_src and has_audio(game_src[0]):
+                cuts.append((game_src[0], game_src[1], dur, timeline))
+        timeline += dur - XFADE      # クロスフェード分は重なる
         print(f"  seg{i:02d} {kind:10s} {what:20s} {dur:5.2f}s", flush=True)
 
     final = concat_xfade(segs, work, [sc['kind'] for sc in scenes])
-    run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(final),
-         "-i", str(work / "narration.wav"),
-         "-c:v", "copy", "-c:a", "aac", "-b:a", "192k",
-         "-shortest", str(out_path)])
+    total = timeline + XFADE
+    gtrack = game_audio_track(cuts, total, work, work / "game_audio.m4a")
+    if gtrack:
+        print(f"  ゲーム音を {len(cuts)} カットに敷きます", flush=True)
+        run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(final),
+             "-i", str(work / "narration.wav"), "-i", str(gtrack),
+             "-filter_complex",
+             "[1:a]volume=1.0[nar];[2:a]apad[gm];"
+             "[nar][gm]amix=inputs=2:duration=first:dropout_transition=0[a]",
+             "-map", "0:v", "-map", "[a]",
+             "-c:v", "copy", "-c:a", "aac", "-b:a", "192k",
+             "-shortest", str(out_path)])
+    else:
+        run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(final),
+             "-i", str(work / "narration.wav"),
+             "-c:v", "copy", "-c:a", "aac", "-b:a", "192k",
+             "-shortest", str(out_path)])
     print(f"VIDEO_OK {out_path}")
 
 
