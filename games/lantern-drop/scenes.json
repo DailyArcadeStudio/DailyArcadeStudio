@@ -1,0 +1,148 @@
+{
+  "id": "0002_lantern_drop",
+  "title": "Lantern Drop",
+  "lang": "python",
+  "voice": "am_adam",
+  "scenes": [
+    {
+      "kind": "hook",
+      "clip": "quake",
+      "narration": "This game exists because of a clerical error in 1903."
+    },
+    {
+      "kind": "image",
+      "prompt": "a cramped municipal records office at night, tall wooden filing cabinets, stacks of yellowed paper ledgers, a single green banker's lamp, dust in the air, cinematic, highly detailed, muted amber and olive tones",
+      "narration": "The city of Otaru kept two ledgers. One recorded public monuments. The other recorded festival decorations. For nine years, a clerk filed into the wrong one."
+    },
+    {
+      "kind": "image",
+      "prompt": "a close-up of an old handwritten ledger page, faded ink in neat columns, one line circled in red pencil, worn paper texture, warm desk lamp light from the side, shallow depth of field, cinematic, highly detailed",
+      "narration": "The consequence was a single line, entered in the spring of 1903. Item: paper lantern. Classification: permanent civic structure. Required height: as recorded."
+    },
+    {
+      "kind": "image",
+      "prompt": "a stone plinth in an empty town square at night, a single lit paper lantern sitting on top of it, low mist, wet cobblestones, moonlight and warm lantern glow, atmospheric wide shot, deep shadows, highly detailed",
+      "narration": "Nobody had recorded a height. So the city built what the ledger described. A permanent civic structure, made of paper, on a stone plinth, in the middle of the square."
+    },
+    {
+      "kind": "image",
+      "prompt": "an impossibly tall precarious tower of glowing orange paper lanterns stacked one on another, leaning slightly, rising into a dark night sky above a small town square, low angle, dramatic moonlight, mist, cinematic, highly detailed",
+      "narration": "Each year the office added one lantern, because the ledger said the structure was permanent and permanent things are maintained. The error was found in 1912. By then the correction would have required taking it down."
+    },
+    {
+      "kind": "showcase",
+      "subject": "lantern",
+      "kicker": "THE MATERIAL",
+      "title": "One Paper Lantern",
+      "bullets": [
+        "The only thing you ever place",
+        "Lands **slightly askew** by however far you missed",
+        "There is no way to move one once it is down"
+      ],
+      "narration": "This is the whole material. One paper lantern. It lands sitting slightly askew by exactly however far you missed, and once it is down, there is no way to move it again."
+    },
+    {
+      "kind": "showcase",
+      "subject": "crane",
+      "kicker": "THE DELIVERY",
+      "title": "The Crane",
+      "bullets": [
+        "Swings the next lantern **overhead, side to side**",
+        "You press once. **Release is the entire input**",
+        "It swings **faster and narrower** with every lantern placed"
+      ],
+      "narration": "The crane swings the next lantern back and forth above the pile. You press once to release it, and that is the entire input. Here is the design decision. Every lantern you place makes the crane swing faster, over a narrower arc."
+    },
+    {
+      "kind": "showcase",
+      "subject": "tower",
+      "kicker": "THE PILE",
+      "title": "What You Are Building",
+      "bullets": [
+        "Every overhang feeds a **lean meter**",
+        "Past the limit, the pile **goes over**",
+        "A near-perfect drop is the **only way to straighten it**"
+      ],
+      "narration": "And this is the pile. Every lantern that sits off centre feeds a lean meter, and past the limit the whole thing goes over. The important part is the recovery. A near-perfect drop pulls the lean back toward zero. It is the only way to straighten a tower that is already going."
+    },
+    {
+      "kind": "events",
+      "clip": "events",
+      "kicker": "THE SQUARE",
+      "title": "It Does Not Stay Still",
+      "bullets": [
+        "**NIGHT GALE** — wind pushes the lantern in flight",
+        "**LANTERN FEVER** — the crane swings much faster",
+        "**PAPER STORM** — rain, dark sky, the tower wobbles",
+        "**EMBER FOG** — the pile dims and hides",
+        "**NIGHT QUAKE** — the ground shoves you further over"
+      ],
+      "narration": "The square does not stay still. A gale pushes the lantern sideways while it is still falling. Fever doubles the crane's speed. A storm darkens the sky and sets the tower wobbling. Fog dims the pile until you cannot read it. And the quake shoves the whole thing further in the direction it was already leaning."
+    },
+    {
+      "kind": "death",
+      "clip": "death",
+      "kicker": "THE END OF A RUN",
+      "title": "Two Ways To Lose",
+      "bullets": [
+        "Miss the pile and the lantern **tumbles off**",
+        "Or the lean meter fills and it **all comes down**",
+        "Time eases to a stop, the camera **pushes in to watch**"
+      ],
+      "narration": "There are two ways to lose. Miss the pile entirely and the lantern tumbles off the side, which ends it immediately. Or the lean meter fills and the whole structure comes down. Either way, time eases to a stop and the camera pushes in, because the collapse is the part worth watching. Otaru maintained theirs for nine years. You will manage about eleven lanterns."
+    },
+    {
+      "kind": "outro",
+      "title": "Link in the description",
+      "subtitle": "Subscribe — a new game every day",
+      "narration": "It is playable right now, and the link is in the description. Subscribe and drop a like, because there is a new one of these tomorrow."
+    }
+  ],
+  "slug": "lantern-drop",
+  "channel": "Daily Arcade Studio",
+  "events": [
+    "gale",
+    "fever",
+    "storm",
+    "fog",
+    "quake"
+  ],
+  "short": [
+    {
+      "mark": "gale",
+      "lead": -0.5,
+      "dur": 7.0,
+      "headline": "The wind takes it mid-drop"
+    },
+    {
+      "mark": "fever",
+      "lead": -0.5,
+      "dur": 7.0,
+      "headline": "Now the crane won't slow down"
+    },
+    {
+      "mark": "fog",
+      "lead": -0.5,
+      "dur": 6.5,
+      "headline": "Then you can't see the pile"
+    },
+    {
+      "mark": "quake",
+      "lead": -0.3,
+      "dur": 8.0,
+      "headline": "And the ground shoves it over"
+    },
+    {
+      "mark": "death",
+      "lead": -2.0,
+      "dur": 9.5,
+      "headline": "Every tower comes down"
+    }
+  ],
+  "thumb": {
+    "hook": "One wrong drop",
+    "sub": "Stack it or lose it. Free in your browser.",
+    "frame_mark": "quake",
+    "frame_lead": 1.0
+  }
+}

@@ -30,14 +30,29 @@ def _paths(work):
             # long event-free run, recorded with ?noev=1
             "bed": work / "bed.mp4"}
 
-# Which recorded beat each gameplay scene starts from, plus lead-in.
-CLIP_SOURCE = {
-    # the boss blade sweeps past within about a second of its trigger
-    "boss":   ("boss", -0.2),
-    "run":    ("run_start", 0.8),
-    "events": ("surge", -0.6),       # rolls through surge -> wall -> blackout
+# Lead-in per clip kind. Event names differ per game (boss / quake / ...),
+# so anything not named here falls back to a small lead: an event clip
+# should open on its banner, not a second before it.
+CLIP_LEAD = {
+    "run":    ("run_start", 0.8),    # clean running, no events yet
     "death":  ("death", -2.2),       # lead in before the hit, then K.O.
 }
+DEFAULT_EVENT_LEAD = -0.2
+
+
+def clip_source(clip, marks, events):
+    """(mark, lead) for a clip name, whatever the game calls its events."""
+    if clip in CLIP_LEAD:
+        return CLIP_LEAD[clip]
+    if clip == "events":
+        # "events" means the montage: start at the first event that was fired
+        first = next((e for e in events if e in marks), None)
+        return (first or "run_start"), -0.6
+    if clip in marks:                # a named event of this game
+        return clip, DEFAULT_EVENT_LEAD
+    # unknown: fall back to clean running rather than crashing the build
+    print(f"  WARN clip '{clip}' has no mark; using run_start", flush=True)
+    return "run_start", 0.8
 
 # Where in the calm bed each story beat starts. The bed has no events and
 # no deaths, so nothing under the narration pulls the eye off the story.
@@ -116,7 +131,9 @@ def concat_xfade(segs, work):
 
 
 def main(scenes_path, work_dir, out_path):
-    scenes = json.loads(Path(scenes_path).read_text())["scenes"]
+    data = json.loads(Path(scenes_path).read_text())
+    scenes = data["scenes"]
+    events = data.get("events", [])
     work = Path(work_dir)
     timing = json.loads((work / "timing.json").read_text())
     ov_dir = work / "overlays"
@@ -154,13 +171,13 @@ def main(scenes_path, work_dir, out_path):
         elif kind == "outro":
             ov = ov_dir / f"{i:02d}.png"
             overlays.title_card(sc["title"], sc.get("subtitle")).save(ov)
-            beat, lead = CLIP_SOURCE["run"]
+            beat, lead = clip_source("run", mk, events)
             seg_clip(P['raw'], mk[beat] + lead, dur, ov, dst)
             what = "outro"
 
         elif sc.get("clip"):
             clip = sc["clip"]
-            beat, lead = CLIP_SOURCE[clip]
+            beat, lead = clip_source(clip, mk, events)
             # the opening hook carries the one line of setup
             ov = None
             if kind == "hook":
