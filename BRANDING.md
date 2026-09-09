@@ -268,6 +268,18 @@ yt.channels().update(part="brandingSettings", body={"id": cid, "brandingSettings
 slot = P.next_slot(d, now, first_immediate=..., yt_ch=ch["yt"])
 ```
 
+### サムネ未設定一覧の日付
+
+`pending_thumbs.json` の `publish_at` は**追加した時点のスナップショット**。
+あとで Studio や API で日付を変えても自動では追従しないため、
+`sync_publish_dates()` で取り直す。管理アプリは起動時・10分ごと・
+「🔄 更新」を押したときに自動で同期する。
+
+```python
+import pending_thumbs as PT
+PT.sync_publish_dates()    # YouTube の実際の publishAt に合わせる
+```
+
 ズレを確認したいとき:
 ```python
 import publish_all as P
