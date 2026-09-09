@@ -31,6 +31,21 @@ implementation for this channel. In particular you MUST reproduce:
   (https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js).
   No build step, no external assets, no image or audio files.
 - A title screen with a START button, and keyboard controls.
+- **It MUST be playable on a phone.** Most players arrive from a phone,
+  so touch is not optional:
+  - swipe / tap on the canvas for every action a key can do
+  - the START button and the title overlay must both respond to
+    `touchend`, not only `click` (click alone is unreliable on touch)
+  - after a game over, show "Tap to retry" on touch devices
+    (`matchMedia('(pointer:coarse)')`) and let a tap restart
+  - `preventDefault` on `touchmove` so the page does not scroll or zoom
+  - route keyboard and touch through the SAME action functions, so the
+    two input paths cannot drift apart
+- **It MUST work in portrait AND landscape.** A phone held upright is far
+  narrower than 16:9, so a fixed FOV pushes the playfield out of frame:
+  widen the camera's vertical FOV as the aspect ratio gets taller, and
+  re-fit on both `resize` and `orientationchange`. Size the HUD, title
+  and game-over text with `clamp()` so nothing overflows a small screen.
 - `?auto=1` autopilot that plays the game competently on its own.
 - `?hold=<ms>` to control the delay before an auto-retry.
 - `?noev=1` to suppress the random events (used to record calm footage).
@@ -105,6 +120,21 @@ def verify(slug, port=8901):
                 problems.append("score never increased")
         except ValueError:
             problems.append(f"unreadable score {state['score']!r}")
+
+        # a phone must be able to play it: tap to start, then score
+        pg.goto(base)
+        pg.wait_for_timeout(1200)
+        mob = pg.context.browser.new_context(
+            viewport={"width": 390, "height": 844}, has_touch=True, is_mobile=True)
+        mp = mob.new_page()
+        mp.goto(base)
+        mp.wait_for_timeout(1500)
+        mp.touchscreen.tap(195, 675)          # START button area
+        mp.wait_for_timeout(4000)
+        sc = mp.evaluate("()=>(document.querySelector('#score')||{}).textContent||''")
+        if int("".join(c for c in sc if c.isdigit()) or 0) <= 0:
+            problems.append("not playable in portrait on touch")
+        mob.close()
 
         # the showcase stage must render something, not a blank frame
         pg.goto(base + "?showcase=player&sx=1&nolabel=1")

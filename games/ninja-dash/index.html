@@ -7,23 +7,28 @@
 <style>
   html,body{margin:0;padding:0;overflow:hidden;background:#0a0a12;font-family:'Helvetica Neue',Arial,sans-serif;}
   #ui{position:fixed;top:16px;left:0;right:0;text-align:center;color:#fff;z-index:10;pointer-events:none;}
-  #score{font-size:34px;font-weight:800;text-shadow:0 2px 8px #000;}
+  #score{font-size:clamp(26px,6vw,34px);font-weight:800;text-shadow:0 2px 8px #000;}
   #msg{font-size:20px;margin-top:6px;opacity:.9;text-shadow:0 2px 6px #000;}
   #title{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
     background:rgba(6,6,14,.72);z-index:20;color:#fff;transition:opacity .4s;}
-  #title h1{font-size:64px;margin:0 0 8px;letter-spacing:2px;text-shadow:0 4px 18px #e33;}
-  #title p{font-size:20px;opacity:.85;margin:4px 0;}
+  #title h1{font-size:clamp(38px,11vw,64px);margin:0 0 8px;letter-spacing:2px;text-shadow:0 4px 18px #e33;}
+  #title p{font-size:clamp(14px,3.6vw,20px);opacity:.85;margin:4px 0;}
   #title .btn{margin-top:26px;padding:14px 44px;font-size:22px;font-weight:700;color:#fff;
     background:linear-gradient(180deg,#e33845,#a3202c);border:none;border-radius:12px;cursor:pointer;
     box-shadow:0 6px 24px rgba(227,56,69,.5);}
   #title .btn:hover{transform:scale(1.05);}
   .hidden{opacity:0;pointer-events:none;}
+  /* show the hint that matches the device */
+  .tc{display:none;}
+  @media (pointer:coarse){ .kb{display:none;} .tc{display:block;} }
+  /* a finger-sized START button on touch devices */
+  @media (pointer:coarse){ #title .btn{padding:18px 56px;font-size:24px;} }
 
   /* --- event banner: slams into the middle of the screen --- */
   #banner{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
     z-index:15;pointer-events:none;opacity:0;}
-  #banner .b{font-size:74px;font-weight:900;letter-spacing:6px;color:#fff;
-    padding:10px 40px;transform:scale(2.4);opacity:0;
+  #banner .b{font-size:clamp(32px,8.5vw,74px);font-weight:900;letter-spacing:.08em;color:#fff;
+    padding:10px 4vw;max-width:94vw;text-align:center;transform:scale(2.4);opacity:0;
     text-shadow:0 0 26px currentColor, 0 6px 20px #000;
     border-top:5px solid currentColor;border-bottom:5px solid currentColor;}
   #banner.go .b{animation:slam .62s cubic-bezier(.12,.85,.2,1) forwards;}
@@ -43,7 +48,7 @@
   #ko{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
     z-index:22;pointer-events:none;opacity:0;color:#fff;transition:opacity .3s;}
   #ko.on{opacity:1;}
-  #ko .koText{font-size:190px;font-weight:900;letter-spacing:10px;color:#fff;
+  #ko .koText{font-size:clamp(96px,26vw,190px);font-weight:900;letter-spacing:10px;color:#fff;
     text-shadow:0 0 40px #e33845,0 0 90px #e33845,0 10px 30px #000;
     transform:scale(3);opacity:0;}
   #ko.on .koText{animation:koSlam .8s cubic-bezier(.1,.9,.2,1) forwards;}
@@ -54,7 +59,7 @@
     100%{transform:scale(1);opacity:1;}
   }
   #ko .finalLabel{font-size:22px;letter-spacing:5px;opacity:0;margin-top:6px;text-shadow:0 2px 8px #000;}
-  #ko .finalScore{font-size:82px;font-weight:800;opacity:0;text-shadow:0 4px 20px #000;}
+  #ko .finalScore{font-size:clamp(52px,14vw,82px);font-weight:800;opacity:0;text-shadow:0 4px 20px #000;}
   #ko.on .finalLabel{animation:fadeUp .5s .75s forwards;}
   #ko.on .finalScore{animation:fadeUp .5s .9s forwards;}
   @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
@@ -73,7 +78,8 @@
 <div id="title">
   <h1>NINJA DASH</h1>
   <p>Dodge the shuriken. Survive the run.</p>
-  <p>← → / A D : move &nbsp;&nbsp; Space : jump</p>
+  <p class="kb">← → / A D : move &nbsp;&nbsp; Space : jump</p>
+  <p class="tc">Swipe to change lane &nbsp;&nbsp; Tap to jump</p>
   <button class="btn" id="startBtn">START</button>
 </div>
 <script type="importmap">
@@ -98,7 +104,28 @@ const camera = new THREE.PerspectiveCamera(62, innerWidth/innerHeight, .1, 100);
 camera.position.set(0, 4.6, 8.5);
 camera.lookAt(0, 1, -4);
 
-addEventListener('resize', ()=>{ camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight); });
+// Portrait and landscape both have to work. A phone held upright is far
+// narrower than 16:9, and with a fixed FOV the three lanes fall outside
+// the frame — so widen the vertical FOV as the screen gets taller.
+const BASE_FOV = 62;
+function fitCamera(){
+  const aspect = innerWidth / innerHeight;
+  camera.aspect = aspect;
+  if(typeof SHOWCASE !== 'undefined' && SHOWCASE){
+    camera.fov = aspect < 1 ? 62 : 46;
+  } else {
+    // keep the horizontal field roughly constant across aspect ratios
+    const ref = 16/9;
+    camera.fov = aspect >= ref ? BASE_FOV
+      : Math.min(96, THREE.MathUtils.radToDeg(
+          2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(BASE_FOV)/2) * (ref/aspect))));
+  }
+  camera.__base = camera.fov;    // SPEED SURGE returns to this
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+}
+addEventListener('resize', fitCamera);
+addEventListener('orientationchange', ()=>setTimeout(fitCamera, 120));
 
 // ---------- lights ----------
 const hemi = new THREE.HemisphereLight(0x99aaff, 0x332222, 1.5);
@@ -262,6 +289,7 @@ const boss = (()=>{
 // ---------- game state ----------
 let running=false, dead=false, t=0, speed=14, score=0, targetLane=1, jumpV=0, grounded=true;
 let timeScale=1;                 // slow-motion multiplier
+let deadAt=0;                    // when the run ended (touch retry gate)
 let shake=0;                     // camera shake amount
 let camDist=7.5, camDistTarget=7.5;   // death zoom pulls the camera in
 let blackout=0;                  // >0 while lights are out
@@ -337,6 +365,9 @@ window.__ev = name => {
 };
 window.__alive = () => running && !dead;
 window.__kill = () => { if(running && !dead){ dead=true; gameOver(); } };
+window.__lane = () => targetLane;
+window.__fov = () => +camera.fov.toFixed(1);
+window.__air = () => !grounded;
 window.__probe = () => ({t:+t.toFixed(2), gap:+boss.gap.toFixed(2), active:boss.active,
   bz:+(boss.group.position.z - camera.position.z).toFixed(2), next:+nextEventAt.toFixed(2)});
 
@@ -377,19 +408,75 @@ function reset(){
   camera.position.set(0,4.6,8.5);
 }
 
-document.getElementById('startBtn').onclick=()=>{
-  titleEl.classList.add('hidden'); reset(); running=true;
-};
+const startBtn = document.getElementById('startBtn');
+
+// --- one place for every action, so touch and keyboard stay in step ---
+function startRun(){ titleEl.classList.add('hidden'); reset(); running=true; }
+function moveLeft(){  targetLane = Math.max(0, targetLane-1); }
+function moveRight(){ targetLane = Math.min(2, targetLane+1); }
+function jump(){ if(grounded){ jumpV=10.5; grounded=false; } }
+
+startBtn.addEventListener('click', startRun);
+// a touch on the button must start too — click alone is unreliable on touch
+startBtn.addEventListener('touchend', e=>{ e.preventDefault(); startRun(); },
+                          {passive:false});
 
 addEventListener('keydown', e=>{
   if(!running){
-    if(e.code==='Space'||e.code==='Enter'){ titleEl.classList.add('hidden'); reset(); running=true; }
+    if(e.code==='Space'||e.code==='Enter') startRun();
     return;
   }
-  if(e.code==='ArrowLeft'||e.code==='KeyA')  targetLane=Math.max(0,targetLane-1);
-  if(e.code==='ArrowRight'||e.code==='KeyD') targetLane=Math.min(2,targetLane+1);
-  if((e.code==='Space'||e.code==='ArrowUp'||e.code==='KeyW') && grounded){ jumpV=10.5; grounded=false; }
+  if(e.code==='ArrowLeft'||e.code==='KeyA')  moveLeft();
+  if(e.code==='ArrowRight'||e.code==='KeyD') moveRight();
+  if(e.code==='Space'||e.code==='ArrowUp'||e.code==='KeyW') jump();
 });
+
+// --- touch: swipe to change lane, tap to jump ---
+// Most viewers arrive from a phone, so the game has to be playable
+// without a keyboard. Swipe left/right moves, a tap jumps.
+(function(){
+  let sx=0, sy=0, st=0, moved=false;
+  const SWIPE = 28;          // px before a drag counts as a swipe
+  const canvas = renderer.domElement;
+
+  canvas.addEventListener('touchstart', e=>{
+    const t = e.changedTouches[0];
+    sx=t.clientX; sy=t.clientY; st=Date.now(); moved=false;
+  }, {passive:true});
+
+  canvas.addEventListener('touchmove', e=>{
+    if(moved || !running || dead) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX-sx, dy = t.clientY-sy;
+    if(Math.abs(dx) > SWIPE && Math.abs(dx) > Math.abs(dy)){
+      dx < 0 ? moveLeft() : moveRight();
+      moved = true;                       // one lane change per swipe
+    } else if(-dy > SWIPE && Math.abs(dy) > Math.abs(dx)){
+      jump();                             // swipe up also jumps
+      moved = true;
+    }
+  }, {passive:true});
+
+  canvas.addEventListener('touchend', e=>{
+    if(dead){
+      // give the K.O. animation time to read, then a tap retries
+      if(!AUTO && Date.now()-deadAt > 1500) startRun();
+      return;
+    }
+    if(!running){ startRun(); return; }
+    // a short touch that never became a swipe is a tap → jump
+    if(!moved && Date.now()-st < 350) jump();
+  }, {passive:true});
+
+  // The title overlay sits above the canvas, so a tap anywhere on it never
+  // reaches the canvas handler. Start from the overlay itself.
+  titleEl.addEventListener('touchend', e=>{
+    if(!running){ e.preventDefault(); startRun(); }
+  }, {passive:false});
+
+  // stop the browser treating game taps as scroll / double-tap zoom
+  canvas.addEventListener('touchmove', e=>e.preventDefault(), {passive:false});
+})();
 
 // autoplay mode for recording: ?auto=1
 const QS = new URLSearchParams(location.search);
@@ -496,9 +583,9 @@ function buildShowcase(name){
   showcase.spin = spin; showcase.label = label; showcase.flat = flat;
 }
 
+fitCamera();          // SHOWCASE is known by here
 if(SHOWCASE){
   titleEl.classList.add('hidden');
-  camera.fov = 46; camera.updateProjectionMatrix();   // set before fitting
   buildShowcase(SHOWCASE);
   scoreEl.textContent = '';
   msgEl.textContent = QS.get('nolabel')==='1' ? '' : showcase.label;
@@ -559,11 +646,11 @@ function tick(){
     if(surge>0){
       surge -= dt;
       speedLineMat.opacity = Math.min(.55, speedLineMat.opacity + dt*3);
-      camera.fov += (72 - camera.fov)*Math.min(1,dt*4);
+      camera.fov += (camera.__base*1.16 - camera.fov)*Math.min(1,dt*4);
       camera.updateProjectionMatrix();
-    } else if(speedLineMat.opacity > 0 || camera.fov > 62.05){
+    } else if(speedLineMat.opacity > 0 || camera.fov > camera.__base + 0.05){
       speedLineMat.opacity = Math.max(0, speedLineMat.opacity - dt*1.2);
-      camera.fov += (62 - camera.fov)*Math.min(1,dt*3);
+      camera.fov += (camera.__base - camera.fov)*Math.min(1,dt*3);
       camera.updateProjectionMatrix();
     }
     for(const m of speedLines){
@@ -678,7 +765,7 @@ function tick(){
 }
 
 function gameOver(hitBy){
-  running=false;
+  running=false; deadAt=Date.now();
   // hit feedback: red flash, red vignette, hard shake, camera punches in
   flash('#ff2b3a', .8, 500);
   vignetteEl.style.transition='opacity .5s'; vignetteEl.style.opacity=1;
@@ -690,7 +777,10 @@ function gameOver(hitBy){
   msgEl.textContent = '';
   setTimeout(()=>{ koEl.classList.add('on'); }, 620);   // K.O. lands after the slow-mo
   if(AUTO){ setTimeout(()=>{ reset(); running=true; }, RETRY_MS); }
-  else setTimeout(()=>{ msgEl.textContent='Space to retry'; }, 1800);
+  else setTimeout(()=>{
+    msgEl.textContent = matchMedia('(pointer:coarse)').matches
+      ? 'Tap to retry' : 'Space to retry';
+  }, 1800);
 }
 tick();
 </script>
