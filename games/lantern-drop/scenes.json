@@ -7,27 +7,17 @@
     {
       "kind": "hook",
       "clip": "quake",
-      "narration": "This game exists because of a clerical error in 1903."
+      "narration": "A man promised his town the tallest lantern tower in Europe. Then he read the rental contract for the crane."
     },
     {
       "kind": "image",
-      "prompt": "a cramped municipal records office at night, tall wooden filing cabinets, stacks of yellowed paper ledgers, a single green banker's lamp, dust in the air, cinematic, highly detailed, muted amber and olive tones",
-      "narration": "The city of Otaru kept two ledgers. One recorded public monuments. The other recorded festival decorations. For nine years, a clerk filed into the wrong one."
+      "prompt": "a small European town square at dusk, string lights, a crowd of townspeople looking up expectantly at an empty stone plinth, warm lamplight, cinematic, photoreal, highly detailed",
+      "narration": "Marek told the town council he could build the tallest lantern tower in Europe. He said it in a bar. Loudly. Twice. By the morning it was on a poster."
     },
     {
       "kind": "image",
-      "prompt": "a close-up of an old handwritten ledger page, faded ink in neat columns, one line circled in red pencil, worn paper texture, warm desk lamp light from the side, shallow depth of field, cinematic, highly detailed",
-      "narration": "The consequence was a single line, entered in the spring of 1903. Item: paper lantern. Classification: permanent civic structure. Required height: as recorded."
-    },
-    {
-      "kind": "image",
-      "prompt": "a stone plinth in an empty town square at night, a single lit paper lantern sitting on top of it, low mist, wet cobblestones, moonlight and warm lantern glow, atmospheric wide shot, deep shadows, highly detailed",
-      "narration": "Nobody had recorded a height. So the city built what the ledger described. A permanent civic structure, made of paper, on a stone plinth, in the middle of the square."
-    },
-    {
-      "kind": "image",
-      "prompt": "an impossibly tall precarious tower of glowing orange paper lanterns stacked one on another, leaning slightly, rising into a dark night sky above a small town square, low angle, dramatic moonlight, mist, cinematic, highly detailed",
-      "narration": "Each year the office added one lantern, because the ledger said the structure was permanent and permanent things are maintained. The error was found in 1912. By then the correction would have required taking it down."
+      "prompt": "a tall industrial crane at night holding a single glowing paper lantern high above a stone plinth in a town square, dramatic spotlight, cinematic, photoreal, highly detailed",
+      "narration": "He rented a crane for one evening. The contract charged by the hour, so he could not slow it down, and it had exactly one control: a button that lets go. That is the whole machine. That is also the whole game."
     },
     {
       "kind": "showcase",
@@ -89,7 +79,7 @@
         "Or the lean meter fills and it **all comes down**",
         "Time eases to a stop, the camera **pushes in to watch**"
       ],
-      "narration": "There are two ways to lose. Miss the pile entirely and the lantern tumbles off the side, which ends it immediately. Or the lean meter fills and the whole structure comes down. Either way, time eases to a stop and the camera pushes in, because the collapse is the part worth watching. Otaru maintained theirs for nine years. You will manage about eleven lanterns."
+      "narration": "There are two ways to lose. Miss the pile and the lantern tumbles off the side, which ends it immediately. Or the lean meter fills and the whole thing comes down. Either way time eases to a stop and the camera pushes in, because the collapse is the part worth watching. Marek got eleven lanterns up before the crane went back. The poster is still on the wall."
     },
     {
       "kind": "outro",
@@ -140,10 +130,10 @@
     }
   ],
   "thumb": {
-    "hook": "One wrong drop",
-    "sub": "Stack it or lose it. Free in your browser.",
-    "frame_mark": "quake",
+    "hook": "One crane. One shot.",
+    "sub": "Stack it or drop it. Free in your browser.",
+    "frame_mark": "gale",
     "frame_lead": 1.0
   },
-  "video_title": "A Clerical Error in 1903 Is Why This Game Exists"
+  "video_title": "He Promised the Tallest Lantern Tower in Europe. He Had One Crane."
 }
