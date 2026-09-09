@@ -249,3 +249,27 @@ yt.channels().update(part="brandingSettings", body={"id": cid, "brandingSettings
 - **タグの大量投入**: 現在の検索アルゴリズムではほぼ効かない。
   タイトル・サムネ・概要の方が桁違いに重要
 - **「国」を頻繁に変える**: 推薦の学習がリセットされうるので一度決めたら固定
+
+---
+
+## 公開枠の決まり方（重要）
+
+`publish_all.next_slot()` が「最後の予約の翌日 JST 9:00」を返す。
+1日1本ずつドリップして在庫を積む仕組み。
+
+**2026-09-09 に修正**: 以前はローカルの `.schedule_state.json` だけを見ていたため、
+手動アップロードや Studio での日付変更とズレると、枠が重複したり空いたりした。
+（実際 Ninja Dash を手動で今日公開した結果、9/10 が空いて Lantern Drop が 9/11 になった）
+
+現在は **YouTube 上の実際の予約を取得し、ローカルより先ならそちらを基準にする**。
+取得に失敗したときだけローカルにフォールバックする。
+
+```python
+slot = P.next_slot(d, now, first_immediate=..., yt_ch=ch["yt"])
+```
+
+ズレを確認したいとき:
+```python
+import publish_all as P
+P.latest_scheduled("arcade")   # YouTube 上の最後の予約
+```
