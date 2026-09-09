@@ -1,0 +1,227 @@
+{
+  "id": "0003_gondola_squeeze",
+  "title": "Gondola Squeeze",
+  "video_title": "The Canal Gets Narrower Every Year. He Still Takes Her Home.",
+  "lang": "python",
+  "voice": "am_adam",
+  "scenes": [
+    {
+      "kind": "hook",
+      "clip": "squeeze",
+      "narration": "There is a canal in Venice that gets about a hand's width narrower every year, and one man who still rows down it every evening."
+    },
+    {
+      "kind": "image",
+      "prompt": "an extremely narrow Venetian canal at dusk, weathered ochre and rose plaster walls almost touching overhead, dark green water, a single wooden gondola wedged between the buildings, warm window light, cinematic wide shot, photoreal, highly detailed",
+      "narration": "His name is Matteo, and he has one regular fare left. Her name is Signora Bellon, she is eighty-six, and her front door opens directly onto the water at the far end of the narrowest canal in the city."
+    },
+    {
+      "kind": "image",
+      "prompt": "old Venetian buildings crowding a waterway, new brick extensions and bolted-on balconies jutting out over dark water, scaffolding on one facade, low evening light, moody cinematic photoreal, highly detailed",
+      "narration": "The canal narrows because the neighbours keep building outward. A balcony here, a boat shed there. Nobody is doing anything wrong. It just adds up, and it only ever adds up in one direction."
+    },
+    {
+      "kind": "image",
+      "prompt": "an elderly Italian woman in a dark coat standing in a low stone doorway at the water's edge, warm lamplight behind her, gondola prow entering the frame, night, soft rain, cinematic photoreal, shallow depth of field, highly detailed",
+      "narration": "She has been offered a room on a wider canal four times. She has declined four times. Matteo was asked whether he might simply let her walk. He said no, and that was the end of the discussion."
+    },
+    {
+      "kind": "showcase",
+      "subject": "gondola",
+      "kicker": "THE BOAT",
+      "title": "The Gondola",
+      "bullets": [
+        "Eleven metres long and it **does not turn quickly**",
+        "Steer left and right — that is the whole helm",
+        "The hull **leans into every turn**, whether you want it to or not"
+      ],
+      "narration": "This is the boat. It is eleven metres long, it does not turn quickly, and steering left and right is the entire helm. The hull leans into every turn, which looks lovely and helps you not at all."
+    },
+    {
+      "kind": "showcase",
+      "subject": "gondolier",
+      "kicker": "THE MAN",
+      "title": "Matteo",
+      "bullets": [
+        "Stands the whole way — **he is the tallest thing on the boat**",
+        "Ducking is a separate button, and you will need it",
+        "He does not stop rowing when things go wrong"
+      ],
+      "narration": "This is Matteo. He stands the entire way, which makes him the tallest thing on the boat, and the tallest thing on the boat is the thing that hits the bridge. Ducking is its own button. You will be using it."
+    },
+    {
+      "kind": "showcase",
+      "subject": "ferro",
+      "kicker": "THE PROW",
+      "title": "The Ferro",
+      "bullets": [
+        "The steel comb on the bow — **pure decoration**",
+        "It is also the first part of the boat to arrive anywhere",
+        "Every gondola has one. Nobody removes it"
+      ],
+      "narration": "That is the ferro, the steel comb on the bow. It is decoration. It is also the first part of the boat to arrive anywhere, which is worth thinking about on a canal this width. Nobody removes it."
+    },
+    {
+      "kind": "showcase",
+      "subject": "arch",
+      "kicker": "HAZARD ONE",
+      "title": "The Low Bridge",
+      "bullets": [
+        "One clear span, marked by **a single lamp**",
+        "Steering into the gap is **not enough** — you must also duck",
+        "Two solid piers either side. Those are not negotiable"
+      ],
+      "narration": "The bridges have exactly one navigable span, and there is a lamp hung over it so you can find it. Steering into that gap is not enough. You have to be in the gap and crouched at the same time. The piers either side are solid stone and take no interest in your evening."
+    },
+    {
+      "kind": "showcase",
+      "subject": "pole",
+      "kicker": "HAZARD TWO",
+      "title": "The Bricola",
+      "bullets": [
+        "Three lashed mooring posts standing in open water",
+        "**Steer around it.** That is the entire interaction",
+        "Somebody owns it. Nobody has ever moved it"
+      ],
+      "narration": "A bricola is three posts lashed together and driven into the canal floor, and one of them is standing where you want to be. You steer around it. That is the whole interaction. Somebody owns it, and nobody has ever moved it."
+    },
+    {
+      "kind": "showcase",
+      "subject": "barge",
+      "kicker": "HAZARD THREE",
+      "title": "The Moored Barge",
+      "bullets": [
+        "Loaded with crates and **tied up for the night**",
+        "Eats one side of the canal outright",
+        "Wider than a pole — you need to commit early"
+      ],
+      "narration": "This is a barge, loaded and tied up for the night. It eats one entire side of the canal, and it is considerably wider than a post, so you cannot decide about it late. You go wide, and you go wide early."
+    },
+    {
+      "kind": "events",
+      "clip": "events",
+      "kicker": "THE CANAL",
+      "title": "It Does Not Stay The Same Width",
+      "bullets": [
+        "**CANAL NARROWS** — the walls close in and hold there",
+        "**BRIDGE RUN** — three bridges, spans staggered left and right",
+        "**ACQUA ALTA** — the fog shuts down to arm's length"
+      ],
+      "narration": "The canal does not stay the same width. It closes in and then holds there for a while. Three bridges arrive back to back with their spans staggered left, right and centre. The tide races and everything speeds up. A vaporetto wash shoves the hull sideways with no warning at all. And sometimes the fog comes down to about arm's length while you are still moving."
+    },
+    {
+      "kind": "death",
+      "clip": "death",
+      "kicker": "THE END OF A RUN",
+      "title": "Every Run Ends The Same Way",
+      "bullets": [
+        "Time **eases down** instead of cutting",
+        "The boat rolls over and settles into the water",
+        "Scraping a wall does not kill you — it just costs you distance"
+      ],
+      "narration": "Every run ends the same way. Time eases down rather than cutting, the boat rolls, and it settles into the water while the camera pushes in. Worth knowing: scraping a wall does not kill you. It only costs you distance, which is its own kind of insult. Matteo has rowed this canal every evening for thirty years. You will manage about forty seconds."
+    },
+    {
+      "kind": "outro",
+      "title": "Link in the description",
+      "subtitle": "Subscribe — a new game every day",
+      "narration": "It is playable right now, and the link is in the description. Subscribe and drop a like, because there is a new one of these tomorrow."
+    }
+  ],
+  "slug": "gondola-squeeze",
+  "channel": "Daily Arcade Studio",
+  "events": [
+    "squeeze",
+    "bridges",
+    "tide",
+    "fog",
+    "vaporetto"
+  ],
+  "short": [
+    {
+      "mark": "squeeze",
+      "lead": -0.3,
+      "dur": 9.0,
+      "headline": "The walls close in"
+    },
+    {
+      "mark": "bridges",
+      "lead": -0.5,
+      "dur": 8.0,
+      "headline": "Three bridges. Duck."
+    },
+    {
+      "mark": "vaporetto",
+      "lead": -0.4,
+      "dur": 7.0,
+      "headline": "The wash shoves you"
+    },
+    {
+      "mark": "fog",
+      "lead": -0.5,
+      "dur": 7.0,
+      "headline": "Fog at arm's length"
+    },
+    {
+      "mark": "death",
+      "lead": -2.0,
+      "dur": 9.0,
+      "headline": "You'll last 40 seconds"
+    }
+  ],
+  "thumb": {
+    "hook": "The canal keeps closing",
+    "sub": "Steer and duck. Free in your browser.",
+    "frame_mark": "squeeze",
+    "frame_lead": 1.2
+  },
+  "short_v2": {
+    "cuts": [
+      {
+        "kind": "clip",
+        "mark": "bridges",
+        "lead": -0.4,
+        "dur": 4.5,
+        "headline": "Today's game",
+        "narration": "Here is today's game."
+      },
+      {
+        "kind": "showcase",
+        "subject": "gondola",
+        "dur": 5.0,
+        "headline": "GONDOLA SQUEEZE",
+        "narration": "You are a gondolier taking one passenger home down a canal that gets narrower every year."
+      },
+      {
+        "kind": "showcase",
+        "subject": "arch",
+        "dur": 5.5,
+        "headline": "Aim, then duck",
+        "narration": "Bridges have one clear span. Steering into it is not enough — you have to duck as well."
+      },
+      {
+        "kind": "showcase",
+        "subject": "barge",
+        "dur": 5.0,
+        "headline": "It eats one side",
+        "narration": "A moored barge takes an entire side of the canal, so you commit early or not at all."
+      },
+      {
+        "kind": "clip",
+        "mark": "death",
+        "lead": -2.0,
+        "dur": 6.0,
+        "headline": "",
+        "narration": "And the walls keep coming in."
+      },
+      {
+        "kind": "clip",
+        "mark": "run2",
+        "lead": 1.0,
+        "dur": 4.5,
+        "cta": "Play it — link in the description",
+        "narration": "Free in your browser. Link in the description."
+      }
+    ]
+  }
+}
