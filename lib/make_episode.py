@@ -69,8 +69,11 @@ def main(slug, work_dir=None):
         run([PY, str(ROOT / "lib/assemble.py"), str(scenes), str(work), str(main_mp4)],
             env=env)
 
-        # 5. vertical short
+        # 5. vertical short（先にビートのナレーションを作る）
         short_mp4 = out / f"short_{slug}.mp4"
+        if not (work / "short_narr" / "durations.json").exists():
+            log("narrating short cuts")
+            run([PY_K, str(ROOT / "lib/narrate_short.py"), slug, str(work)])
         log("building short")
         run([PY, str(ROOT / "lib/make_short.py"), str(work), str(short_mp4)], env=env)
 

@@ -30,35 +30,59 @@ def log(m):
     print(f"[capture] {m}", flush=True)
 
 
-def to_mp4(webm, dst):
-    subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(webm),
-                    "-c:v", "libx264", "-preset", "medium", "-crf", "18",
-                    "-pix_fmt", "yuv420p", "-r", "30", str(dst)], check=True)
+def to_mp4(webm, dst, audio=None):
+    """webm -> mp4。audio があればゲーム音として乗せる。"""
+    cmd = ["ffmpeg", "-y", "-loglevel", "error", "-i", str(webm)]
+    if audio and Path(audio).exists():
+        cmd += ["-i", str(audio), "-map", "0:v", "-map", "1:a",
+                "-c:a", "aac", "-b:a", "128k", "-shortest"]
+    cmd += ["-c:v", "libx264", "-preset", "medium", "-crf", "18",
+            "-pix_fmt", "yuv420p", "-r", "30", str(dst)]
+    subprocess.run(cmd, check=True)
 
 
 def newest(d):
-    v = sorted(glob.glob(str(Path(d) / "*.webm")), key=os.path.getmtime)
+    # audio.webm はこちらで書いた音声なので、映像として拾わない
+    v = [f for f in sorted(glob.glob(str(Path(d) / "*.webm")), key=os.path.getmtime)
+         if Path(f).name != "audio.webm"]
     if not v:
         raise SystemExit(f"no recording produced in {d}")
     return v[-1]
 
 
-def record(url, seconds, out_dir, drive=None):
-    """Record one page; `drive` may script the page while it records."""
+def record(url, seconds, out_dir, drive=None, want_audio=False):
+    """Record one page; `drive` may script the page while it records.
+
+    Playwright の録画には音声が入らない。want_audio のときは URL に
+    rec=1 を付け、ゲーム自身に WebAudio の master を録らせて .webm を
+    別に書き出す（鳴っているものそのものなので映像と同期する）。
+    """
     Path(out_dir).mkdir(parents=True, exist_ok=True)
+    audio_bytes = None
     with sync_playwright() as p:
-        b = p.chromium.launch(args=["--enable-unsafe-swiftshader"])
+        b = p.chromium.launch(args=["--enable-unsafe-swiftshader",
+                                    "--autoplay-policy=no-user-gesture-required"])
         ctx = b.new_context(viewport=VIEW, record_video_dir=str(out_dir),
                             record_video_size=VIEW)
         pg = ctx.new_page()
         errs = []
         pg.on("pageerror", lambda e: errs.append(str(e)))
+        if want_audio:
+            url += ("&" if "?" in url else "?") + "rec=1"
         pg.goto(url)
         result = drive(pg) if drive else pg.wait_for_timeout(seconds * 1000)
+        if want_audio:
+            try:
+                audio_bytes = pg.evaluate("()=>window.__recStop()")
+            except Exception as e:
+                log(f"WARNING 音声取得に失敗: {e}")
         ctx.close()
         b.close()
     if errs:
         log(f"WARNING page errors: {errs[:2]}")
+    if audio_bytes:
+        Path(out_dir, "audio.webm").write_bytes(bytes(audio_bytes))
+        log(f"  game audio: {len(audio_bytes)//1024} KB")
     return newest(out_dir), result
 
 
@@ -111,8 +135,9 @@ def staged_run(base, work):
         mark("run2")
         pg.wait_for_timeout(7000)
 
-    webm, _ = record(base + "?auto=1&hold=11000", None, work / "_raw", drive)
-    to_mp4(webm, work / "raw.mp4")
+    webm, _ = record(base + "?auto=1&hold=11000", None, work / "_raw", drive,
+                     want_audio=True)
+    to_mp4(webm, work / "raw.mp4", audio=work / "_raw" / "audio.webm")
     (work / "marks.json").write_text(json.dumps({"marks": marks}, indent=2))
     log(f"raw.mp4 + {len(marks)} marks")
 
@@ -130,12 +155,21 @@ def main(slug, work_dir, subjects=None):
     to_mp4(webm, work / "bed.mp4")
     log("bed.mp4")
 
+    # 本編用（左寄せ：右にテキストを置く）
     sc = work / "showcase"
     sc.mkdir(exist_ok=True)
     for s in subjects:
         webm, _ = record(f"{base}?showcase={s}&sx=1&nolabel=1", 20, sc / f"_{s}")
         to_mp4(webm, sc / f"{s}.mp4")
         log(f"showcase/{s}.mp4")
+
+    # 縦ショート用（中央：縦画面は横に余白がない）
+    scc = work / "showcase_center"
+    scc.mkdir(exist_ok=True)
+    for s in subjects:
+        webm, _ = record(f"{base}?showcase={s}&nolabel=1", 10, scc / f"_{s}")
+        to_mp4(webm, scc / f"{s}.mp4")
+        log(f"showcase_center/{s}.mp4")
     log("CAPTURE_OK")
 
 

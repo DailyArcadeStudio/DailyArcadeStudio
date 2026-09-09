@@ -71,9 +71,16 @@ implementation for this channel. In particular you MUST reproduce:
   a stinger on each event, and a hit plus descending motif on the game
   over (`SND.duck`). Add the same mute button (also bound to `M`).
   **Every automated mode must be silent**: declare
-  `SILENT = AUTO || !!SHOWCASE_Q || QS.get('mute')==='1'` and guard every
-  SND call with it, or the music ends up in the recorded footage. Declare
-  the url flags at the TOP of the module, before anything reads them.
+  `SILENT = (AUTO || !!SHOWCASE_Q || QS.get('mute')==='1') && !REC` and
+  guard every SND call with it. Declare the url flags at the TOP of the
+  module, before anything reads them.
+- **A `?rec=1` audio-capture mode.** Playwright's recording carries no
+  audio, so the game records its own: on `rec=1`, keep the sound ON, tap
+  a `MediaStreamDestination` off the master bus with a `MediaRecorder`,
+  and expose `window.__recStop()` returning the bytes. Copy this from
+  {ref} verbatim.
+- The `?auto=1` start path MUST go through `startRun()`, not a separate
+  inline copy — otherwise sound and recording never start.
 
 Keep it readable and comment the parts that are not obvious. Match the
 reference's visual language: dark background, a strong accent colour,

@@ -101,32 +101,32 @@
     {
       "mark": "gale",
       "lead": -0.5,
-      "dur": 7.0,
-      "headline": "The wind takes it mid-drop"
+      "dur": 8.0,
+      "headline": "One button. That's it."
     },
     {
       "mark": "fever",
       "lead": -0.5,
-      "dur": 7.0,
-      "headline": "Now the crane won't slow down"
-    },
-    {
-      "mark": "fog",
-      "lead": -0.5,
-      "dur": 6.5,
-      "headline": "Then you can't see the pile"
+      "dur": 8.0,
+      "headline": "Each one speeds up the crane"
     },
     {
       "mark": "quake",
       "lead": -0.3,
       "dur": 8.0,
-      "headline": "And the ground shoves it over"
+      "headline": "You build your own difficulty"
+    },
+    {
+      "mark": "fog",
+      "lead": -0.5,
+      "dur": 6.0,
+      "headline": "No undo. Ever."
     },
     {
       "mark": "death",
       "lead": -2.0,
-      "dur": 9.5,
-      "headline": "Every tower comes down"
+      "dur": 9.0,
+      "headline": "Marek managed eleven"
     }
   ],
   "thumb": {
@@ -135,5 +135,54 @@
     "frame_mark": "gale",
     "frame_lead": 1.0
   },
-  "video_title": "He Promised the Tallest Lantern Tower in Europe. He Had One Crane."
+  "video_title": "He Promised the Tallest Lantern Tower in Europe. He Had One Crane.",
+  "short_v2": {
+    "cuts": [
+      {
+        "kind": "clip",
+        "mark": "quake",
+        "lead": -0.3,
+        "dur": 4.5,
+        "headline": "Today's game",
+        "narration": "Here is today's game."
+      },
+      {
+        "kind": "showcase",
+        "subject": "lantern",
+        "dur": 5.0,
+        "headline": "LANTERN DROP",
+        "narration": "You are stacking paper lanterns, one at a time."
+      },
+      {
+        "kind": "showcase",
+        "subject": "crane",
+        "dur": 6.0,
+        "headline": "One button",
+        "narration": "The crane swings. You press once to let go. That is the whole input."
+      },
+      {
+        "kind": "showcase",
+        "subject": "tower",
+        "dur": 5.5,
+        "headline": "No undo",
+        "narration": "A lantern that lands off centre can never be moved again."
+      },
+      {
+        "kind": "clip",
+        "mark": "gale",
+        "lead": -0.5,
+        "dur": 6.0,
+        "headline": "",
+        "narration": "And the wind does not care."
+      },
+      {
+        "kind": "clip",
+        "mark": "run2",
+        "lead": 1.0,
+        "dur": 4.5,
+        "cta": "Play it — link in the description",
+        "narration": "Free in your browser. Link in the description."
+      }
+    ]
+  }
 }

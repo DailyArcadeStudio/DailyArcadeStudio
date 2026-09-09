@@ -108,7 +108,8 @@ const QS = new URLSearchParams(location.search);
 const AUTO = QS.get('auto')==='1';
 const SHOWCASE_Q = QS.get('showcase');
 // Recording must produce clean footage, so every automated mode is muted.
-const SILENT = AUTO || !!SHOWCASE_Q || QS.get('mute')==='1';
+const REC = QS.get('rec')==='1';   // 録音モード: 音を鳴らして拾う
+const SILENT = (AUTO || !!SHOWCASE_Q || QS.get('mute')==='1') && !REC;
 
 // ---------- renderer / scene ----------
 const renderer = new THREE.WebGLRenderer({antialias:true});
@@ -365,6 +366,7 @@ window.__ev = name => {
   const busy = EVENTS[name](); nextEventAt = t + busy + 5; return true;
 };
 window.__alive = () => running && !dead;
+window.__recStop = () => SND.recStop();   // 録画用: ゲーム音を取り出す
 window.__kill = () => { if(running && !dead){ topple('manual'); } };
 window.__lean = () => +lean.toFixed(3);
 window.__height = () => stack.length;
@@ -511,6 +513,31 @@ const SND = (() => {
     return ctx;
   }
 
+
+  // ---- 録音用の分岐（?rec=1）----
+  // Playwright の録画には音声が入らないので、ゲーム自身に master バスを
+  // 録らせる。鳴っているものそのものなので映像と必ず同期する。
+  let recDest = null, recorder = null, recChunks = [];
+  function recStart() {
+    if (!ctx || recorder) return;
+    recDest = ctx.createMediaStreamDestination();
+    master.connect(recDest);
+    recorder = new MediaRecorder(recDest.stream, {mimeType: 'audio/webm'});
+    recorder.ondataavailable = e => { if (e.data.size) recChunks.push(e.data); };
+    recorder.start();
+  }
+  function recStop() {
+    return new Promise(res => {
+      if (!recorder) return res(null);
+      recorder.onstop = async () => {
+        const blob = new Blob(recChunks, {type: 'audio/webm'});
+        const buf = await blob.arrayBuffer();
+        res(Array.from(new Uint8Array(buf)));
+      };
+      recorder.stop();
+    });
+  }
+
   function blip(freq, dur, type = 'square', vol = 0.25, dest = null, slideTo = null) {
     if (!ctx || !on) return;
     const o = ctx.createOscillator(), g = ctx.createGain();
@@ -583,6 +610,8 @@ const SND = (() => {
               blip(180, 0.5, 'sawtooth', 0.28, null, 40); },
     over()  { ensure(); [0, 140, 280, 460].forEach((ms, i) =>
                 setTimeout(() => blip(hz(-i, -1), 0.42, 'triangle', 0.26), ms)); },
+    recStart() { ensure(); recStart(); },
+    recStop() { return recStop(); },
     toggle() { on = !on; if (!on) { this.stop(); } else { this.start(); } return on; },
     get enabled() { return on; },
   };
@@ -591,7 +620,7 @@ const SND = (() => {
 // --- one place for every action, so touch and keyboard stay in step ---
 function startRun(){
   titleEl.classList.add('hidden'); reset(); running=true;
-  if(!SILENT){ SND.unduck(); SND.start(); }
+  if(!SILENT){ SND.unduck(); SND.start(); if(REC) SND.recStart(); }
 }
 // Steering nudges the crane's swing phase, which slides the carrier
 // sideways without breaking the pendulum motion.
@@ -674,7 +703,7 @@ addEventListener('keydown', e=>{
 const RETRY_MS = Math.max(1200, parseInt(QS.get('hold')||'4200', 10));
 // ?noev=1 records a calm run with no events, for narration beds
 const NOEV = QS.get('noev')==='1';
-if(AUTO){ setTimeout(()=>{ titleEl.classList.add('hidden'); reset(); running=true; }, 1200); }
+if(AUTO){ setTimeout(startRun, 1200); }   // startRun 経由にする（音/録音も始まる）
 
 // The autopilot aims for the top of the pile, but has to release early:
 // the lantern takes time to fall, and the crane keeps moving while it does.
@@ -1067,7 +1096,8 @@ function gameOver(cause){
   msgEl.textContent = '';
   leanEl.style.opacity = 0;
   setTimeout(()=>{ koEl.classList.add('on'); }, 620);   // K.O. lands after the slow-mo
-  if(AUTO){ setTimeout(()=>{ reset(); running=true; }, RETRY_MS); }
+  if(AUTO){ setTimeout(()=>{ reset(); running=true;
+                             if(!SILENT) SND.unduck(); }, RETRY_MS); }
   else setTimeout(()=>{
     msgEl.textContent = matchMedia('(pointer:coarse)').matches
       ? 'Tap to retry' : 'Space to retry';

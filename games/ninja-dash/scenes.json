@@ -130,34 +130,34 @@
   ],
   "short": [
     {
-      "mark": "surge",
-      "lead": -0.5,
-      "dur": 7.0,
-      "headline": "The road speeds up"
+      "mark": "boss",
+      "lead": -0.3,
+      "dur": 9.0,
+      "headline": "It can never catch you"
+    },
+    {
+      "mark": "boss",
+      "lead": 2.5,
+      "dur": 6.0,
+      "headline": "That's on purpose"
     },
     {
       "mark": "wall",
       "lead": -0.5,
-      "dur": 7.0,
-      "headline": "Two lanes slam shut"
+      "dur": 8.0,
+      "headline": "Two walls. One gap."
     },
     {
-      "mark": "blackout",
+      "mark": "surge",
       "lead": -0.5,
-      "dur": 6.5,
-      "headline": "Then the lights go out"
-    },
-    {
-      "mark": "boss",
-      "lead": -0.3,
-      "dur": 9.0,
-      "headline": "And this comes up behind you"
+      "dur": 7.0,
+      "headline": "Surviving makes it harder"
     },
     {
       "mark": "death",
       "lead": -2.0,
-      "dur": 9.5,
-      "headline": "Every run ends the same way"
+      "dur": 9.0,
+      "headline": "You'll last 40 seconds"
     }
   ],
   "thumb": {
@@ -165,5 +165,55 @@
     "sub": "3 lanes. No brakes. Free in your browser.",
     "frame_mark": "wall",
     "frame_lead": 1.0
+  },
+  "short_v2": {
+    "cuts": [
+      {
+        "kind": "clip",
+        "mark": "boss",
+        "lead": -0.3,
+        "dur": 4.5,
+        "headline": "Today's game",
+        "narration": "Here is today's game."
+      },
+      {
+        "kind": "showcase",
+        "subject": "ninja",
+        "dur": 5.0,
+        "headline": "NINJA DASH",
+        "narration": "You are a courier on a road that does not want you on it."
+      },
+      {
+        "kind": "showcase",
+        "subject": "shuriken",
+        "dur": 5.0,
+        "headline": "Can't be jumped",
+        "narration": "The throwing stars hover at waist height, so jumping does nothing. You have to move."
+      },
+      {
+        "kind": "clip",
+        "mark": "wall",
+        "lead": -0.5,
+        "dur": 6.0,
+        "headline": "Two walls, one gap",
+        "narration": "Walls arrive two at a time. One gap, about one second to pick it."
+      },
+      {
+        "kind": "clip",
+        "mark": "death",
+        "lead": -2.0,
+        "dur": 6.5,
+        "headline": "",
+        "narration": "And it keeps getting faster."
+      },
+      {
+        "kind": "clip",
+        "mark": "run2",
+        "lead": 1.0,
+        "dur": 4.5,
+        "cta": "Play it — link in the description",
+        "narration": "Free in your browser. Link in the description."
+      }
+    ]
   }
 }
