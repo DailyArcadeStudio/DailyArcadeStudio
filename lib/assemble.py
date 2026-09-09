@@ -109,7 +109,13 @@ def seg_clip(src, start, dur, overlay_png, dst, pan=0.0):
                  "-t", f"{dur:.3f}", "-vf", fit], dst)
 
 
-def concat_xfade(segs, work):
+def concat_xfade(segs, work, kinds=None):
+    """segs = [(path, dur)]. `kinds` lets same-layout neighbours wipe.
+
+    A plain dissolve between two showcase scenes double-exposes two text
+    panels in the same place, which reads as garbled overlap. A wipe
+    slides one over the other instead.
+    """
     if len(segs) == 1:
         return segs[0][0]
     inputs = []
@@ -118,7 +124,10 @@ def concat_xfade(segs, work):
     fc, prev, cum = [], "0:v", segs[0][1]
     for i in range(1, len(segs)):
         out = f"v{i}"
-        fc.append(f"[{prev}][{i}:v]xfade=transition=fade:"
+        same = (kinds and i < len(kinds)
+                and kinds[i] == kinds[i-1] == "showcase")
+        trans = "wipeleft" if same else "fade"
+        fc.append(f"[{prev}][{i}:v]xfade=transition={trans}:"
                   f"duration={XFADE}:offset={cum - XFADE:.3f}[{out}]")
         prev = out
         cum = cum - XFADE + segs[i][1]
@@ -195,7 +204,7 @@ def main(scenes_path, work_dir, out_path):
         segs.append((dst, dur))
         print(f"  seg{i:02d} {kind:10s} {what:20s} {dur:5.2f}s", flush=True)
 
-    final = concat_xfade(segs, work)
+    final = concat_xfade(segs, work, [sc['kind'] for sc in scenes])
     run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(final),
          "-i", str(work / "narration.wav"),
          "-c:v", "copy", "-c:a", "aac", "-b:a", "192k",
