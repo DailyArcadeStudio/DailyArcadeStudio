@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Camel Queue</title>
+<style>
+  html,body{margin:0;padding:0;overflow:hidden;background:#120c08;font-family:'Helvetica Neue',Arial,sans-serif;}
+  #ui{position:fixed;top:16px;left:0;right:0;text-align:center;color:#fff;z-index:10;pointer-events:none;}
+  #score{font-size:clamp(26px,6vw,34px);font-weight:800;text-shadow:0 2px 8px #000;}
+  #msg{font-size:clamp(14px,3.4vw,20px);margin-top:6px;opacity:.9;text-shadow:0 2px 6px #000;}
+  /* the spacing meter: one pip per gap in the caravan, lit when the gap is safe */
+  #gaps{position:fixed;bottom:calc(18px + env(safe-area-inset-bottom,0px));left:0;right:0;
+    display:flex;justify-content:center;gap:clamp(5px,1.6vw,10px);z-index:10;pointer-events:none;}
+  #gaps .pip{width:clamp(16px,5vw,34px);height:clamp(7px,1.8vw,11px);border-radius:3px;
+    background:#3a2a1c;box-shadow:0 2px 6px #000;transition:background .12s;}
+  #title{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:rgba(14,9,5,.74);z-index:20;color:#fff;transition:opacity .4s;}
+  #title h1{font-size:clamp(38px,11vw,64px);margin:0 0 8px;letter-spacing:2px;text-shadow:0 4px 18px #f2a03c;}
+  #title p{font-size:clamp(14px,3.6vw,20px);opacity:.85;margin:4px 0;}
+  #title .btn{margin-top:26px;padding:14px 44px;font-size:clamp(20px,5vw,22px);font-weight:700;color:#241202;
+    background:linear-gradient(180deg,#ffc24a,#e07f18);border:none;border-radius:12px;cursor:pointer;
+    box-shadow:0 6px 24px rgba(242,160,60,.5);}
+  #title .btn:hover{transform:scale(1.05);}
+  .hidden{opacity:0;pointer-events:none;}
+  #back{position:fixed;top:14px;left:14px;z-index:30;text-decoration:none;
+    background:rgba(26,18,10,.72);color:#fff;font:600 15px/1 'Helvetica Neue',Arial,sans-serif;
+    padding:0 16px;height:44px;display:flex;align-items:center;border-radius:12px;}
+  #back:hover{background:rgba(56,40,22,.9);}
+  #mute{position:fixed;top:14px;right:14px;z-index:30;border:none;cursor:pointer;
+    background:rgba(26,18,10,.72);color:#fff;font-size:20px;line-height:1;
+    width:44px;height:44px;border-radius:12px;}
+  #mute:hover{background:rgba(56,40,22,.9);}
+  /* show the hint that matches the device */
+  .tc{display:none;}
+  @media (pointer:coarse){ .kb{display:none;} .tc{display:block;} }
+  /* a finger-sized START button on touch devices */
+  @media (pointer:coarse){ #title .btn{padding:18px 56px;font-size:24px;} }
+
+  /* --- event banner: slams into the middle of the screen --- */
+  #banner{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    z-index:15;pointer-events:none;opacity:0;}
+  #banner .b{font-size:clamp(30px,8.2vw,74px);font-weight:900;letter-spacing:.08em;color:#fff;
+    padding:10px 4vw;max-width:94vw;text-align:center;transform:scale(2.4);opacity:0;
+    text-shadow:0 0 26px currentColor, 0 6px 20px #000;
+    border-top:5px solid currentColor;border-bottom:5px solid currentColor;}
+  #banner.go .b{animation:slam .62s cubic-bezier(.12,.85,.2,1) forwards;}
+  @keyframes slam{
+    0%  {transform:scale(2.4) rotate(-4deg);opacity:0;}
+    22% {transform:scale(1)   rotate(0deg); opacity:1;}
+    70% {transform:scale(1)   rotate(0deg); opacity:1;}
+    100%{transform:scale(1.12);opacity:0;}
+  }
+
+  /* --- full-screen colour flashes --- */
+  #flash{position:fixed;inset:0;z-index:14;pointer-events:none;opacity:0;background:#fff;}
+  #vignette{position:fixed;inset:0;z-index:13;pointer-events:none;opacity:0;
+    background:radial-gradient(ellipse at center,rgba(0,0,0,0) 32%,rgba(120,10,0,.85) 100%);}
+
+  /* --- K.O. screen --- */
+  #ko{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    z-index:22;pointer-events:none;opacity:0;color:#fff;transition:opacity .3s;}
+  #ko.on{opacity:1;}
+  #ko .koText{font-size:clamp(96px,26vw,190px);font-weight:900;letter-spacing:10px;color:#fff;
+    text-shadow:0 0 40px #f2a03c,0 0 90px #e0521a,0 10px 30px #000;
+    transform:scale(3);opacity:0;}
+  #ko.on .koText{animation:koSlam .8s cubic-bezier(.1,.9,.2,1) forwards;}
+  @keyframes koSlam{
+    0%  {transform:scale(3) rotate(-8deg);opacity:0;}
+    30% {transform:scale(1) rotate(0deg);opacity:1;}
+    36% {transform:scale(1.06);}
+    100%{transform:scale(1);opacity:1;}
+  }
+  #ko .finalLabel{font-size:clamp(16px,4vw,22px);letter-spacing:5px;opacity:0;margin-top:6px;text-shadow:0 2px 8px #000;}
+  #ko .finalScore{font-size:clamp(52px,14vw,82px);font-weight:800;opacity:0;text-shadow:0 4px 20px #000;}
+  #ko.on .finalLabel{animation:fadeUp .5s .75s forwards;}
+  #ko.on .finalScore{animation:fadeUp .5s .9s forwards;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+</style>
+</head>
+<body>
+<div id="ui"><div id="score">0</div><div id="msg"></div></div>
+<div id="gaps"></div>
+<a id="back" href="../../" title="all games">‹ All games</a>
+<button id="mute" title="sound on/off">🔊</button>
+<div id="vignette"></div>
+<div id="flash"></div>
+<div id="banner"><div class="b"></div></div>
+<div id="ko">
+  <div class="koText">K.O.</div>
+  <div class="finalLabel">FINAL SCORE</div>
+  <div class="finalScore">0</div>
+</div>
+<div id="title">
+  <h1>CAMEL QUEUE</h1>
+  <p>Keep the caravan evenly spaced across the dunes.</p>
+  <p class="kb">↑ / W : hurry &nbsp;&nbsp; ↓ / S : ease &nbsp;&nbsp; Space : whistle</p>
+  <p class="tc">Swipe up to hurry &nbsp;&nbsp; Swipe down to ease &nbsp;&nbsp; Tap to whistle</p>
+  <button class="btn" id="startBtn">START</button>
+</div>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+// ---------- url flags (declared first: sound and camera both read them) ----------
+const QS = new URLSearchParams(location.search);
+const AUTO = QS.get('auto')==='1';
+const SHOWCASE_Q = QS.get('showcase');
+// Recording must produce clean footage, so every automated mode is muted.
+const REC = QS.get('rec')==='1';   // 録音モード: 音を鳴らして拾う
+const SILENT = (AUTO || !!SHOWCASE_Q || QS.get('mute')==='1') && !REC;
+
+// ---------- renderer / scene ----------
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.shadowMap.enabled = true;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const SKY = new THREE.Color(0x2a1508);          // dusk over the sand sea
+scene.background = SKY.clone();
+scene.fog = new THREE.Fog(0x2a1508, 26, 78);
+
+const camera = new THREE.PerspectiveCamera(58, innerWidth/innerHeight, .1, 220);
+
+// Portrait and landscape both have to work. A phone held upright is far
+// narrower than 16:9, and with a fixed FOV the tail of the caravan falls
+// outside the frame — so widen the vertical FOV as the screen gets taller.
+const BASE_FOV = 58;
+function fitCamera(){
+  const aspect = innerWidth / innerHeight;
+  camera.aspect = aspect;
+  if(typeof SHOWCASE !== 'undefined' && SHOWCASE){
+    camera.fov = aspect < 1 ? 62 : 46;
+  } else {
+    // keep the horizontal field roughly constant across aspect ratios
+    const ref = 16/9;
+    camera.fov = aspect >= ref ? BASE_FOV
+      : Math.min(96, THREE.MathUtils.radToDeg(
+          2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(BASE_FOV)/2) * (ref/aspect))));
+  }
+  camera.__base = camera.fov;    // MIRAGE / SANDSTORM return to this
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+}
+addEventListener('resize', fitCamera);
+addEventListener('orientationchange', ()=>setTimeout(fitCamera, 120));
+
+// ---------- lights ----------
+const hemi = new THREE.HemisphereLight(0xffca7a, 0x2a1206, 1.4);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xffdca0, 2.6);
+sun.position.set(-8, 14, 6); sun.castShadow = true;
+sun.shadow.camera.left=-22; sun.shadow.camera.right=22;
+sun.shadow.camera.top=22; sun.shadow.camera.bottom=-22;
+sun.shadow.mapSize.set(1024,1024);
+scene.add(sun);
+
+// ================= the dune field =================
+// The caravan walks along +X at x = trailX(z=0); the ground is a single long
+// strip whose vertices are displaced by the same height function the camels
+// read, so a camel is never floating above or sunk into the sand.
+//
+// Dunes are two out-of-phase sine waves. `duneAmp` and `duneShift` are
+// animated by events, which is what makes the ground "shift" under the queue.
+let duneAmp = 1.0;        // 1 = normal relief; events push this up
+let duneShift = 0;        // scrolls the dune phase, so crests travel
+const DUNE_A = 1.55, DUNE_B = .62;
+
+/** height of the sand at distance `s` along the caravan's path */
+function duneH(s){
+  return (Math.sin(s*0.085 + duneShift) * DUNE_A +
+          Math.sin(s*0.213 + duneShift*1.7 + 1.3) * DUNE_B) * duneAmp;
+}
+/** slope of the sand at `s` — camels lean into it and lose/gain speed on it */
+function duneSlope(s){
+  return (Math.cos(s*0.085 + duneShift) * DUNE_A * 0.085 +
+          Math.cos(s*0.213 + duneShift*1.7 + 1.3) * DUNE_B * 0.213) * duneAmp;
+}
+
+// The strip is rebuilt every frame from duneH, so shifting dunes really move.
+const STRIP_LEN = 190, STRIP_SEG = 150, STRIP_W = 26;
+const sandGeo = new THREE.PlaneGeometry(STRIP_LEN, STRIP_W, STRIP_SEG, 10);
+sandGeo.rotateX(-Math.PI/2);
+const sandMat = new THREE.MeshStandardMaterial({color:0xc98c42, roughness:.98, flatShading:true});
+const sand = new THREE.Mesh(sandGeo, sandMat);
+sand.receiveShadow = true;
+scene.add(sand);
+
+// Sand runs off to both sides at a lower detail so the horizon is not a cliff.
+const farSand = new THREE.Mesh(new THREE.PlaneGeometry(600, 600),
+  new THREE.MeshStandardMaterial({color:0x8f5f2c, roughness:1}));
+farSand.rotation.x = -Math.PI/2; farSand.position.y = -3.2;
+scene.add(farSand);
+
+/** Re-displace the visible strip around the caravan's current position. */
+function updateSand(centerS){
+  const pos = sandGeo.attributes.position;
+  sand.position.x = centerS;
+  for(let i=0;i<pos.count;i++){
+    const localX = pos.getX(i);
+    const zOff = pos.getZ(i);
+    // ridges fall away to the sides so the strip reads as a dune, not a ramp
+    const sideFade = 1 - Math.min(1, Math.abs(zOff)/ (STRIP_W*0.5)) * .35;
+    pos.setY(i, duneH(centerS + localX) * sideFade
+               + Math.sin((centerS+localX)*.9 + zOff*.55)*.06);   // fine ripples
+  }
+  pos.needsUpdate = true;
+  sandGeo.computeVertexNormals();
+}
+
+// ---------- sun disc + sky decoration ----------
+const sunDisc = new THREE.Mesh(new THREE.CircleGeometry(7, 48),
+  new THREE.MeshBasicMaterial({color:0xffb457, fog:false}));   // sky: never fogged out
+scene.add(sunDisc);
+// distant palm silhouettes, parallaxed
+const palms = [];
+for(let i=0;i<14;i++){
+  const g = new THREE.Group();
+  const trunkMat = new THREE.MeshBasicMaterial({color:0x3a2110, fog:false});
+  const tr = new THREE.Mesh(new THREE.CylinderGeometry(.16,.26,4.4,6), trunkMat);
+  tr.position.y = 2.2; g.add(tr);
+  for(let f=0;f<5;f++){
+    const frond = new THREE.Mesh(new THREE.ConeGeometry(.42,2.4,4), trunkMat);
+    frond.position.set(Math.cos(f/5*6.28)*.9, 4.5, Math.sin(f/5*6.28)*.9);
+    frond.rotation.z = Math.cos(f/5*6.28)*.9; frond.rotation.x = -Math.sin(f/5*6.28)*.9;
+    g.add(frond);
+  }
+  g.position.set(i*34 - 100, 0, -40 - Math.random()*14);
+  g.scale.setScalar(.8 + Math.random()*.7);
+  scene.add(g); palms.push(g);
+}
+
+// blowing sand motes — opacity is driven up during SANDSTORM
+const moteMat = new THREE.MeshBasicMaterial({color:0xe8c48a, transparent:true, opacity:.10});
+const motes = [];
+for(let i=0;i<180;i++){
+  const m = new THREE.Mesh(new THREE.BoxGeometry(.5,.05,.05), moteMat);
+  m.position.set(Math.random()*90-30, Math.random()*9, Math.random()*40-20);
+  scene.add(m); motes.push(m);
+}
+
+// ================= the camels =================
+// Primitive build only: capsules and boxes. A camel is a barrel body, two
+// humps, a curved neck, a snout and four legs that swing from the hips.
+const HIDE   = new THREE.MeshStandardMaterial({color:0xd8a25c, roughness:.85});
+const HIDE_D = new THREE.MeshStandardMaterial({color:0xb27d3d, roughness:.9});
+const LEAD_H = new THREE.MeshStandardMaterial({color:0xf2a03c, roughness:.7,
+  emissive:0x3a1c00});                       // the lead camel is the accent colour
+const CLOTH  = new THREE.MeshStandardMaterial({color:0xc2352b, roughness:.6});
+const DARK   = new THREE.MeshBasicMaterial({color:0x1a1008});
+
+function buildCamel(lead){
+  const g = new THREE.Group();
+  const hide = lead ? LEAD_H : HIDE;
+  const body = new THREE.Mesh(new THREE.CapsuleGeometry(.46, .95, 8, 16), hide);
+  body.rotation.z = Math.PI/2; body.position.y = 1.32; g.add(body);
+  // two humps — the silhouette that says "camel" at any distance
+  for(const hx of [.22, -.30]){
+    const h = new THREE.Mesh(new THREE.SphereGeometry(.34, 16, 12), hide);
+    h.scale.set(1, .9, .82); h.position.set(hx, 1.86, 0); g.add(h);
+  }
+  const saddle = new THREE.Mesh(new THREE.BoxGeometry(.5,.16,.86), CLOTH);
+  saddle.position.set(-.04, 1.72, 0); saddle.rotation.z = .08; g.add(saddle);
+  // neck: two segments so it curves forward rather than sticking out straight
+  const neck = new THREE.Mesh(new THREE.CapsuleGeometry(.17, .78, 6, 12), hide);
+  neck.position.set(.72, 1.86, 0); neck.rotation.z = .55; g.add(neck);
+  const head = new THREE.Group();
+  const skull = new THREE.Mesh(new THREE.SphereGeometry(.22, 14, 12), hide);
+  skull.scale.set(1.1,.95,.9); head.add(skull);
+  const snout = new THREE.Mesh(new THREE.CapsuleGeometry(.12,.24,6,10), HIDE_D);
+  snout.rotation.z = Math.PI/2 - .35; snout.position.set(.28,-.09,0); head.add(snout);
+  for(const s of [1,-1]){
+    const eye = new THREE.Mesh(new THREE.SphereGeometry(.045,8,8), DARK);
+    eye.position.set(.14,.08,.16*s); head.add(eye);
+    const ear = new THREE.Mesh(new THREE.ConeGeometry(.06,.16,6), hide);
+    ear.position.set(-.10,.22,.13*s); head.add(ear);
+  }
+  head.position.set(1.06, 2.30, 0); g.add(head);
+  const tail = new THREE.Mesh(new THREE.CapsuleGeometry(.05,.42,4,8), HIDE_D);
+  tail.position.set(-.82, 1.42, 0); tail.rotation.z = .9; g.add(tail);
+
+  // legs: front pair and back pair, swung in a two-beat pace
+  const legs = [];
+  for(const lx of [.42, -.42]) for(const lz of [.28,-.28]){
+    const leg = new THREE.Group();
+    const upper = new THREE.Mesh(new THREE.CapsuleGeometry(.10,.62,6,10), hide);
+    upper.position.y = -.42; leg.add(upper);
+    const hoof = new THREE.Mesh(new THREE.CylinderGeometry(.13,.15,.14,8), HIDE_D);
+    hoof.position.y = -.80; leg.add(hoof);
+    leg.position.set(lx, 1.18, lz);
+    g.add(leg); legs.push({leg, side:lz>0?1:-1, front:lx>0?1:-1});
+  }
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  return {group:g, legs, head, neck, tail, body};
+}
+
+// ---------- the caravan ----------
+// Every camel keeps a scalar `s` = distance travelled along the path. The
+// player only drives camel 0; the rest chase the camel ahead with their own
+// inertia, which is what makes the gaps breathe.
+const CARAVAN = 5;                       // lead + 4 followers
+const IDEAL = 4.6;                       // the gap the queue wants
+const GAP_MIN = 3.1, GAP_MAX = 6.4;      // outside this band, the queue breaks
+const camels = [];
+for(let i=0;i<CARAVAN;i++){
+  const c = buildCamel(i===0);
+  scene.add(c.group);
+  camels.push({...c, s:-i*IDEAL, v:0, strain:0, spook:0, bias:0, biasT:Math.random()*6});
+}
+const lead = camels[0];
+
+// a lamp riding with the lead camel, so it reads against the dusk
+const heroLight = new THREE.PointLight(0xffd08a, 26, 26);
+scene.add(heroLight);
+
+// ---------- hazards ----------
+// Hazards live at a fixed `s` on the path. They do not kill on contact: they
+// grab a camel and drag its speed, which pulls the gaps apart — the queue is
+// what dies, never a single animal.
+const hazards = [];
+const ROCK_M = new THREE.MeshStandardMaterial({color:0x6b4a30, roughness:1, flatShading:true});
+const CACTUS_M = new THREE.MeshStandardMaterial({color:0x3f6b3a, roughness:.8});
+const PIT_M = new THREE.MeshStandardMaterial({color:0xa8702c, roughness:1});
+
+function buildHazard(type){
+  const g = new THREE.Group();
+  if(type==='rock'){
+    for(let i=0;i<3;i++){
+      const r = new THREE.Mesh(new THREE.DodecahedronGeometry(.42+Math.random()*.34, 0), ROCK_M);
+      r.position.set((Math.random()-.5)*1.1, .3+Math.random()*.25, (Math.random()-.5)*1.5);
+      r.rotation.set(Math.random(),Math.random(),Math.random());
+      g.add(r);
+    }
+  } else if(type==='cactus'){
+    const trunk = new THREE.Mesh(new THREE.CapsuleGeometry(.24,1.5,6,12), CACTUS_M);
+    trunk.position.y = 1.15; g.add(trunk);
+    for(const s of [1,-1]){
+      const arm = new THREE.Mesh(new THREE.CapsuleGeometry(.15,.7,6,10), CACTUS_M);
+      arm.position.set(0, 1.5, .42*s); arm.rotation.x = -.9*s; g.add(arm);
+      const up = new THREE.Mesh(new THREE.CapsuleGeometry(.15,.5,6,10), CACTUS_M);
+      up.position.set(0, 1.95, .62*s); g.add(up);
+    }
+  } else {  // 'quicksand' — a sunken dish of darker, wetter sand
+    const dish = new THREE.Mesh(new THREE.CircleGeometry(1.9, 28), PIT_M);
+    dish.rotation.x = -Math.PI/2; dish.position.y = .05; g.add(dish);
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(1.9,.14,8,28), ROCK_M);
+    ring.rotation.x = -Math.PI/2; g.add(ring);
+  }
+  g.traverse(o=>{ if(o.isMesh){ o.castShadow = type!=='quicksand'; o.receiveShadow=true; } });
+  return g;
+}
+function spawnHazard(s){
+  const r = Math.random();
+  const type = r<.42 ? 'rock' : r<.75 ? 'cactus' : 'quicksand';
+  const g = buildHazard(type);
+  g.position.z = (Math.random()-.5)*1.6;      // slight lateral scatter for looks
+  scene.add(g);
+  hazards.push({group:g, type, s, drag: type==='quicksand' ? .95 : type==='rock' ? .62 : .48});
+}
+
+// ---------- the dust devil (event hazard: chases the tail of the queue) ----------
+const devil = (()=>{
+  const g = new THREE.Group();
+  const cone = new THREE.Mesh(new THREE.ConeGeometry(1.5, 8.5, 18, 6, true),
+    new THREE.MeshStandardMaterial({color:0xd8a86a, roughness:1, transparent:true,
+      opacity:.72, side:THREE.DoubleSide, flatShading:true}));
+  cone.position.y = 4.2; cone.rotation.x = Math.PI; g.add(cone);   // point down
+  // a soft halo so the base does not read as a hard cone edge
+  const glow = new THREE.Mesh(new THREE.CircleGeometry(3.0, 40), new THREE.ShaderMaterial({
+    transparent:true, depthWrite:false, blending:THREE.AdditiveBlending,
+    uniforms:{c:{value:new THREE.Color(0xffbe6a)}},
+    vertexShader:`varying vec2 vUv; void main(){ vUv=uv;
+      gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }`,
+    fragmentShader:`uniform vec3 c; varying vec2 vUv;
+      void main(){ float d=distance(vUv,vec2(.5));
+        float a=pow(max(0.,1.-d*2.),2.2)*.5;
+        gl_FragColor=vec4(c,a); }`,
+  }));
+  glow.position.y = 3.0; g.add(glow);
+  g.visible = false;
+  scene.add(g);
+  return {group:g, cone, glow, active:false, s:0};
+})();
+
+// ---------- game state ----------
+let running=false, dead=false, t=0, score=0;
+let pace = 5.4;                  // the lead camel's commanded speed
+let timeScale=1;
+let deadAt=0;
+let shake=0;
+let camDist=13.5, camDistTarget=13.5;
+let camHigh=5.2;
+let whistle=0;                   // >0 while the whistle is pulling the queue in
+let whistleCd=0;                 // cooldown so it cannot be spammed
+let mirage=0, storm=0, stampede=0, nightfall=0;
+let nextEventAt=9;
+let eventQueue=[];
+let breakMsg='';                 // why the queue broke (shown on the K.O. screen)
+const scoreEl = document.getElementById('score');
+const msgEl = document.getElementById('msg');
+const titleEl = document.getElementById('title');
+const bannerEl = document.getElementById('banner');
+const bannerText = bannerEl.querySelector('.b');
+const flashEl = document.getElementById('flash');
+const vignetteEl = document.getElementById('vignette');
+const koEl = document.getElementById('ko');
+const koScoreEl = koEl.querySelector('.finalScore');
+
+// the gap meter: one pip per gap between neighbours
+const gapsEl = document.getElementById('gaps');
+const pips = [];
+for(let i=0;i<CARAVAN-1;i++){
+  const p = document.createElement('div');
+  p.className = 'pip'; gapsEl.appendChild(p); pips.push(p);
+}
+
+// ---------- presentation helpers ----------
+function banner(text, color){
+  bannerText.textContent = text;
+  bannerText.style.color = color;
+  bannerEl.classList.remove('go');
+  void bannerEl.offsetWidth;      // restart the CSS animation
+  bannerEl.style.opacity = 1;
+  bannerEl.classList.add('go');
+}
+function flash(color, strength, ms){
+  flashEl.style.background = color;
+  flashEl.style.transition = 'none';
+  flashEl.style.opacity = strength;
+  requestAnimationFrame(()=>{
+    flashEl.style.transition = `opacity ${ms}ms ease-out`;
+    flashEl.style.opacity = 0;
+  });
+}
+
+// ---------- events ----------
+// Each one attacks the spacing in a different way, so the footage varies:
+// dune swell moves the ground, the devil drags the tail, the stampede shoves
+// the whole line forward, the mirage lies to the camera, nightfall hides the
+// queue and the sandstorm blows everyone apart at once.
+const EVENTS = {
+  swell(){
+    banner('DUNE SWELL', '#f2a03c');
+    duneTarget = 4.2;                     // taller dunes = harder climbs
+    duneScroll = 1.15;                    // and the crests start travelling
+    shake = Math.max(shake, .16);
+    return 8;
+  },
+  devil(){
+    banner('DUST DEVIL', '#c2352b');
+    devil.active = true;
+    devil.s = camels[CARAVAN-1].s - 16;   // spawns behind the tail and closes
+    devil.group.visible = true;
+    shake = Math.max(shake, .3);
+    return 8.5;
+  },
+  stampede(){
+    banner('STAMPEDE', '#ffe14a');
+    stampede = 4.5;                       // every follower bolts forward
+    for(const c of camels) c.spook = 1;
+    flash('#ffe9a8', .30, 380);
+    return 5.5;
+  },
+  mirage(){
+    banner('MIRAGE', '#7be0d8');
+    mirage = 5.0;                         // the camera swims; the gaps still count
+    return 6;
+  },
+  sandstorm(){
+    banner('SANDSTORM', '#e0d090');
+    storm = 6.0;                          // random per-camel gusts
+    return 7.5;
+  },
+  nightfall(){
+    banner('NIGHTFALL', '#7c6bff');
+    nightfall = 5.5;                      // lights down; only the lead lamp remains
+    return 7;
+  },
+};
+const EVENT_NAMES = Object.keys(EVENTS);
+
+// dune animation targets, eased so the ground never snaps
+let duneTarget = 1.0, duneScroll = 0;
+
+// recording/debug hook: fire a named event on cue (used by the capture script)
+// returns false if the run is already over, so a capture script can wait
+// for the next run instead of firing an event onto the K.O. screen
+window.__ev = name => {
+  if(!running || dead || !EVENTS[name]) return false;
+  const busy = EVENTS[name]();
+  if(!SILENT) SND.event(); nextEventAt = t + busy + 5; return true;
+};
+window.__alive = () => running && !dead;
+window.__kill = () => { if(running && !dead){ breakMsg='THE QUEUE BROKE'; dead=true; gameOver(); } };
+window.__recStop = () => SND.recStop();
+window.__snd = () => ({enabled: SND.enabled, silent: SILENT});
+window.__gaps = () => camels.slice(1).map((c,i)=>+(camels[i].s - c.s).toFixed(2));
+window.__fov = () => +camera.fov.toFixed(1);
+window.__probe = () => ({t:+t.toFixed(2), pace:+pace.toFixed(2),
+  amp:+duneAmp.toFixed(2), devil:devil.active, next:+nextEventAt.toFixed(2)});
+
+// the recording/verification tooling reads these; it cannot guess the names
+window.__subjects = ['camel','lead','rock','cactus','quicksand','devil'];
+window.__events   = EVENT_NAMES;
+
+function refillEventQueue(){
+  eventQueue = EVENT_NAMES.slice();
+  for(let i=eventQueue.length-1;i>0;i--){        // shuffle so the order varies per run
+    const j = Math.floor(Math.random()*(i+1));
+    [eventQueue[i],eventQueue[j]]=[eventQueue[j],eventQueue[i]];
+  }
+}
+
+function triggerEvent(){
+  if(!eventQueue.length) refillEventQueue();
+  const name = eventQueue.pop();
+  const busy = EVENTS[name]();
+  if(!SILENT) SND.event();
+  nextEventAt = t + busy + 5 + Math.random()*4;  // breathing room between events
+}
+
+// ---------- reset ----------
+function reset(){
+  for(const h of hazards) scene.remove(h.group);
+  hazards.length = 0;
+  for(let i=0;i<CARAVAN;i++){
+    const c = camels[i];
+    c.s = -i*IDEAL; c.v = pace; c.strain = 0; c.spook = 0;
+    c.bias = 0; c.biasT = Math.random()*6;
+    c.group.rotation.set(0,0,0);
+    c.group.scale.set(1,1,1);
+    c.group.visible = true;
+  }
+  let s = 34;
+  for(let i=0;i<26;i++){ spawnHazard(s); s += 13 + Math.random()*16; }
+  t=0; score=0; dead=false; pace=5.4;
+  timeScale=1; shake=0; camDist=13.5; camDistTarget=13.5; camHigh=5.2;
+  whistle=0; whistleCd=0;
+  mirage=0; storm=0; stampede=0; nightfall=0;
+  duneAmp=1.0; duneTarget=1.0; duneShift=0; duneScroll=0;
+  devil.active=false; devil.group.visible=false;
+  breakMsg='';
+  nextEventAt = 9;
+  refillEventQueue();
+  msgEl.textContent='';
+  koEl.classList.remove('on');
+  vignetteEl.style.transition='opacity .3s'; vignetteEl.style.opacity=0;
+  hemi.intensity=1.4; sun.intensity=2.6;
+  scene.background.copy(SKY); scene.fog.color.copy(SKY);
+  moteMat.opacity = .10;
+}
+
+const startBtn = document.getElementById('startBtn');
+
+// ---------- sound: everything synthesised, no audio files ----------
+// Keeps the single-HTML rule (nothing to download) and lets the music
+// react to play: the bass line speeds up with the game, events drop a
+// stinger, and the whole thing ducks out on a game over.
+const SND = (() => {
+  let ctx = null, master = null, musicGain = null, on = true, started = false;
+  let step = 0, timer = null, tempo = 0.25;
+
+  // A pentatonic scale never sounds wrong against itself, which matters
+  // when the tempo drifts with the player's speed.
+  // minor pentatonic, driving — a chase that never lets up
+  const SCALE = [0, 3, 5, 7, 10];
+  const ROOT = 196;
+  const BASS = 'square', LEAD = 'sawtooth';
+  const hz = (deg, oct = 0) =>
+    ROOT * Math.pow(2, oct + Math.floor(deg / SCALE.length)) *
+    Math.pow(2, SCALE[((deg % SCALE.length) + SCALE.length) % SCALE.length] / 12);
+
+  function ensure() {
+    if (ctx) return ctx;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    ctx = new AC();
+    master = ctx.createGain();
+    master.gain.value = 0.32;
+    master.connect(ctx.destination);
+    musicGain = ctx.createGain();
+    musicGain.gain.value = 1;
+    musicGain.connect(master);
+    return ctx;
+  }
+
+
+  // ---- 録音用の分岐（?rec=1）----
+  // Playwright の録画には音声が入らないので、ゲーム自身に master バスを
+  // 録らせる。鳴っているものそのものなので映像と必ず同期する。
+  let recDest = null, recorder = null, recChunks = [];
+  function recStart() {
+    if (!ctx || recorder) return;
+    recDest = ctx.createMediaStreamDestination();
+    master.connect(recDest);
+    recorder = new MediaRecorder(recDest.stream, {mimeType: 'audio/webm'});
+    recorder.ondataavailable = e => { if (e.data.size) recChunks.push(e.data); };
+    recorder.start();
+  }
+  function recStop() {
+    return new Promise(res => {
+      if (!recorder) return res(null);
+      recorder.onstop = async () => {
+        const blob = new Blob(recChunks, {type: 'audio/webm'});
+        const buf = await blob.arrayBuffer();
+        res(Array.from(new Uint8Array(buf)));
+      };
+      recorder.stop();
+    });
+  }
+
+  function blip(freq, dur, type = 'square', vol = 0.25, dest = null, slideTo = null) {
+    if (!ctx || !on) return;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, ctx.currentTime);
+    if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, ctx.currentTime + dur);
+    // a short attack stops every note from clicking
+    g.gain.setValueAtTime(0, ctx.currentTime);
+    g.gain.linearRampToValueAtTime(vol, ctx.currentTime + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
+    o.connect(g); g.connect(dest || master);
+    o.start(); o.stop(ctx.currentTime + dur + 0.02);
+  }
+
+  function noise(dur, vol = 0.2, hp = 800) {
+    if (!ctx || !on) return;
+    const n = Math.floor(ctx.sampleRate * dur);
+    const buf = ctx.createBuffer(1, n, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    const f = ctx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = hp;
+    const g = ctx.createGain(); g.gain.value = vol;
+    src.connect(f); f.connect(g); g.connect(master);
+    src.start();
+  }
+
+  // --- the loop: a walking bass plus an offbeat blip ---
+  function tick() {
+    if (!ctx || !on) return;
+    const bar = step % 16;
+    // straight driving pulse: bass on every beat, lead stabs offbeat
+    if (bar % 2 === 0) blip(hz(bar % 8 === 0 ? 0 : 1, -1), tempo * 1.1, BASS, 0.30, musicGain);
+    if (bar % 8 === 5) blip(hz(4, 0), tempo * 0.6, LEAD, 0.09, musicGain);
+    if (bar % 4 === 2) noise(0.04, 0.05, 5000);
+    step++;
+    timer = setTimeout(tick, tempo * 1000);
+  }
+
+  return {
+    // must be called from a user gesture — browsers block audio otherwise
+    start() {
+      if (!ensure() || started) return;
+      if (ctx.state === 'suspended') ctx.resume();
+      started = true; step = 0; tick();
+    },
+    stop() { if (timer) { clearTimeout(timer); timer = null; } started = false; },
+    /** speed the music up with the game; 1 = starting pace */
+    setPace(mult) { tempo = Math.max(0.11, 0.25 / Math.max(0.2, mult)); },
+    duck(sec = 1.6) {                                      // for game over
+      if (!ctx) return;
+      musicGain.gain.cancelScheduledValues(ctx.currentTime);
+      musicGain.gain.setValueAtTime(musicGain.gain.value, ctx.currentTime);
+      musicGain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + sec);
+    },
+    unduck() {
+      if (!ctx) return;
+      musicGain.gain.cancelScheduledValues(ctx.currentTime);
+      musicGain.gain.setValueAtTime(0.0001, ctx.currentTime);
+      musicGain.gain.exponentialRampToValueAtTime(1, ctx.currentTime + 0.4);
+    },
+    // --- one-shots: short, pitched and distinct, so they read under narration ---
+    hurry() { ensure(); blip(hz(2, 0), 0.09, LEAD, 0.14, null, hz(4, 0)); },   // rising
+    ease()  { ensure(); blip(hz(4, 0), 0.11, LEAD, 0.13, null, hz(0, 0)); },   // falling
+    // the whistle: a clean two-note call, unmistakable against the bass
+    call()  { ensure(); blip(hz(4, 1), 0.10, 'triangle', 0.22, null, hz(6, 1));
+              setTimeout(() => blip(hz(6, 1), 0.16, 'triangle', 0.20), 90); },
+    // a camel stumbling into a hazard: a dull thud, no pitch
+    stumble(){ ensure(); noise(0.10, 0.14, 260); },
+    // the queue is out of band — a nagging two-tone warning
+    warn()  { ensure(); blip(hz(1, 0), 0.07, 'square', 0.10);
+              setTimeout(() => blip(hz(0, 0), 0.07, 'square', 0.10), 80); },
+    event() { ensure(); [0, 90, 180].forEach((ms, i) =>
+                setTimeout(() => blip(hz(2 + i, 0), 0.18, 'sawtooth', 0.20), ms)); },
+    hit()   { ensure(); noise(0.35, 0.30, 200);
+              blip(180, 0.5, 'sawtooth', 0.28, null, 40); },
+    over()  { ensure(); [0, 140, 280, 460].forEach((ms, i) =>
+                setTimeout(() => blip(hz(-i, -1), 0.42, 'triangle', 0.26), ms)); },
+    recStart() { ensure(); recStart(); },
+    recStop() { return recStop(); },
+    toggle() { on = !on; if (!on) { this.stop(); } else { this.start(); } return on; },
+    get enabled() { return on; },
+  };
+})();
+
+// --- one place for every action, so touch and keyboard stay in step ---
+const PACE_MIN = 3.0, PACE_MAX = 9.5;
+function startRun(){
+  titleEl.classList.add('hidden'); reset(); running=true;
+  if(!SILENT){ SND.unduck(); SND.start(); if(REC) SND.recStart(); }
+}
+function hurry(){ if(!running||dead) return;
+  pace = Math.min(PACE_MAX, pace + .85); if(!SILENT) SND.hurry(); }
+function ease(){  if(!running||dead) return;
+  pace = Math.max(PACE_MIN, pace - .85); if(!SILENT) SND.ease(); }
+/** The whistle: for a moment every follower closes hard on the camel ahead.
+ *  It is the only tool that fixes a gap that has already opened, and it has a
+ *  cooldown, so it has to be spent at the right moment. */
+function callQueue(){
+  if(!running||dead||whistleCd>0) return;
+  whistle = 1.6; whistleCd = 4.5;
+  for(const c of camels) c.spook = 0;
+  if(!SILENT) SND.call();
+}
+
+const muteBtn = document.getElementById('mute');
+function toggleMute(){ muteBtn.textContent = SND.toggle() ? '🔊' : '🔇'; }
+muteBtn.addEventListener('click', toggleMute);
+muteBtn.addEventListener('touchend', e=>{ e.preventDefault(); toggleMute(); },
+                         {passive:false});
+if(SILENT) muteBtn.style.display='none';   // automated modes have no audio
+addEventListener('keydown', e=>{ if(e.code==='KeyM') toggleMute(); });
+
+startBtn.addEventListener('click', startRun);
+// a touch on the button must start too — click alone is unreliable on touch
+startBtn.addEventListener('touchend', e=>{ e.preventDefault(); startRun(); },
+                          {passive:false});
+
+addEventListener('keydown', e=>{
+  if(!running){
+    if(e.code==='Space'||e.code==='Enter') startRun();
+    return;
+  }
+  if(e.code==='ArrowUp'||e.code==='KeyW')   hurry();
+  if(e.code==='ArrowDown'||e.code==='KeyS') ease();
+  if(e.code==='Space'||e.code==='Enter')    callQueue();
+});
+
+// --- touch: swipe up/down to change pace, tap to whistle ---
+// Most viewers arrive from a phone, so the game has to be playable
+// without a keyboard, through the same action functions as the keys.
+(function(){
+  let sx=0, sy=0, st=0, moved=false;
+  const SWIPE = 26;          // px before a drag counts as a swipe
+  const canvas = renderer.domElement;
+
+  canvas.addEventListener('touchstart', e=>{
+    const t = e.changedTouches[0];
+    sx=t.clientX; sy=t.clientY; st=Date.now(); moved=false;
+  }, {passive:true});
+
+  canvas.addEventListener('touchmove', e=>{
+    if(moved || !running || dead) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX-sx, dy = t.clientY-sy;
+    if(Math.abs(dy) > SWIPE && Math.abs(dy) > Math.abs(dx)){
+      dy < 0 ? hurry() : ease();
+      moved = true;                       // one pace step per swipe
+    } else if(Math.abs(dx) > SWIPE){
+      callQueue();                        // a sideways swipe also whistles
+      moved = true;
+    }
+  }, {passive:true});
+
+  canvas.addEventListener('touchend', e=>{
+    if(dead){
+      // give the K.O. animation time to read, then a tap retries
+      if(!AUTO && Date.now()-deadAt > 1500) startRun();
+      return;
+    }
+    if(!running){ startRun(); return; }
+    // a short touch that never became a swipe is a tap → whistle
+    if(!moved && Date.now()-st < 350) callQueue();
+  }, {passive:true});
+
+  // The title overlay sits above the canvas, so a tap anywhere on it never
+  // reaches the canvas handler. Start from the overlay itself.
+  titleEl.addEventListener('touchend', e=>{
+    if(!running){ e.preventDefault(); startRun(); }
+  }, {passive:false});
+
+  // stop the browser treating game taps as scroll / double-tap zoom
+  canvas.addEventListener('touchmove', e=>e.preventDefault(), {passive:false});
+})();
+
+// autoplay mode for recording: ?auto=1
+// recording holds the K.O. longer than play does: ?hold=9000
+const RETRY_MS = Math.max(1200, parseInt(QS.get('hold')||'4200', 10));
+// ?noev=1 records a calm run with no events, for narration beds
+const NOEV = QS.get('noev')==='1';
+if(AUTO){ setTimeout(startRun, 1200); }   // startRun 経由にする（音/録音も始まる）
+
+// ---------- autopilot ----------
+// Plays the real game through the real action functions: it watches the
+// worst gap in the queue and nudges the pace to pull it back to IDEAL,
+// spending the whistle when a gap is about to break.
+let autoCd = 0;
+function autoPilot(dt){
+  autoCd -= dt;
+  // The gap that is closest to breaking, and which wall it is heading for.
+  // Trend matters as much as position: a gap of 5.5 that is opening fast is
+  // more urgent than a gap of 6.0 that is already closing.
+  let worstErr = -99, worstGap = IDEAL, opening = 0;
+  for(let i=1;i<CARAVAN;i++){
+    const g = camels[i-1].s - camels[i].s;
+    const rate = camels[i-1].v - camels[i].v;        // >0 = the gap is opening
+    // distance to whichever wall this gap is drifting toward
+    const err = Math.max(g - IDEAL, IDEAL - g) + rate*(g > IDEAL ? .55 : -.55);
+    if(err > worstErr){ worstErr = err; worstGap = g; opening = rate; }
+  }
+  // The whistle is the only way to reel in a gap that is already stretched,
+  // so spend it when the widest gap is genuinely near the wall.
+  if(worstGap > GAP_MAX - 1.0 && opening > -0.2 && whistleCd <= 0){ callQueue(); return; }
+  if(autoCd > 0) return;
+  autoCd = .14;                       // don't hammer the pace every frame
+  // Easing lets the tail close up; hurrying stretches the line but scores more.
+  const slack = worstGap - IDEAL;
+  if(slack > .55 || (slack > .1 && opening > .35))       ease();
+  else if(slack < -.55 || (slack < -.1 && opening < -.35)) hurry();
+  // in the clear: creep the pace up, because score scales with pace
+  else if(pace < PACE_MAX - .9 && Math.abs(slack) < .45) hurry();
+}
+
+// ---------- showcase mode ----------
+// Puts one object on a turntable against an empty stage so the video can
+// talk about it while the real thing is on screen. Uses the game's own
+// meshes, so what the narration describes is exactly what ships.
+const SHOWCASE = QS.get('showcase');
+const showcase = {group:null, spin:.55, label:''};
+
+function buildShowcase(name){
+  const g = new THREE.Group();
+  let label = '', spin = .55;
+  if(name==='camel' || name==='lead'){
+    const c = buildCamel(name==='lead');
+    c.group.scale.setScalar(1.1);
+    g.add(c.group);
+    label = name==='lead' ? 'THE LEAD CAMEL' : 'A CARAVAN CAMEL';
+    spin = .5;
+    // hold a walking pose so the legs read as legs, not posts
+    c.legs.forEach((L,i)=>{ L.leg.rotation.z = (i%2?1:-1)*.42; });
+    c.head.rotation.z = .12;
+  } else if(name==='rock'){
+    const m = buildHazard('rock'); m.scale.setScalar(1.9); g.add(m);
+    label = 'SCREE'; spin = .6;
+  } else if(name==='cactus'){
+    const m = buildHazard('cactus'); m.scale.setScalar(1.15); g.add(m);
+    label = 'CACTUS'; spin = .5;
+  } else if(name==='quicksand'){
+    const m = buildHazard('quicksand'); m.scale.setScalar(1.0);
+    m.rotation.x = -0.95;               // tilt the dish so it is not edge-on
+    g.add(m); label = 'QUICKSAND'; spin = .7;
+  } else if(name==='devil'){
+    const c = new THREE.Mesh(new THREE.ConeGeometry(1.5, 8.5, 18, 6, true),
+      new THREE.MeshStandardMaterial({color:0xd8a86a, roughness:1, transparent:true,
+        opacity:.85, side:THREE.DoubleSide, flatShading:true}));
+    c.rotation.x = Math.PI; g.add(c);
+    label = 'DUST DEVIL'; spin = 2.4;
+  }
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  scene.add(g);
+
+  // Centre the subject on the origin and pull the camera back to fit it,
+  // so every object is framed the same way regardless of its size.
+  const box = new THREE.Box3().setFromObject(g);
+  const size = box.getSize(new THREE.Vector3());
+  const mid = box.getCenter(new THREE.Vector3());
+  g.position.sub(mid);                       // sit centred at the origin
+  // Fit to whichever axis is tighter in frame: with a wide aspect the height
+  // is the limit, so fitting on width alone leaves the subject tiny.
+  const fovV = THREE.MathUtils.degToRad(camera.fov);
+  const distV = (size.y*0.5) / Math.tan(fovV/2);
+  const distH = (size.x*0.5) / Math.tan(fovV/2) / camera.aspect;
+  const reach = Math.max(size.x, size.y) * 0.5;
+  const dist = Math.max(distV, distH) * 1.28 + 0.6;      // 1.28 = breathing room
+  camera.position.set(0, size.y*0.06, dist);
+
+  // Slide the subject sideways so a text panel can own the other half.
+  // The offset lives on a parent so the turntable still spins in place —
+  // rotating an offset group would make it orbit instead.
+  g.rotation.y = -Math.PI/2;      // start side-on, the readable silhouette
+  const bias = parseFloat(QS.get('sx') || '0');
+  const pivot = new THREE.Group();
+  pivot.position.x = -bias * reach * 1.15;
+  scene.add(pivot);
+  pivot.add(g);
+  showcase.group = g; showcase.pivot = pivot;
+  showcase.spin = spin; showcase.label = label;
+}
+
+fitCamera();          // SHOWCASE is known by here
+if(SHOWCASE){
+  titleEl.classList.add('hidden');
+  buildShowcase(SHOWCASE);
+  scoreEl.textContent = '';
+  msgEl.textContent = QS.get('nolabel')==='1' ? '' : showcase.label;
+  msgEl.style.fontSize = 'clamp(18px,5vw,30px)';
+  msgEl.style.letterSpacing = '6px';
+  // a plain dark stage: nothing on screen but the subject
+  sand.visible = false; farSand.visible = false; sunDisc.visible = false;
+  gapsEl.style.display = 'none';
+  for(const c of camels) c.group.visible = false;   // playable camels are separate objects
+  for(const p of palms) p.visible = false;
+  for(const m of motes) m.visible = false;
+  devil.group.visible = false;
+  scene.fog = null;
+  scene.background = new THREE.Color(0x120c14);
+  heroLight.position.set(2.6, 3.2, 4.2);
+  heroLight.intensity = 70;
+  hemi.intensity = 1.5;
+  sun.intensity = 2.2; sun.position.set(2.5, 6, 6);
+  // a second light from the other side so the far face is not pure black
+  const fill = new THREE.PointLight(0x88aaff, 26, 26);
+  fill.position.set(-4.5, 2.4, 3.6); scene.add(fill);
+}
+// let the capture script drive the turntable and swap subjects
+window.__showcase = name => {
+  if(showcase.pivot) scene.remove(showcase.pivot);   // pivot owns the group
+  buildShowcase(name);
+  msgEl.textContent = showcase.label;
+};
+
+// ---------- simulation ----------
+let warnCd = 0;             // throttles the out-of-band warning beep
+
+function stepCamels(dt){
+  // --- lead camel: obeys the commanded pace, but the sand fights it ---
+  // climbing costs speed, descending gives it back (additive, so the drag is
+  // the same absolute bite at every pace and cannot compound)
+  let leadTarget = pace - THREE.MathUtils.clamp(duneSlope(lead.s), -.9, .9) * 4.2;
+  if(stampede>0) leadTarget += .6;
+  leadTarget -= lead.strain * 4.0;
+  lead.v += (leadTarget - lead.v) * Math.min(1, dt*3.2);
+  lead.v = THREE.MathUtils.clamp(lead.v, 0.4, PACE_MAX + 2.5);
+  lead.s += lead.v*dt;
+
+  // --- followers: chase the camel ahead with their own inertia ---
+  // A damped spring on the gap. The damping term (the closing-speed feedback)
+  // is what keeps this stable: a pure position spring would oscillate forever
+  // and the swing would amplify down the line until the tail slingshotted.
+  const K_POS = 0.48;      // pull toward IDEAL (weak: the player is the real corrector)
+  const K_VEL = 1.55;      // damping — must stay well above sqrt(K_POS) here
+  for(let i=1;i<CARAVAN;i++){
+    const c = camels[i], ahead = camels[i-1];
+    const gap = ahead.s - c.s;
+    // Each camel has a temperament that wanders: some dawdle, some push on.
+    // Without this the spring would hold the queue together untouched and the
+    // player would have nothing to do — this is what makes the queue drift.
+    c.biasT += dt;
+    c.bias = Math.sin(c.biasT*0.62 + i*2.3)*1.5 + Math.sin(c.biasT*0.23 + i)*1.25;
+    // match the camel ahead, corrected by gap error and closing speed
+    let want = ahead.v + (gap - IDEAL)*K_POS - (c.v - ahead.v)*K_VEL;
+    // Slope is an additive drag, not a multiplier: `ahead.v` already carries
+    // the leader's slope, so scaling it again compounds along the queue.
+    want -= THREE.MathUtils.clamp(duneSlope(c.s), -.9, .9) * 4.2;
+    // whistle: everyone closes hard on the camel ahead for a moment
+    if(whistle>0) want += (gap - IDEAL*0.7) * 2.2;
+    // stampede: followers bolt, ignoring the camel in front
+    if(stampede>0) want += c.spook * (5.2 + Math.sin(t*3+i)*2.4);
+    // sandstorm: an independent gust per camel, so the line frays
+    if(storm>0) want += Math.sin(t*(1.4+i*.37) + i*2.1) * 4.2;
+    want += c.bias;                       // its own temperament
+    // hazards drag whoever is standing in them
+    want -= c.strain * 4.0;
+    // reaction lag grows down the line — the tail is always the loose end
+    c.v += (want - c.v) * Math.min(1, dt*(6.0 - i*0.55));
+    // a camel can trot but never sprint: the cap stops any runaway feedback
+    c.v = THREE.MathUtils.clamp(c.v, 0.4, PACE_MAX + 2.5);
+    c.s += c.v*dt;
+  }
+
+  // --- hazard drag ---
+  for(const c of camels) c.strain = Math.max(0, c.strain - dt*1.3);
+  for(const h of hazards){
+    for(const c of camels){
+      if(Math.abs(c.s - h.s) < 1.5){
+        if(c.strain < h.drag){
+          if(c.strain < .04 && !SILENT) SND.stumble();   // one thud per entry
+          c.strain = h.drag;
+        }
+      }
+    }
+  }
+
+  // --- dust devil: closes on the tail and drags it hard ---
+  if(devil.active){
+    const tail = camels[CARAVAN-1];
+    devil.s += (tail.s - 3.0 - devil.s) * Math.min(1, dt*0.55);
+    const d = Math.abs(tail.s - devil.s);
+    if(d < 5.0) tail.strain = Math.max(tail.strain, .85 * (1 - d/5.0));
+    shake = Math.max(shake, .10 * THREE.MathUtils.clamp(1 - d/10, 0, 1));
+  }
+}
+
+/** Place a camel's mesh from its scalar `s`, sitting it on the sand. */
+function placeCamel(c, i){
+  const g = c.group;
+  g.position.x = c.s;
+  g.position.z = Math.sin(c.s*0.06 + i*0.9) * 1.1;      // a gentle weave, not a rail
+  const h = duneH(c.s);
+  g.position.y = h;
+  // pitch into the slope so the camel looks like it is climbing, not sliding
+  g.rotation.z = -Math.atan(duneSlope(c.s)) * 0.9;
+  // walk cycle: the two-beat pace of a camel — same-side legs move together
+  const stride = c.v * 1.5;
+  const ph = c.s * 1.5;
+  for(const L of c.legs){
+    const beat = Math.sin(ph + (L.side>0 ? 0 : Math.PI));
+    L.leg.rotation.z = beat * .38 * THREE.MathUtils.clamp(c.v/5, .2, 1.4);
+  }
+  // the body rocks and the head bobs with the stride
+  g.position.y += Math.abs(Math.sin(ph)) * .05 * THREE.MathUtils.clamp(c.v/5,.2,1.2);
+  c.head.rotation.z = Math.sin(ph*.5)*.10 - c.strain*.5;     // head drops when strained
+  c.tail.rotation.x = Math.sin(t*4 + i)*.35;
+  // strain reads visually: a strained camel leans back and slows its legs
+  g.rotation.y = Math.sin(c.s*0.06 + i*0.9)*0.12;
+}
+
+// ---------- loop ----------
+const clock = new THREE.Clock();
+function tick(){
+  requestAnimationFrame(tick);
+  const raw = Math.min(clock.getDelta(), .05);
+  const dt = raw * timeScale;
+
+  if(SHOWCASE){
+    if(showcase.group) showcase.group.rotation.y += raw*showcase.spin;
+    camera.lookAt(0, 0, 0);        // subject is offset, camera stays on axis
+    renderer.render(scene, camera);
+    return;
+  }
+
+  if(running && !dead){
+    t += dt;
+    score += dt * (6 + pace);              // a brisk, held queue scores faster
+    scoreEl.textContent = Math.floor(score);
+    if(!SILENT) SND.setPace(pace/5.4);
+    if(AUTO) autoPilot(dt);
+
+    // --- events ---
+    if(t > nextEventAt && !NOEV) triggerEvent();
+
+    // DUNE SWELL: the relief grows and the crests start travelling
+    duneAmp += (duneTarget - duneAmp) * Math.min(1, dt*0.8);
+    duneShift += duneScroll * dt;
+    if(duneTarget > 1.05){
+      duneTarget -= dt*0.16;                            // settles back over ~9s
+      if(duneTarget <= 1.05){ duneTarget = 1.0; duneScroll = 0; }
+    }
+
+    // STAMPEDE: the spook decays, and the pace snaps back once it passes
+    if(stampede>0){
+      stampede -= dt;
+      for(const c of camels) c.spook = Math.max(0, c.spook - dt*0.22);
+      if(stampede<=0) for(const c of camels) c.spook = 0;
+    }
+
+    // SANDSTORM: the air fills with sand and the sky bleaches out
+    if(storm>0){
+      storm -= dt;
+      moteMat.opacity = Math.min(.85, moteMat.opacity + dt*1.6);
+      scene.fog.far = Math.max(30, scene.fog.far - dt*34);
+      shake = Math.max(shake, .07);
+    } else if(moteMat.opacity > .10){
+      moteMat.opacity = Math.max(.10, moteMat.opacity - dt*.5);
+      scene.fog.far = Math.min(78, scene.fog.far + dt*40);
+    }
+
+    // NIGHTFALL: the sun goes out and only the lead camel's lamp is left
+    if(nightfall>0){
+      nightfall -= dt;
+      const k = nightfall > .6 ? 0 : 1 - nightfall/.6;   // fade back in at the end
+      hemi.intensity = .18 + 1.22*k; sun.intensity = 2.6*k;
+      scene.background.setHex(0x05060e).lerp(SKY, k);
+      scene.fog.color.copy(scene.background);
+      sunDisc.visible = k > .5;
+      if(nightfall<=0){
+        hemi.intensity=1.4; sun.intensity=2.6;
+        scene.background.copy(SKY); scene.fog.color.copy(SKY); sunDisc.visible=true;
+      }
+    }
+
+    // MIRAGE: the camera swims and the FOV breathes — the queue is unchanged,
+    // so the player has to trust the pip meter over their eyes.
+    if(mirage>0){
+      mirage -= dt;
+      camera.fov = camera.__base + Math.sin(t*3.1)*4.2;
+      camera.updateProjectionMatrix();
+    } else if(Math.abs(camera.fov - camera.__base) > 0.05){
+      camera.fov += (camera.__base - camera.fov)*Math.min(1,dt*3);
+      camera.updateProjectionMatrix();
+    }
+
+    // whistle timers
+    if(whistle>0) whistle -= dt;
+    if(whistleCd>0) whistleCd -= dt;
+
+    stepCamels(dt);
+
+    // --- the actual failure condition: a gap outside the band ---
+    let worst = 0, worstIdx = 0, tooClose = false;
+    for(let i=1;i<CARAVAN;i++){
+      const gap = camels[i-1].s - camels[i].s;
+      const bad = gap > GAP_MAX ? gap - GAP_MAX : (gap < GAP_MIN ? GAP_MIN - gap : 0);
+      if(bad > worst){ worst = bad; worstIdx = i; tooClose = gap < GAP_MIN; }
+      // pip colour: green in band, amber near the edge, red outside
+      const edge = Math.min(Math.abs(gap-GAP_MIN), Math.abs(gap-GAP_MAX));
+      pips[i-1].style.background =
+        bad > 0 ? '#ff3b2e' : edge < 1.2 ? '#ffc24a' : '#6fe08a';
+    }
+    if(worst > 0){
+      warnCd -= dt;
+      if(warnCd <= 0){ if(!SILENT) SND.warn(); warnCd = .55; }
+      msgEl.textContent = tooClose ? 'TOO TIGHT' : 'FALLING BEHIND';
+      // a short grace period, so a brief overshoot is recoverable
+      camels[worstIdx].strain = Math.max(camels[worstIdx].strain, 0);
+      if(worst > 1.9){
+        breakMsg = tooClose ? 'THE QUEUE COLLIDED' : 'A CAMEL WAS LOST';
+        dead = true; gameOver(camels[worstIdx]);
+      }
+    } else {
+      msgEl.textContent = '';
+    }
+
+    // recycle hazards that the queue has walked past
+    const tailS = camels[CARAVAN-1].s;
+    for(const h of hazards){
+      if(h.s < tailS - 14) h.s += 26*15 + Math.random()*60;
+      h.group.position.x = h.s;
+      h.group.position.y = duneH(h.s) - (h.type==='quicksand' ? .06 : 0);
+    }
+
+    // world dressing follows the caravan
+    updateSand(lead.s);
+    farSand.position.x = lead.s;
+    sunDisc.position.set(lead.s + 18, 8.5, -70);   // low on the horizon, behind the queue
+    for(const p of palms){
+      if(p.position.x < lead.s - 90) p.position.x += 14*34;
+      // stand them on the far dune line so they read as a skyline, not stumps
+      p.position.y = -1.0 + duneH(p.position.x)*.5;
+    }
+    for(const m of motes){
+      m.position.x -= (7 + (storm>0?26:0))*dt;
+      if(m.position.x < lead.s - 40){
+        m.position.set(lead.s + 40 + Math.random()*20,
+                       Math.random()*9, Math.random()*44 - 22);
+      }
+    }
+    heroLight.position.set(lead.s + 1.5, duneH(lead.s) + 4.2, 3.0);
+    heroLight.intensity = nightfall>0 ? 90 : 26;
+    sun.position.set(lead.s - 8, 14, 6);
+    sun.target.position.set(lead.s, 0, 0); sun.target.updateMatrixWorld();
+  }
+
+  // camels are drawn even during the death freeze, so the K.O. shows the break
+  if(running || dead){
+    for(let i=0;i<CARAVAN;i++) placeCamel(camels[i], i);
+    if(devil.active){
+      devil.group.position.set(devil.s, duneH(devil.s), 0);
+      devil.cone.rotation.y += raw*9;
+      devil.glow.lookAt(camera.position);
+    }
+  }
+
+  // --- death sequence: slow-mo unwinds and the queue scatters ---
+  if(dead){
+    timeScale += (0 - timeScale)*Math.min(1, raw*1.1);   // ease down to a near-freeze
+    for(let i=0;i<CARAVAN;i++){
+      const c = camels[i];
+      c.group.rotation.z += raw*(1.4 + i*.3)*(i%2?1:-1);
+      c.group.position.y += Math.max(0, .9 - (1-timeScale)*.9)*raw*2.2;
+    }
+  }
+
+  // --- camera (runs even while dead, so the zoom and shake still play) ---
+  // Frames the whole queue: sits beside the caravan's midpoint and pulls back
+  // far enough that the tail stays on screen as the line stretches.
+  const spread = lead.s - camels[CARAVAN-1].s;
+  const mid = (lead.s + camels[CARAVAN-1].s) * .5;
+  if(!dead) camDistTarget = 11.5 + spread*.55;
+  camDist += (camDistTarget - camDist)*Math.min(1, raw*2.0);
+  const camX = mid + (dead ? 0 : 1.5);
+  camera.position.x += (camX - camera.position.x)*Math.min(1, raw*3.4);
+  camera.position.z = camDist;
+  camera.position.y = camHigh + duneH(mid)*.5;
+  // pull the whole frame down a touch: the caravan should sit low against the
+  // sky rather than dead-centre with empty sand under it
+
+  if(mirage>0){                       // the swim: a slow lateral drift
+    camera.position.x += Math.sin(t*2.3)*.9;
+    camera.position.y += Math.cos(t*1.7)*.5;
+  }
+  if(shake>0){
+    shake = Math.max(0, shake - raw*.9);
+    camera.position.x += (Math.random()-.5)*shake;
+    camera.position.y += (Math.random()-.5)*shake;
+  }
+  camera.lookAt(mid, duneH(mid) + 3.0, 0);
+
+  renderer.render(scene, camera);
+}
+
+function gameOver(brokeAt){
+  running=false; deadAt=Date.now();
+  if(!SILENT){ SND.hit(); SND.duck(1.6); setTimeout(()=>SND.over(), 700); }
+  // hit feedback: red flash, red vignette, hard shake, camera punches in
+  flash('#ff4a1e', .8, 500);
+  vignetteEl.style.transition='opacity .5s'; vignetteEl.style.opacity=1;
+  shake = .9;
+  camDistTarget = 7.0;                    // push in on the break
+  for(const p of pips) p.style.background = '#ff3b2e';
+  const finalScore = Math.floor(score);
+  koScoreEl.textContent = finalScore;
+  msgEl.textContent = '';
+  setTimeout(()=>{ koEl.classList.add('on'); }, 620);   // K.O. lands after the slow-mo
+  if(AUTO){ setTimeout(()=>{ reset(); running=true;
+                             if(!SILENT) SND.unduck(); }, RETRY_MS); }
+  else setTimeout(()=>{
+    msgEl.textContent = (breakMsg ? breakMsg + ' · ' : '') +
+      (matchMedia('(pointer:coarse)').matches ? 'Tap to retry' : 'Space to retry');
+  }, 1800);
+}
+updateSand(0);
+tick();
+</script>
+</body>
+</html>

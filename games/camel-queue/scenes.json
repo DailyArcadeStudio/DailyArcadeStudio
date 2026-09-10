@@ -1,0 +1,227 @@
+{
+  "id": "0002_camel_queue",
+  "title": "Camel Queue",
+  "lang": "python",
+  "voice": "am_adam",
+  "scenes": [
+    {
+      "kind": "hook",
+      "clip": "stampede",
+      "narration": "A guide in Morocco owns five camels who refuse to walk near each other."
+    },
+    {
+      "kind": "image",
+      "prompt": "a lone camel guide in a faded blue robe standing beside five camels on a vast empty sand dune at golden hour, long shadows, wide cinematic shot, warm dust haze, highly detailed, photoreal",
+      "narration": "His name is Idir, he runs cargo out of Zagora, and he has five camels. Individually, they are excellent. Together, they are a problem."
+    },
+    {
+      "kind": "image",
+      "prompt": "two camels close together on a desert ridge, one turning its head sharply toward the other, teeth bared, dust kicked up around their legs, harsh afternoon sunlight, dramatic low angle, cinematic, photoreal, highly detailed",
+      "narration": "If two of them get close, they bite. If one falls behind, it stops, turns around, and goes home. So Idir spends every crossing walking backwards up the line, whistling, keeping exactly the right amount of desert between each camel."
+    },
+    {
+      "kind": "image",
+      "prompt": "an empty vast desert of tall rolling dunes stretching to the horizon, a single faint line of footprints crossing the frame, late afternoon light, no people, cinematic wide landscape, photoreal, highly detailed",
+      "narration": "He was asked once why he does not simply buy different camels. He said these are the camels he has."
+    },
+    {
+      "kind": "showcase",
+      "subject": "lead",
+      "kicker": "THE FRONT OF THE LINE",
+      "title": "The Lead Camel",
+      "bullets": [
+        "Sets the pace — **hurry or ease**, that is your control",
+        "Everything behind it reacts, **late**",
+        "Faster pace scores more. Faster pace also stretches the line"
+      ],
+      "narration": "You do not steer. You set the pace of the lead camel, hurry or ease, and everything behind it reacts a moment late. A brisk pace scores faster. A brisk pace also stretches the line out, which is the whole tension."
+    },
+    {
+      "kind": "showcase",
+      "subject": "camel",
+      "kicker": "THE FOUR BEHIND",
+      "title": "A Caravan Camel",
+      "bullets": [
+        "Four followers, **four gaps to hold**",
+        "Too tight and they collide. Too wide and one is lost",
+        "The **whistle** hauls the whole line back in — on a cooldown"
+      ],
+      "narration": "Behind the lead there are four more, which means four gaps, and every one of them can kill you. Too tight and the queue collides. Too wide and a camel is lost. The whistle pulls everyone in hard at once, but it has a cooldown, so it is a thing you spend, not a thing you lean on."
+    },
+    {
+      "kind": "showcase",
+      "subject": "quicksand",
+      "kicker": "HAZARD",
+      "title": "Quicksand",
+      "bullets": [
+        "The **heaviest drag** in the game",
+        "Slows **one camel**, not the line",
+        "So the gap ahead of it opens while you watch"
+      ],
+      "narration": "Quicksand is the worst thing out there. It does not stop the caravan. It grabs one camel and slows it down, which means the gap in front of that camel opens on its own, while you are looking somewhere else."
+    },
+    {
+      "kind": "showcase",
+      "subject": "cactus",
+      "kicker": "HAZARD",
+      "title": "Cactus",
+      "bullets": [
+        "The gentlest drag — a **nuisance, not a crisis**",
+        "The most common thing on the sand",
+        "Dangerous only when the gap is already bad"
+      ],
+      "narration": "The cactus is the mild one. On its own it is a nuisance. It becomes a crisis only when a gap was already going wrong, which, statistically, is most of the time."
+    },
+    {
+      "kind": "showcase",
+      "subject": "rock",
+      "kicker": "HAZARD",
+      "title": "Scree",
+      "bullets": [
+        "Middling drag, sitting in **open sand**",
+        "Easy to read, easy to forget",
+        "Hits the camel you were not watching"
+      ],
+      "narration": "Scree sits in the open where you can see it coming, which is exactly why it gets you. You watch it approach the lead camel, you handle it, and it takes the fourth one instead."
+    },
+    {
+      "kind": "showcase",
+      "subject": "devil",
+      "kicker": "THE ONE THAT HUNTS",
+      "title": "Dust Devil",
+      "bullets": [
+        "Spawns **behind the tail** and closes",
+        "Drags the **last camel** specifically",
+        "You cannot outrun it — you have to absorb it"
+      ],
+      "narration": "And then there is the dust devil. It comes up from behind the caravan and it goes for the last camel specifically. You cannot outrun it, because running stretches the line. You have to slow the front down and let it happen."
+    },
+    {
+      "kind": "events",
+      "clip": "events",
+      "kicker": "THE CROSSING",
+      "title": "Six Ways To Lose The Line",
+      "bullets": [
+        "**DUNE SWELL** — the ground rises and climbing costs speed",
+        "**STAMPEDE** — every follower bolts forward at once",
+        "**MIRAGE** — the camera lies; the gaps do not"
+      ],
+      "narration": "The desert does not sit still. The dunes swell, and climbing quietly costs each camel speed. A stampede sends all four followers bolting forward into the camel in front. A sandstorm blows them apart at random. Nightfall takes the light and leaves you one lamp. And the mirage is the mean one, because the camera swims but the gaps underneath are completely unchanged — you have to stop trusting your eyes and read the meter instead."
+    },
+    {
+      "kind": "death",
+      "clip": "death",
+      "kicker": "THE END OF A CROSSING",
+      "title": "It Tells You Which Way You Failed",
+      "bullets": [
+        "**THE QUEUE COLLIDED** — you held them too tight",
+        "**A CAMEL WAS LOST** — you let one drift",
+        "Time slows, the camera punches in, and you see the distance"
+      ],
+      "narration": "A run ends in one of two ways, and the game names it. The queue collided, meaning you held them too close together. Or a camel was lost, meaning you did not. Time eases down, the camera punches in, and it shows you exactly how far you got. Idir has been doing this crossing for nineteen years. You will lose a camel before the first dune."
+    },
+    {
+      "kind": "outro",
+      "title": "Link in the description",
+      "subtitle": "Subscribe — a new game every day",
+      "narration": "It is playable right now, and the link is in the description. Subscribe and drop a like, because there is a new one of these tomorrow."
+    }
+  ],
+  "slug": "camel-queue",
+  "channel": "Daily Arcade Studio",
+  "events": [
+    "swell",
+    "devil",
+    "stampede",
+    "mirage",
+    "sandstorm",
+    "nightfall"
+  ],
+  "short": [
+    {
+      "mark": "stampede",
+      "lead": -0.3,
+      "dur": 9.0,
+      "headline": "They all bolt at once"
+    },
+    {
+      "mark": "devil",
+      "lead": -0.5,
+      "dur": 8.0,
+      "headline": "It goes for the last camel"
+    },
+    {
+      "mark": "mirage",
+      "lead": -0.5,
+      "dur": 7.0,
+      "headline": "The camera lies. The gaps don't."
+    },
+    {
+      "mark": "nightfall",
+      "lead": -0.5,
+      "dur": 7.0,
+      "headline": "One lamp, four gaps"
+    },
+    {
+      "mark": "death",
+      "lead": -2.0,
+      "dur": 9.0,
+      "headline": "Too close, or too far"
+    }
+  ],
+  "thumb": {
+    "hook": "Five camels, four gaps",
+    "sub": "Too close they bite. Too far they leave. Free in your browser.",
+    "frame_mark": "devil",
+    "frame_lead": 1.0
+  },
+  "short_v2": {
+    "cuts": [
+      {
+        "kind": "clip",
+        "mark": "stampede",
+        "lead": -0.3,
+        "dur": 4.5,
+        "headline": "Today's game",
+        "narration": "Here is today's game."
+      },
+      {
+        "kind": "showcase",
+        "subject": "lead",
+        "dur": 5.0,
+        "headline": "CAMEL QUEUE",
+        "narration": "You are a guide with five camels who refuse to walk near each other."
+      },
+      {
+        "kind": "showcase",
+        "subject": "camel",
+        "dur": 5.5,
+        "headline": "Four gaps to hold",
+        "narration": "Too tight and they collide. Too far and one wanders off. You only control the pace of the front one."
+      },
+      {
+        "kind": "showcase",
+        "subject": "devil",
+        "dur": 5.0,
+        "headline": "It hunts the tail",
+        "narration": "The dust devil comes from behind and drags the last camel. Speeding up only stretches the line."
+      },
+      {
+        "kind": "clip",
+        "mark": "death",
+        "lead": -2.0,
+        "dur": 6.0,
+        "headline": "",
+        "narration": "And it tells you which way you failed."
+      },
+      {
+        "kind": "clip",
+        "mark": "run2",
+        "lead": 1.0,
+        "dur": 4.5,
+        "cta": "Play it — link in the description",
+        "narration": "Free in your browser. Link in the description."
+      }
+    ]
+  }
+}
