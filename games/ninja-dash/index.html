@@ -71,10 +71,47 @@
   #ko.on .finalLabel{animation:fadeUp .5s .75s forwards;}
   #ko.on .finalScore{animation:fadeUp .5s .9s forwards;}
   @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+
+  /* --- help (?) --- */
+  #helpBtn{position:fixed;top:14px;right:66px;z-index:30;border:none;cursor:pointer;
+    background:rgba(12,16,26,.72);color:#fff;font:700 20px/1 'Helvetica Neue',Arial,sans-serif;
+    width:44px;height:44px;border-radius:12px;}
+  #helpBtn:hover{background:rgba(30,38,56,.9);}
+  #help{position:fixed;inset:0;z-index:40;display:none;align-items:center;
+    justify-content:center;background:rgba(4,6,12,.82);padding:20px;}
+  #help.on{display:flex;}
+  #help .box{background:#111726;border:1px solid #2b3550;border-radius:18px;
+    max-width:560px;width:100%;max-height:86vh;overflow:auto;padding:26px 28px 22px;
+    color:#e6edf3;font-family:'Helvetica Neue',Arial,sans-serif;}
+  #help h2{margin:0 0 4px;font-size:26px;}
+  #help .sub{color:#8b949e;font-size:14px;margin:0 0 18px;}
+  #help h3{font-size:15px;color:#ffd23b;margin:18px 0 6px;letter-spacing:.04em;}
+  #help ul{margin:0;padding-left:20px;}
+  #help li{font-size:15px;line-height:1.65;margin:3px 0;}
+  #help b{color:#ffd23b;font-weight:700;}
+  #help .close{margin-top:20px;width:100%;padding:12px;border:none;border-radius:10px;
+    background:#2b3550;color:#fff;font-size:16px;font-weight:700;cursor:pointer;}
+  #help .close:hover{background:#3a4668;}
 </style>
 </head>
 <body>
 <div id="ui"><div id="score">0</div><div id="msg"></div></div>
+<button id="helpBtn" title="how to play">?</button>
+<div id="help"><div class="box">
+  <h2>Ninja Dash</h2>
+  <p class="sub">3 lanes. No brakes. Free in your browser.</p>
+    <h3>Sabu</h3>
+    <ul><li>Carries nothing. <b>Speed is the whole job</b></li><li>Three lanes: left, middle, right</li><li>He gets <b>faster the longer he survives</b> — not a reward</li></ul>
+    <h3>The Unexplained Throwing Stars</h3>
+    <ul><li>Spinning, waist height, <b>cannot be jumped</b></li><li>Roughly sixty percent of everything out there</li><li>Still nobody will explain them</li></ul>
+    <h3>Rocks</h3>
+    <ul><li>The only honest obstacle on the road</li><li><b>Jump it.</b> That is the entire interaction</li><li>Sabu's complaint raises no objection to these</li></ul>
+    <h3>The Wall</h3>
+    <ul><li>Blocks a lane <b>completely</b> — jumping does nothing</li><li>They arrive <b>two at a time</b>, leaving one gap</li><li>You get about a second to pick</li></ul>
+    <h3>The Thing Behind You</h3>
+    <ul><li>Overtakes from <b>behind the camera</b></li><li>Tuned so it can <b>never actually reach you</b></li><li>It does not need to. It only has to be visible</li></ul>
+  <button class="close">Got it</button>
+</div></div>
 <a id="back" href="../../" title="all games">‹ All games</a>
 <button id="mute" title="sound on/off">🔊</button>
 <div id="vignette"></div>
@@ -105,6 +142,8 @@ const SHOWCASE_Q = QS.get('showcase');
 // Recording must produce clean footage, so every automated mode is muted.
 const REC = QS.get('rec')==='1';   // 録音モード: 音を鳴らして拾う
 const SILENT = (AUTO || !!SHOWCASE_Q || QS.get('mute')==='1') && !REC;
+// 録画・showcase では「?」と「All games」を出さない（動画の邪魔になる）
+const NOCHROME = AUTO || !!SHOWCASE_Q || QS.get('nochrome')==='1';
 
 // ---------- renderer / scene ----------
 const renderer = new THREE.WebGLRenderer({antialias:true});
@@ -956,6 +995,31 @@ function gameOver(hitBy){
   }, 1800);
 }
 tick();
+
+// --- help (?) : ルールを見せる。録画中は出さない ---
+(function(){
+  const btn = document.getElementById('helpBtn');
+  const panel = document.getElementById('help');
+  if(!btn || !panel) return;
+  if(NOCHROME){                      // 録画・showcase では画面から消す
+    btn.style.display = 'none';
+    const back = document.getElementById('back');
+    if(back) back.style.display = 'none';
+    return;
+  }
+  const open = () => { panel.classList.add('on'); };
+  const close = () => { panel.classList.remove('on'); };
+  btn.addEventListener('click', open);
+  btn.addEventListener('touchend', e => { e.preventDefault(); open(); }, {passive:false});
+  panel.addEventListener('click', e => { if(e.target === panel) close(); });
+  panel.querySelector('.close').addEventListener('click', close);
+  panel.querySelector('.close').addEventListener('touchend',
+    e => { e.preventDefault(); close(); }, {passive:false});
+  addEventListener('keydown', e => {
+    if(e.code === 'Escape') close();
+    else if(e.key === '?' || (e.code === 'Slash' && e.shiftKey)) open();
+  });
+})();
 </script>
 </body>
 </html>

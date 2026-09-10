@@ -71,10 +71,49 @@
   #ko.on .finalLabel{animation:fadeUp .5s .75s forwards;}
   #ko.on .finalScore{animation:fadeUp .5s .9s forwards;}
   @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+
+  /* --- help (?) --- */
+  #helpBtn{position:fixed;top:14px;right:66px;z-index:30;border:none;cursor:pointer;
+    background:rgba(12,16,26,.72);color:#fff;font:700 20px/1 'Helvetica Neue',Arial,sans-serif;
+    width:44px;height:44px;border-radius:12px;}
+  #helpBtn:hover{background:rgba(30,38,56,.9);}
+  #help{position:fixed;inset:0;z-index:40;display:none;align-items:center;
+    justify-content:center;background:rgba(4,6,12,.82);padding:20px;}
+  #help.on{display:flex;}
+  #help .box{background:#111726;border:1px solid #2b3550;border-radius:18px;
+    max-width:560px;width:100%;max-height:86vh;overflow:auto;padding:26px 28px 22px;
+    color:#e6edf3;font-family:'Helvetica Neue',Arial,sans-serif;}
+  #help h2{margin:0 0 4px;font-size:26px;}
+  #help .sub{color:#8b949e;font-size:14px;margin:0 0 18px;}
+  #help h3{font-size:15px;color:#ffd23b;margin:18px 0 6px;letter-spacing:.04em;}
+  #help ul{margin:0;padding-left:20px;}
+  #help li{font-size:15px;line-height:1.65;margin:3px 0;}
+  #help b{color:#ffd23b;font-weight:700;}
+  #help .close{margin-top:20px;width:100%;padding:12px;border:none;border-radius:10px;
+    background:#2b3550;color:#fff;font-size:16px;font-weight:700;cursor:pointer;}
+  #help .close:hover{background:#3a4668;}
 </style>
 </head>
 <body>
 <div id="ui"><div id="score">0</div><div id="msg"></div></div>
+<button id="helpBtn" title="how to play">?</button>
+<div id="help"><div class="box">
+  <h2>Gondola Squeeze</h2>
+  <p class="sub">Steer and duck. Free in your browser.</p>
+    <h3>The Gondola</h3>
+    <ul><li>Eleven metres long and it <b>does not turn quickly</b></li><li>Steer left and right — that is the whole helm</li><li>The hull <b>leans into every turn</b>, whether you want it to or not</li></ul>
+    <h3>Matteo</h3>
+    <ul><li>Stands the whole way — <b>he is the tallest thing on the boat</b></li><li>Ducking is a separate button, and you will need it</li><li>He does not stop rowing when things go wrong</li></ul>
+    <h3>The Ferro</h3>
+    <ul><li>The steel comb on the bow — <b>pure decoration</b></li><li>It is also the first part of the boat to arrive anywhere</li><li>Every gondola has one. Nobody removes it</li></ul>
+    <h3>The Low Bridge</h3>
+    <ul><li>One clear span, marked by <b>a single lamp</b></li><li>Steering into the gap is <b>not enough</b> — you must also duck</li><li>Two solid piers either side. Those are not negotiable</li></ul>
+    <h3>The Bricola</h3>
+    <ul><li>Three lashed mooring posts standing in open water</li><li><b>Steer around it.</b> That is the entire interaction</li><li>Somebody owns it. Nobody has ever moved it</li></ul>
+    <h3>The Moored Barge</h3>
+    <ul><li>Loaded with crates and <b>tied up for the night</b></li><li>Eats one side of the canal outright</li><li>Wider than a pole — you need to commit early</li></ul>
+  <button class="close">Got it</button>
+</div></div>
 <a id="back" href="../../" title="all games">‹ All games</a>
 <button id="mute" title="sound on/off">🔊</button>
 <div id="vignette"></div>
@@ -105,6 +144,8 @@ const SHOWCASE_Q = QS.get('showcase');
 // Recording must produce clean footage, so every automated mode is muted.
 const REC = QS.get('rec')==='1';   // 録音モード: 音を鳴らして拾う
 const SILENT = (AUTO || !!SHOWCASE_Q || QS.get('mute')==='1') && !REC;
+// 録画・showcase では「?」と「All games」を出さない（動画の邪魔になる）
+const NOCHROME = AUTO || !!SHOWCASE_Q || QS.get('nochrome')==='1';
 
 // ---------- renderer / scene ----------
 const renderer = new THREE.WebGLRenderer({antialias:true});
@@ -1298,6 +1339,31 @@ function gameOver(hitBy){
   }, 1800);
 }
 tick();
+
+// --- help (?) : ルールを見せる。録画中は出さない ---
+(function(){
+  const btn = document.getElementById('helpBtn');
+  const panel = document.getElementById('help');
+  if(!btn || !panel) return;
+  if(NOCHROME){                      // 録画・showcase では画面から消す
+    btn.style.display = 'none';
+    const back = document.getElementById('back');
+    if(back) back.style.display = 'none';
+    return;
+  }
+  const open = () => { panel.classList.add('on'); };
+  const close = () => { panel.classList.remove('on'); };
+  btn.addEventListener('click', open);
+  btn.addEventListener('touchend', e => { e.preventDefault(); open(); }, {passive:false});
+  panel.addEventListener('click', e => { if(e.target === panel) close(); });
+  panel.querySelector('.close').addEventListener('click', close);
+  panel.querySelector('.close').addEventListener('touchend',
+    e => { e.preventDefault(); close(); }, {passive:false});
+  addEventListener('keydown', e => {
+    if(e.code === 'Escape') close();
+    else if(e.key === '?' || (e.code === 'Slash' && e.shiftKey)) open();
+  });
+})();
 </script>
 </body>
 </html>

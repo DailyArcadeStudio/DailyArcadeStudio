@@ -75,9 +75,42 @@
   #mute{position:fixed;top:14px;right:14px;z-index:30;border:none;cursor:pointer;
     background:rgba(12,16,26,.72);color:#fff;font-size:20px;line-height:1;
     width:44px;height:44px;border-radius:12px;}
+
+  /* --- help (?) --- */
+  #helpBtn{position:fixed;top:14px;right:66px;z-index:30;border:none;cursor:pointer;
+    background:rgba(12,16,26,.72);color:#fff;font:700 20px/1 'Helvetica Neue',Arial,sans-serif;
+    width:44px;height:44px;border-radius:12px;}
+  #helpBtn:hover{background:rgba(30,38,56,.9);}
+  #help{position:fixed;inset:0;z-index:40;display:none;align-items:center;
+    justify-content:center;background:rgba(4,6,12,.82);padding:20px;}
+  #help.on{display:flex;}
+  #help .box{background:#111726;border:1px solid #2b3550;border-radius:18px;
+    max-width:560px;width:100%;max-height:86vh;overflow:auto;padding:26px 28px 22px;
+    color:#e6edf3;font-family:'Helvetica Neue',Arial,sans-serif;}
+  #help h2{margin:0 0 4px;font-size:26px;}
+  #help .sub{color:#8b949e;font-size:14px;margin:0 0 18px;}
+  #help h3{font-size:15px;color:#ffd23b;margin:18px 0 6px;letter-spacing:.04em;}
+  #help ul{margin:0;padding-left:20px;}
+  #help li{font-size:15px;line-height:1.65;margin:3px 0;}
+  #help b{color:#ffd23b;font-weight:700;}
+  #help .close{margin-top:20px;width:100%;padding:12px;border:none;border-radius:10px;
+    background:#2b3550;color:#fff;font-size:16px;font-weight:700;cursor:pointer;}
+  #help .close:hover{background:#3a4668;}
 </style>
 </head>
 <body>
+<button id="helpBtn" title="how to play">?</button>
+<div id="help"><div class="box">
+  <h2>Lantern Drop</h2>
+  <p class="sub">Stack it or drop it. Free in your browser.</p>
+    <h3>One Paper Lantern</h3>
+    <ul><li>The only thing you ever place</li><li>Lands <b>slightly askew</b> by however far you missed</li><li>There is no way to move one once it is down</li></ul>
+    <h3>The Crane</h3>
+    <ul><li>Swings the next lantern <b>overhead, side to side</b></li><li>You press once. <b>Release is the entire input</b></li><li>It swings <b>faster and narrower</b> with every lantern placed</li></ul>
+    <h3>What You Are Building</h3>
+    <ul><li>Every overhang feeds a <b>lean meter</b></li><li>Past the limit, the pile <b>goes over</b></li><li>A near-perfect drop is the <b>only way to straighten it</b></li></ul>
+  <button class="close">Got it</button>
+</div></div>
 <a id="back" href="../../" title="all games">‹ All games</a>
 <button id="mute" title="sound on/off">🔊</button>
 <div id="ui"><div id="score">0</div><div id="msg"></div></div>
@@ -110,6 +143,8 @@ const SHOWCASE_Q = QS.get('showcase');
 // Recording must produce clean footage, so every automated mode is muted.
 const REC = QS.get('rec')==='1';   // 録音モード: 音を鳴らして拾う
 const SILENT = (AUTO || !!SHOWCASE_Q || QS.get('mute')==='1') && !REC;
+// 録画・showcase では「?」と「All games」を出さない（動画の邪魔になる）
+const NOCHROME = AUTO || !!SHOWCASE_Q || QS.get('nochrome')==='1';
 
 // ---------- renderer / scene ----------
 const renderer = new THREE.WebGLRenderer({antialias:true});
@@ -1104,6 +1139,31 @@ function gameOver(cause){
   }, 1800);
 }
 tick();
+
+// --- help (?) : ルールを見せる。録画中は出さない ---
+(function(){
+  const btn = document.getElementById('helpBtn');
+  const panel = document.getElementById('help');
+  if(!btn || !panel) return;
+  if(NOCHROME){                      // 録画・showcase では画面から消す
+    btn.style.display = 'none';
+    const back = document.getElementById('back');
+    if(back) back.style.display = 'none';
+    return;
+  }
+  const open = () => { panel.classList.add('on'); };
+  const close = () => { panel.classList.remove('on'); };
+  btn.addEventListener('click', open);
+  btn.addEventListener('touchend', e => { e.preventDefault(); open(); }, {passive:false});
+  panel.addEventListener('click', e => { if(e.target === panel) close(); });
+  panel.querySelector('.close').addEventListener('click', close);
+  panel.querySelector('.close').addEventListener('touchend',
+    e => { e.preventDefault(); close(); }, {passive:false});
+  addEventListener('keydown', e => {
+    if(e.code === 'Escape') close();
+    else if(e.key === '?' || (e.code === 'Slash' && e.shiftKey)) open();
+  });
+})();
 </script>
 </body>
 </html>
