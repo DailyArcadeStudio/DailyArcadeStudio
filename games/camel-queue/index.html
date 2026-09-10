@@ -97,10 +97,18 @@
   #help .close{margin-top:20px;width:100%;padding:12px;border:none;border-radius:10px;
     background:#2b3550;color:#fff;font-size:16px;font-weight:700;cursor:pointer;}
   #help .close:hover{background:#3a4668;}
+  /* 口笛が今使えるか。pips は間隔を示すが、こちらは残っていなかった。 */
+  #whistleHud{position:fixed;left:16px;bottom:16px;z-index:25;pointer-events:none;
+    display:flex;align-items:center;gap:8px;background:rgba(10,14,22,.72);
+    padding:8px 12px;border-radius:10px;
+    font:600 11px/1 'Helvetica Neue',Arial,sans-serif;color:#8b949e;letter-spacing:.12em;}
+  #whistleHud i{display:block;width:92px;height:6px;border-radius:3px;background:#2a3242;}
+  #whistleHud i b{display:block;height:100%;width:100%;border-radius:3px;background:#58a6ff;}
 </style>
 </head>
 <body>
 <div id="ui"><div id="score">0</div><div id="msg"></div></div>
+<div id="whistleHud"><span>WHISTLE</span><i><b></b></i></div>
 <div id="gaps"></div>
 <button id="helpBtn" title="how to play">?</button>
 <div id="help"><div class="box">
@@ -536,6 +544,15 @@ window.__ev = name => {
   if(!SILENT) SND.event(); nextEventAt = t + busy + 5; return true;
 };
 window.__alive = () => running && !dead;
+// 口笛のクールダウン表示。使えるかどうかが見えないと駆け引きにならない。
+const whistleHud = document.getElementById('whistleHud');
+const whistleBar = whistleHud.querySelector('b');
+function syncWhistleHud(){
+  if(NOCHROME){ whistleHud.style.display = 'none'; return; }
+  const ready = Math.max(0, 1 - whistleCd/4.5);
+  whistleBar.style.width = (ready*100) + '%';
+  whistleBar.style.background = ready >= 1 ? '#58a6ff' : '#3a4657';
+}
 window.__kill = () => { if(running && !dead){ breakMsg='THE QUEUE BROKE'; dead=true; gameOver(); } };
 window.__recStop = () => SND.recStop();
 window.__snd = () => ({enabled: SND.enabled, silent: SILENT});
@@ -1080,6 +1097,7 @@ function tick(){
     t += dt;
     score += dt * (6 + pace);              // a brisk, held queue scores faster
     scoreEl.textContent = Math.floor(score);
+    syncWhistleHud();
     if(!SILENT) SND.setPace(pace/5.4);
     if(AUTO) autoPilot(dt);
 
