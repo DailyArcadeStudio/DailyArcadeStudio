@@ -119,11 +119,14 @@ def main(work_dir, out_path):
     tmp = work / "short"
     tmp.mkdir(parents=True, exist_ok=True)
     slug = os.environ.get("GAME_SLUG", "")
-    title = os.environ.get("GAME_TITLE", "GAME")
+    # タイトルは scenes.json を正とする。環境変数頼みだと渡し忘れて
+    # 既定値の "GAME" が画面に出てしまう。
+    title = os.environ.get("GAME_TITLE") or ""
     raw = work / "raw.mp4"
     sc_dir = work / "showcase_center"
     marks = {n: t for n, t in json.loads((work / "marks.json").read_text())["marks"]}
     scenes = json.loads((ROOT / "games" / slug / "scenes.json").read_text())
+    title = (title or scenes.get("title") or slug.replace("-", " ")).upper()
     spec = scenes.get("short_v2") or {}
     narr = work / "short_narr"
     durs = []

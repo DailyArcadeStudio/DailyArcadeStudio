@@ -42,7 +42,12 @@ def main(slug, work_dir=None):
     work.mkdir(parents=True, exist_ok=True)
     out = ROOT / "output"
     out.mkdir(exist_ok=True)
-    env = {**os.environ, "GAME_SLUG": slug, "EP_WORK": str(work)}
+    try:
+        _title = json.loads(scenes.read_text()).get("title", slug)
+    except Exception:
+        _title = slug
+    env = {**os.environ, "GAME_SLUG": slug, "EP_WORK": str(work),
+           "GAME_TITLE": _title}
 
     srv = serve()
     try:
