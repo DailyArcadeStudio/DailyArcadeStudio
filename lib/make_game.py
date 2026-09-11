@@ -47,6 +47,38 @@ JA_UI_RULE = """
 小さい画面でもはみ出さないようにしてください。
 """
 
+
+VARIETY_RULE = """
+
+**操作の型を前作と変えてください（重要）。**
+直近に作ったゲームはこれです:
+{recent}
+
+上のどれかと同じ操作（同じ指の動き、同じ判断）になっていたら、
+別の型にしてください。たとえば:
+  - 避けて進む / 速度や間隔を保つ / 積んでバランスを取る
+  - タイミングよく押す / 狙って当てる / 選んで振り分ける
+  - 覚えて思い出す / 組み立ててつなぐ / 力加減を調整する
+「操作が1〜2種類で説明が要らない」ことは保ったまま、
+指の動きそのものが違うものにしてください。
+絵面（乗り物、動物、走る）が似ていても、操作が違えば別のゲームになります。
+"""
+
+
+def _recent_games(n=4):
+    """直近に作ったゲームの名前と中身を返す。プロンプトに埋めて重複を避ける。"""
+    out = []
+    for g in sorted(GAMES.glob("*/scenes.json"),
+                    key=lambda p: p.stat().st_mtime, reverse=True)[:n]:
+        try:
+            import json
+            d = json.loads(g.read_text())
+            out.append(f"  - {d.get('title', g.parent.name)}: "
+                       f"{(d.get('lead') or d.get('video_title') or '')[:48]}")
+        except Exception:
+            out.append(f"  - {g.parent.name}")
+    return "\n".join(out) or "  （まだありません）"
+
 PROMPT = """Build a browser game: {title}
 
 Concept: {idea}
@@ -135,6 +167,7 @@ def generate(slug, title, idea):
     prompt = PROMPT.format(title=title, idea=idea, dst=dst, ref=REFERENCE)
     if _JA:
         prompt += JA_UI_RULE
+    prompt += VARIETY_RULE.format(recent=_recent_games())
     print(f"GENERATING {slug}…", flush=True)
     r = subprocess.run([CLAUDE, "-p", prompt, "--permission-mode", "acceptEdits",
                         "--dangerously-skip-permissions"],

@@ -1,0 +1,177 @@
+{
+  "title": "あなたがコンスタンティノス11世だったら",
+  "lead": "千年続いた街の、最後の皇帝。兵は7000人。あなたなら、この街を守れますか。",
+  "axes": [
+    {
+      "label": "自分で守るか、外に頼るか",
+      "pos": "独",
+      "neg": "頼"
+    },
+    {
+      "label": "戦い抜くか、生き延びるか",
+      "pos": "戦",
+      "neg": "存"
+    }
+  ],
+  "history": "史実の皇帝は西に援軍を求め、教会の合同を認めましたが、来た船はわずかでした。53日守り抜き、5月29日の未明に城壁を破られます。皇帝は印を脱ぎ捨てて敵の中へ突っ込み、遺体は見つからなかったと言われます。",
+  "scenes": [
+    {
+      "year": "1451年 夏",
+      "situation": "オスマンのスルタンが代替わりしました。21歳のメフメト2世です。若すぎる、と周りは笑っています。手元には、彼の親戚を人質として預かっているという札があります。",
+      "options": [
+        {
+          "text": "人質を持ち出して、金を要求して揺さぶる",
+          "a": 2,
+          "b": 1
+        },
+        {
+          "text": "刺激せず、静かに城壁の修理を始める",
+          "a": -1,
+          "b": -2
+        }
+      ]
+    },
+    {
+      "year": "1452年 春",
+      "situation": "メフメトが海峡のこちら側、街のすぐ北に城を建て始めました。黒海からの船を止めるための城です。ここは帝国の土地のはずです。",
+      "options": [
+        {
+          "text": "兵を出して工事を止めにかかる",
+          "a": 2,
+          "b": 2
+        },
+        {
+          "text": "抗議の使者だけ送り、黒海の穀物を買いだめする",
+          "a": -1,
+          "b": -2
+        }
+      ]
+    },
+    {
+      "year": "1452年 冬",
+      "situation": "西の援軍がほしい。ただしローマ教皇は条件を出しました。東西の教会を合同せよ、と。街の人々は「教皇の帽子を見るくらいなら、トルコの頭巾のほうがましだ」と言っています。",
+      "options": [
+        {
+          "text": "聖ソフィア教会で合同の式を行い、西に借りを作る",
+          "a": -2,
+          "b": 0
+        },
+        {
+          "text": "民の信仰を守り、合同を断る",
+          "a": 2,
+          "b": 0
+        }
+      ]
+    },
+    {
+      "year": "1453年 春",
+      "situation": "ハンガリー人の技術者ウルバンが、大砲を売り込みに来ました。壁を壊せる大砲だと言います。国庫はほとんど空です。払えば、他の備えに回す金がなくなります。",
+      "options": [
+        {
+          "text": "教会の銀器まで売って、言い値で雇う",
+          "a": 2,
+          "b": 1
+        },
+        {
+          "text": "断り、その金で外国の傭兵と食料を買う",
+          "a": -2,
+          "b": -1
+        }
+      ]
+    },
+    {
+      "year": "1453年 4月",
+      "situation": "敵は8万とも言われます。守る兵は7000ほど。長い城壁を全部は埋められません。ジェノヴァ人のジュスティニアーニが、兵700を連れて自分から来てくれました。",
+      "options": [
+        {
+          "text": "陸の城壁の指揮を、外国人の彼に任せる",
+          "a": -2,
+          "b": 1
+        },
+        {
+          "text": "指揮は自国の将に握らせ、彼は一部隊として使う",
+          "a": 2,
+          "b": -1
+        }
+      ]
+    },
+    {
+      "year": "1453年 4月下旬",
+      "situation": "金角湾の鎖は破られていないのに、ある朝、湾の内側に敵の船がいました。丘を越えて陸を運ばれたのです。湾側の壁は薄く、兵を割かなければなりません。",
+      "options": [
+        {
+          "text": "夜襲をかけ、湾の敵船を焼きに出る",
+          "a": 2,
+          "b": 2
+        },
+        {
+          "text": "ジェノヴァ人の居留地に頼み、湾の守りを分担してもらう",
+          "a": -2,
+          "b": -1
+        }
+      ]
+    },
+    {
+      "year": "1453年 5月下旬",
+      "situation": "メフメトから使者が来ました。街を明け渡せば、命と財産は保証し、別の土地の領主にしてやる、と。城壁はもうあちこち崩れ、援軍の船は来ません。",
+      "options": [
+        {
+          "text": "この街で死ぬと答え、使者を帰す",
+          "a": 1,
+          "b": 2
+        },
+        {
+          "text": "申し出を受け、人々を連れて街を出る",
+          "a": -1,
+          "b": -2
+        }
+      ]
+    },
+    {
+      "year": "1453年 5月29日 未明",
+      "situation": "総攻撃です。ジュスティニアーニが傷を負い、運び出されました。それを見た兵が崩れます。港には、まだ出られる船が何隻か残っています。",
+      "options": [
+        {
+          "text": "皇帝の印を脱ぎ捨て、崩れた壁の穴へ突っ込む",
+          "a": 1,
+          "b": 2
+        },
+        {
+          "text": "船に乗り、帝国の名をどこかで継ぐ",
+          "a": -1,
+          "b": -2
+        }
+      ]
+    }
+  ],
+  "endings": {
+    "頼戦": {
+      "tag": "ENDING 1",
+      "name": "最後のローマ人（史実に近い結末）",
+      "body": "あなたは西に頭を下げ、教会を合同し、それでも来ない援軍を待ち続けました。53日、街は持ちこたえます。5月29日、壁が破れると、あなたは皇帝の印を捨てて兵の中へ消えました。遺体は見つからなかったと言われます。街は落ち、二千年続いた名前が、そこで終わりました。",
+      "image_prompt": "An emperor in torn purple casting off his golden regalia and charging alone into a breach in massive stone city walls at dawn, torchlight, smoke, spears and chaos around him, 19th century academic history painting, oil on canvas, dramatic chiaroscuro, no text, no letters, no words, no writing, no signage",
+      "image": "img/頼戦.jpg"
+    },
+    "独戦": {
+      "tag": "ENDING 2",
+      "name": "誰にも借りなかった街",
+      "body": "あなたは西に頼りませんでした。信仰も、指揮権も、自分の手に握ったままです。街の人々はあなたを愛し、最後まで一緒に壁に立ちました。それでも数は覆りません。落ちるときも街はひとつでした。誇りだけは、誰にも分けなかったことになります。",
+      "image_prompt": "Byzantine citizens, monks and soldiers standing together on a crumbling fortified rampart under a red sky, an emperor among them holding an icon, enormous enemy camp on the plain below, 19th century academic history painting, oil on canvas, no text, no letters, no words, no writing, no signage",
+      "image": "img/独戦.jpg"
+    },
+    "頼存": {
+      "tag": "ENDING 3",
+      "name": "海の向こうの帝国",
+      "body": "あなたは壁の中で死ぬことを選びませんでした。船に乗り、人と本を西へ運びます。街は落ちますが、逃げた学者たちの荷物がイタリアで開かれ、古い言葉が読み直されました。皇帝としては負けです。ただ、千年ぶんの記憶は沈みませんでした。",
+      "image_prompt": "A crowded galley leaving a burning walled city at night, refugees clutching bundles of scrolls and manuscripts, domed cathedral silhouetted in flames behind, calm dark sea, 19th century academic history painting, oil on canvas, no text, no letters, no words, no writing, no signage",
+      "image": "img/頼存.jpg"
+    },
+    "独存": {
+      "tag": "ENDING 4",
+      "name": "名前だけ残った王",
+      "body": "あなたは誰にも頼らず、そして最後に取引をしました。命と、いくらかの人々は助かります。与えられた小さな土地で、あなたはローマ皇帝と名乗り続けました。誰もそう呼びません。街は他人のものになり、名前だけが手元に残りました。",
+      "image_prompt": "A solitary deposed emperor in faded robes standing on a small stone terrace of a modest provincial fortress, looking toward a distant sea, autumn light, empty landscape, 19th century academic history painting, oil on canvas, melancholy mood, no text, no letters, no words, no writing, no signage",
+      "image": "img/独存.jpg"
+    }
+  }
+}

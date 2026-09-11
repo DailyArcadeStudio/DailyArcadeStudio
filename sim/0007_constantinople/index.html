@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>あなたがコンスタンティノス11世だったら</title>
+<meta property="og:title" content="あなたがコンスタンティノス11世だったら">
+<meta property="og:description" content="千年続いた街の、最後の皇帝。兵は7000人。あなたなら、この街を守れますか。">
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;background:#0b0e14;color:#e6edf3;
+       font-family:-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;
+       line-height:1.75;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+  .wrap{max-width:600px;margin:0 auto;padding:22px 18px 60px}
+  h1{font-size:clamp(21px,5.6vw,29px);margin:6px 0 8px;line-height:1.4}
+  .lead{color:#8b949e;font-size:14.5px;margin:0 0 20px}
+  .prog{position:sticky;top:0;background:#0b0e14;padding:10px 0 12px;z-index:5}
+  .bar{height:4px;background:#1c2333;border-radius:2px;overflow:hidden}
+  .bar i{display:block;height:100%;background:#d4a544;width:0;transition:width .3s}
+  .count{font-size:12.5px;color:#8b949e;margin-top:6px;letter-spacing:.04em}
+  .scene{background:#121722;border:1px solid #222b3d;border-radius:14px;
+          padding:20px 18px;margin:0 0 16px}
+  .year{color:#d4a544;font-size:12.5px;letter-spacing:.1em;margin:0 0 8px}
+  .sit{font-size:16px;margin:0 0 18px;color:#dbe3ec}
+  .opts{display:grid;gap:10px}
+  .opt{border:1px solid #2b3550;background:#161d2b;color:#e6edf3;border-radius:11px;
+        padding:15px 16px;font-size:15.5px;cursor:pointer;text-align:left;
+        font-family:inherit;line-height:1.6;transition:.15s}
+  .opt:hover{border-color:#d4a544}
+  .opt:active{transform:scale(.985)}
+  .log{margin:0 0 20px}
+  .logi{border-left:2px solid #2b3550;padding:2px 0 2px 14px;margin:0 0 10px;
+         font-size:13.5px;color:#7d8796}
+  .logi b{color:#b3bdcc;font-weight:600}
+  #end{display:none} #end.on{display:block}
+  .eimg{width:100%;border-radius:14px;display:block;margin:0 0 18px;background:#121722}
+  .etag{color:#d4a544;font-size:13px;letter-spacing:.09em;margin:0 0 4px}
+  .ename{font-size:clamp(23px,6.4vw,32px);margin:0 0 14px;line-height:1.35}
+  .ebody{font-size:15.5px;color:#c9d1d9;margin:0 0 20px;white-space:pre-wrap}
+  .fact{background:#121722;border-left:3px solid #58a6ff;border-radius:0 10px 10px 0;
+         padding:14px 16px;margin:0 0 20px;font-size:14.5px;color:#c9d1d9}
+  .fact b{color:#58a6ff;display:block;margin-bottom:5px;font-size:12.5px;
+           letter-spacing:.08em}
+  .warn{color:#6e7681;font-size:12.5px;margin:18px 0 0;padding:12px 14px;
+         border:1px dashed #2b3550;border-radius:10px}
+  .share{display:grid;gap:10px;margin:22px 0}
+  .share a,.share button{display:block;text-align:center;padding:14px;border-radius:12px;
+        text-decoration:none;font-weight:700;font-size:15px;border:1px solid #2b3550;
+        background:#161d2b;color:#e6edf3;cursor:pointer;font-family:inherit}
+  .back{display:inline-block;margin-top:6px;color:#8b949e;font-size:14px}
+  footer{margin-top:32px;color:#6e7681;font-size:12.5px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div id="sim">
+  <h1>あなたがコンスタンティノス11世だったら</h1>
+  <p class="lead">千年続いた街の、最後の皇帝。兵は7000人。あなたなら、この街を守れますか。</p>
+  <div class="prog"><div class="bar"><i id="pbar"></i></div>
+    <div class="count"><span id="pnum">1</span> / 8</div></div>
+  <div class="log" id="log"></div>
+  <div class="scene" id="scene"></div>
+</div>
+
+<div id="end">
+  <img class="eimg" id="eimg" alt="">
+  <p class="etag" id="etag"></p>
+  <h1 class="ename" id="ename"></h1>
+  <p class="ebody" id="ebody"></p>
+  <div class="fact" id="fact"></div>
+  <div class="share">
+    <a id="tw" target="_blank" rel="noopener">結果をXに投稿する</a>
+    <button id="again">やり直す</button>
+  </div>
+  <a class="back" href="../">ほかのシミュレータを見る</a>
+  <p class="warn">これはシミュレータです。あなたの選択によっては史実と異なる結末になります。
+  実際に起きたことは上の「史実」の欄をご覧ください。</p>
+</div>
+
+<footer>MosukeStudio</footer>
+</div>
+
+<script>
+const DATA = {"title": "あなたがコンスタンティノス11世だったら", "lead": "千年続いた街の、最後の皇帝。兵は7000人。あなたなら、この街を守れますか。", "axes": [{"label": "自分で守るか、外に頼るか", "pos": "独", "neg": "頼"}, {"label": "戦い抜くか、生き延びるか", "pos": "戦", "neg": "存"}], "history": "史実の皇帝は西に援軍を求め、教会の合同を認めましたが、来た船はわずかでした。53日守り抜き、5月29日の未明に城壁を破られます。皇帝は印を脱ぎ捨てて敵の中へ突っ込み、遺体は見つからなかったと言われます。", "scenes": [{"year": "1451年 夏", "situation": "オスマンのスルタンが代替わりしました。21歳のメフメト2世です。若すぎる、と周りは笑っています。手元には、彼の親戚を人質として預かっているという札があります。", "options": [{"text": "人質を持ち出して、金を要求して揺さぶる", "a": 2, "b": 1}, {"text": "刺激せず、静かに城壁の修理を始める", "a": -1, "b": -2}]}, {"year": "1452年 春", "situation": "メフメトが海峡のこちら側、街のすぐ北に城を建て始めました。黒海からの船を止めるための城です。ここは帝国の土地のはずです。", "options": [{"text": "兵を出して工事を止めにかかる", "a": 2, "b": 2}, {"text": "抗議の使者だけ送り、黒海の穀物を買いだめする", "a": -1, "b": -2}]}, {"year": "1452年 冬", "situation": "西の援軍がほしい。ただしローマ教皇は条件を出しました。東西の教会を合同せよ、と。街の人々は「教皇の帽子を見るくらいなら、トルコの頭巾のほうがましだ」と言っています。", "options": [{"text": "聖ソフィア教会で合同の式を行い、西に借りを作る", "a": -2, "b": 0}, {"text": "民の信仰を守り、合同を断る", "a": 2, "b": 0}]}, {"year": "1453年 春", "situation": "ハンガリー人の技術者ウルバンが、大砲を売り込みに来ました。壁を壊せる大砲だと言います。国庫はほとんど空です。払えば、他の備えに回す金がなくなります。", "options": [{"text": "教会の銀器まで売って、言い値で雇う", "a": 2, "b": 1}, {"text": "断り、その金で外国の傭兵と食料を買う", "a": -2, "b": -1}]}, {"year": "1453年 4月", "situation": "敵は8万とも言われます。守る兵は7000ほど。長い城壁を全部は埋められません。ジェノヴァ人のジュスティニアーニが、兵700を連れて自分から来てくれました。", "options": [{"text": "陸の城壁の指揮を、外国人の彼に任せる", "a": -2, "b": 1}, {"text": "指揮は自国の将に握らせ、彼は一部隊として使う", "a": 2, "b": -1}]}, {"year": "1453年 4月下旬", "situation": "金角湾の鎖は破られていないのに、ある朝、湾の内側に敵の船がいました。丘を越えて陸を運ばれたのです。湾側の壁は薄く、兵を割かなければなりません。", "options": [{"text": "夜襲をかけ、湾の敵船を焼きに出る", "a": 2, "b": 2}, {"text": "ジェノヴァ人の居留地に頼み、湾の守りを分担してもらう", "a": -2, "b": -1}]}, {"year": "1453年 5月下旬", "situation": "メフメトから使者が来ました。街を明け渡せば、命と財産は保証し、別の土地の領主にしてやる、と。城壁はもうあちこち崩れ、援軍の船は来ません。", "options": [{"text": "この街で死ぬと答え、使者を帰す", "a": 1, "b": 2}, {"text": "申し出を受け、人々を連れて街を出る", "a": -1, "b": -2}]}, {"year": "1453年 5月29日 未明", "situation": "総攻撃です。ジュスティニアーニが傷を負い、運び出されました。それを見た兵が崩れます。港には、まだ出られる船が何隻か残っています。", "options": [{"text": "皇帝の印を脱ぎ捨て、崩れた壁の穴へ突っ込む", "a": 1, "b": 2}, {"text": "船に乗り、帝国の名をどこかで継ぐ", "a": -1, "b": -2}]}], "endings": {"頼戦": {"tag": "ENDING 1", "name": "最後のローマ人（史実に近い結末）", "body": "あなたは西に頭を下げ、教会を合同し、それでも来ない援軍を待ち続けました。53日、街は持ちこたえます。5月29日、壁が破れると、あなたは皇帝の印を捨てて兵の中へ消えました。遺体は見つからなかったと言われます。街は落ち、二千年続いた名前が、そこで終わりました。", "image_prompt": "An emperor in torn purple casting off his golden regalia and charging alone into a breach in massive stone city walls at dawn, torchlight, smoke, spears and chaos around him, 19th century academic history painting, oil on canvas, dramatic chiaroscuro, no text, no letters, no words, no writing, no signage", "image": "img/頼戦.jpg"}, "独戦": {"tag": "ENDING 2", "name": "誰にも借りなかった街", "body": "あなたは西に頼りませんでした。信仰も、指揮権も、自分の手に握ったままです。街の人々はあなたを愛し、最後まで一緒に壁に立ちました。それでも数は覆りません。落ちるときも街はひとつでした。誇りだけは、誰にも分けなかったことになります。", "image_prompt": "Byzantine citizens, monks and soldiers standing together on a crumbling fortified rampart under a red sky, an emperor among them holding an icon, enormous enemy camp on the plain below, 19th century academic history painting, oil on canvas, no text, no letters, no words, no writing, no signage", "image": "img/独戦.jpg"}, "頼存": {"tag": "ENDING 3", "name": "海の向こうの帝国", "body": "あなたは壁の中で死ぬことを選びませんでした。船に乗り、人と本を西へ運びます。街は落ちますが、逃げた学者たちの荷物がイタリアで開かれ、古い言葉が読み直されました。皇帝としては負けです。ただ、千年ぶんの記憶は沈みませんでした。", "image_prompt": "A crowded galley leaving a burning walled city at night, refugees clutching bundles of scrolls and manuscripts, domed cathedral silhouetted in flames behind, calm dark sea, 19th century academic history painting, oil on canvas, no text, no letters, no words, no writing, no signage", "image": "img/頼存.jpg"}, "独存": {"tag": "ENDING 4", "name": "名前だけ残った王", "body": "あなたは誰にも頼らず、そして最後に取引をしました。命と、いくらかの人々は助かります。与えられた小さな土地で、あなたはローマ皇帝と名乗り続けました。誰もそう呼びません。街は他人のものになり、名前だけが手元に残りました。", "image_prompt": "A solitary deposed emperor in faded robes standing on a small stone terrace of a modest provincial fortress, looking toward a distant sea, autumn light, empty landscape, 19th century academic history painting, oil on canvas, melancholy mood, no text, no letters, no words, no writing, no signage", "image": "img/独存.jpg"}}};
+let i = 0;
+const score = [0, 0];
+const picks = [];
+
+const sceneEl = document.getElementById('scene');
+const logEl = document.getElementById('log');
+
+function render() {
+  const s = DATA.scenes[i];
+  document.getElementById('pnum').textContent = i + 1;
+  document.getElementById('pbar').style.width = (i / DATA.scenes.length * 100) + '%';
+  sceneEl.innerHTML = `<p class="year">${s.year}</p><p class="sit">${s.situation}</p>`;
+  const box = document.createElement('div');
+  box.className = 'opts';
+  s.options.forEach(o => {
+    const b = document.createElement('button');
+    b.className = 'opt';
+    b.textContent = o.text;
+    b.onclick = () => choose(o);
+    box.appendChild(b);
+  });
+  sceneEl.appendChild(box);
+}
+
+function choose(o) {
+  score[0] += o.a || 0;
+  score[1] += o.b || 0;
+  picks.push(o.text);
+  const d = document.createElement('div');
+  d.className = 'logi';
+  d.innerHTML = `<b>${DATA.scenes[i].year}</b> ${o.text}`;
+  logEl.appendChild(d);
+  i++;
+  if (i < DATA.scenes.length) { render(); scrollTo(0, 0); }
+  else finish();
+}
+
+function finish() {
+  // 2軸の符号で4象限 → 4つの結末
+  const key = (score[0] >= 0 ? DATA.axes[0].pos : DATA.axes[0].neg)
+            + (score[1] >= 0 ? DATA.axes[1].pos : DATA.axes[1].neg);
+  const e = DATA.endings[key] || DATA.endings[Object.keys(DATA.endings)[0]];
+  document.getElementById('eimg').src = e.image;
+  document.getElementById('eimg').alt = e.name;
+  document.getElementById('etag').textContent = e.tag || 'ENDING';
+  document.getElementById('ename').textContent = e.name;
+  document.getElementById('ebody').textContent = e.body;
+  document.getElementById('fact').innerHTML =
+    `<b>史実では</b>${DATA.history}`;
+  const txt = encodeURIComponent(
+    `${DATA.title}\n私の結末は「${e.name}」でした。\n`);
+  document.getElementById('tw').href =
+    `https://twitter.com/intent/tweet?text=${txt}&url=${encodeURIComponent(location.href)}`;
+  document.getElementById('sim').style.display = 'none';
+  document.getElementById('end').classList.add('on');
+  scrollTo(0, 0);
+}
+
+document.getElementById('again').onclick = () => location.reload();
+render();
+</script>
+</body>
+</html>
