@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>あなたの1日の使い方診断</title>
+<meta property="og:title" content="あなたの1日の使い方診断">
+<meta property="og:description" content="朝から夜まで、あなたはどう時間を割っていますか。">
+<meta property="og:type" content="website">
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;background:#0d1117;color:#e6edf3;
+       font-family:-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;
+       line-height:1.7;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+  .wrap{max-width:560px;margin:0 auto;padding:24px 18px 60px}
+  h1{font-size:clamp(22px,6vw,30px);margin:8px 0 6px;line-height:1.4}
+  .lead{color:#8b949e;font-size:15px;margin:0 0 22px}
+  .story{background:#161b22;border-left:3px solid #ffd23b;border-radius:0 10px 10px 0;
+          padding:14px 16px;margin:0 0 26px;font-size:14.5px;color:#c9d1d9}
+  .prog{position:sticky;top:0;background:#0d1117;padding:10px 0 12px;z-index:5}
+  .bar{height:5px;background:#21262d;border-radius:3px;overflow:hidden}
+  .bar i{display:block;height:100%;background:#ffd23b;width:0;transition:width .25s}
+  .count{font-size:13px;color:#8b949e;margin-top:6px}
+  .q{margin:0 0 30px}
+  .qt{font-size:17px;font-weight:700;margin:0 0 14px}
+  .opts{display:grid;gap:8px}
+  .opt{border:1px solid #30363d;background:#161b22;color:#e6edf3;border-radius:10px;
+        padding:13px 14px;font-size:15px;cursor:pointer;text-align:left;
+        font-family:inherit;transition:.15s}
+  .opt:active{transform:scale(.985)}
+  .opt.on{border-color:#ffd23b;background:#1c2128;color:#ffd23b;font-weight:700}
+  .go{width:100%;padding:16px;border:none;border-radius:12px;background:#ffd23b;
+       color:#0d1117;font-size:17px;font-weight:700;cursor:pointer;font-family:inherit;
+       margin-top:8px}
+  .go:disabled{background:#21262d;color:#6e7681;cursor:default}
+  #result{display:none}
+  #result.on{display:block}
+  .rimg{width:100%;border-radius:14px;display:block;margin:0 0 18px;background:#161b22}
+  .rtype{color:#ffd23b;font-size:14px;letter-spacing:.08em;margin:0 0 4px}
+  .rname{font-size:clamp(24px,7vw,34px);margin:0 0 14px;line-height:1.35}
+  .rbody{font-size:15.5px;color:#c9d1d9;margin:0 0 18px}
+  .axes{display:grid;gap:10px;margin:0 0 24px}
+  .ax{font-size:13px;color:#8b949e}
+  .axbar{height:6px;background:#21262d;border-radius:3px;margin-top:5px;position:relative}
+  .axbar i{position:absolute;top:0;height:100%;background:#58a6ff;border-radius:3px}
+  .share{display:grid;gap:10px;margin:24px 0}
+  .share a,.share button{display:block;text-align:center;padding:14px;border-radius:12px;
+        text-decoration:none;font-weight:700;font-size:15px;border:1px solid #30363d;
+        background:#161b22;color:#e6edf3;cursor:pointer;font-family:inherit}
+  .back{display:inline-block;margin-top:8px;color:#8b949e;font-size:14px}
+  footer{margin-top:34px;color:#6e7681;font-size:12.5px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div id="quiz">
+  <h1>あなたの1日の使い方診断</h1>
+  <p class="lead">朝から夜まで、あなたはどう時間を割っていますか。</p>
+  <div class="story">スペインの小さな町では、午後2時ごろに店が閉まると言われています。暑さと、長い昼ごはんと、家族のための時間。日本は昼休みを短くまとめ、スペインは1日を2つに割る。どちらも1日の組み立て方です。その話から作りました。</div>
+  <div class="prog"><div class="bar"><i id="pbar"></i></div>
+    <div class="count"><span id="pnum">0</span> / 10 問</div></div>
+  <div id="qs"></div>
+  <button class="go" id="submit" disabled>結果を見る</button>
+</div>
+
+<div id="result">
+  <img class="rimg" id="rimg" alt="">
+  <p class="rtype" id="rtype"></p>
+  <h1 class="rname" id="rname"></h1>
+  <p class="rbody" id="rbody"></p>
+  <div class="axes" id="axes"></div>
+  <div class="share">
+    <a id="tw" target="_blank" rel="noopener">結果をXに投稿する</a>
+    <button id="again">もう一度やる</button>
+  </div>
+  <a class="back" href="../../">ほかのゲーム・診断を見る</a>
+</div>
+
+<footer>Daily Arcade Studio</footer>
+</div>
+
+<script>
+const DATA = {"title": "あなたの1日の使い方診断", "lead": "朝から夜まで、あなたはどう時間を割っていますか。", "story": "スペインの小さな町では、午後2時ごろに店が閉まると言われています。暑さと、長い昼ごはんと、家族のための時間。日本は昼休みを短くまとめ、スペインは1日を2つに割る。どちらも1日の組み立て方です。その話から作りました。", "axes": [{"label": "朝から動くか、夜に動くか", "pos": "M", "neg": "N"}, {"label": "休みをまとめて長くとるか、短く刻むか", "pos": "L", "neg": "S"}, {"label": "ごはんをゆっくり楽しむか、手早く済ませるか", "pos": "F", "neg": "Q"}, {"label": "予定どおりに進めるか、その日の体調に合わせるか", "pos": "P", "neg": "A"}], "questions": [{"text": "頭がいちばん働くのは、午前中だ。", "axis": 0, "sign": 1}, {"text": "夜9時から、やっと本気が出る。", "axis": 0, "sign": -1}, {"text": "休みの日も、早起きしたい。", "axis": 0, "sign": 1}, {"text": "途中で2時間まるごと休めるなら、そうしたい。", "axis": 1, "sign": 1}, {"text": "休憩は10分ずつ、こまめにとるほうがいい。", "axis": 1, "sign": -1}, {"text": "昼にいったん家に帰れるなら、帰りたい。", "axis": 1, "sign": 1}, {"text": "昼ごはんに1時間以上かけても、もったいないと思わない。", "axis": 2, "sign": 1}, {"text": "食事は15分で終わらせたい。", "axis": 2, "sign": -1}, {"text": "その日の予定は、だいたい時間まで決めておく。", "axis": 3, "sign": 1}, {"text": "暑い日や眠い日は、予定をずらしてしまう。", "axis": 3, "sign": -1}], "results": {"NLFA": {"name": "スペイン型", "body": "1日を2つに割って、間をたっぷりとるタイプ。昼ごはんはゆっくり、夜は遅くまで元気。暑い日や疲れた日は、無理せず後ろにずらします。休むことが、働き方の一部になっている形です。", "image_prompt": "photorealistic narrow sunlit street in a small southern Spanish town, closed wooden shop shutters, white walls, harsh midday sun and deep shadows, empty stone pavement, potted geraniums, cinematic natural light, no text, no letters, no words, no writing", "image": "img/NLFA.jpg"}, "NLFP": {"name": "イタリア型", "body": "夜型で、食事は長く、休みもまとめてとる。それでも段取りは自分の中で決まっています。ゆっくりやるけれど、だらだらはしない。長い食卓にも、ちゃんと順番があるタイプです。", "image_prompt": "photorealistic long outdoor dining table in an Italian village courtyard at evening, plates of pasta and wine glasses, stone walls, hanging vines, warm golden light, relaxed gathering, cinematic, no text, no letters, no words, no writing", "image": "img/NLFP.jpg"}, "NLQA": {"name": "ギリシャ型", "body": "夜に動き、休みは長め。でも食事そのものは意外とあっさりです。暑い時間は避けて、涼しくなってから本番。海辺の町みたいに、時間が日差しで決まるタイプです。", "image_prompt": "photorealistic whitewashed Greek island village at late afternoon, blue domed church, steep stone steps, bright sea horizon, a cat sleeping in shade, warm low sun, cinematic, no text, no letters, no words, no writing", "image": "img/NLQA.jpg"}, "NLQP": {"name": "メキシコ型", "body": "夜が長く、昼の休みもしっかり。ごはんは手早く、でも人との時間は大事にします。段取りは頭の中にあって、暑さに合わせて組み替える。にぎやかで計画的なタイプです。", "image_prompt": "photorealistic Mexican town plaza in the evening, colorful colonial buildings, food stalls with steam, families walking, string lights, warm dusk sky, cinematic natural light, no text, no letters, no words, no writing", "image": "img/NLQP.jpg"}, "NSFA": {"name": "アルゼンチン型", "body": "夜型で、食事はゆっくり。でも休みは短く刻みます。その日の気分で動くから、夕食が夜10時になることも平気。日が落ちてから、いちばん人らしくなるタイプです。", "image_prompt": "photorealistic Buenos Aires street at night, grand european-style facades, warm cafe windows, people at outdoor tables, wet cobblestones reflecting lamplight, cinematic, no text, no letters, no words, no writing", "image": "img/NSFA.jpg"}, "NSFP": {"name": "フランス型", "body": "食事には時間をかけるけれど、休みは小分け。夜もしっかり動きます。順番と段取りを崩さず、味わうところだけ丁寧に。メリハリのつけ方が上手なタイプです。", "image_prompt": "photorealistic Parisian bistro terrace in the evening, small round tables, bread and wine, cane chairs, classic stone building, soft lamp glow, cinematic natural light, no text, no letters, no words, no writing", "image": "img/NSFP.jpg"}, "NSQA": {"name": "エジプト型", "body": "夜に動き、休みは短く、食事も手早い。そのかわり、暑さや体調でどんどん予定を動かします。日中は力を抜いて、涼しくなってから一気に進めるタイプです。", "image_prompt": "photorealistic Cairo street market at night, crowded narrow lane, hanging lanterns, stacks of goods, warm yellow light, distant minaret silhouette, cinematic, no text, no letters, no words, no writing", "image": "img/NSQA.jpg"}, "NSQP": {"name": "韓国型", "body": "夜おそくまで動いて、休みは短く、食事もさっと。それでも予定はきっちり守ります。夜のほうが集中できて、遅い時間まで走り続けられるタイプです。", "image_prompt": "photorealistic Seoul street at night, neon signs glowing, steam from street food stalls, people walking under umbrellas, wet asphalt reflections, cinematic, no text, no letters, no words, no writing", "image": "img/NSQP.jpg"}, "MLFA": {"name": "ポルトガル型", "body": "朝から動いて、昼はゆっくり長く。食事も急がず、その日の調子に合わせます。早く始めて、途中でしっかり止まる。穏やかに一日を二度使うタイプです。", "image_prompt": "photorealistic Portuguese coastal town in the morning, tiled building facades, terracotta roofs, fishing boats in a small harbor, soft warm sunlight, laundry on a balcony, cinematic, no text, no letters, no words, no writing", "image": "img/MLFA.jpg"}, "MLFP": {"name": "トスカーナの農家型", "body": "朝はやくから働いて、昼はまとめて休み、食卓は長い。それでも一日の流れは決まっています。昔の農作業のような、よく考えられた形のタイプです。", "image_prompt": "photorealistic Tuscan farmhouse at sunrise, rolling green hills, rows of cypress trees, stone building with red roof, morning mist in the valley, golden light, cinematic, no text, no letters, no words, no writing", "image": "img/MLFP.jpg"}, "MLQA": {"name": "モロッコ型", "body": "朝から動き、昼はしっかり休む。ごはんは手早く、予定はその日次第。暑い時間を避ける知恵が、自然と体に入っているタイプです。", "image_prompt": "photorealistic Moroccan medina alley at midday, ochre clay walls, woven rugs hanging in shade, arched doorway, strong sunlight and deep shade, dusty air, cinematic, no text, no letters, no words, no writing", "image": "img/MLQA.jpg"}, "MLQP": {"name": "ドイツ型", "body": "朝はやく始めて、休みはまとめて、食事は手短に。予定はきっちり守ります。始まりも終わりも早い、区切りのはっきりしたタイプです。", "image_prompt": "photorealistic German town square in early morning, half-timbered houses, clock tower, cobblestones, a few cyclists, crisp clear light, tidy streets, cinematic, no text, no letters, no words, no writing", "image": "img/MLQP.jpg"}, "MSFA": {"name": "ハワイ型", "body": "朝は早いけれど、休みは小刻み。食事はゆっくり、予定はゆるめ。海の近くで暮らすみたいに、その日の天気と気分に合わせて進むタイプです。", "image_prompt": "photorealistic Hawaiian beach in early morning, calm turquoise water, palm trees, volcanic rock, a hammock between trees, soft sunrise light, cinematic, no text, no letters, no words, no writing", "image": "img/MSFA.jpg"}, "MSFP": {"name": "台湾型", "body": "朝から動いて、休みは短く、でも食べることは大事にします。予定もきちんと守る。朝ごはんから夜市まで、食のために一日を回すタイプです。", "image_prompt": "photorealistic Taiwanese morning breakfast shop, steam rising from bamboo baskets, small plastic stools, scooters parked outside, bright morning light, busy street, cinematic, no text, no letters, no words, no writing", "image": "img/MSFP.jpg"}, "MSQA": {"name": "ベトナム型", "body": "朝はとても早く、休みは短く、食事もさっと。そのかわり、暑さや用事でどんどん動きを変えます。早朝が勝負で、あとは流れにまかせるタイプです。", "image_prompt": "photorealistic Vietnamese street at dawn, motorbikes and bicycles, a small noodle stall with steam, low stools, green trees, soft misty morning light, cinematic, no text, no letters, no words, no writing", "image": "img/MSQA.jpg"}, "MSQP": {"name": "日本型", "body": "朝から動いて、昼休みは短くまとめ、食事も手早い。予定どおりに進めます。一日をひと続きで走りきって、そのぶん早めに切り上げるタイプです。", "image_prompt": "photorealistic Japanese office district street at noon, crowds of workers walking, tall glass buildings, convenience store entrance, bright clear daylight, orderly crosswalk, cinematic, no text, no letters, no words, no writing", "image": "img/MSQP.jpg"}}};
+const SCALE = ["とてもそう","ややそう","どちらとも","あまり違う","全く違う"];
+
+const qsEl = document.getElementById('qs');
+const ans = new Array(DATA.questions.length).fill(null);
+
+DATA.questions.forEach((q, i) => {
+  const d = document.createElement('div');
+  d.className = 'q';
+  d.innerHTML = `<p class="qt">Q${i+1}. ${q.text}</p>`;
+  const box = document.createElement('div');
+  box.className = 'opts';
+  SCALE.forEach((label, k) => {
+    const b = document.createElement('button');
+    b.className = 'opt'; b.textContent = label;
+    b.onclick = () => {
+      ans[i] = 2 - k;                    // +2(とてもそう) 〜 -2(全く違う)
+      [...box.children].forEach(c => c.classList.remove('on'));
+      b.classList.add('on');
+      update();
+    };
+    box.appendChild(b);
+  });
+  d.appendChild(box);
+  qsEl.appendChild(d);
+});
+
+function update() {
+  const done = ans.filter(a => a !== null).length;
+  document.getElementById('pnum').textContent = done;
+  document.getElementById('pbar').style.width = (done / ans.length * 100) + '%';
+  document.getElementById('submit').disabled = done < ans.length;
+}
+
+document.getElementById('submit').onclick = () => {
+  // 軸ごとにスコアを合計する。q.axis は 0..3、q.sign は +1/-1
+  const score = [0, 0, 0, 0];
+  const max = [0, 0, 0, 0];
+  DATA.questions.forEach((q, i) => {
+    score[q.axis] += ans[i] * q.sign;
+    max[q.axis] += 2;
+  });
+  // 各軸を2値にして 16 タイプのキーを作る
+  const key = score.map((s, i) => s >= 0 ? DATA.axes[i].pos : DATA.axes[i].neg).join('');
+  const r = DATA.results[key] || DATA.results[Object.keys(DATA.results)[0]];
+
+  document.getElementById('rimg').src = r.image;
+  document.getElementById('rimg').alt = r.name;
+  document.getElementById('rtype').textContent = key;
+  document.getElementById('rname').textContent = r.name;
+  document.getElementById('rbody').textContent = r.body;
+
+  const ax = document.getElementById('axes');
+  ax.innerHTML = '';
+  DATA.axes.forEach((a, i) => {
+    const pct = Math.round((score[i] + max[i]) / (max[i] * 2) * 100);
+    const d = document.createElement('div');
+    d.className = 'ax';
+    d.innerHTML = `${a.label}<div class="axbar"><i style="left:0;width:${pct}%"></i></div>`;
+    ax.appendChild(d);
+  });
+
+  const txt = encodeURIComponent(`${DATA.title}\n私は「${r.name}」でした。\n`);
+  document.getElementById('tw').href =
+    `https://twitter.com/intent/tweet?text=${txt}&url=${encodeURIComponent(location.href)}`;
+
+  document.getElementById('quiz').style.display = 'none';
+  document.getElementById('result').classList.add('on');
+  scrollTo(0, 0);
+};
+
+document.getElementById('again').onclick = () => {
+  location.reload();
+};
+</script>
+</body>
+</html>
