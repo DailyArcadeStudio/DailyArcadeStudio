@@ -1,0 +1,177 @@
+{
+  "title": "あなたがハンニバルだったら",
+  "lead": "象とともにアルプスを越えた男。あなたなら、ローマを倒せますか。",
+  "axes": [
+    {
+      "label": "攻めるか、待つか",
+      "pos": "攻",
+      "neg": "慎"
+    },
+    {
+      "label": "独力で戦うか、味方を頼るか",
+      "pos": "独",
+      "neg": "協"
+    }
+  ],
+  "history": "史実のハンニバルはアルプスを越え、カンナエでローマ軍をほぼ壊滅させたと言われます。しかしローマ市は攻めず、イタリアで16年ほど粘りました。最後は本国に呼び戻され、ザマで敗れ、カルタゴは屈しました。",
+  "scenes": [
+    {
+      "year": "紀元前219年 春",
+      "situation": "スペインの町サグントゥムはローマと手を結んでいます。ここを攻めれば、ローマとの戦争は避けられません。",
+      "options": [
+        {
+          "text": "町を包囲し、力ずくで落とす",
+          "a": 2,
+          "b": 1
+        },
+        {
+          "text": "手を出さず、スペインの支配を固める",
+          "a": -2,
+          "b": -1
+        }
+      ]
+    },
+    {
+      "year": "紀元前218年 春",
+      "situation": "ローマへ向かう道は二つ。船でイタリアを突くか、陸をゆき、山を越えるか。海はローマの艦隊が強いと言われます。",
+      "options": [
+        {
+          "text": "陸路を選び、アルプスを越える",
+          "a": 2,
+          "b": 0
+        },
+        {
+          "text": "スペインに留まり、ローマ軍を迎え撃つ",
+          "a": -2,
+          "b": 0
+        }
+      ]
+    },
+    {
+      "year": "紀元前218年 秋",
+      "situation": "アルプスの峠は雪。兵も象も次々に倒れます。案内人の言葉も当てになりません。引き返す道はまだあります。",
+      "options": [
+        {
+          "text": "犠牲を覚悟で、峠を押し通る",
+          "a": 2,
+          "b": 1
+        },
+        {
+          "text": "ガリアの部族に道と食料を頼み、遠回りする",
+          "a": -1,
+          "b": -2
+        }
+      ]
+    },
+    {
+      "year": "紀元前217年 夏",
+      "situation": "トラシメヌス湖のほとり。霧の深い朝、ローマの執政官の軍が細い道を進んでいます。待ち伏せの好機です。",
+      "options": [
+        {
+          "text": "霧に乗じ、湖畔で全軍を伏せる",
+          "a": 2,
+          "b": 1
+        },
+        {
+          "text": "深追いはせず、イタリアの町々を味方に誘う",
+          "a": -1,
+          "b": -2
+        }
+      ]
+    },
+    {
+      "year": "紀元前216年 夏",
+      "situation": "カンナエの平野。ローマはおよそ8万の大軍と言われます。こちらはその半分ほど。正面から当たれば押しつぶされます。",
+      "options": [
+        {
+          "text": "中央をわざと下げ、左右から包み込む",
+          "a": 2,
+          "b": 0
+        },
+        {
+          "text": "会戦を避け、補給を断って相手を弱らせる",
+          "a": -2,
+          "b": 0
+        }
+      ]
+    },
+    {
+      "year": "紀元前216年 晩夏",
+      "situation": "カンナエの直後。部下のマハルバルが言います。「数日でローマの城門に立てます」。だが城壁は高く、攻城の道具はありません。",
+      "options": [
+        {
+          "text": "勢いのままローマ市へ進軍する",
+          "a": 2,
+          "b": 2
+        },
+        {
+          "text": "南イタリアの都市を味方に引き入れる",
+          "a": -1,
+          "b": -2
+        }
+      ]
+    },
+    {
+      "year": "紀元前207年",
+      "situation": "弟ハスドルバルが援軍を連れてアルプスを越えました。合流を告げる手紙を運ぶ使者が、北へ向かいます。",
+      "options": [
+        {
+          "text": "北へ急進し、力ずくで合流を果たす",
+          "a": 2,
+          "b": -1
+        },
+        {
+          "text": "南に留まり、弟の到着を待つ",
+          "a": -2,
+          "b": 1
+        }
+      ]
+    },
+    {
+      "year": "紀元前202年 秋",
+      "situation": "ローマのスキピオが本国アフリカに上陸。ザマの地で向き合います。頼みの騎兵は、今度は相手のほうが多いのです。",
+      "options": [
+        {
+          "text": "象を先頭に、正面から決戦を挑む",
+          "a": 2,
+          "b": 1
+        },
+        {
+          "text": "決戦を避け、有利な講和を探る",
+          "a": -2,
+          "b": -1
+        }
+      ]
+    }
+  ],
+  "endings": {
+    "攻独": {
+      "tag": "ENDING 1",
+      "name": "ローマの門に立つ者",
+      "body": "あなたは休まず攻め続けました。カンナエの勝利のまま北へ進み、ローマの城門に迫ります。城壁は破れずとも、恐怖がローマの同盟を揺さぶりました。いくつかの都市が離れ、ローマは初めて講和の席につきます。ただし兵は減り、本国からの援軍は届きません。勝利は、薄い氷の上に立っていました。",
+      "image_prompt": "A Carthaginian general on horseback before the towering walls of ancient Rome at dusk, war elephants and weary soldiers behind him, smoke on the horizon, dramatic chiaroscuro, 19th century academic history painting, oil on canvas, no text, no letters, no words, no writing",
+      "image": "img/攻独.jpg"
+    },
+    "攻協": {
+      "tag": "ENDING 2",
+      "name": "イタリアを裂いた男",
+      "body": "あなたは攻めながら、味方を増やしました。南イタリアの都市が次々に離反し、弟の軍とも合流します。ローマは半島の半分を失い、イタリアは二つに割れました。戦争は終わらず、にらみ合いが続きます。カルタゴは滅びませんでしたが、地中海は長い緊張の海となりました。",
+      "image_prompt": "Ancient Italian city gates opening to a Carthaginian army as local citizens greet them, olive groves and hills, warm golden light, crowds and banners without any inscription, Renaissance style history painting, oil on canvas, no text, no letters, no words, no writing",
+      "image": "img/攻協.jpg"
+    },
+    "慎独": {
+      "tag": "ENDING 3",
+      "name": "スペインの王",
+      "body": "あなたはイタリアへ渡らず、スペインを固めました。銀山の富で軍を養い、独立した王国のように振る舞います。ローマとの正面衝突は避けられました。しかしローマは海を押さえ、少しずつ包囲を狭めます。あなたの名は将軍としてではなく、豊かな属州の主として残りました。",
+      "image_prompt": "A commander overlooking silver mines and fortified hill towns in ancient Iberia, workers and pack mules below, wide sunlit landscape, calm and stately composition, classical history painting, oil on canvas, no text, no letters, no words, no writing",
+      "image": "img/慎独.jpg"
+    },
+    "慎協": {
+      "tag": "ENDING 4",
+      "name": "ザマの夕暮れ（史実に近い結末）",
+      "body": "あなたはイタリアで16年ほど粘り、味方を集めました。けれどローマ市は落とせず、弟の援軍も途中で破れます。本国に呼び戻され、ザマでスキピオと戦い、敗れました。カルタゴは艦隊と領土を失い、重い賠償を負います。あなたは亡命し、異国の地で生涯を終えたと言われています。",
+      "image_prompt": "An aging defeated general seated alone on a hillside at sunset, broken shields and fallen elephants on the plain below, distant Roman camp, melancholy mood, Romantic era history painting, oil on canvas, no text, no letters, no words, no writing",
+      "image": "img/慎協.jpg"
+    }
+  }
+}

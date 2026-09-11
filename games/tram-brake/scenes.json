@@ -1,0 +1,227 @@
+{
+  "id": "0002_tram_brake",
+  "title": "坂道のトラム",
+  "video_title": "この坂では、ブレーキしか操作できません",
+  "lang": "python",
+  "voice": "am_adam",
+  "scenes": [
+    {
+      "kind": "hook",
+      "clip": "steep",
+      "narration": "リスボンに、運転士がみんな嫌がる坂があります。"
+    },
+    {
+      "kind": "image",
+      "prompt": "an extremely steep narrow cobblestone street in Lisbon, old yellow tram descending, pastel tiled buildings crowding both sides, overhead wires, late afternoon warm light, photorealistic, cinematic, highly detailed",
+      "narration": "リスボンは、坂の多い街です。その中に、とくに急な一本があります。石畳の細い道を、黄色いトラムが毎日下っていきます。運転士のジョアンさんは、この路線を12年やっています。"
+    },
+    {
+      "kind": "image",
+      "prompt": "close-up of a worn white painted stop line on wet cobblestones beside a tram rail, faded and half rubbed away, an old metal tram stop pole standing next to it, overcast light, photorealistic, shallow depth of field, highly detailed",
+      "narration": "坂の途中に、停留所があります。地面には白い停止線が引いてあります。ところがこの線、昔の短いトラムに合わせて引かれたものなんです。今の車両は、それより長い。少し行き過ぎるだけで、乗り口が坂の途中に出てしまいます。"
+    },
+    {
+      "kind": "image",
+      "prompt": "a tram driver's hands gripping a worn brass brake lever inside an old wooden tram cab, dashboard polished by decades of use, steep street visible through the windscreen ahead, warm interior light, photorealistic, cinematic, highly detailed",
+      "narration": "ジョアンさんは、線を引き直してほしいと何度も頼みました。返事は、いつも同じです。予定に入っています。そう言われて、もう12年です。だから今日も、手で合わせます。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "tram",
+      "kicker": "運転する人",
+      "title": "ジョアンさん",
+      "bullets": [
+        "アクセルはない。**坂が勝手に加速させる**",
+        "操作はブレーキ1つだけ",
+        "押している間だけ効く"
+      ],
+      "narration": "これがジョアンさんのトラムです。まず面白いのがここ。アクセルがありません。坂が勝手に加速させてくれるからです。だからあなたが触れるのは、ブレーキ1つだけ。押している間だけ効きます。それで全部です。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "stop",
+      "kicker": "目標",
+      "title": "停留所の白い線",
+      "bullets": [
+        "**ぴったり止めて1000点**",
+        "60センチずれるともう減点",
+        "1メートルでも行き過ぎたら、その場で終わり"
+      ],
+      "narration": "止める場所がこれです。線にぴったり止めると1000点。60センチずれると、もう減点が始まります。そして、ここが厳しいところ。1メートルでも行き過ぎたら、その場で終わりです。手前で止まるぶんには、点が減るだけ。行き過ぎだけが、一発なんです。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "rain",
+      "kicker": "邪魔するもの 1",
+      "title": "濡れたレール",
+      "bullets": [
+        "ブレーキの**効きが落ちる**",
+        "押し方は同じ。伸びる距離だけ変わる",
+        "12秒つづく"
+      ],
+      "narration": "雨が降ると、レールが濡れます。するとブレーキの効きが落ちます。押し方は今までと同じなのに、止まる距離だけ伸びる。これが一番いやらしいところです。体が覚えた感覚が、そのまま裏切ってきます。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "rider",
+      "kicker": "邪魔するもの 2",
+      "title": "満員の乗客",
+      "bullets": [
+        "車体が**重くなる**",
+        "同じブレーキでも止まりきれない",
+        "乗せないという選択肢はない"
+      ],
+      "narration": "こちらは乗客です。乗ってくると、車体が重くなります。重い車は、同じブレーキでは止まりません。そして仕事なので、乗せないという選択肢はありません。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "car",
+      "kicker": "邪魔するもの 3",
+      "title": "横断する車",
+      "bullets": [
+        "線路の上で**止まる**",
+        "ぶつかったら終わり",
+        "手前で止まっていれば、先に行ってくれる"
+      ],
+      "narration": "そして車です。線路を横切って、真ん中で止まります。ぶつかったら、そこで終わりです。ただし手前でちゃんと止まっていれば、車のほうが先に行ってくれます。急いだ人だけが損をする仕組みです。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "lamp",
+      "kicker": "たよりになるもの",
+      "title": "街灯と、目測",
+      "bullets": [
+        "距離はゲージで見える",
+        "**満タンに近いほど手遅れ**",
+        "霧が出ると、それも当てにならない"
+      ],
+      "narration": "助けもあります。画面の下のゲージです。今の速度で止まるのに要る距離を出しています。満タンに近いほど、もう手遅れという意味です。数字を読むより速い。見てください、こういうのが上手いゲームです。"
+    },
+    {
+      "kind": "events",
+      "clip": "events",
+      "kicker": "坂の途中で起きること",
+      "title": "静かなままでは終わらない",
+      "bullets": [
+        "**急勾配** — 勝手に速くなる",
+        "**濃霧** — 停留所が見えなくなる",
+        "**満員** — 重さが変わる"
+      ],
+      "narration": "坂は、静かなままでは終わりません。急に勾配がきつくなって、勝手に速くなります。霧が出て、停留所が見えなくなります。そこに乗客が乗ってきて、重さまで変わる。そうなんです。全部いっぺんに来ます。"
+    },
+    {
+      "kind": "death",
+      "clip": "death",
+      "kicker": "終わりかた",
+      "title": "だいたい、行き過ぎで終わる",
+      "bullets": [
+        "止まる瞬間、時間がゆっくり止まる",
+        "カメラが寄って、理由を一言出す",
+        "停留所は進むほど**近づいてくる**"
+      ],
+      "narration": "終わるときは、いつも同じです。時間がゆっくり止まって、カメラが寄ってきて、何で終わったのかを一言だけ教えてくれます。そしてもう1つ。停留所は、進むほど間隔が近づいてきます。判断する時間が、じわじわ減っていくんです。ジョアンさんは、この坂を12年下っています。あなたは、たぶん4つ目で行き過ぎます。"
+    },
+    {
+      "kind": "outro",
+      "title": "概要欄のリンクから遊べます",
+      "subtitle": "チャンネル登録もお願いします",
+      "narration": "ブラウザで無料で遊べます。概要欄のリンクからどうぞ。毎日1本ゲームを出しているので、チャンネル登録もお願いします。"
+    }
+  ],
+  "slug": "tram-brake",
+  "channel": "Daily Arcade Studio",
+  "events": [
+    "wet",
+    "crowd",
+    "steep",
+    "fog",
+    "car"
+  ],
+  "short": [
+    {
+      "mark": "car",
+      "lead": -0.5,
+      "dur": 8.0,
+      "headline": "線路の上で止まる車"
+    },
+    {
+      "mark": "steep",
+      "lead": -0.5,
+      "dur": 7.0,
+      "headline": "坂が勝手に加速させる"
+    },
+    {
+      "mark": "wet",
+      "lead": -0.5,
+      "dur": 8.0,
+      "headline": "濡れると止まれない"
+    },
+    {
+      "mark": "fog",
+      "lead": -0.5,
+      "dur": 7.0,
+      "headline": "停留所が見えない"
+    },
+    {
+      "mark": "death",
+      "lead": -2.0,
+      "dur": 9.0,
+      "headline": "1メートル行き過ぎたら終わり"
+    }
+  ],
+  "thumb": {
+    "hook": "止まれ、その線で",
+    "sub": "操作はブレーキだけ。ブラウザで無料。",
+    "frame_mark": "steep",
+    "frame_lead": 1.0
+  },
+  "short_v2": {
+    "cuts": [
+      {
+        "kind": "clip",
+        "mark": "car",
+        "lead": -0.5,
+        "dur": 4.5,
+        "headline": "今日のゲーム",
+        "narration": "今日のゲームです。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "tram",
+        "dur": 5.0,
+        "headline": "坂道のトラム",
+        "narration": "リスボンの急坂を下る、トラムの運転士です。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "stop",
+        "dur": 5.0,
+        "headline": "白い線",
+        "narration": "この線にぴったり止めます。行き過ぎたら、その場で終わりです。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "rain",
+        "dur": 5.0,
+        "headline": "効かない",
+        "narration": "レールが濡れると、ブレーキの効きが落ちます。止まる距離だけ伸びます。"
+      },
+      {
+        "kind": "clip",
+        "mark": "death",
+        "lead": -2.0,
+        "dur": 5.0,
+        "headline": "",
+        "narration": "そして停留所は、どんどん近づいてきます。"
+      },
+      {
+        "kind": "clip",
+        "mark": "run2",
+        "lead": 1.0,
+        "dur": 4.5,
+        "cta": "概要欄のリンクから遊べます",
+        "narration": "ブラウザで無料で遊べます。リンクは概要欄です。"
+      }
+    ]
+  }
+}

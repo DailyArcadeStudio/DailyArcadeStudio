@@ -1,3 +1,11 @@
-output/*.mp4
+
 __pycache__/
+*.pyc
+*/_imgspec.json
+*/_raw/
+*/*/_imgspec.json
+*/*/_raw/
+# 体験ページの作業ファイル（公開不要）
+output/
 output/*.built
+output/*.mp4

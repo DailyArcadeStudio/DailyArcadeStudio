@@ -59,8 +59,14 @@ def main(slug, work_dir=None):
             log("gameplay already recorded")
 
         # 2. story images (slow: SDXL). Skipped when the scenes need none.
-        if not (work / "imgs").exists():
-            log("generating story images")
+        # ディレクトリの有無だけで判定すると、途中で落ちて1枚だけ残った
+        # ときに「生成済み」と誤判定して assemble が転ける。必要な枚数
+        # そろっているかで判定する。
+        need = sum(1 for sc in json.loads(scenes.read_text())["scenes"]
+                   if sc.get("kind") == "image")
+        have = len(list((work / "imgs").glob("*.png"))) if (work / "imgs").exists() else 0
+        if have < need:
+            log(f"generating story images ({have}/{need})")
             run([PY, str(ROOT / "lib/gen_images.py"), str(scenes), str(work)])
 
         # 3. narration

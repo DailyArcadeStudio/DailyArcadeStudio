@@ -215,6 +215,40 @@ def _wrap(d, text, font, max_w):
         lines.append(cur)
     return lines
 
+# --- 日本語対応 (jp_text) ---
+# 日本語ナレーション/字幕のときは、ヒラギノ + 文字単位の折り返しに切り替える。
+# 英語のときの見た目は一切変えない。
+import os as _os
+import sys as _sys
+_sys.path.insert(0, "/Users/fukushimatakumi/develop")
+from jp_text import is_ja as _is_ja, wrap_ja as _wrap_ja, jp_font_path as _jp_font
+
+_JA_MODE = _os.environ.get("VIDEO_LANG", "").lower().startswith("ja")
+
+if _JA_MODE:
+    _h6, _h8 = _jp_font("W6"), _jp_font("W8")
+    if _h6:
+        FONTS["sans"] = _h6
+        FONTS["sans_bold"] = _h8 or _h6
+
+
+def _font_t(text, kind, size):
+    """文字列に合わせてフォントを選ぶ。日本語が入る mono は sans に逃がす
+    （Menlo に日本語グリフが無く、豆腐になるため）。"""
+    if _JA_MODE and kind == "mono" and _is_ja(text):
+        kind = "sans"
+    return _font(kind, size)
+
+
+_wrap_en = _wrap
+
+
+def _wrap(d, text, font, max_w):
+    """日本語は文字単位、英語は従来どおり単語単位。"""
+    if _is_ja(text):
+        return _wrap_ja(d, text, font, max_w)
+    return _wrap_en(d, text, font, max_w)
+
 
 def render_scene(scene, n_code_lines=None):
     """1シーンを PNG(Image) にして返す。n_code_lines でコードのタイピング途中を描ける。"""

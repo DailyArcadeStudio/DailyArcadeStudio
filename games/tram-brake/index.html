@@ -1,0 +1,1362 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>坂道のトラム</title>
+<style>
+  html,body{margin:0;padding:0;overflow:hidden;background:#0a0c14;
+    font-family:'Hiragino Kaku Gothic ProN','Yu Gothic','Helvetica Neue',Arial,sans-serif;}
+  #ui{position:fixed;top:16px;left:0;right:0;text-align:center;color:#fff;z-index:10;pointer-events:none;}
+  #score{font-size:clamp(24px,5.6vw,34px);font-weight:800;text-shadow:0 2px 8px #000;}
+  #msg{font-size:clamp(14px,3.4vw,19px);margin-top:6px;opacity:.9;text-shadow:0 2px 6px #000;}
+  /* 速度と次の停留所までの距離。ブレーキゲームなので常に見えている必要がある */
+  #gauge{position:fixed;left:0;right:0;bottom:16px;z-index:10;pointer-events:none;
+    display:flex;flex-direction:column;align-items:center;gap:7px;color:#fff;}
+  #gauge .row{font-size:clamp(12px,3.2vw,16px);letter-spacing:.04em;text-shadow:0 2px 6px #000;
+    display:flex;gap:clamp(12px,5vw,30px);}
+  #gauge .row b{color:#ffc93b;font-weight:800;font-size:1.15em;}
+  #bar{width:min(76vw,420px);height:10px;border-radius:6px;background:rgba(255,255,255,.16);
+    overflow:hidden;box-shadow:0 2px 10px #000;}
+  #barFill{height:100%;width:0;background:linear-gradient(90deg,#3bd4ff,#ffc93b);}
+  #title{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:rgba(6,8,16,.74);z-index:20;color:#fff;transition:opacity .4s;
+    padding:16px;box-sizing:border-box;}
+  #title h1{font-size:clamp(30px,9vw,58px);margin:0 0 10px;letter-spacing:3px;
+    text-shadow:0 4px 18px #ffc93b;text-align:center;}
+  #title p{font-size:clamp(13px,3.4vw,19px);opacity:.88;margin:4px 0;text-align:center;line-height:1.6;}
+  #title .btn{margin-top:24px;padding:14px 44px;font-size:clamp(18px,5vw,22px);font-weight:700;color:#1a1206;
+    background:linear-gradient(180deg,#ffd24f,#e0951a);border:none;border-radius:12px;cursor:pointer;
+    box-shadow:0 6px 24px rgba(255,201,59,.45);}
+  #title .btn:hover{transform:scale(1.05);}
+  .hidden{opacity:0;pointer-events:none;}
+  #back{position:fixed;top:14px;left:14px;z-index:30;text-decoration:none;
+    background:rgba(12,16,26,.72);color:#fff;
+    font:600 clamp(13px,3.4vw,15px)/1 'Hiragino Kaku Gothic ProN','Yu Gothic',Arial,sans-serif;
+    padding:0 14px;height:44px;display:flex;align-items:center;border-radius:12px;}
+  #back:hover{background:rgba(30,38,56,.9);}
+  #mute{position:fixed;top:14px;right:14px;z-index:30;border:none;cursor:pointer;
+    background:rgba(12,16,26,.72);color:#fff;font-size:20px;line-height:1;
+    width:44px;height:44px;border-radius:12px;}
+  #mute:hover{background:rgba(30,38,56,.9);}
+  /* 端末に合う操作説明だけを出す */
+  .tc{display:none;}
+  @media (pointer:coarse){ .kb{display:none;} .tc{display:block;} }
+  @media (pointer:coarse){ #title .btn{padding:18px 52px;} }
+
+  /* --- イベントのバナー: 画面中央に叩きつける --- */
+  #banner{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    z-index:15;pointer-events:none;opacity:0;}
+  #banner .b{font-size:clamp(26px,7.4vw,64px);font-weight:900;letter-spacing:.06em;color:#fff;
+    padding:10px 3vw;max-width:94vw;text-align:center;transform:scale(2.4);opacity:0;
+    text-shadow:0 0 26px currentColor, 0 6px 20px #000;
+    border-top:5px solid currentColor;border-bottom:5px solid currentColor;}
+  #banner.go .b{animation:slam .62s cubic-bezier(.12,.85,.2,1) forwards;}
+  @keyframes slam{
+    0%  {transform:scale(2.4) rotate(-4deg);opacity:0;}
+    22% {transform:scale(1)   rotate(0deg); opacity:1;}
+    70% {transform:scale(1)   rotate(0deg); opacity:1;}
+    100%{transform:scale(1.12);opacity:0;}
+  }
+
+  /* --- 全画面のフラッシュ --- */
+  #flash{position:fixed;inset:0;z-index:14;pointer-events:none;opacity:0;background:#fff;}
+  #vignette{position:fixed;inset:0;z-index:13;pointer-events:none;opacity:0;
+    background:radial-gradient(ellipse at center,rgba(0,0,0,0) 32%,rgba(120,0,10,.85) 100%);}
+
+  /* --- 停車の判定表示: 停まるたびに出る --- */
+  #verdict{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    z-index:16;pointer-events:none;opacity:0;}
+  #verdict .v{font-size:clamp(26px,7.4vw,62px);font-weight:900;color:#fff;letter-spacing:.04em;
+    text-shadow:0 0 24px currentColor,0 6px 18px #000;transform:scale(.6);opacity:0;
+    text-align:center;line-height:1.25;max-width:92vw;}
+  #verdict.go .v{animation:pop 1s cubic-bezier(.15,.9,.25,1) forwards;}
+  @keyframes pop{
+    0%  {transform:scale(.6);opacity:0;}
+    16% {transform:scale(1.14);opacity:1;}
+    30% {transform:scale(1);opacity:1;}
+    72% {transform:scale(1);opacity:1;}
+    100%{transform:scale(1) translateY(-26px);opacity:0;}
+  }
+
+  /* --- K.O. 画面 --- */
+  #ko{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    z-index:22;pointer-events:none;opacity:0;color:#fff;transition:opacity .3s;}
+  #ko.on{opacity:1;}
+  #ko .koText{font-size:clamp(84px,24vw,180px);font-weight:900;letter-spacing:10px;color:#fff;
+    text-shadow:0 0 40px #ff3b4a,0 0 90px #ff3b4a,0 10px 30px #000;
+    transform:scale(3);opacity:0;}
+  #ko.on .koText{animation:koSlam .8s cubic-bezier(.1,.9,.2,1) forwards;}
+  @keyframes koSlam{
+    0%  {transform:scale(3) rotate(-8deg);opacity:0;}
+    30% {transform:scale(1) rotate(0deg);opacity:1;}
+    36% {transform:scale(1.06);}
+    100%{transform:scale(1);opacity:1;}
+  }
+  #ko .finalLabel{font-size:clamp(15px,4vw,21px);letter-spacing:4px;opacity:0;margin-top:6px;
+    text-shadow:0 2px 8px #000;}
+  #ko .finalScore{font-size:clamp(46px,13vw,80px);font-weight:800;opacity:0;text-shadow:0 4px 20px #000;}
+  #ko.on .finalLabel{animation:fadeUp .5s .75s forwards;}
+  #ko.on .finalScore{animation:fadeUp .5s .9s forwards;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+
+  /* --- 遊びかた (?) --- */
+  #helpBtn{position:fixed;top:14px;right:66px;z-index:30;border:none;cursor:pointer;
+    background:rgba(12,16,26,.72);color:#fff;font:700 20px/1 Arial,sans-serif;
+    width:44px;height:44px;border-radius:12px;}
+  #helpBtn:hover{background:rgba(30,38,56,.9);}
+  #help{position:fixed;inset:0;z-index:40;display:none;align-items:center;
+    justify-content:center;background:rgba(4,6,12,.85);padding:18px;box-sizing:border-box;}
+  #help.on{display:flex;}
+  #help .box{background:#111726;border:1px solid #2b3550;border-radius:18px;
+    max-width:560px;width:100%;max-height:86vh;overflow:auto;padding:24px 22px 20px;
+    color:#e6edf3;font-family:'Hiragino Kaku Gothic ProN','Yu Gothic',Arial,sans-serif;}
+  #help h2{margin:0 0 4px;font-size:clamp(20px,5.4vw,26px);}
+  #help .sub{color:#8b949e;font-size:clamp(12px,3.2vw,14px);margin:0 0 16px;}
+  #help h3{font-size:clamp(13px,3.6vw,15px);color:#ffc93b;margin:16px 0 6px;letter-spacing:.04em;}
+  #help ul{margin:0;padding-left:20px;}
+  #help li{font-size:clamp(13px,3.5vw,15px);line-height:1.7;margin:3px 0;}
+  #help b{color:#ffc93b;font-weight:700;}
+  #help .close{margin-top:18px;width:100%;padding:12px;border:none;border-radius:10px;
+    background:#2b3550;color:#fff;font-size:16px;font-weight:700;cursor:pointer;}
+  #help .close:hover{background:#3a4668;}
+</style>
+</head>
+<body>
+<div id="ui"><div id="score">0</div><div id="msg"></div></div>
+<div id="gauge">
+  <div id="bar"><div id="barFill"></div></div>
+  <div class="row"><span>速度 <b id="spd">0</b></span><span>次の停留所 <b id="dist">-</b> m</span></div>
+</div>
+<button id="helpBtn" title="遊びかた">?</button>
+<div id="help"><div class="box">
+  <h2>坂道のトラム</h2>
+  <p class="sub">リスボンの急坂。停留所にぴったり止めるだけ。</p>
+    <h3>トラム</h3>
+    <ul>
+      <li>坂を<b>ひとりでに下っていく</b>。アクセルはない</li>
+      <li>あるのはブレーキだけ。<b>押している間だけ減速</b>する</li>
+      <li>止まればすぐ、次の停留所へ転がり出す</li>
+    </ul>
+    <h3>停留所</h3>
+    <ul>
+      <li>黄色いラインが<b>停止位置</b></li>
+      <li>ズレが<b>小さいほど高得点</b>。ぴったりで満点</li>
+      <li>ラインを<b>行き過ぎたらそこで終わり</b></li>
+    </ul>
+    <h3>濡れたレール</h3>
+    <ul>
+      <li>雨で<b>ブレーキがほとんど効かない</b></li>
+      <li>ふだんの倍の距離を見て、早めに踏むしかない</li>
+    </ul>
+    <h3>満員の乗客</h3>
+    <ul>
+      <li>車体が重くなり、<b>止まるまでの距離が伸びる</b></li>
+      <li>屋根の上の人影が目印</li>
+    </ul>
+    <h3>横断する車</h3>
+    <ul>
+      <li>線路を<b>横切って止まる</b>。ぶつかれば即終了</li>
+      <li>手前で<b>停まって待てば</b>、勝手にどいてくれる</li>
+    </ul>
+    <h3>急勾配 / 濃霧</h3>
+    <ul>
+      <li><b>急勾配</b>: 坂がきつくなり、勝手に速くなる</li>
+      <li><b>濃霧</b>: 停留所が直前まで見えない。数字だけが頼り</li>
+    </ul>
+  <button class="close">わかった</button>
+</div></div>
+<a id="back" href="../../" title="ゲーム一覧へ">‹ ゲーム一覧</a>
+<button id="mute" title="音のオン / オフ">🔊</button>
+<div id="vignette"></div>
+<div id="flash"></div>
+<div id="banner"><div class="b"></div></div>
+<div id="verdict"><div class="v"></div></div>
+<div id="ko">
+  <div class="koText">K.O.</div>
+  <div class="finalLabel">最終スコア</div>
+  <div class="finalScore">0</div>
+</div>
+<div id="title">
+  <h1>坂道のトラム</h1>
+  <p>リスボンの急坂を下る。停留所にぴったり止めろ。</p>
+  <p class="kb">スペース / ↓ : ブレーキ（押しっぱなし）</p>
+  <p class="tc">画面を押している間だけブレーキ</p>
+  <button class="btn" id="startBtn">スタート</button>
+</div>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+// ---------- url flags (declared first: sound and camera both read them) ----------
+const QS = new URLSearchParams(location.search);
+const AUTO = QS.get('auto')==='1';
+const SHOWCASE_Q = QS.get('showcase');
+// Recording must produce clean footage, so every automated mode is muted.
+const REC = QS.get('rec')==='1';   // 録音モード: 音を鳴らして拾う
+const SILENT = (AUTO || !!SHOWCASE_Q || QS.get('mute')==='1') && !REC;
+// 録画・showcase では「?」と「ゲーム一覧」を出さない（動画の邪魔になる）
+const NOCHROME = AUTO || !!SHOWCASE_Q || QS.get('nochrome')==='1';
+
+// ---------- renderer / scene ----------
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.shadowMap.enabled = true;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const SKY = new THREE.Color(0x121524);
+scene.background = SKY.clone();
+const FOG_NEAR = 34, FOG_FAR = 140;
+scene.fog = new THREE.Fog(0x121524, FOG_NEAR, FOG_FAR);
+
+const camera = new THREE.PerspectiveCamera(58, innerWidth/innerHeight, .1, 400);
+camera.position.set(0, 5.4, 11);
+
+// Portrait and landscape both have to work. A phone held upright is far
+// narrower than 16:9, and with a fixed FOV the tram and the stop line ahead
+// fall outside the frame — so widen the vertical FOV as the screen gets taller.
+const BASE_FOV = 58;
+function fitCamera(){
+  const aspect = innerWidth / innerHeight;
+  camera.aspect = aspect;
+  if(typeof SHOWCASE !== 'undefined' && SHOWCASE){
+    camera.fov = aspect < 1 ? 62 : 46;
+  } else {
+    // keep the horizontal field roughly constant across aspect ratios
+    const ref = 16/9;
+    camera.fov = aspect >= ref ? BASE_FOV
+      : Math.min(96, THREE.MathUtils.radToDeg(
+          2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(BASE_FOV)/2) * (ref/aspect))));
+  }
+  camera.__base = camera.fov;    // 急勾配イベントがこの値に戻す
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+}
+addEventListener('resize', fitCamera);
+addEventListener('orientationchange', ()=>setTimeout(fitCamera, 120));
+
+// ---------- lights ----------
+const hemi = new THREE.HemisphereLight(0x8fa8ff, 0x2a1f18, 1.4);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xffe6bb, 2.2);
+sun.position.set(8, 15, 7); sun.castShadow = true;
+sun.shadow.camera.left=-20; sun.shadow.camera.right=20;
+sun.shadow.camera.top=20;  sun.shadow.camera.bottom=-20;
+scene.add(sun);
+
+// ============================================================
+// The hill is faked by tilting one group around X. The tram itself only
+// ever moves along Z inside that group, so the physics stay strictly
+// one-dimensional (position, speed, brake) and collisions are trivial.
+// ============================================================
+const world = new THREE.Group();
+scene.add(world);
+const BASE_TILT = 0.13;            // ふだんの勾配（ラジアン）
+world.rotation.x = BASE_TILT;
+
+// ---------- the street ----------
+const TRACK_LEN = 2600;            // 一本の長い坂。使い切る前にゲームが終わる
+const TRACK_MID = -TRACK_LEN/2 + 60;
+const roadMat = new THREE.MeshStandardMaterial({color:0x353b50, roughness:.95});
+const road = new THREE.Mesh(new THREE.PlaneGeometry(14, TRACK_LEN), roadMat);
+road.rotation.x = -Math.PI/2; road.position.z = TRACK_MID; road.receiveShadow = true;
+world.add(road);
+
+// 2本のレール
+const railMat = new THREE.MeshStandardMaterial({color:0xb9c2d4, metalness:.85, roughness:.3});
+const rails = [];
+for(const x of [-1.15, 1.15]){
+  const r = new THREE.Mesh(new THREE.BoxGeometry(.17, .12, TRACK_LEN), railMat);
+  r.position.set(x, .07, TRACK_MID);
+  world.add(r); rails.push(r);
+}
+
+// 敷石の目地。等間隔なので、これが流れる速さで体感速度が読める。
+// トラムの後ろに出たものを前へ回して使い回す（無限に生成しない）。
+const SLEEPER_GAP = 5, SLEEPER_N = 110;
+const sleepers = [];
+const sleeperMat = new THREE.MeshStandardMaterial({color:0x4a5064, roughness:1});
+const sleeperGeo = new THREE.BoxGeometry(3.4, .06, .5);
+for(let i=0;i<SLEEPER_N;i++){
+  const s = new THREE.Mesh(sleeperGeo, sleeperMat);
+  s.position.set(0, .03, -i*SLEEPER_GAP);
+  world.add(s); sleepers.push(s);
+}
+
+// 沿道の建物。坂の両側に並べ、これも使い回す。
+// リスボンらしく、淡い外壁にオレンジの屋根。
+const BUILDING_GAP = 26, BUILDING_N = 22;
+const buildings = [];
+const wallPalette = [0xd9c9a8, 0xc7b7cf, 0xa9c2c9, 0xd6b39a, 0xbfc9b2];
+const roofMat = new THREE.MeshStandardMaterial({color:0xb85a32, roughness:.8});
+const winMat  = new THREE.MeshStandardMaterial({color:0x2a2f42, emissive:0xffcf72,
+                                                emissiveIntensity:.5, roughness:.4});
+function buildHouse(side, seed){
+  const g = new THREE.Group();
+  const w = 7 + (seed%3)*1.6, h = 7 + (seed%5)*2.2, d = 9 + (seed%4)*2;
+  const wall = new THREE.Mesh(new THREE.BoxGeometry(w, h, d),
+    new THREE.MeshStandardMaterial({color:wallPalette[seed%wallPalette.length], roughness:.9}));
+  wall.position.y = h/2; wall.castShadow = true; wall.receiveShadow = true; g.add(wall);
+  // 屋根は箱を45度倒した三角柱。プリミティブだけで組む
+  const roof = new THREE.Mesh(new THREE.CylinderGeometry(w*.72, w*.72, d, 3), roofMat);
+  roof.rotation.set(0, 0, Math.PI/2);
+  roof.rotation.x = Math.PI/2;   // 三角柱を寝かせて、屋根の稜線を坂方向に向ける
+  roof.position.y = h + w*.32;
+  roof.castShadow = true; g.add(roof);
+  // 窓を格子状に。夜の街に見える最小限の情報量
+  for(let ry=0; ry<Math.floor(h/3); ry++){
+    for(let rz=0; rz<Math.floor(d/3.4); rz++){
+      const win = new THREE.Mesh(new THREE.BoxGeometry(.2, 1.1, .8), winMat);
+      win.position.set(-side*(w/2+.05), 1.8 + ry*2.6, -d/2 + 2 + rz*3.4);
+      g.add(win);
+    }
+  }
+  g.position.x = side * 10.5;
+  return g;
+}
+for(let i=0;i<BUILDING_N;i++){
+  for(const side of [-1, 1]){
+    const b = buildHouse(side, i*2 + (side>0?1:0));
+    b.position.z = -i*BUILDING_GAP - 20;
+    world.add(b); buildings.push(b);
+  }
+}
+
+// 遠くの街灯。坂の奥行きを出す
+const LAMP_GAP = 34, lamps = [];
+const lampPoleMat = new THREE.MeshStandardMaterial({color:0x1c2130, roughness:.6});
+const lampHeadMat = new THREE.MeshBasicMaterial({color:0xffdc8a});
+for(let i=0;i<16;i++){
+  const g = new THREE.Group();
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(.09,.11,5.4,8), lampPoleMat);
+  pole.position.y = 2.7; g.add(pole);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(.34, 12, 10), lampHeadMat);
+  head.position.y = 5.5; g.add(head);
+  g.position.set(i%2 ? 5.4 : -5.4, 0, -i*LAMP_GAP - 30);
+  world.add(g); lamps.push(g);
+}
+
+// 川と対岸のシルエット（テージョ川）。坂の下にあるので、下るほど近づいて見える
+const river = new THREE.Mesh(new THREE.PlaneGeometry(600, 300),
+  new THREE.MeshStandardMaterial({color:0x1b3550, roughness:.25, metalness:.5}));
+river.rotation.x = -Math.PI/2; river.position.set(0, -14, -420);
+scene.add(river);
+const moon = new THREE.Mesh(new THREE.CircleGeometry(4.2, 40),
+  new THREE.MeshBasicMaterial({color:0xfff4d8}));
+moon.position.set(16, 34, -300); scene.add(moon);
+
+// 雨の粒。濡れたレールのときだけ見える
+const rainMat = new THREE.MeshBasicMaterial({color:0xa8d8ff, transparent:true, opacity:0});
+const rain = [];
+for(let i=0;i<160;i++){
+  const m = new THREE.Mesh(new THREE.BoxGeometry(.035,1.5,.035), rainMat);
+  m.position.set((Math.random()-.5)*26, Math.random()*22, -Math.random()*90);
+  scene.add(m); rain.push(m);
+}
+
+// ---------- the tram (primitive build) ----------
+// リスボンの黄色いトラム。丸い前面、白い帯、屋根のポール。
+const TRAM_YELLOW = 0xf5c518;
+function buildTram(){
+  const g = new THREE.Group();
+  const yellow = new THREE.MeshStandardMaterial({color:TRAM_YELLOW, roughness:.55, metalness:.15});
+  const cream  = new THREE.MeshStandardMaterial({color:0xf3efe6, roughness:.6});
+  const dark   = new THREE.MeshStandardMaterial({color:0x1a1e2c, roughness:.7});
+  const glass  = new THREE.MeshStandardMaterial({color:0x3f5570, roughness:.15, metalness:.6,
+                                                 transparent:true, opacity:.72});
+  const chrome = new THREE.MeshStandardMaterial({color:0xc8cedd, metalness:.9, roughness:.25});
+
+  // 車体。角を丸めたいのでシリンダー(多角柱)を寝かせて使う
+  const body = new THREE.Mesh(new THREE.BoxGeometry(2.9, 2.2, 6.4), yellow);
+  body.position.y = 1.85; g.add(body);
+  // 前後の妻面。角を落とした一段細い箱を足すだけで、
+  // 真後ろから見たときに「箱」ではなく車両の顔に見える。
+  for(const zz of [3.35, -3.35]){
+    const cap = new THREE.Mesh(new THREE.BoxGeometry(2.5, 1.9, .5), yellow);
+    cap.position.set(0, 1.85, zz); g.add(cap);
+  }
+  // 白いベルトライン。黄色一色だと形が読めない
+  const belt = new THREE.Mesh(new THREE.BoxGeometry(3.02, .3, 6.9), cream);
+  belt.position.y = 2.34; g.add(belt);
+  const skirt = new THREE.Mesh(new THREE.BoxGeometry(3.0, .5, 6.8), dark);
+  skirt.position.y = .82; g.add(skirt);
+  // 側面の窓
+  for(const sx of [1, -1]){
+    for(let i=0;i<3;i++){
+      const w = new THREE.Mesh(new THREE.BoxGeometry(.12, 1.0, 1.5), glass);
+      w.position.set(sx*1.47, 2.05, -2.1 + i*2.1); g.add(w);
+    }
+  }
+  // 前面の大きな窓とヘッドライト
+  const front = new THREE.Mesh(new THREE.BoxGeometry(2.1, 1.1, .12), glass);
+  front.position.set(0, 2.1, 3.63); g.add(front);
+  const lamp = new THREE.Mesh(new THREE.SphereGeometry(.24, 14, 12),
+    new THREE.MeshBasicMaterial({color:0xfff0c0}));
+  lamp.position.set(0, 1.05, 3.66); g.add(lamp);
+  // 車号板
+  const plate = new THREE.Mesh(new THREE.BoxGeometry(.8, .34, .08), cream);
+  plate.position.set(0, 2.9, 3.5); g.add(plate);
+
+  // 台車と車輪
+  const wheels = [];
+  for(const sx of [1.32, -1.32]){
+    for(const zz of [2.0, -2.0]){
+      const w = new THREE.Mesh(new THREE.CylinderGeometry(.5,.5,.24,16), dark);
+      w.rotation.z = Math.PI/2; w.position.set(sx, .5, zz);
+      g.add(w); wheels.push(w);
+    }
+  }
+  // 屋根のポールとパンタグラフ（架線に触れている一本の棒）
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(.05,.06,4.2,8), chrome);
+  pole.position.set(0, 4.6, -1.4); pole.rotation.x = -.42; g.add(pole);
+  const shoe = new THREE.Mesh(new THREE.BoxGeometry(.5,.1,.16), chrome);
+  shoe.position.set(0, 6.5, -2.3); g.add(shoe);
+
+  // 満員イベントで屋根に立つ人影（ふだんは隠す）
+  const riders = new THREE.Group();
+  for(let i=0;i<6;i++){
+    const p = new THREE.Mesh(new THREE.CapsuleGeometry(.2,.5,4,8),
+      new THREE.MeshStandardMaterial({color:[0xd94f4f,0x4f8fd9,0x6fd94f,0xd9c14f,
+                                             0xb04fd9,0xd9884f][i], roughness:.7}));
+    p.position.set(((i%3)-1)*.95, 3.55, (i<3 ? 1.2 : -1.2));
+    riders.add(p);
+  }
+  riders.visible = false; g.add(riders);
+
+  // ブレーキ火花。ブレーキ中だけ光る
+  const sparks = new THREE.Group();
+  const sparkMat = new THREE.MeshBasicMaterial({color:0xffb347, transparent:true, opacity:0});
+  for(let i=0;i<10;i++){
+    const s = new THREE.Mesh(new THREE.BoxGeometry(.07,.07,.4), sparkMat);
+    s.position.set((i%2?1:-1)*1.35, .28, -1.8 + (i>>1)*.9);
+    sparks.add(s);
+  }
+  g.add(sparks);
+
+  g.traverse(o=>{ if(o.isMesh && o.material !== sparkMat) o.castShadow = true; });
+  return {group:g, wheels, riders, sparks, sparkMat, lamp};
+}
+const tram = buildTram();
+world.add(tram.group);
+// 車体を追う光。夜の坂で車体が沈まないように
+const heroLight = new THREE.PointLight(0xfff0dd, 60, 34);
+scene.add(heroLight);
+
+// ---------- stops (停留所) ----------
+// 停留所ひとつ = 黄色い停止ライン + プラットフォーム + 標識。
+// 使い回さず、通過したら消す。1本の坂に沿って前へ前へ置いていく。
+const stops = [];
+const stopLineMat = new THREE.MeshBasicMaterial({color:0xffd23b});
+const platMat = new THREE.MeshStandardMaterial({color:0x5b6377, roughness:.9});
+const signPoleMat = new THREE.MeshStandardMaterial({color:0xd8dde8, roughness:.5});
+const signHeadMat = new THREE.MeshBasicMaterial({color:0xffd23b});
+function buildStop(z){
+  const g = new THREE.Group();
+  // 停止ライン: 路面いっぱいの黄色い帯
+  const line = new THREE.Mesh(new THREE.PlaneGeometry(13.4, .9), stopLineMat);
+  line.rotation.x = -Math.PI/2; line.position.y = .09; g.add(line);
+  // 両脇のプラットフォーム
+  for(const sx of [1,-1]){
+    const p = new THREE.Mesh(new THREE.BoxGeometry(3.2, .5, 9), platMat);
+    p.position.set(sx*4.6, .25, -1.5); p.receiveShadow = true; g.add(p);
+    // 標識
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(.07,.07,3.4,8), signPoleMat);
+    pole.position.set(sx*4.6, 2.2, 1.4); g.add(pole);
+    const head = new THREE.Mesh(new THREE.CircleGeometry(.62, 20), signHeadMat);
+    head.position.set(sx*4.6, 4.0, 1.45); g.add(head);
+    const head2 = head.clone(); head2.rotation.y = Math.PI; head2.position.z = 1.35; g.add(head2);
+  }
+  g.position.z = z;
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  world.add(g);
+  return g;
+}
+
+// ---------- crossing car (横断する車) ----------
+// 線路の上に止まる小型車。イベントでのみ現れる。
+const CAR_BODY = 0xd94f4f;
+function buildCar(){
+  const g = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.BoxGeometry(4.4, 1.2, 2.0),
+    new THREE.MeshStandardMaterial({color:CAR_BODY, roughness:.5, metalness:.2}));
+  body.position.y = .95; g.add(body);
+  const cabin = new THREE.Mesh(new THREE.BoxGeometry(2.3, .95, 1.85),
+    new THREE.MeshStandardMaterial({color:0x2b3350, roughness:.3, metalness:.4}));
+  cabin.position.set(-.2, 1.85, 0); g.add(cabin);
+  const wheelMat = new THREE.MeshStandardMaterial({color:0x14171f, roughness:.9});
+  for(const sx of [1.4,-1.4]) for(const sz of [1.05,-1.05]){
+    const w = new THREE.Mesh(new THREE.CylinderGeometry(.45,.45,.3,14), wheelMat);
+    w.rotation.x = Math.PI/2; w.position.set(sx, .45, sz); g.add(w);
+  }
+  // ヘッドライト: どちら向きに走っているかが一目でわかる
+  for(const sz of [.6,-.6]){
+    const l = new THREE.Mesh(new THREE.SphereGeometry(.16,10,8),
+      new THREE.MeshBasicMaterial({color:0xfff2c8}));
+    l.position.set(2.2, .95, sz); g.add(l);
+  }
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  return g;
+}
+let car = null;                     // {group, x, vx, z, state}
+
+// ---------- game state ----------
+let running=false, dead=false, t=0, score=0;
+let pos=0;                          // トラムの走行距離(m)。増える方向 = 坂を下る方向
+let speed=0;                        // m/s
+let braking=false;
+let stopIdx=0;                      // 何個目の停留所か
+let targetPos=0;                    // 次の停止ラインの走行距離
+let stopping=false;                 // 停留所で客扱い中
+let stopTimer=0;
+let grade=0;                        // 現在の加速度(m/s^2)
+let gripMul=1;                      // 濡れたレール: ブレーキの効き
+let massMul=1;                      // 満員: 止まりにくさ
+let timeScale=1;                    // スローモーション
+let deadAt=0;                       // ゲームオーバーの時刻（タップ再開の待ち）
+let shake=0;
+let camDist=13, camDistTarget=13;
+let wet=0, steep=0, fogEv=0, crowd=0;   // 各イベントの残り時間
+let nextEventAt=9;
+let eventQueue=[];
+let perfectStreak=0;
+let bestOffset=null;
+
+const scoreEl   = document.getElementById('score');
+const msgEl     = document.getElementById('msg');
+const titleEl   = document.getElementById('title');
+const bannerEl  = document.getElementById('banner');
+const bannerText= bannerEl.querySelector('.b');
+const flashEl   = document.getElementById('flash');
+const vignetteEl= document.getElementById('vignette');
+const verdictEl = document.getElementById('verdict');
+const verdictText = verdictEl.querySelector('.v');
+const koEl      = document.getElementById('ko');
+const koScoreEl = koEl.querySelector('.finalScore');
+const spdEl     = document.getElementById('spd');
+const distEl    = document.getElementById('dist');
+const barFill   = document.getElementById('barFill');
+const gaugeEl   = document.getElementById('gauge');
+
+// ---------- presentation helpers ----------
+function banner(text, color){
+  bannerText.textContent = text;
+  bannerText.style.color = color;
+  bannerEl.classList.remove('go');
+  void bannerEl.offsetWidth;      // CSS アニメーションを頭から流し直す
+  bannerEl.style.opacity = 1;
+  bannerEl.classList.add('go');
+}
+function verdict(text, color){
+  verdictText.textContent = text;
+  verdictText.style.color = color;
+  verdictEl.classList.remove('go');
+  void verdictEl.offsetWidth;
+  verdictEl.style.opacity = 1;
+  verdictEl.classList.add('go');
+}
+function flash(color, strength, ms){
+  flashEl.style.background = color;
+  flashEl.style.transition = 'none';
+  flashEl.style.opacity = strength;
+  requestAnimationFrame(()=>{
+    flashEl.style.transition = `opacity ${ms}ms ease-out`;
+    flashEl.style.opacity = 0;
+  });
+}
+
+// ---------- events ----------
+// 4種類。効き方をわざと別々にしてある:
+//   wet    = ブレーキが効かない（入力が薄くなる）
+//   crowd  = 車体が重い（同じ入力で伸びる）
+//   steep  = 勝手に速くなる（放置が罰になる）
+//   fog    = 目で測れない（情報が消える）
+//   car    = 止まらざるを得ない障害物（前進そのものが罰になる）
+const EVENTS = {
+  wet(){
+    banner('濡れたレール', '#3bd4ff');
+    wet = 12;
+    flash('#7fd8ff', .3, 420);
+    return 12;
+  },
+  crowd(){
+    banner('満員の乗客', '#ff8f3b');
+    crowd = 14;
+    tram.riders.visible = true;
+    shake = Math.max(shake, .22);
+    return 14;
+  },
+  steep(){
+    banner('急勾配', '#ff3b6e');
+    steep = 10;
+    shake = Math.max(shake, .3);
+    return 10;
+  },
+  fog(){
+    banner('濃霧', '#b39bff');
+    fogEv = 11;
+    return 11;
+  },
+  car(){
+    banner('横断する車', '#ffd23b');
+    spawnCar();
+    return 7;
+  },
+};
+const EVENT_NAMES = Object.keys(EVENTS);
+
+// 録画ツールが名前で参照する。中身の識別子は英語のまま。
+window.__events   = EVENT_NAMES;
+window.__subjects = ['tram','stop','car','rain','rider','lamp'];
+
+// recording/debug hook: fire a named event on cue (used by the capture script)
+// returns false if the run is already over, so a capture script can wait
+// for the next run instead of firing an event onto the K.O. screen
+window.__ev = name => {
+  if(!running || dead || !EVENTS[name]) return false;
+  const busy = EVENTS[name]();
+  if(!SILENT) SND.event();
+  nextEventAt = t + busy + 5;
+  return true;
+};
+window.__alive = () => running && !dead;
+window.__kill  = () => { if(running && !dead){ dead=true; gameOver('derail'); } };
+window.__recStop = () => SND.recStop();
+window.__snd = () => ({enabled: SND.enabled, silent: SILENT});
+window.__probe = () => ({t:+t.toFixed(2), pos:+pos.toFixed(1), speed:+speed.toFixed(2),
+  to:+(targetPos-pos).toFixed(2), braking, stopping, stops:stopIdx,
+  wet:+wet.toFixed(1), crowd:+crowd.toFixed(1), steep:+steep.toFixed(1),
+  fog:+fogEv.toFixed(1), car:!!car, next:+nextEventAt.toFixed(2)});
+
+function refillEventQueue(){
+  eventQueue = EVENT_NAMES.slice();
+  for(let i=eventQueue.length-1;i>0;i--){        // 毎回順番が変わるようにシャッフル
+    const j = Math.floor(Math.random()*(i+1));
+    [eventQueue[i],eventQueue[j]]=[eventQueue[j],eventQueue[i]];
+  }
+}
+function triggerEvent(){
+  if(!eventQueue.length) refillEventQueue();
+  const name = eventQueue.pop();
+  const busy = EVENTS[name]();
+  if(!SILENT) SND.event();
+  nextEventAt = t + busy + 6 + Math.random()*5;  // イベントの間に息継ぎを入れる
+}
+
+// ---------- physics constants ----------
+const G_BASE   = 1.55;   // ふだんの重力加速度（坂の勾配ぶん）
+const G_STEEP  = 3.2;    // 急勾配のとき
+const BRAKE    = 5.4;    // ブレーキの減速度（乾いたレール、空車）
+const MAX_SPEED= 34;
+const SPAN_MIN = 130, SPAN_SPREAD = 90;   // 停留所どうしの間隔(m)
+
+// 実距離(m) を 3D 空間の Z に落とす。1m = 1unit。
+const zOf = p => -p;
+
+// ---------- stop bookkeeping ----------
+function placeNextStop(){
+  // 停留所は少しずつ近づく = 少しずつ難しくなる
+  const shrink = Math.max(0, 1 - stopIdx*0.035);
+  const span = SPAN_MIN*shrink + Math.random()*SPAN_SPREAD*shrink;
+  targetPos = pos + Math.max(70, span);
+  const g = buildStop(zOf(targetPos));
+  stops.push({group:g, at:targetPos});
+}
+function clearStops(){
+  for(const s of stops) world.remove(s.group);
+  stops.length = 0;
+}
+
+// 停止ラインとのズレから点を出す。ぴったりで満点。
+function scoreStop(offset){
+  const err = Math.abs(offset);
+  let pts, text, color;
+  if(err < 0.6){ pts = 1000; text = 'ぴったり停車！'; color = '#ffd23b'; perfectStreak++; }
+  else if(err < 1.8){ pts = 600; text = 'みごと'; color = '#7dffb0'; perfectStreak++; }
+  else if(err < 4.0){ pts = 300; text = 'セーフ'; color = '#3bd4ff'; perfectStreak=0; }
+  // offset は「停止ラインまでの残り」。負なら少し行き過ぎている
+  else { pts = 100; text = offset > 0 ? '手前すぎ' : '止まりきれず'; color = '#9fb0c8'; perfectStreak=0; }
+  // 連続の精密停車にボーナス。footage に山場が生まれる
+  if(perfectStreak >= 2) pts += 200*(perfectStreak-1);
+  if(bestOffset===null || err < bestOffset) bestOffset = err;
+  return {pts, text, color, err};
+}
+
+// ---------- crossing car ----------
+function spawnCar(){
+  if(car) return;
+  // トラムの十分先、ただし次の停留所より手前に置く
+  const ahead = Math.min(70 + speed*2.2, Math.max(40, (targetPos - pos) * .55));
+  const g = buildCar();
+  const fromLeft = Math.random() < .5;
+  g.position.set(fromLeft ? -22 : 22, 0, zOf(pos + ahead));
+  g.rotation.y = fromLeft ? 0 : Math.PI;
+  world.add(g);
+  car = {group:g, at:pos+ahead, vx: fromLeft ? 9 : -9, phase:'in', wait:2.6};
+}
+function despawnCar(){
+  if(!car) return;
+  world.remove(car.group); car = null;
+}
+
+// ---------- reset ----------
+function reset(){
+  clearStops(); despawnCar();
+  pos=0; speed=6; braking=false; stopIdx=0; stopping=false; stopTimer=0;
+  t=0; score=0; dead=false;
+  timeScale=1; shake=0; camDist=13; camDistTarget=13;
+  wet=0; steep=0; fogEv=0; crowd=0; gripMul=1; massMul=1;
+  perfectStreak=0; bestOffset=null;
+  tram.riders.visible = false;
+  tram.sparkMat.opacity = 0;
+  rainMat.opacity = 0;
+  world.rotation.x = BASE_TILT;
+  scene.fog.near = FOG_NEAR; scene.fog.far = FOG_FAR;
+  scene.background.copy(SKY); scene.fog.color.copy(SKY);
+  hemi.intensity = 1.4; sun.intensity = 2.2;
+  nextEventAt = 9;
+  refillEventQueue();
+  placeNextStop();
+  msgEl.textContent = '';
+  koEl.classList.remove('on');
+  vignetteEl.style.transition='opacity .3s'; vignetteEl.style.opacity=0;
+  scoreEl.textContent = '0';
+  camera.position.set(0, 5.4, 11);
+}
+
+const startBtn = document.getElementById('startBtn');
+
+// ---------- sound: everything synthesised, no audio files ----------
+// Keeps the single-HTML rule (nothing to download) and lets the music
+// react to play: the bass line speeds up with the game, events drop a
+// stinger, and the whole thing ducks out on a game over.
+const SND = (() => {
+  let ctx = null, master = null, musicGain = null, on = true, started = false;
+  let step = 0, timer = null, tempo = 0.25;
+
+  // A pentatonic scale never sounds wrong against itself, which matters
+  // when the tempo drifts with the player's speed.
+  // minor pentatonic, driving — a chase that never lets up
+  const SCALE = [0, 3, 5, 7, 10];
+  const ROOT = 196;
+  const BASS = 'square', LEAD = 'sawtooth';
+  const hz = (deg, oct = 0) =>
+    ROOT * Math.pow(2, oct + Math.floor(deg / SCALE.length)) *
+    Math.pow(2, SCALE[((deg % SCALE.length) + SCALE.length) % SCALE.length] / 12);
+
+  function ensure() {
+    if (ctx) return ctx;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    ctx = new AC();
+    master = ctx.createGain();
+    master.gain.value = 0.32;
+    master.connect(ctx.destination);
+    musicGain = ctx.createGain();
+    musicGain.gain.value = 1;
+    musicGain.connect(master);
+    return ctx;
+  }
+
+
+  // ---- 録音用の分岐（?rec=1）----
+  // Playwright の録画には音声が入らないので、ゲーム自身に master バスを
+  // 録らせる。鳴っているものそのものなので映像と必ず同期する。
+  let recDest = null, recorder = null, recChunks = [];
+  function recStart() {
+    if (!ctx || recorder) return;
+    recDest = ctx.createMediaStreamDestination();
+    master.connect(recDest);
+    recorder = new MediaRecorder(recDest.stream, {mimeType: 'audio/webm'});
+    recorder.ondataavailable = e => { if (e.data.size) recChunks.push(e.data); };
+    recorder.start();
+  }
+  function recStop() {
+    return new Promise(res => {
+      if (!recorder) return res(null);
+      recorder.onstop = async () => {
+        const blob = new Blob(recChunks, {type: 'audio/webm'});
+        const buf = await blob.arrayBuffer();
+        res(Array.from(new Uint8Array(buf)));
+      };
+      recorder.stop();
+    });
+  }
+
+  function blip(freq, dur, type = 'square', vol = 0.25, dest = null, slideTo = null) {
+    if (!ctx || !on) return;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, ctx.currentTime);
+    if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, ctx.currentTime + dur);
+    // a short attack stops every note from clicking
+    g.gain.setValueAtTime(0, ctx.currentTime);
+    g.gain.linearRampToValueAtTime(vol, ctx.currentTime + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
+    o.connect(g); g.connect(dest || master);
+    o.start(); o.stop(ctx.currentTime + dur + 0.02);
+  }
+
+  function noise(dur, vol = 0.2, hp = 800) {
+    if (!ctx || !on) return;
+    const n = Math.floor(ctx.sampleRate * dur);
+    const buf = ctx.createBuffer(1, n, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    const f = ctx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = hp;
+    const g = ctx.createGain(); g.gain.value = vol;
+    src.connect(f); f.connect(g); g.connect(master);
+    src.start();
+  }
+
+  // --- the loop: a walking bass plus an offbeat blip ---
+  function tick() {
+    if (!ctx || !on) return;
+    const bar = step % 16;
+    // straight driving pulse: bass on every beat, lead stabs offbeat
+    if (bar % 2 === 0) blip(hz(bar % 8 === 0 ? 0 : 1, -1), tempo * 1.1, BASS, 0.30, musicGain);
+    if (bar % 8 === 5) blip(hz(4, 0), tempo * 0.6, LEAD, 0.09, musicGain);
+    if (bar % 4 === 2) noise(0.04, 0.05, 5000);
+    step++;
+    timer = setTimeout(tick, tempo * 1000);
+  }
+
+  return {
+    // must be called from a user gesture — browsers block audio otherwise
+    start() {
+      if (!ensure() || started) return;
+      if (ctx.state === 'suspended') ctx.resume();
+      started = true; step = 0; tick();
+    },
+    stop() { if (timer) { clearTimeout(timer); timer = null; } started = false; },
+    /** speed the music up with the game; 1 = starting pace */
+    setPace(mult) { tempo = Math.max(0.11, 0.25 / Math.max(0.2, mult)); },
+    duck(sec = 1.6) {                                      // for game over
+      if (!ctx) return;
+      musicGain.gain.cancelScheduledValues(ctx.currentTime);
+      musicGain.gain.setValueAtTime(musicGain.gain.value, ctx.currentTime);
+      musicGain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + sec);
+    },
+    unduck() {
+      if (!ctx) return;
+      musicGain.gain.cancelScheduledValues(ctx.currentTime);
+      musicGain.gain.setValueAtTime(0.0001, ctx.currentTime);
+      musicGain.gain.exponentialRampToValueAtTime(1, ctx.currentTime + 0.4);
+    },
+    // --- one-shots ---
+    // ブレーキ = 低く軋む音。押した瞬間に一度だけ鳴らす
+    brakeOn()  { ensure(); blip(hz(0, 0), 0.14, 'sawtooth', 0.16, null, hz(0, -1)); },
+    brakeOff() { ensure(); blip(hz(1, 0), 0.07, LEAD, 0.09); },
+    // ベル = リスボンのトラムの音。停車のたびに 2 打
+    bell()     { ensure(); [0, 130].forEach(ms =>
+                   setTimeout(() => blip(hz(4, 2), 0.30, 'triangle', 0.22), ms)); },
+    // ぴったり停車 = 上がっていく 3 音。耳で「うまくいった」とわかる
+    perfect()  { ensure(); [0, 80, 160].forEach((ms, i) =>
+                   setTimeout(() => blip(hz(2 + i * 2, 1), 0.22, 'triangle', 0.24), ms)); },
+    ok()       { ensure(); blip(hz(2, 1), 0.16, 'triangle', 0.18, null, hz(4, 1)); },
+    event()    { ensure(); [0, 90, 180].forEach((ms, i) =>
+                   setTimeout(() => blip(hz(2 + i, 0), 0.18, 'sawtooth', 0.20), ms)); },
+    hit()      { ensure(); noise(0.35, 0.30, 200);
+                 blip(180, 0.5, 'sawtooth', 0.28, null, 40); },
+    over()     { ensure(); [0, 140, 280, 460].forEach((ms, i) =>
+                   setTimeout(() => blip(hz(-i, -1), 0.42, 'triangle', 0.26), ms)); },
+    recStart() { ensure(); recStart(); },
+    recStop() { return recStop(); },
+    toggle() { on = !on; if (!on) { this.stop(); } else { this.start(); } return on; },
+    get enabled() { return on; },
+  };
+})();
+
+// --- one place for every action, so touch and keyboard stay in step ---
+function startRun(){
+  titleEl.classList.add('hidden'); reset(); running=true;
+  if(!SILENT){ SND.unduck(); SND.start(); if(REC) SND.recStart(); }
+}
+function brakeDown(){
+  if(!running || dead || braking) return;
+  braking = true;
+  if(!SILENT) SND.brakeOn();
+}
+function brakeUp(){
+  if(!braking) return;
+  braking = false;
+  if(!SILENT && running && !dead) SND.brakeOff();
+}
+
+const muteBtn = document.getElementById('mute');
+function toggleMute(){ muteBtn.textContent = SND.toggle() ? '🔊' : '🔇'; }
+muteBtn.addEventListener('click', toggleMute);
+muteBtn.addEventListener('touchend', e=>{ e.preventDefault(); toggleMute(); },
+                         {passive:false});
+if(SILENT) muteBtn.style.display='none';   // automated modes have no audio
+addEventListener('keydown', e=>{ if(e.code==='KeyM') toggleMute(); });
+
+startBtn.addEventListener('click', startRun);
+// a touch on the button must start too — click alone is unreliable on touch
+startBtn.addEventListener('touchend', e=>{ e.preventDefault(); startRun(); },
+                          {passive:false});
+
+addEventListener('keydown', e=>{
+  if(!running){
+    if(e.code==='Space'||e.code==='Enter'||e.code==='ArrowDown'){
+      // ゲームオーバー直後は K.O. を読ませてから再開させる
+      if(!dead || Date.now()-deadAt > 1200) startRun();
+    }
+    return;
+  }
+  if(e.code==='Space'||e.code==='ArrowDown'||e.code==='KeyS'){
+    e.preventDefault(); brakeDown();
+  }
+});
+addEventListener('keyup', e=>{
+  if(e.code==='Space'||e.code==='ArrowDown'||e.code==='KeyS') brakeUp();
+});
+// タブから離れた間ブレーキが踏まれっぱなしにならないように
+addEventListener('blur', brakeUp);
+
+// --- touch: hold the canvas to brake ---
+// Most viewers arrive from a phone, so the game has to be playable
+// without a keyboard. Holding anywhere on the canvas is the brake —
+// exactly the same action function the keyboard uses.
+(function(){
+  const canvas = renderer.domElement;
+
+  canvas.addEventListener('touchstart', e=>{
+    if(dead || !running) return;
+    brakeDown();
+  }, {passive:true});
+
+  canvas.addEventListener('touchend', e=>{
+    if(dead){
+      // K.O. のアニメーションを読ませてから、タップで再開
+      if(!AUTO && Date.now()-deadAt > 1500) startRun();
+      return;
+    }
+    if(!running){ startRun(); return; }
+    brakeUp();
+  }, {passive:true});
+  canvas.addEventListener('touchcancel', brakeUp, {passive:true});
+
+  // マウスでも同じ関数を通す（PC で誤ってドラッグしても破綻しない）
+  canvas.addEventListener('mousedown', e=>{ if(running && !dead) brakeDown(); });
+  addEventListener('mouseup', brakeUp);
+
+  // The title overlay sits above the canvas, so a tap anywhere on it never
+  // reaches the canvas handler. Start from the overlay itself.
+  titleEl.addEventListener('touchend', e=>{
+    if(!running){ e.preventDefault(); startRun(); }
+  }, {passive:false});
+
+  // stop the browser treating game taps as scroll / double-tap zoom
+  canvas.addEventListener('touchmove', e=>e.preventDefault(), {passive:false});
+})();
+
+// autoplay mode for recording: ?auto=1
+// recording holds the K.O. longer than play does: ?hold=9000
+const RETRY_MS = Math.max(1200, parseInt(QS.get('hold')||'4200', 10));
+// ?noev=1 records a calm run with no events, for narration beds
+const NOEV = QS.get('noev')==='1';
+if(AUTO){ setTimeout(startRun, 1200); }   // startRun 経由にする（音/録音も始まる）
+
+// ---------- autopilot ----------
+// 制動距離の物理をそのまま解いて踏む。d = v^2 / (2a)。
+// 少しだけ手前を狙い、最後の数メートルは断続ブレーキで詰める。
+function autoPilot(){
+  if(stopping){ braking = false; return; }
+  // 重力は常にかかっているので、実効の減速度はブレーキから勾配を引いた分。
+  // これを取り違えると、計算上は止まれるのに現実には止まれない。
+  const net = Math.max(0.4, BRAKE * gripMul / massMul - grade/massMul);
+  let gap = targetPos - pos;
+
+  // 横断中の車がいるなら、そこを新しい「止まるべき点」として扱う
+  if(car && car.phase !== 'out'){
+    const carGap = car.at - pos - 7;
+    if(carGap < gap) gap = carGap;
+  }
+
+  if(gap <= 0.4){ braking = true; return; }   // 行き過ぎ寸前。全力で踏む
+  // 残り 1.2m を切ったら、あとは踏み切って停止判定に入れる
+  if(gap < 1.2){ braking = true; return; }
+
+  // 途中でイベントが来ると、効きが落ちたり坂がきつくなったりして
+  // 「さっき足りていた距離」が足りなくなる。まだ濡れても重くもない
+  // うちは最悪ケース（グリップ 0.38 / 質量 1.85）でも止まれる距離で踏む。
+  const worst = Math.max(0.4, BRAKE*0.38/1.85 - G_STEEP/1.85);
+  const safe  = (wet>0 || crowd>0 || steep>0) ? net : Math.min(net, worst*2.6);
+  const need = (speed*speed) / (2*safe);      // 今の速度で止まるのに要る距離
+
+  // 早めに踏んだぶん、手前で失速して止まりきってしまう。最後の数十メートルは
+  // 惰性で寄せて、ラインの直前でもう一度踏む「詰め」の区間にする。
+  if(gap < 26 && speed < 3.4){
+    // 停止判定は braking 中しか通らないので、寄せ切ったら必ず踏み直す
+    braking = (speed*speed)/(2*net) >= gap - 0.5;
+    return;
+  }
+  braking = need >= gap - 0.6;
+}
+
+// ---------- showcase mode ----------
+// Puts one object on a turntable against an empty stage so the video can
+// talk about it while the real thing is on screen. Uses the game's own
+// meshes, so what the narration describes is exactly what ships.
+const SHOWCASE = QS.get('showcase');
+const showcase = {group:null, pivot:null, spin:.55, label:''};
+
+function buildShowcase(name){
+  const g = new THREE.Group();
+  let label = '', spin = .5, flat = false;
+  if(name==='tram'){
+    const s = buildTram();
+    s.group.scale.set(1,1,1);
+    g.add(s.group); label = 'トラム'; spin = .45;
+  } else if(name==='stop'){
+    // 停留所は world 直下に作るので、いったん外して showcase に移す
+    const st = buildStop(0);
+    world.remove(st);
+    g.add(st); label = '停留所'; spin = .4;
+  } else if(name==='car'){
+    const c = buildCar();
+    c.scale.set(1.3,1.3,1.3);
+    g.add(c); label = '横断する車'; spin = .55;
+  } else if(name==='rain'){
+    // 雨は 1 粒では見えないので、束にして見せる
+    const bundle = new THREE.Group();
+    const dropMat = new THREE.MeshStandardMaterial({color:0x9fd6ff, emissive:0x2a6fa8,
+                                                    roughness:.2, metalness:.4});
+    for(let i=0;i<90;i++){
+      const d = new THREE.Mesh(new THREE.CapsuleGeometry(.055, .8, 4, 8), dropMat);
+      d.position.set((Math.random()-.5)*4.2, (Math.random()-.5)*5.4, (Math.random()-.5)*4.2);
+      bundle.add(d);
+    }
+    g.add(bundle); label = '濡れたレール'; spin = .6;
+  } else if(name==='rider'){
+    // 満員の乗客: 屋根に乗る人影のかたまり
+    const cluster = new THREE.Group();
+    const cols = [0xd94f4f,0x4f8fd9,0x6fd94f,0xd9c14f,0xb04fd9,0xd9884f];
+    for(let i=0;i<6;i++){
+      const p = new THREE.Mesh(new THREE.CapsuleGeometry(.34, .95, 6, 12),
+        new THREE.MeshStandardMaterial({color:cols[i], roughness:.7}));
+      p.position.set(((i%3)-1)*1.05, 0, (i<3 ? .75 : -.75));
+      cluster.add(p);
+    }
+    g.add(cluster); label = '満員の乗客'; spin = .55;
+  } else if(name==='lamp'){
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(.11,.14,5.4,10), lampPoleMat);
+    pole.position.y = 2.7; g.add(pole);
+    const head = new THREE.Mesh(new THREE.SphereGeometry(.55, 16, 12),
+      new THREE.MeshBasicMaterial({color:0xffdc8a}));
+    head.position.y = 5.6; g.add(head);
+    label = '坂の街灯'; spin = .4;
+  }
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  scene.add(g);
+
+  // Centre the subject on the origin and pull the camera back to fit it,
+  // so every object is framed the same way regardless of its size.
+  const box = new THREE.Box3().setFromObject(g);
+  const size = box.getSize(new THREE.Vector3());
+  const mid  = box.getCenter(new THREE.Vector3());
+  g.position.sub(mid);                       // sit centred at the origin
+  const reach = Math.max(size.x, size.y) * 0.5;
+  const fov = THREE.MathUtils.degToRad(camera.fov);
+  const dist = (reach / Math.tan(fov/2)) * 1.75 + 1.0;   // 1.75 = 余白
+  camera.position.set(0, size.y*0.10, dist);
+
+  // Slide the subject sideways so a text panel can own the other half.
+  // The offset lives on a parent so the turntable still spins in place —
+  // rotating an offset group would make it orbit instead.
+  const bias = parseFloat(QS.get('sx') || '0');
+  const pivot = new THREE.Group();
+  pivot.position.x = -bias * reach * 1.15;
+  scene.add(pivot);
+  pivot.add(g);
+  showcase.group = g; showcase.pivot = pivot;
+  showcase.spin = spin; showcase.label = label; showcase.flat = flat;
+}
+
+fitCamera();          // SHOWCASE is known by here
+if(SHOWCASE){
+  titleEl.classList.add('hidden');
+  buildShowcase(SHOWCASE);
+  scoreEl.textContent = '';
+  msgEl.textContent = QS.get('nolabel')==='1' ? '' : showcase.label;
+  msgEl.style.fontSize = 'clamp(20px,5vw,30px)';
+  msgEl.style.letterSpacing = '5px';
+  // 何も置かない暗い舞台。被写体だけを映す
+  world.visible = false;
+  river.visible = false; moon.visible = false;
+  gaugeEl.style.display = 'none';
+  for(const m of rain) m.visible = false;
+  scene.fog = null;
+  scene.background = new THREE.Color(0x0b0d16);
+  heroLight.position.set(3.0, 3.4, 4.4);
+  heroLight.intensity = 160;
+  hemi.intensity = 3.2;
+  sun.intensity = 4.0; sun.position.set(2.6, 6, 6);
+  // 反対側からの補助光。奥の面が真っ黒にならないように
+  const fill = new THREE.PointLight(0x88aaff, 55, 30);
+  fill.position.set(-4.8, 2.6, 3.8); scene.add(fill);
+}
+// let the capture script drive the turntable and swap subjects
+window.__showcase = name => {
+  if(showcase.pivot) scene.remove(showcase.pivot);   // pivot owns the group
+  buildShowcase(name);
+  msgEl.textContent = showcase.label;
+};
+
+// ---------- loop ----------
+const clock = new THREE.Clock();
+function tick(){
+  requestAnimationFrame(tick);
+  const raw = Math.min(clock.getDelta(), .05);
+  const dt = raw * timeScale;
+
+  if(SHOWCASE){
+    if(showcase.group) showcase.group.rotation.y += raw*showcase.spin;
+    camera.lookAt(0, 0, 0);        // subject is offset, camera stays on axis
+    renderer.render(scene, camera);
+    return;
+  }
+
+  if(running && !dead){
+    t += dt;
+    if(AUTO) autoPilot();
+
+    // --- events ---
+    if(t > nextEventAt && !NOEV) triggerEvent();
+
+    // 濡れたレール: ブレーキの効きを落とし、雨を降らせる
+    if(wet>0){
+      wet -= dt;
+      gripMul = 0.38;
+      rainMat.opacity = Math.min(.55, rainMat.opacity + dt*2);
+      for(const m of rain){
+        m.position.y -= (34 + speed)*dt;
+        m.position.z += speed*dt*0.6;
+        if(m.position.y < -2){
+          m.position.set((Math.random()-.5)*26, 20 + Math.random()*6,
+                          camera.position.z - 10 - Math.random()*80);
+        }
+      }
+      if(wet<=0) gripMul = 1;
+    } else if(rainMat.opacity > 0){
+      rainMat.opacity = Math.max(0, rainMat.opacity - dt*1.2);
+      gripMul = 1;
+    }
+
+    // 満員の乗客: 質量が増え、同じブレーキでも止まらない
+    if(crowd>0){
+      crowd -= dt;
+      massMul = 1.85;
+      if(crowd<=0){ massMul = 1; tram.riders.visible = false; }
+    } else massMul = 1;
+
+    // 急勾配: 坂の傾きと画角をぐっと変える。見た目でも速く感じさせる
+    const tiltTarget = steep>0 ? BASE_TILT*2.4 : BASE_TILT;
+    world.rotation.x += (tiltTarget - world.rotation.x)*Math.min(1, raw*1.6);
+    if(steep>0){
+      steep -= dt;
+      camera.fov += (camera.__base*1.14 - camera.fov)*Math.min(1, raw*3);
+      camera.updateProjectionMatrix();
+    } else if(camera.fov > camera.__base + .05){
+      camera.fov += (camera.__base - camera.fov)*Math.min(1, raw*2.4);
+      camera.updateProjectionMatrix();
+    }
+
+    // 濃霧: 霧を手前まで引き寄せる。停留所が直前まで見えなくなる
+    if(fogEv>0){
+      fogEv -= dt;
+      scene.fog.near += (8 - scene.fog.near)*Math.min(1, raw*1.6);
+      scene.fog.far  += (46 - scene.fog.far)*Math.min(1, raw*1.6);
+      if(fogEv<=0){ /* 下の復帰処理に任せる */ }
+    } else if(scene.fog.far < FOG_FAR - .5){
+      scene.fog.near += (FOG_NEAR - scene.fog.near)*Math.min(1, raw*1.1);
+      scene.fog.far  += (FOG_FAR  - scene.fog.far )*Math.min(1, raw*1.1);
+    }
+
+    // --- 1D physics: gravity down the hill, brake against it ---
+    grade = steep>0 ? G_STEEP : G_BASE;
+    if(stopping){
+      // 客扱い中。数秒だけ完全に止まってから、また転がり出す
+      speed = 0;
+      stopTimer -= dt;
+      if(stopTimer <= 0){ stopping = false; placeNextStop(); }
+    } else {
+      const decel = braking ? BRAKE * gripMul / massMul : 0;
+      speed += (grade/massMul - decel) * dt;
+      // ブレーキだけでは後退しない
+      if(speed < 0) speed = 0;
+      if(speed > MAX_SPEED) speed = MAX_SPEED;
+      pos += speed * dt;
+      // 走った距離そのものが点になる。生きているかぎりスコアは増える
+      score += speed * dt * 0.6;
+    }
+
+    // 車輪を回す
+    for(const w of tram.wheels) w.rotation.x -= speed*dt*2;
+    // ブレーキ火花: 速度が乗っているときだけ光る
+    const wantSpark = braking && speed > 4 ? .85 : 0;
+    tram.sparkMat.opacity += (wantSpark - tram.sparkMat.opacity)*Math.min(1, raw*10);
+    tram.sparkMat.color.setHex(wet>0 ? 0x8fd8ff : 0xffb347);
+
+    // --- 停留所の判定 ---
+    const gap = targetPos - pos;
+    if(!stopping){
+      if(gap < -0.6){
+        // 停止ラインを行き過ぎた = 失敗
+        dead = true; gameOver('overrun');
+      } else if(braking && speed < 1.2 && gap < 20){
+        // 止まった。ズレで採点する
+        speed = 0;
+        const v = scoreStop(gap);
+        score += v.pts;
+        stopIdx++;
+        verdict(v.err < 0.6 ? v.text : `${v.text}　${v.err.toFixed(1)}m`, v.color);
+        if(!SILENT){ SND.bell(); setTimeout(()=> v.err < 1.8 ? SND.perfect() : SND.ok(), 220); }
+        if(v.err < 0.6) flash('#ffd23b', .35, 380);
+        stopping = true; stopTimer = 1.5;
+        // 停まっているあいだ、通り過ぎた停留所を掃除する
+        for(let i=stops.length-1;i>=0;i--){
+          if(stops[i].at <= targetPos - 1){ world.remove(stops[i].group); stops.splice(i,1); }
+        }
+      }
+    }
+
+    // --- 横断する車 ---
+    if(car){
+      const gapToCar = car.at - pos;
+      if(car.phase === 'in'){
+        car.group.position.x += car.vx*dt;
+        if(Math.abs(car.group.position.x) < .5){ car.group.position.x = 0; car.phase = 'wait'; }
+      } else if(car.phase === 'wait'){
+        car.wait -= dt;
+        // トラムが十分手前で止まっていれば、車は先に立ち去る
+        if(car.wait <= 0 || (speed < .5 && gapToCar > 4)) car.phase = 'out';
+      } else {
+        car.group.position.x += car.vx*dt*1.6;
+        if(Math.abs(car.group.position.x) > 24) despawnCar();
+      }
+      // 衝突: 線路の上にいる車に突っ込んだ
+      if(car && car.phase !== 'out' && Math.abs(car.group.position.x) < 3.2
+         && Math.abs(gapToCar) < 3.4 && speed > 0.6){
+        dead = true; gameOver('car');
+      }
+    }
+
+    // --- HUD ---
+    scoreEl.textContent = Math.floor(score);
+    spdEl.textContent = Math.round(speed*3.6);          // m/s → km/h
+    distEl.textContent = Math.max(0, gap).toFixed(0);
+    // ゲージ = 「今の速度で止まるのに要る距離 / 残り距離」。
+    // 満タンに近いほど手遅れ。数字より速く読める
+    const decelNow = BRAKE * gripMul / massMul;
+    const need = (speed*speed)/(2*decelNow);
+    const ratio = gap > 0.1 ? Math.min(1.4, need/gap) : 1.4;
+    barFill.style.width = Math.min(100, ratio*100/1.4) + '%';
+    barFill.style.background = ratio > 1
+      ? 'linear-gradient(90deg,#ff8f3b,#ff3b4a)'
+      : (ratio > .7 ? 'linear-gradient(90deg,#3bd4ff,#ffc93b)'
+                    : 'linear-gradient(90deg,#3bd4ff,#7dffb0)');
+    if(!SILENT) SND.setPace(0.6 + speed/16);
+
+    // --- 街並みを使い回す ---
+    const tz = zOf(pos);
+    for(const s of sleepers){
+      if(s.position.z > tz + 14) s.position.z -= SLEEPER_N*SLEEPER_GAP;
+    }
+    for(const b of buildings){
+      if(b.position.z > tz + 30) b.position.z -= BUILDING_N*BUILDING_GAP;
+    }
+    for(const l of lamps){
+      if(l.position.z > tz + 20) l.position.z -= lamps.length*LAMP_GAP;
+    }
+    // トラムを坂の上に置く
+    tram.group.position.z = tz;
+    // 川と月はワールドの外。坂を下るほど水面が近づいて見える
+    river.position.z = -420 + pos*0.06;
+    moon.position.z  = -300 + pos*0.02;
+    heroLight.position.set(0, 9, tz*Math.cos(world.rotation.x) + 8);
+  }
+
+  // --- death sequence: slow-mo unwinds, camera pushes in, tram lurches ---
+  if(dead){
+    timeScale += (0 - timeScale)*Math.min(1, raw*1.1);   // ease down to a near-freeze
+    tram.group.rotation.z += raw*0.9;
+    tram.group.rotation.x -= raw*0.5;
+    tram.group.position.y += Math.max(0, 1.2 - (1-timeScale)*1.2)*raw*2.4;
+  }
+
+  // --- camera (runs even while dead, so the zoom and shake still play) ---
+  // world が傾いているので、カメラはワールド座標でトラムを追う
+  const tramWorld = new THREE.Vector3();
+  tram.group.getWorldPosition(tramWorld);
+  camDist += (camDistTarget - camDist)*Math.min(1, raw*2.4);
+  camera.position.z = tramWorld.z + camDist;
+  camera.position.y = tramWorld.y + 7.4 - (13-camDist)*.22;
+  camera.position.x += (0 - camera.position.x)*Math.min(1, raw*6);
+  if(shake>0){
+    shake = Math.max(0, shake - raw*.9);
+    camera.position.x += (Math.random()-.5)*shake;
+    camera.position.y += (Math.random()-.5)*shake;
+  }
+  camera.lookAt(0, tramWorld.y + 2.0, tramWorld.z - 14);
+
+  renderer.render(scene, camera);
+}
+
+function gameOver(cause){
+  running=false; deadAt=Date.now();
+  if(!SILENT){ SND.hit(); SND.duck(1.6); setTimeout(()=>SND.over(), 700); }
+  braking = false;
+  // hit feedback: red flash, red vignette, hard shake, camera punches in
+  flash('#ff2b3a', .8, 500);
+  vignetteEl.style.transition='opacity .5s'; vignetteEl.style.opacity=1;
+  shake = .9;
+  camDistTarget = 6.5;
+  const finalScore = Math.floor(score);
+  koScoreEl.textContent = finalScore;
+  // 何で終わったのかを一言。見ている側が理由を推理しなくて済む
+  verdict(cause==='car' ? '車に衝突' :
+          cause==='overrun' ? '行き過ぎ' : '脱線', '#ff3b4a');
+  msgEl.textContent = '';
+  setTimeout(()=>{ koEl.classList.add('on'); }, 620);   // K.O. lands after the slow-mo
+  if(AUTO){ setTimeout(()=>{ reset(); running=true;
+                             if(!SILENT) SND.unduck(); }, RETRY_MS); }
+  else setTimeout(()=>{
+    msgEl.textContent = matchMedia('(pointer:coarse)').matches
+      ? 'タップでもう一度' : 'スペースでもう一度';
+  }, 1800);
+}
+tick();
+
+// --- help (?) : ルールを見せる。録画中は出さない ---
+(function(){
+  const btn = document.getElementById('helpBtn');
+  const panel = document.getElementById('help');
+  if(!btn || !panel) return;
+  if(NOCHROME){                      // 録画・showcase では画面から消す
+    btn.style.display = 'none';
+    const back = document.getElementById('back');
+    if(back) back.style.display = 'none';
+    return;
+  }
+  const open = () => { panel.classList.add('on'); };
+  const close = () => { panel.classList.remove('on'); };
+  btn.addEventListener('click', open);
+  btn.addEventListener('touchend', e => { e.preventDefault(); open(); }, {passive:false});
+  panel.addEventListener('click', e => { if(e.target === panel) close(); });
+  panel.querySelector('.close').addEventListener('click', close);
+  panel.querySelector('.close').addEventListener('touchend',
+    e => { e.preventDefault(); close(); }, {passive:false});
+  addEventListener('keydown', e => {
+    if(e.code === 'Escape') close();
+    else if(e.key === '?' || (e.code === 'Slash' && e.shiftKey)) open();
+  });
+})();
+</script>
+</body>
+</html>

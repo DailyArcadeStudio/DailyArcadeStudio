@@ -15,6 +15,9 @@ import re
 import sys
 from pathlib import Path
 
+sys.path.insert(0, "/Users/fukushimatakumi/develop")
+from jp_ui import T as _T  # 固定文言の日英切り替え
+
 ROOT = Path(__file__).resolve().parent.parent
 
 CSS = """
@@ -95,15 +98,17 @@ def main(slug):
 
     data = json.loads((gdir / "scenes.json").read_text())
     title = data.get("title", slug)
-    hook = (data.get("thumb") or {}).get("sub", "") or "Play it free in your browser."
+    hook = ((data.get("thumb") or {}).get("sub", "")
+            or _T("Play it free in your browser."))
     body = bullets_html(data["scenes"])
 
-    panel = (f'<button id="helpBtn" title="how to play">?</button>\n'
+    _howto = _T("how to play")
+    panel = (f'<button id="helpBtn" title="{_howto}">?</button>\n'
              f'<div id="help"><div class="box">\n'
              f'  <h2>{title}</h2>\n'
              f'  <p class="sub">{hook}</p>\n'
              f'{body}\n'
-             f'  <button class="close">Got it</button>\n'
+             f'  <button class="close">{_T("Got it")}</button>\n'
              f'</div></div>')
 
     # ボタンとパネルは #back の隣に置く

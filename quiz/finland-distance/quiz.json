@@ -1,0 +1,177 @@
+{
+  "title": "あなたのパーソナルスペース診断",
+  "lead": "人との「ちょうどいい距離」、あなたはどこに置いてますか。",
+  "story": "フィンランドの人口密度は18人/km²。距離を空けるのは、冷たさじゃなく親切だと言われます。でもサウナでは肩が触れる。距離の正解はひとつじゃない、という話から作りました。",
+  "axes": [
+    {
+      "label": "人と物理的に近づくのが平気か、間を空けたいか",
+      "pos": "D",
+      "neg": "C"
+    },
+    {
+      "label": "沈黙が心地よいか、会話で埋めたくなるか",
+      "pos": "S",
+      "neg": "T"
+    },
+    {
+      "label": "自分から誘うか、誘われるのを待つか",
+      "pos": "I",
+      "neg": "W"
+    },
+    {
+      "label": "本音をすぐ出すか、まず様子を見るか",
+      "pos": "H",
+      "neg": "G"
+    }
+  ],
+  "questions": [
+    {
+      "text": "空いているバス停なら、少し離れて立つ。",
+      "axis": 0,
+      "sign": -1
+    },
+    {
+      "text": "エレベーターで知らない人と二人きりでも平気だ。",
+      "axis": 0,
+      "sign": 1
+    },
+    {
+      "text": "混んだ電車で肩が触れるのは、あまり気にならない。",
+      "axis": 0,
+      "sign": 1
+    },
+    {
+      "text": "会話が止まっても、無理に何か言わなくていいと思う。",
+      "axis": 1,
+      "sign": 1
+    },
+    {
+      "text": "沈黙が続くと、つい話題を探してしまう。",
+      "axis": 1,
+      "sign": -1
+    },
+    {
+      "text": "黙って一緒にいる時間も、いい時間だと思う。",
+      "axis": 1,
+      "sign": 1
+    },
+    {
+      "text": "気になる人がいたら、自分から声をかける。",
+      "axis": 2,
+      "sign": 1
+    },
+    {
+      "text": "遊びの予定は、誘われてから動くことが多い。",
+      "axis": 2,
+      "sign": -1
+    },
+    {
+      "text": "思っていることは、早めに口に出すほうだ。",
+      "axis": 3,
+      "sign": 1
+    },
+    {
+      "text": "相手の出方を見てから、自分の本音を出す。",
+      "axis": 3,
+      "sign": -1
+    }
+  ],
+  "results": {
+    "CSWG": {
+      "name": "フィンランド型",
+      "body": "間を空けるのは、遠ざけたいからじゃない。相手の領域を踏まないための優しさです。沈黙も平気。ただしサウナのように、条件がそろえば一気に近づける。静かで、でも冷たくない距離の取り方です。",
+      "image_prompt": "photorealistic Finnish lakeside at dusk, three people standing far apart on a wooden pier, still water, pine forest, soft blue twilight, wisps of steam from a small sauna cabin, quiet and calm mood, cinematic natural light, no text, no letters, no words, no writing",
+      "image": "img/CSWG.jpg"
+    },
+    "CSWH": {
+      "name": "アイスランド型",
+      "body": "距離は空けるし、沈黙も平気。でも口を開けば、飾らず率直です。誘うのは苦手でも、誘われれば本音で話す。小さな集落みたいに、関わる人数は少なく、その分だけ濃い付き合いになります。",
+      "image_prompt": "photorealistic Icelandic landscape, a lone red-roofed farmhouse on black volcanic plain, dramatic sky, distant waterfall, moss-covered rocks, cold clear air, wide empty vista, natural lighting, no text, no letters, no words, no writing",
+      "image": "img/CSWH.jpg"
+    },
+    "CSIG": {
+      "name": "ノルウェー型",
+      "body": "物理的には離れたいし、沈黙も苦じゃない。それでも人を誘うのは自分から。ただ、本音はゆっくり出します。一緒に山を歩いて、話は半分、景色が半分。そんな付き合い方が合っています。",
+      "image_prompt": "photorealistic Norwegian fjord, two hikers walking apart on a mountain trail, steep cliffs, deep blue water far below, scattered clouds, crisp daylight, vast open scenery, no text, no letters, no words, no writing",
+      "image": "img/CSIG.jpg"
+    },
+    "CSIH": {
+      "name": "オランダ型",
+      "body": "近づきすぎないし、黙るのも平気。でも誘うのは自分から、言うことははっきり。回りくどいのが苦手です。相手にも同じ率直さを期待するので、遠慮の多い相手とは少しずれるかもしれません。",
+      "image_prompt": "photorealistic Dutch canal street in Amsterdam, tall narrow brick houses, bicycles leaning on a bridge railing, calm water reflecting the sky, overcast soft daylight, tidy and open composition, no text, no letters, no words, no writing",
+      "image": "img/CSIH.jpg"
+    },
+    "CTWG": {
+      "name": "日本型",
+      "body": "距離は空ける、沈黙は埋めたい、誘うのは待つ、本音は後から。気配りの量が多い分、少し疲れやすいタイプです。ただ、その慎重さが「一緒にいて楽な人」という評価につながることも多いはず。",
+      "image_prompt": "photorealistic Japanese residential street at evening, people queueing at a train platform with even gaps, warm vending machine glow, narrow road, power lines, gentle rain sheen on asphalt, no text, no letters, no words, no writing",
+      "image": "img/CTWG.jpg"
+    },
+    "CTWH": {
+      "name": "ドイツ型",
+      "body": "距離は保つし、待つ側。でも会話は止めたくないし、意見ははっきり言う。曖昧なままにしておくのが気持ち悪いタイプです。仲良くなる速度は遅めでも、いったん入れば信頼は固い。",
+      "image_prompt": "photorealistic German town square, orderly half-timbered buildings, cobblestone pavement, people seated at well-spaced outdoor cafe tables, clear afternoon light, tidy geometric composition, no text, no letters, no words, no writing",
+      "image": "img/CTWH.jpg"
+    },
+    "CTIG": {
+      "name": "韓国型",
+      "body": "体の距離は保ちたいけれど、会話は途切れさせたくない。自分から誘うし、面倒見もいい。ただ本音は段階を踏んで出します。にぎやかなのに、芯のところは慎重。そのバランスが持ち味です。",
+      "image_prompt": "photorealistic Seoul alley at night, neon-lit storefronts, a group of friends walking together, steam rising from a street food stall, wet pavement reflections, lively urban atmosphere, no text, no letters, no words, no writing",
+      "image": "img/CTIG.jpg"
+    },
+    "CTIH": {
+      "name": "フランス型",
+      "body": "むやみに体を寄せはしないけれど、議論は大好き。自分から誘って、思ったことをそのまま言う。それは攻撃じゃなく、関心の示し方です。話が弾む相手とは、一晩でも喋っていられるタイプ。",
+      "image_prompt": "photorealistic Parisian cafe terrace, wicker chairs facing the street, people in animated conversation across small round tables, haussmann stone facades, golden late afternoon light, no text, no letters, no words, no writing",
+      "image": "img/CTIH.jpg"
+    },
+    "DSWG": {
+      "name": "スウェーデン型",
+      "body": "近くにいるのは平気だし、黙っているのも平気。でも自分から誘うことは少なく、本音もゆっくり。同じ部屋で別々のことをしている、みたいな距離がいちばん落ち着きます。",
+      "image_prompt": "photorealistic Swedish apartment interior, two people in the same living room doing separate things, large window with grey city light, minimal wooden furniture, houseplants, calm quiet mood, no text, no letters, no words, no writing",
+      "image": "img/DSWG.jpg"
+    },
+    "DSWH": {
+      "name": "カナダ型",
+      "body": "体の距離は気にしないし、沈黙も心地いい。誘うのは待つほうだけど、聞かれれば正直に答えます。押しは弱いのに、なぜか居心地がいいと言われるタイプ。輪の中で自然に馴染みます。",
+      "image_prompt": "photorealistic Canadian lakeside cabin in autumn, two people sitting close on a wooden dock, maple forest in red and gold, still water, soft overcast light, peaceful scene, no text, no letters, no words, no writing",
+      "image": "img/DSWH.jpg"
+    },
+    "DSIG": {
+      "name": "モンゴル型",
+      "body": "距離は近くていい、静けさも平気。誘うのは自分からだけれど、本音は時間をかけて渡します。来た人はまず迎え入れる。その上でゆっくり相手を知る、という順番のタイプです。",
+      "image_prompt": "photorealistic Mongolian steppe, a white ger tent under an enormous open sky, horses grazing, two figures standing side by side at the horizon, golden grassland, vast emptiness, no text, no letters, no words, no writing",
+      "image": "img/DSIG.jpg"
+    },
+    "DSIH": {
+      "name": "オーストラリア型",
+      "body": "距離は近くても平気、黙るのも平気。それでいて誘うのは自分から、話す時は率直。気取らないぶん、初対面でもすぐ打ち解けます。深刻になりすぎないのが、この型の強みです。",
+      "image_prompt": "photorealistic Australian beach at midday, friends standing together on bright sand, turquoise surf, rugged coastal cliffs, strong sunlight, relaxed open atmosphere, no text, no letters, no words, no writing",
+      "image": "img/DSIH.jpg"
+    },
+    "DTWG": {
+      "name": "タイ型",
+      "body": "近い距離も平気だし、会話は絶やしたくない。でも誘うのは待つし、本音はやわらかく包みます。角を立てないことを大事にするので、周りは一緒にいて楽。自分の消耗にだけ注意を。",
+      "image_prompt": "photorealistic Thai riverside market, crowded wooden walkway, people close together browsing stalls, hanging lanterns, tropical greenery, humid warm evening light, no text, no letters, no words, no writing",
+      "image": "img/DTWG.jpg"
+    },
+    "DTWH": {
+      "name": "トルコ型",
+      "body": "距離は近く、会話も途切れさせない。自分から誘うことは少ないけれど、話し始めれば本音が早い。客が来たらまずお茶を出す、そんな受け身の温かさを持っているタイプです。",
+      "image_prompt": "photorealistic Istanbul tea house, men seated shoulder to shoulder on low stools, small tulip-shaped glasses on a tray, worn stone wall, warm lamp light, bustling narrow street beyond, no text, no letters, no words, no writing",
+      "image": "img/DTWH.jpg"
+    },
+    "DTIG": {
+      "name": "スペイン型",
+      "body": "距離は近く、会話も絶えず、誘うのも自分から。ただ、本音のいちばん奥は簡単には見せません。にぎやかな時間を全力で楽しみつつ、芯の部分は自分で守っている。そんなバランス型です。",
+      "image_prompt": "photorealistic Spanish plaza at night, crowded tapas bar terrace, people standing close and gesturing, string lights overhead, warm stone architecture, festive lively atmosphere, no text, no letters, no words, no writing",
+      "image": "img/DTIG.jpg"
+    },
+    "DTIH": {
+      "name": "イタリア型",
+      "body": "近い、喋る、誘う、言う。四拍子そろった最短距離タイプです。フィンランドとは正反対だけど、どちらも相手を大事にしているのは同じ。距離の詰め方が違うだけ、と覚えておくと楽です。",
+      "image_prompt": "photorealistic Italian piazza at golden hour, a large family gathered around a long outdoor table, people leaning in and gesturing, terracotta buildings, warm sunlight, abundant food and wine, no text, no letters, no words, no writing",
+      "image": "img/DTIH.jpg"
+    }
+  }
+}

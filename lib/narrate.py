@@ -12,13 +12,28 @@ from pathlib import Path
 
 import numpy as np
 import soundfile as sf
-from kokoro import KPipeline
+try:
+    from kokoro import KPipeline
+except Exception:
+    KPipeline = None
+
+
+# --- 日本語(VOICEVOX)対応 ---
+# VIDEO_LANG=ja のとき Kokoro ではなく VOICEVOX(四国めたん)で合成する。
+import os as _os, sys as _sys
+_sys.path.insert(0, "/Users/fukushimatakumi/develop")
+_JA = _os.environ.get("VIDEO_LANG", "").lower().startswith("ja")
+if _JA:
+    from vv_tts import ensure_engine as _vv_ensure, synth as _vv_synth
+    _vv_ensure()
 
 SR = 24000
 GAP = 0.45          # silence between scenes
 
 
 def synth(pipe, text, voice):
+    if _JA:
+        return _vv_synth(text)[0]
     chunks = [a for _gs, _ps, a in pipe(text, voice=voice)]
     if not chunks:
         return np.zeros(int(SR * 0.3), dtype=np.float32)
@@ -31,7 +46,7 @@ def main(scenes_path, out_dir):
     out.mkdir(parents=True, exist_ok=True)
     voice = data.get("voice", "am_adam")
 
-    pipe = KPipeline(lang_code="a", repo_id="hexgrad/Kokoro-82M")
+    pipe = None if _JA else KPipeline(lang_code="a", repo_id="hexgrad/Kokoro-82M")
     gap = np.zeros(int(SR * GAP), dtype=np.float32)
 
     parts, timing, cursor = [], [], 0.0

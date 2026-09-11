@@ -18,6 +18,35 @@ GAMES = ROOT / "games"
 CLAUDE = "/opt/homebrew/bin/claude"
 REFERENCE = GAMES / "ninja-dash" / "index.html"
 
+
+
+# --- 日本語版 ---
+# VIDEO_LANG=ja のとき、プレイヤーに見える文字を日本語で作らせる。
+# ゲームのロジックとコードは英語のまま（変数名・関数名は触らない）。
+import os as _os
+_JA = _os.environ.get("VIDEO_LANG", "").lower().startswith("ja")
+
+JA_UI_RULE = """
+
+**画面に出る文字はすべて日本語にしてください。**（日本人向けのチャンネルです）
+日本語にするもの:
+  - <title> タグ、タイトル画面のゲーム名と説明文
+  - START ボタン、操作説明（「スペース / ↓ : ブレーキ」など）
+  - HUD の見出し、イベントのバナー、スコアの表示
+  - ゲームオーバーの文字（「K.O.」はそのままでよい）、最終スコアの見出し
+  - 「もう一度」（Tap to retry / Space to retry にあたるもの）
+  - ルール説明パネル（? ボタン）の見出しと本文
+  - 戻るリンクは `‹ ゲーム一覧`、ボタンの title 属性も日本語
+  - showcase のキャプション（?showcase= で出る被写体の名前）
+英語のまま残すもの:
+  - 変数名・関数名・window.__ev などのAPI名（ツールが読むので変えない）
+  - `?auto=1` などのURLパラメータ名
+  - `window.__subjects` / `window.__events` の**中身の識別子**
+    （録画ツールが名前で参照するため。画面に出すキャプションだけ日本語にする）
+日本語は半角英数より幅を取ります。`clamp()` の値と改行位置に注意して、
+小さい画面でもはみ出さないようにしてください。
+"""
+
 PROMPT = """Build a browser game: {title}
 
 Concept: {idea}
@@ -104,6 +133,8 @@ def generate(slug, title, idea):
         print(f"EXISTS {dst}", flush=True)
         return dst
     prompt = PROMPT.format(title=title, idea=idea, dst=dst, ref=REFERENCE)
+    if _JA:
+        prompt += JA_UI_RULE
     print(f"GENERATING {slug}…", flush=True)
     r = subprocess.run([CLAUDE, "-p", prompt, "--permission-mode", "acceptEdits",
                         "--dangerously-skip-permissions"],
