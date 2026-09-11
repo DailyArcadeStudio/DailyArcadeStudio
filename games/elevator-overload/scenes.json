@@ -1,0 +1,227 @@
+{
+  "id": "0008_elevator_overload",
+  "title": "エレベーター過積載",
+  "video_title": "定員600キロ。目で見て決めてください。",
+  "lang": "python",
+  "voice": "am_adam",
+  "scenes": [
+    {
+      "kind": "hook",
+      "clip": "sumo",
+      "narration": "この建物のエレベーターには、重さを測る装置がありません。"
+    },
+    {
+      "kind": "image",
+      "prompt": "an old worn elevator lobby in a 1960s apartment tower, scuffed beige walls, brass call button plate, a small crowd of residents waiting with shopping bags, flickering fluorescent light, photorealistic, cinematic, highly detailed",
+      "narration": "古い団地の話です。棟は14階まであります。エレベーターは、たった1台です。朝と夕方は、いつも人でいっぱいになります。"
+    },
+    {
+      "kind": "image",
+      "prompt": "close-up of a scratched metal capacity plate inside an old elevator cabin, engraved characters worn almost smooth, dented stainless steel wall around it, harsh overhead light, photorealistic, shallow depth of field, highly detailed",
+      "narration": "かごの中に、定員の板が貼ってあります。600キロまで。ところがこの装置、10年前に壊れました。それ以来、重さは誰も測っていません。管理人のマツダさんが、目で見て決めています。"
+    },
+    {
+      "kind": "image",
+      "prompt": "a building caretaker in a grey work jacket standing beside an open elevator door, hand resting on the door frame, watching residents step inside, tired but friendly expression, warm dim corridor light, photorealistic, cinematic, highly detailed",
+      "narration": "マツダさんは、修理をずっと頼んでいます。返事は、来年の予算で、です。もう10年、来年のままです。だから今日も、ドアの横に立ちます。そしてここからが本題です。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "cabin",
+      "kicker": "しごと",
+      "title": "かご",
+      "bullets": [
+        "定員は **600キロ**。越えた瞬間に落ちる",
+        "操作は2つだけ。**乗せる** か **閉める**",
+        "閉めれば届けて、積載は **ゼロに戻る**"
+      ],
+      "narration": "これがそのかごです。定員は600キロ。あなたの操作は2つだけです。乗せるか、閉めるか。閉めれば出発して、積載はゼロに戻ります。そうなんです。これだけのゲームです。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "rider",
+      "kicker": "おきゃく",
+      "title": "ふつうの客",
+      "bullets": [
+        "だいたい **60キロ前後**",
+        "乗せると、次の一人がまた来る",
+        "止まらないのは **あなただけ**"
+      ],
+      "narration": "ふつうの客です。60キロくらい。乗せると、次の一人がすぐ来ます。もう一人くらい、と思いますよね。そこが狙われます。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "heavy",
+      "kicker": "けいかい",
+      "title": "重い客",
+      "bullets": [
+        "**148キロ**。ふつうの客2人ぶん以上",
+        "体重は **見た目でわかる**",
+        "残りが少ない時は、この一人で終わる"
+      ],
+      "narration": "たまに、こういう人が来ます。148キロ。ふつうの客2人ぶんより重いです。体格でわかるようにしてあります。見てください。残りが200キロの時、この一人が来たら、それで決まりです。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "child",
+      "kicker": "ごほうび",
+      "title": "子ども",
+      "bullets": [
+        "**28キロ**。ほぼタダで1点",
+        "点数は **運んだ人数**、重さではない",
+        "だから軽い客ほど強い"
+      ],
+      "narration": "こちらは子どもです。28キロ。ここが面白いところです。点数は運んだ人数で決まります。重さではありません。つまり子どもは、ほとんどタダで1点です。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "gauge",
+      "kicker": "ゆいいつの情報",
+      "title": "重量計",
+      "bullets": [
+        "画面の下にずっと出ている",
+        "右の **赤い線が定員**",
+        "次に乗る人の体重は、ドアの横に出る"
+      ],
+      "narration": "判断の材料は、この重量計だけです。画面の下にずっと出ています。右の赤い線が定員です。次に乗る人の体重も、ドアの横に出ます。だから、ちゃんと計算はできます。できるはずなんです。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "cart",
+      "kicker": "りふじん",
+      "title": "荷物カート",
+      "bullets": [
+        "人ではない。**勝手に乗り込む**",
+        "80から160キロ。断れない",
+        "あなたの判断を待たない唯一の存在"
+      ],
+      "narration": "そして、これです。荷物カート。人ではありません。あなたが乗せるのではなく、勝手に入ってきます。重さは80から160キロ。断る方法はありません。"
+    },
+    {
+      "kind": "events",
+      "clip": "events",
+      "kicker": "おきること",
+      "title": "静かなのは最初だけ",
+      "bullets": [
+        "**力士の団体** — しばらく重い客しか来ない",
+        "**定員点検** — 定員が一時的に下がる",
+        "**停電** — 体重の表示が消える"
+      ],
+      "narration": "静かなのは最初だけです。力士の団体が来ると、しばらく重い客しか並びません。定員点検では、定員そのものが下がります。さっきまで安全だった積載が、いきなり危なくなります。停電もあります。体重の表示が、全部消えます。目だけが頼りです。"
+    },
+    {
+      "kind": "death",
+      "clip": "death",
+      "kicker": "おわりかた",
+      "title": "終わり方はひとつだけ",
+      "bullets": [
+        "定員を越えた瞬間に **ワイヤーが切れる**",
+        "警告は出る。**閉める時間もある**",
+        "最後に、運んだ人数が出る"
+      ],
+      "narration": "終わり方はひとつだけです。定員を越えた瞬間に、ワイヤーが切れます。もちろん警告は出ます。閉める時間だってあります。それでも、あと一人、と思ってしまう。マツダさんは、これを10年続けています。あなたは、たぶん20人くらいです。"
+    },
+    {
+      "kind": "outro",
+      "title": "概要欄のリンクから遊べます",
+      "subtitle": "チャンネル登録で、毎日1本",
+      "narration": "ブラウザで無料で遊べます。リンクは概要欄です。チャンネル登録もお願いします。毎日1本、新しいゲームを出しています。"
+    }
+  ],
+  "slug": "elevator-overload",
+  "channel": "Daily Arcade Studio",
+  "events": [
+    "sumo",
+    "cart",
+    "inspection",
+    "blackoutEv",
+    "express"
+  ],
+  "short": [
+    {
+      "mark": "sumo",
+      "lead": -0.5,
+      "dur": 9.0,
+      "headline": "重い客しか来ない"
+    },
+    {
+      "mark": "cart",
+      "lead": -0.3,
+      "dur": 7.0,
+      "headline": "勝手に乗ってくる"
+    },
+    {
+      "mark": "inspection",
+      "lead": -0.5,
+      "dur": 8.0,
+      "headline": "定員が下がった"
+    },
+    {
+      "mark": "blackoutEv",
+      "lead": -0.5,
+      "dur": 7.0,
+      "headline": "体重が見えない"
+    },
+    {
+      "mark": "death",
+      "lead": -2.0,
+      "dur": 9.0,
+      "headline": "あと一人、が命取り"
+    }
+  ],
+  "thumb": {
+    "hook": "あと一人、乗せる？",
+    "sub": "定員600キロ。目で見て決める。ブラウザで無料。",
+    "frame_mark": "sumo",
+    "frame_lead": 1.0
+  },
+  "short_v2": {
+    "cuts": [
+      {
+        "kind": "clip",
+        "mark": "sumo",
+        "lead": -0.5,
+        "dur": 4.5,
+        "headline": "今日のゲーム",
+        "narration": "今日のゲームです。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "cabin",
+        "dur": 5.0,
+        "headline": "エレベーター過積載",
+        "narration": "古い団地で、エレベーターを回す管理人です。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "heavy",
+        "dur": 5.0,
+        "headline": "148キロ",
+        "narration": "定員は600キロです。この人だけで、4分の1が消えます。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "cart",
+        "dur": 5.0,
+        "headline": "断れない",
+        "narration": "荷物カートは、勝手に乗り込んできます。止められません。"
+      },
+      {
+        "kind": "clip",
+        "mark": "death",
+        "lead": -2.0,
+        "dur": 5.0,
+        "headline": "",
+        "narration": "越えた瞬間に、ワイヤーが切れます。"
+      },
+      {
+        "kind": "clip",
+        "mark": "run2",
+        "lead": 1.0,
+        "dur": 4.5,
+        "cta": "概要欄のリンクから遊べます",
+        "narration": "ブラウザで無料で遊べます。リンクは概要欄です。"
+      }
+    ]
+  }
+}

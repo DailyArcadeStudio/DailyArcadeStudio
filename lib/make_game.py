@@ -233,11 +233,36 @@ def verify(slug, port=8901):
             viewport={"width": 390, "height": 844}, has_touch=True, is_mobile=True)
         mp = mob.new_page()
         mp.goto(base)
-        mp.wait_for_timeout(1500)
-        mp.touchscreen.tap(195, 675)          # START button area
-        mp.wait_for_timeout(4000)
-        sc = mp.evaluate("()=>(document.querySelector('#score')||{}).textContent||''")
-        if int("".join(c for c in sc if c.isdigit()) or 0) <= 0:
+        mp.wait_for_timeout(1800)
+        # START は座標決め打ちだと当たらない（ボタン位置はゲームごとに違う）。
+        # 要素を探して押し、駄目なら画面下半分をタップする。
+        started = False
+        for sel in ("#startBtn", "#start", ".btn", "button"):
+            try:
+                el = mp.locator(sel).first
+                if el.is_visible():
+                    el.tap(); started = True; break
+            except Exception:
+                pass
+        if not started:
+            mp.touchscreen.tap(195, 675)
+        mp.wait_for_timeout(2500)
+
+        # 操作しないと点が入らないゲームが多い。左右・上下を打ち分けて
+        # 「どれかの操作で点が増える」ことを確かめる（片側だけだと
+        # 「乗せずに出発し続ける」ような空回りになり誤判定する）。
+        def _score():
+            t = mp.evaluate("()=>(document.querySelector('#score')||{}).textContent||''")
+            return int("".join(c for c in t if c.isdigit()) or 0)
+
+        before = _score()
+        for _ in range(6):
+            for x, y in ((90, 620), (300, 620), (195, 400), (195, 760)):
+                mp.touchscreen.tap(x, y)
+                mp.wait_for_timeout(320)
+            if _score() > before:
+                break
+        if _score() <= 0:
             problems.append("not playable in portrait on touch")
         mob.close()
 
