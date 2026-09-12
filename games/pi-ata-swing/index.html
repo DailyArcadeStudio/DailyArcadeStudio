@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ピニャータ・スイング</title>
+<style>
+  html,body{margin:0;padding:0;overflow:hidden;background:#0a0a12;font-family:'Helvetica Neue',Arial,sans-serif;}
+  #ui{position:fixed;top:16px;left:0;right:0;text-align:center;color:#fff;z-index:10;pointer-events:none;}
+  #score{font-size:clamp(24px,5.6vw,34px);font-weight:800;text-shadow:0 2px 8px #000;}
+  #msg{font-size:clamp(13px,3.4vw,20px);margin-top:6px;opacity:.9;text-shadow:0 2px 6px #000;}
+  #title{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:rgba(6,6,14,.72);z-index:20;color:#fff;transition:opacity .4s;padding:0 18px;text-align:center;}
+  /* 日本語は半角より幅を取るので、狭い画面では字間を詰めて一行に収める */
+  #title h1{font-size:clamp(26px,7.6vw,58px);margin:0 0 8px;letter-spacing:1px;
+    text-shadow:0 4px 18px #ff9f1c;white-space:nowrap;}
+  #title p{font-size:clamp(12px,3.2vw,19px);opacity:.85;margin:4px 0;line-height:1.6;}
+  #title .btn{margin-top:26px;padding:14px 44px;font-size:clamp(18px,5vw,22px);font-weight:700;color:#fff;
+    background:linear-gradient(180deg,#ff9f1c,#c26a00);border:none;border-radius:12px;cursor:pointer;
+    box-shadow:0 6px 24px rgba(255,159,28,.5);}
+  #title .btn:hover{transform:scale(1.05);}
+  .hidden{opacity:0;pointer-events:none;}
+  #back{position:fixed;top:14px;left:14px;z-index:30;text-decoration:none;
+    background:rgba(12,16,26,.72);color:#fff;font:600 clamp(12px,3.4vw,15px)/1 'Helvetica Neue',Arial,sans-serif;
+    padding:0 14px;height:44px;display:flex;align-items:center;border-radius:12px;white-space:nowrap;}
+  #back:hover{background:rgba(30,38,56,.9);}
+  #mute{position:fixed;top:14px;right:14px;z-index:30;border:none;cursor:pointer;
+    background:rgba(12,16,26,.72);color:#fff;font-size:20px;line-height:1;
+    width:44px;height:44px;border-radius:12px;}
+  #mute:hover{background:rgba(30,38,56,.9);}
+  /* show the hint that matches the device */
+  .tc{display:none;}
+  @media (pointer:coarse){ .kb{display:none;} .tc{display:block;} }
+  /* a finger-sized START button on touch devices */
+  @media (pointer:coarse){ #title .btn{padding:18px 52px;} }
+
+  /* --- event banner: slams into the middle of the screen --- */
+  #banner{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    z-index:15;pointer-events:none;opacity:0;}
+  #banner .b{font-size:clamp(24px,7.2vw,64px);font-weight:900;letter-spacing:.06em;color:#fff;
+    padding:10px 4vw;max-width:94vw;text-align:center;transform:scale(2.4);opacity:0;
+    text-shadow:0 0 26px currentColor, 0 6px 20px #000;
+    border-top:5px solid currentColor;border-bottom:5px solid currentColor;}
+  #banner.go .b{animation:slam .62s cubic-bezier(.12,.85,.2,1) forwards;}
+  @keyframes slam{
+    0%  {transform:scale(2.4) rotate(-4deg);opacity:0;}
+    22% {transform:scale(1)   rotate(0deg); opacity:1;}
+    70% {transform:scale(1)   rotate(0deg); opacity:1;}
+    100%{transform:scale(1.12);opacity:0;}
+  }
+
+  /* --- full-screen colour flashes --- */
+  #flash{position:fixed;inset:0;z-index:14;pointer-events:none;opacity:0;background:#fff;}
+  #vignette{position:fixed;inset:0;z-index:13;pointer-events:none;opacity:0;
+    background:radial-gradient(ellipse at center,rgba(0,0,0,0) 32%,rgba(120,0,10,.85) 100%);}
+
+  /* --- K.O. screen --- */
+  #ko{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    z-index:22;pointer-events:none;opacity:0;color:#fff;transition:opacity .3s;}
+  #ko.on{opacity:1;}
+  #ko .koText{font-size:clamp(82px,24vw,180px);font-weight:900;letter-spacing:10px;color:#fff;
+    text-shadow:0 0 40px #ff9f1c,0 0 90px #ff6a00,0 10px 30px #000;
+    transform:scale(3);opacity:0;}
+  #ko.on .koText{animation:koSlam .8s cubic-bezier(.1,.9,.2,1) forwards;}
+  @keyframes koSlam{
+    0%  {transform:scale(3) rotate(-8deg);opacity:0;}
+    30% {transform:scale(1) rotate(0deg);opacity:1;}
+    36% {transform:scale(1.06);}
+    100%{transform:scale(1);opacity:1;}
+  }
+  #ko .finalLabel{font-size:clamp(14px,4vw,22px);letter-spacing:4px;opacity:0;margin-top:6px;text-shadow:0 2px 8px #000;}
+  #ko .finalScore{font-size:clamp(44px,13vw,80px);font-weight:800;opacity:0;text-shadow:0 4px 20px #000;}
+  #ko.on .finalLabel{animation:fadeUp .5s .75s forwards;}
+  #ko.on .finalScore{animation:fadeUp .5s .9s forwards;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+
+  /* --- help (?) --- */
+  #helpBtn{position:fixed;top:14px;right:66px;z-index:30;border:none;cursor:pointer;
+    background:rgba(12,16,26,.72);color:#fff;font:700 20px/1 'Helvetica Neue',Arial,sans-serif;
+    width:44px;height:44px;border-radius:12px;}
+  #helpBtn:hover{background:rgba(30,38,56,.9);}
+  #help{position:fixed;inset:0;z-index:40;display:none;align-items:center;
+    justify-content:center;background:rgba(4,6,12,.82);padding:20px;}
+  #help.on{display:flex;}
+  #help .box{background:#111726;border:1px solid #2b3550;border-radius:18px;
+    max-width:560px;width:100%;max-height:86vh;overflow:auto;padding:26px 24px 22px;
+    color:#e6edf3;font-family:'Helvetica Neue',Arial,sans-serif;}
+  #help h2{margin:0 0 4px;font-size:clamp(19px,5.4vw,26px);}
+  #help .sub{color:#8b949e;font-size:clamp(12px,3.4vw,14px);margin:0 0 18px;}
+  #help h3{font-size:clamp(13px,3.8vw,15px);color:#ff9f1c;margin:18px 0 6px;letter-spacing:.04em;}
+  #help ul{margin:0;padding-left:20px;}
+  #help li{font-size:clamp(13px,3.6vw,15px);line-height:1.7;margin:3px 0;}
+  #help b{color:#ff9f1c;font-weight:700;}
+  #help .close{margin-top:20px;width:100%;padding:12px;border:none;border-radius:10px;
+    background:#2b3550;color:#fff;font-size:16px;font-weight:700;cursor:pointer;}
+  #help .close:hover{background:#3a4668;}
+</style>
+</head>
+<body>
+<div id="ui"><div id="score">0</div><div id="msg"></div></div>
+<button id="helpBtn" title="あそびかた">?</button>
+<div id="help"><div class="box">
+  <h2>ピニャータ・スイング</h2>
+  <p class="sub">目隠し。音だけで当てる。ブラウザで無料。</p>
+    <h3>目隠しの人</h3>
+    <ul><li>ピニャータは<b>見えません</b>。棒の先が回っているだけ</li><li>棒は<b>勝手に回り続ける</b>。止められません</li><li>できるのは<b>振ること</b>。それだけ</li></ul>
+    <h3>振りかた</h3>
+    <ul><li><b>スペース / タップ</b>で振る</li><li>棒の向きが<b>ピニャータと重なった瞬間</b>が当たり</li><li>外すと<b>空振り</b>。3回で終わります</li></ul>
+    <h3>ピニャータ</h3>
+    <ul><li>ロープで吊られて<b>ぐるぐる回っています</b></li><li>当てるたびに<b>逃げ足が速くなる</b></li><li>割れたら次が降りてきます</li></ul>
+    <h3>音の輪</h3>
+    <ul><li>ピニャータが鳴ると<b>光の輪</b>が出ます</li><li>それが唯一の手がかり。<b>位置ではなく拍を聞く</b></li><li>目が使えるのは輪が出ている間だけ</li></ul>
+    <h3>おじゃま</h3>
+    <ul><li><b>逆回転・二体・暗転</b>など、順番に起こります</li><li>どれも棒の操作は変わりません</li><li>変わるのは<b>当たる場所</b>です</li></ul>
+  <button class="close">とじる</button>
+</div></div>
+<a id="back" href="../../" title="ゲーム一覧にもどる">‹ ゲーム一覧</a>
+<button id="mute" title="音のオン / オフ">🔊</button>
+<div id="vignette"></div>
+<div id="flash"></div>
+<div id="banner"><div class="b"></div></div>
+<div id="ko">
+  <div class="koText">K.O.</div>
+  <div class="finalLabel">さいしゅうスコア</div>
+  <div class="finalScore">0</div>
+</div>
+<div id="title">
+  <h1>ピニャータ・スイング</h1>
+  <p>目隠しで、回るピニャータを狙う。</p>
+  <p>棒は止まらない。振る瞬間だけが自分のもの。</p>
+  <p class="kb">スペース / ↑ / クリック : 振る</p>
+  <p class="tc">画面タップ : 振る</p>
+  <button class="btn" id="startBtn">スタート</button>
+</div>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+// ---------- url flags (declared first: sound and camera both read them) ----------
+const QS = new URLSearchParams(location.search);
+const AUTO = QS.get('auto')==='1';
+const SHOWCASE_Q = QS.get('showcase');
+// Recording must produce clean footage, so every automated mode is muted.
+const REC = QS.get('rec')==='1';   // 録音モード: 音を鳴らして拾う
+const SILENT = (AUTO || !!SHOWCASE_Q || QS.get('mute')==='1') && !REC;
+// 録画・showcase では「?」と「ゲーム一覧」を出さない（動画の邪魔になる）
+const NOCHROME = AUTO || !!SHOWCASE_Q || QS.get('nochrome')==='1';
+
+// ---------- renderer / scene ----------
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.shadowMap.enabled = true;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const SKY = new THREE.Color(0x120c1e);
+scene.background = SKY.clone();
+scene.fog = new THREE.Fog(0x120c1e, 16, 52);
+
+// The whole game happens on one spot: a courtyard with a rope above it.
+// The camera looks down at a slight angle so the player reads the ring
+// of the swing arc as a circle, not a line.
+const camera = new THREE.PerspectiveCamera(58, innerWidth/innerHeight, .1, 120);
+
+// Portrait and landscape both have to work. A phone held upright is far
+// narrower than 16:9, and with a fixed FOV the swing ring falls outside
+// the frame — so widen the vertical FOV as the screen gets taller.
+const BASE_FOV = 58;
+function fitCamera(){
+  const aspect = innerWidth / innerHeight;
+  camera.aspect = aspect;
+  if(typeof SHOWCASE !== 'undefined' && SHOWCASE){
+    camera.fov = aspect < 1 ? 62 : 46;
+  } else {
+    // keep the horizontal field roughly constant across aspect ratios
+    const ref = 16/9;
+    camera.fov = aspect >= ref ? BASE_FOV
+      : Math.min(96, THREE.MathUtils.radToDeg(
+          2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(BASE_FOV)/2) * (ref/aspect))));
+  }
+  camera.__base = camera.fov;    // ズーム演出はここに戻る
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+}
+addEventListener('resize', fitCamera);
+addEventListener('orientationchange', ()=>setTimeout(fitCamera, 120));
+
+// ---------- lights ----------
+const hemi = new THREE.HemisphereLight(0x8866ff, 0x221133, 1.3);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xffe2b0, 2.2);
+sun.position.set(5, 13, 6); sun.castShadow = true;
+sun.shadow.camera.left=-12; sun.shadow.camera.right=12;
+sun.shadow.camera.top=12; sun.shadow.camera.bottom=-12;
+scene.add(sun);
+
+// ---------- courtyard ----------
+const ground = new THREE.Mesh(new THREE.CircleGeometry(16, 56),
+  new THREE.MeshStandardMaterial({color:0x2a2137, roughness:.92}));
+ground.rotation.x = -Math.PI/2; ground.receiveShadow = true;
+scene.add(ground);
+
+// the swing circle painted on the ground: the path the bat tip travels
+const ARENA_R = 3.2;                        // radius of the swing arc
+// The piñata hangs at exactly the bat's height. That is the whole read:
+// when the tip and the piñata overlap on screen, the swing connects.
+const HANG_Y = 1.45;
+const arcRing = new THREE.Mesh(new THREE.RingGeometry(ARENA_R-.07, ARENA_R+.07, 72),
+  new THREE.MeshBasicMaterial({color:0xff9f1c, transparent:true, opacity:.3, side:THREE.DoubleSide}));
+arcRing.rotation.x = -Math.PI/2; arcRing.position.y = .02;
+scene.add(arcRing);
+
+// a ring of paper lanterns around the courtyard — parallax and a party mood
+const lanterns = [];
+for(let i=0;i<14;i++){
+  const a = i/14*Math.PI*2;
+  const col = [0xff4d6d,0xffd23b,0x4dd2ff,0x9b6bff][i%4];
+  const g = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.SphereGeometry(.38, 16, 12),
+    new THREE.MeshStandardMaterial({color:col, emissive:col, emissiveIntensity:.55, roughness:.6}));
+  body.scale.set(1,.8,1);
+  const rope = new THREE.Mesh(new THREE.CylinderGeometry(.02,.02,3.2,6),
+    new THREE.MeshStandardMaterial({color:0x5a4a3a}));
+  rope.position.y = 1.6;
+  g.add(body, rope);
+  g.position.set(Math.cos(a)*9.5, 4.4, Math.sin(a)*9.5);
+  g.userData = {base:4.4, phase:a*3};
+  scene.add(g); lanterns.push(g);
+}
+
+// the beam the piñata hangs from
+const beam = new THREE.Mesh(new THREE.BoxGeometry(14, .3, .3),
+  new THREE.MeshStandardMaterial({color:0x4a3a2c, roughness:.8}));
+beam.position.y = 7.4; beam.castShadow = true;
+scene.add(beam);
+for(const sx of [-6.6, 6.6]){
+  const post = new THREE.Mesh(new THREE.CylinderGeometry(.22,.26,7.4,10),
+    new THREE.MeshStandardMaterial({color:0x4a3a2c, roughness:.8}));
+  post.position.set(sx, 3.7, 0); post.castShadow = true;
+  scene.add(post);
+}
+
+// a moon so the night sky is not empty
+// fog:false — a basic material still gets fogged, which turned the moon grey
+const moon = new THREE.Mesh(new THREE.CircleGeometry(2.6, 40),
+  new THREE.MeshBasicMaterial({color:0xfff0d4, fog:false}));
+moon.position.set(-9, 13, -34); scene.add(moon);
+
+// ---------- the blindfolded player (primitive build) ----------
+// The body stays in the centre; only the bat arm rotates. The bat tip is
+// what the game actually tests against the piñata.
+function buildSwinger(){
+  const g = new THREE.Group();
+  const cloth = new THREE.MeshStandardMaterial({color:0x2a3a6b, roughness:.75});
+  const skin  = new THREE.MeshStandardMaterial({color:0xe8c19e, roughness:.6});
+  const blind = new THREE.MeshStandardMaterial({color:0xff9f1c, roughness:.45,
+                  emissive:0xff9f1c, emissiveIntensity:.25});
+  const wood  = new THREE.MeshStandardMaterial({color:0xc9a227, roughness:.55, metalness:.15});
+
+  const torso = new THREE.Mesh(new THREE.CapsuleGeometry(.42, .7, 8, 16), cloth);
+  torso.position.y = 1.15; g.add(torso);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(.38, 22, 16), skin);
+  head.position.y = 1.92; g.add(head);
+  // the blindfold: a band around the eyes, the whole premise of the game.
+  // A torus hugs the sphere, where a box would read as a slab on top of it.
+  const band = new THREE.Mesh(new THREE.TorusGeometry(.365, .075, 10, 26), blind);
+  band.rotation.x = Math.PI/2; band.position.y = 1.98; band.scale.y = 1.15;
+  g.add(band);
+  const knot = new THREE.Mesh(new THREE.BoxGeometry(.13,.26,.1), blind);
+  knot.position.set(.26,1.9,-.32); knot.rotation.z = .5; g.add(knot);
+  for(const s of [1,-1]){
+    const leg = new THREE.Mesh(new THREE.CapsuleGeometry(.14,.5,6,12), cloth);
+    leg.position.set(.2*s,.42,0); g.add(leg);
+  }
+  // the arm that carries the bat — a pivot so the whole thing sweeps as one
+  const arm = new THREE.Group();
+  arm.position.set(0, 1.3, 0);
+  const upper = new THREE.Mesh(new THREE.CapsuleGeometry(.13,.5,6,12), cloth);
+  upper.rotation.z = -Math.PI/2; upper.position.set(.42,0,0); arm.add(upper);
+  // the bat: a stick that reaches out to ARENA_R so its tip rides the ring
+  const bat = new THREE.Mesh(new THREE.CylinderGeometry(.1,.16, ARENA_R-.5, 12), wood);
+  bat.rotation.z = -Math.PI/2;
+  bat.position.set(.72 + (ARENA_R-.5)/2, 0, 0);
+  arm.add(bat);
+  // a bright tip so the player can read exactly where the bat is pointing
+  const tip = new THREE.Mesh(new THREE.SphereGeometry(.26, 16, 12),
+    new THREE.MeshStandardMaterial({color:0xff9f1c, emissive:0xff9f1c, emissiveIntensity:.9}));
+  tip.position.set(ARENA_R, 0, 0); arm.add(tip);
+  g.add(arm);
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  return {group:g, arm, bat, tip, head};
+}
+const player = buildSwinger();
+scene.add(player.group);
+
+// a light on the player so they never vanish into the dark floor
+const heroLight = new THREE.PointLight(0xfff0dd, 26, 16);
+heroLight.position.set(0, 5.2, 2.4);
+scene.add(heroLight);
+
+// ---------- the piñata ----------
+// Hangs from the beam on a rope and orbits the player at ARENA_R.
+// A hit is "bat angle ≈ piñata angle at the moment of the swing".
+function buildPinata(color){
+  const g = new THREE.Group();
+  const skin = new THREE.MeshStandardMaterial({color, roughness:.7});
+  const dark = new THREE.MeshStandardMaterial({color:0x1d1628, roughness:.8});
+  const body = new THREE.Mesh(new THREE.SphereGeometry(.62, 20, 16), skin);
+  body.scale.set(1.15,.95,1); g.add(body);
+  // a donkey-ish head and ears so it reads as a piñata, not a ball
+  const head = new THREE.Mesh(new THREE.BoxGeometry(.42,.4,.52), skin);
+  head.position.set(.72,.22,0); g.add(head);
+  for(const s of [1,-1]){
+    const ear = new THREE.Mesh(new THREE.ConeGeometry(.1,.3,8), skin);
+    ear.position.set(.74,.5,.16*s); g.add(ear);
+  }
+  for(const s of [1,-1]){
+    const leg = new THREE.Mesh(new THREE.CylinderGeometry(.08,.08,.42,8), dark);
+    leg.position.set(.3*s,-.62,.2); g.add(leg);
+    const leg2 = leg.clone(); leg2.position.z = -.2; g.add(leg2);
+  }
+  // Frilled paper bands. The body is a sphere of r=.62 scaled (1.15,.95,1),
+  // so each band's radius has to follow that ellipse at its own height or
+  // it either floats off the surface or sinks into it.
+  const frill = new THREE.MeshStandardMaterial({color:0xffd23b, roughness:.65});
+  for(let i=0;i<3;i++){
+    const y = .3 - i*.3;
+    const k = Math.sqrt(Math.max(.04, 1 - (y/(.62*.95))**2));   // ellipse profile
+    const band = new THREE.Mesh(new THREE.TorusGeometry(.62*k, .06, 8, 24), frill);
+    band.rotation.x = Math.PI/2;
+    band.scale.x = 1.15;                  // match the body's x stretch
+    band.position.y = y; g.add(band);
+  }
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  return g;
+}
+const PINATA_COLORS = [0xff4d6d, 0x4dd2ff, 0x6bff9b, 0xff9f1c, 0xd06bff];
+
+// Make a piñata glow by its own colour. Emissive ignores scene lights, so
+// this is what keeps it visible once BLINDFOLD turns everything else off.
+function setGlow(mesh, amount){
+  mesh.traverse(o=>{
+    if(!o.isMesh || !o.material.emissive) return;
+    if(!o.userData.baseColor) o.userData.baseColor = o.material.color.getHex();
+    o.material.emissive.setHex(o.userData.baseColor);
+    o.material.emissiveIntensity = amount;
+  });
+}
+
+// A piñata is one orbiting target. The second one (DOUBLE event) reuses this.
+function makePinata(i){
+  const group = new THREE.Group();
+  const mesh = buildPinata(PINATA_COLORS[i % PINATA_COLORS.length]);
+  mesh.position.y = -.1;
+  const rope = new THREE.Mesh(new THREE.CylinderGeometry(.035,.035,1,6),
+    new THREE.MeshStandardMaterial({color:0xcbb79a}));
+  group.add(rope, mesh);
+  scene.add(group);
+  return {group, mesh, rope, ang:0, spin:1.6, alive:true, hitFlash:0, swingY:0};
+}
+const pinatas = [makePinata(0)];
+
+// --- the sound ring: the only honest hint the player gets ---
+// Pulses out from the piñata on its beat. In BLINDFOLD (the dark event) it
+// is literally all you can see.
+const rings = [];
+const ringMat = new THREE.MeshBasicMaterial({color:0xffe9b0, transparent:true,
+                   opacity:0, side:THREE.DoubleSide, depthWrite:false});
+for(let i=0;i<6;i++){
+  const m = new THREE.Mesh(new THREE.RingGeometry(.4,.52,40), ringMat.clone());
+  m.rotation.x = -Math.PI/2; m.visible = false;
+  scene.add(m); rings.push({mesh:m, life:0, at:new THREE.Vector3()});
+}
+function pingRing(pos, color){
+  const r = rings.find(r=>r.life<=0) || rings[0];
+  r.life = 1; r.at.copy(pos);
+  r.mesh.material.color.setHex(color);
+  r.mesh.visible = true;
+}
+
+// --- confetti burst when a piñata breaks ---
+const confetti = [];
+const confettiGeo = new THREE.BoxGeometry(.13,.13,.02);
+for(let i=0;i<90;i++){
+  // transparent so BLINDFOLD can dim it — unlit material ignores the lights
+  const m = new THREE.Mesh(confettiGeo, new THREE.MeshBasicMaterial({
+    color:PINATA_COLORS[i%PINATA_COLORS.length], side:THREE.DoubleSide,
+    transparent:true, opacity:1}));
+  m.visible = false; scene.add(m);
+  confetti.push({mesh:m, v:new THREE.Vector3(), life:0, spin:new THREE.Vector3()});
+}
+function burst(pos){
+  let n = 0;
+  for(const c of confetti){
+    if(c.life>0) continue;
+    c.mesh.position.copy(pos);
+    c.v.set((Math.random()-.5)*7, 2+Math.random()*6, (Math.random()-.5)*7);
+    c.spin.set(Math.random()*14, Math.random()*14, Math.random()*14);
+    c.life = 1.6 + Math.random();
+    c.mesh.visible = true;
+    if(++n >= 34) break;
+  }
+}
+
+// --- a swarm of wasps: the HORNET event's hazard ---
+// They orbit on the same ring as the piñata. Hitting one ends the run.
+const wasps = [];
+for(let i=0;i<3;i++){
+  const g = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.SphereGeometry(.26, 14, 10),
+    new THREE.MeshStandardMaterial({color:0xffd23b, emissive:0x553300, roughness:.5}));
+  body.scale.set(1.5,1,1);
+  const stripe = new THREE.Mesh(new THREE.TorusGeometry(.2,.07,6,14),
+    new THREE.MeshStandardMaterial({color:0x1a1410}));
+  stripe.rotation.y = Math.PI/2;
+  const sting = new THREE.Mesh(new THREE.ConeGeometry(.08,.26,8),
+    new THREE.MeshStandardMaterial({color:0x1a1410}));
+  sting.rotation.z = Math.PI/2; sting.position.x = -.46;
+  for(const s of [1,-1]){
+    const wing = new THREE.Mesh(new THREE.CircleGeometry(.26, 12),
+      new THREE.MeshBasicMaterial({color:0xcfe8ff, transparent:true, opacity:.5,
+                                   side:THREE.DoubleSide}));
+    wing.rotation.x = -Math.PI/2.2; wing.position.set(0,.2,.22*s); g.add(wing);
+  }
+  g.add(body, stripe, sting);
+  g.visible = false;
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  scene.add(g);
+  wasps.push({group:g, ang:0, active:false});
+}
+
+// ---------- game state ----------
+let running=false, dead=false, t=0, score=0;
+let batAng=0;                    // the bat's current angle, always turning
+let batSpin=2.5;                 // rad/s — speeds up as the run goes on
+let swinging=0;                  // >0 while the swing animation plays
+let misses=0;                    // three whiffs and the run is over
+const MAX_MISS=3;
+let combo=0;
+let timeScale=1;                 // slow-motion multiplier
+let deadAt=0;                    // when the run ended (touch retry gate)
+let shake=0;                     // camera shake amount
+let camDist=9.2, camDistTarget=9.2;   // death zoom pulls the camera in
+let camHeight=6.4, camHeightTarget=6.4;
+let dark=0;                      // >0 while the BLINDFOLD event hides everything
+let reverse=0;                   // >0 while the bat turns the other way
+let gust=0;                      // >0 while the wind wobbles the piñata height
+let hornet=0;                    // >0 while wasps share the ring
+let twin=0;                      // >0 while a second piñata shares the ring
+let runId=0;                     // bumped on every reset, so stale timers no-op
+let nextEventAt=9;               // seconds until the first event
+let eventQueue=[];               // event names not yet used in this run
+let pingAt=0;                    // next scheduled sound-ring pulse
+const scoreEl = document.getElementById('score');
+const msgEl = document.getElementById('msg');
+const titleEl = document.getElementById('title');
+const bannerEl = document.getElementById('banner');
+const bannerText = bannerEl.querySelector('.b');
+const flashEl = document.getElementById('flash');
+const vignetteEl = document.getElementById('vignette');
+const koEl = document.getElementById('ko');
+const koScoreEl = koEl.querySelector('.finalScore');
+
+// ---------- presentation helpers ----------
+function banner(text, color){
+  bannerText.textContent = text;
+  bannerText.style.color = color;
+  bannerEl.classList.remove('go');
+  void bannerEl.offsetWidth;      // restart the CSS animation
+  bannerEl.style.opacity = 1;
+  bannerEl.classList.add('go');
+}
+function flash(color, strength, ms){
+  flashEl.style.background = color;
+  flashEl.style.transition = 'none';
+  flashEl.style.opacity = strength;
+  requestAnimationFrame(()=>{
+    flashEl.style.transition = `opacity ${ms}ms ease-out`;
+    flashEl.style.opacity = 0;
+  });
+}
+function updateHud(){
+  scoreEl.textContent = Math.floor(score);
+  if(dead) return;
+  // 残り空振り回数を○で出す。数字より一目で読める
+  const left = MAX_MISS - misses;
+  msgEl.textContent = '空振り ' + '○'.repeat(Math.max(0,left)) + '✕'.repeat(misses) +
+                      (combo>1 ? '　れんぞく ' + combo : '');
+}
+
+// ---------- events ----------
+// Each one changes WHERE the hit is, never HOW you swing. One button all the way.
+const EVENTS = {
+  // the bat suddenly turns the other way — every learned beat is wrong
+  reverse(){
+    banner('ぎゃくかいてん', '#4dd2ff');
+    reverse = 7;
+    flash('#4dd2ff', .3, 380);
+    shake = Math.max(shake, .2);
+    return 7;
+  },
+  // a second piñata joins the ring, opposite the first. Two targets means
+  // two beats to track — and a swing can only take one of them.
+  double(){
+    banner('ふたつめ', '#ff4d6d');
+    if(pinatas.length < 2){
+      const p = makePinata(1);
+      p.ang = pinatas[0].ang + Math.PI;
+      p.spin = pinatas[0].spin;
+      pinatas.push(p);
+    }
+    twin = 9;                          // it leaves again when the timer runs out
+    return 9;
+  },
+  // the lights go out: only the sound rings remain
+  blindfold(){
+    banner('ていでん', '#9b6bff');
+    dark = 5.5;
+    return 6;
+  },
+  // wind pumps the piñata up and down, so the bat can pass under it
+  gust(){
+    banner('つよいかぜ', '#6bff9b');
+    gust = 8;
+    shake = Math.max(shake, .15);
+    return 8;
+  },
+  // wasps ride the ring; clipping one ends the run instantly
+  hornet(){
+    banner('ハチの群れ', '#ffd23b');
+    hornet = 8.5;
+    for(let i=0;i<wasps.length;i++){
+      wasps[i].active = true;
+      wasps[i].group.visible = true;
+      wasps[i].ang = pinatas[0].ang + Math.PI*2/3*(i+1) + .4;
+    }
+    flash('#ffd23b', .25, 320);
+    return 8.5;
+  },
+};
+const EVENT_NAMES = Object.keys(EVENTS);
+// recording/debug hook: fire a named event on cue (used by the capture script)
+// returns false if the run is already over, so a capture script can wait
+// for the next run instead of firing an event onto the K.O. screen
+window.__ev = name => {
+  if(!running || dead || !EVENTS[name]) return false;
+  const busy = EVENTS[name]();
+  if(!SILENT) SND.event(); nextEventAt = t + busy + 5; return true;
+};
+window.__alive = () => running && !dead;
+window.__kill = () => { if(running && !dead){ dead=true; gameOver(); } };
+window.__recStop = () => SND.recStop();
+window.__snd = () => ({enabled: SND.enabled, silent: SILENT});
+window.__fov = () => +camera.fov.toFixed(1);
+window.__events = EVENT_NAMES.slice();
+window.__subjects = ['swinger','pinata','bat','wasp','ring','lantern'];
+window.__probe = () => ({t:+t.toFixed(2), bat:+batAng.toFixed(2),
+  pin:+pinatas[0].ang.toFixed(2), misses, spin:+batSpin.toFixed(2),
+  next:+nextEventAt.toFixed(2)});
+
+function refillEventQueue(){
+  eventQueue = EVENT_NAMES.slice();
+  for(let i=eventQueue.length-1;i>0;i--){        // shuffle so the order varies per run
+    const j = Math.floor(Math.random()*(i+1));
+    [eventQueue[i],eventQueue[j]]=[eventQueue[j],eventQueue[i]];
+  }
+}
+
+function triggerEvent(){
+  if(!eventQueue.length) refillEventQueue();
+  const name = eventQueue.pop();
+  const busy = EVENTS[name]();
+  if(!SILENT) SND.event();
+  nextEventAt = t + busy + 5 + Math.random()*4;  // breathing room between events
+}
+
+// ---------- reset ----------
+function reset(){
+  runId++;                       // any respawn still pending belongs to the old run
+  // drop back to a single piñata
+  while(pinatas.length > 1){ const p = pinatas.pop(); scene.remove(p.group); }
+  const p0 = pinatas[0];
+  p0.ang = Math.random()*Math.PI*2; p0.spin = 1.55; p0.alive = true;
+  p0.group.visible = true; p0.hitFlash = 0; p0.swingY = 0;
+  for(const w of wasps){ w.active=false; w.group.visible=false; }
+  for(const c of confetti){ c.life=0; c.mesh.visible=false; }
+  for(const r of rings){ r.life=0; r.mesh.visible=false; }
+  player.group.position.set(0,0,0);
+  player.group.rotation.set(0,0,0);
+  player.arm.rotation.set(0,0,0);
+  player.arm.position.y = 1.3;
+  batAng=0; batSpin=2.5; swinging=0; misses=0; combo=0;
+  t=0; score=0; dead=false;
+  timeScale=1; shake=0;
+  camDist=9.2; camDistTarget=9.2; camHeight=6.4; camHeightTarget=6.4;
+  dark=0; reverse=0; gust=0; hornet=0; twin=0;
+  nextEventAt = 9; pingAt = 1.2;
+  refillEventQueue();
+  // restore anything BLINDFOLD dimmed
+  hemi.intensity=1.3; sun.intensity=2.2; heroLight.intensity=26;
+  scene.background.copy(SKY); scene.fog.color.copy(SKY);
+  moon.visible = true; arcRing.material.opacity = .3;
+  player.tip.material.emissiveIntensity = .9;
+  for(const p of pinatas) setGlow(p.mesh, 0);
+  for(const c of confetti) c.mesh.material.opacity = 1;
+  for(const l of lanterns) l.visible = true;
+  koEl.classList.remove('on');
+  vignetteEl.style.transition='opacity .3s'; vignetteEl.style.opacity=0;
+  camera.position.set(0,6.4,9.2);
+  updateHud();
+}
+
+const startBtn = document.getElementById('startBtn');
+
+// ---------- sound: everything synthesised, no audio files ----------
+// Keeps the single-HTML rule (nothing to download) and lets the music
+// react to play: the bass line speeds up with the game, events drop a
+// stinger, and the whole thing ducks out on a game over.
+const SND = (() => {
+  let ctx = null, master = null, musicGain = null, on = true, started = false;
+  let step = 0, timer = null, tempo = 0.25;
+
+  // A pentatonic scale never sounds wrong against itself, which matters
+  // when the tempo drifts with the player's speed.
+  // minor pentatonic, driving — a chase that never lets up
+  const SCALE = [0, 3, 5, 7, 10];
+  const ROOT = 196;
+  const BASS = 'square', LEAD = 'sawtooth';
+  const hz = (deg, oct = 0) =>
+    ROOT * Math.pow(2, oct + Math.floor(deg / SCALE.length)) *
+    Math.pow(2, SCALE[((deg % SCALE.length) + SCALE.length) % SCALE.length] / 12);
+
+  function ensure() {
+    if (ctx) return ctx;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    ctx = new AC();
+    master = ctx.createGain();
+    master.gain.value = 0.32;
+    master.connect(ctx.destination);
+    musicGain = ctx.createGain();
+    musicGain.gain.value = 1;
+    musicGain.connect(master);
+    return ctx;
+  }
+
+
+  // ---- 録音用の分岐（?rec=1）----
+  // Playwright の録画には音声が入らないので、ゲーム自身に master バスを
+  // 録らせる。鳴っているものそのものなので映像と必ず同期する。
+  let recDest = null, recorder = null, recChunks = [];
+  function recStart() {
+    if (!ctx || recorder) return;
+    recDest = ctx.createMediaStreamDestination();
+    master.connect(recDest);
+    recorder = new MediaRecorder(recDest.stream, {mimeType: 'audio/webm'});
+    recorder.ondataavailable = e => { if (e.data.size) recChunks.push(e.data); };
+    recorder.start();
+  }
+  function recStop() {
+    return new Promise(res => {
+      if (!recorder) return res(null);
+      recorder.onstop = async () => {
+        const blob = new Blob(recChunks, {type: 'audio/webm'});
+        const buf = await blob.arrayBuffer();
+        res(Array.from(new Uint8Array(buf)));
+      };
+      recorder.stop();
+    });
+  }
+
+  function blip(freq, dur, type = 'square', vol = 0.25, dest = null, slideTo = null) {
+    if (!ctx || !on) return;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, ctx.currentTime);
+    if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, ctx.currentTime + dur);
+    // a short attack stops every note from clicking
+    g.gain.setValueAtTime(0, ctx.currentTime);
+    g.gain.linearRampToValueAtTime(vol, ctx.currentTime + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
+    o.connect(g); g.connect(dest || master);
+    o.start(); o.stop(ctx.currentTime + dur + 0.02);
+  }
+
+  function noise(dur, vol = 0.2, hp = 800) {
+    if (!ctx || !on) return;
+    const n = Math.floor(ctx.sampleRate * dur);
+    const buf = ctx.createBuffer(1, n, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    const f = ctx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = hp;
+    const g = ctx.createGain(); g.gain.value = vol;
+    src.connect(f); f.connect(g); g.connect(master);
+    src.start();
+  }
+
+  // --- the loop: a walking bass plus an offbeat blip ---
+  function tick() {
+    if (!ctx || !on) return;
+    const bar = step % 16;
+    // straight driving pulse: bass on every beat, lead stabs offbeat
+    if (bar % 2 === 0) blip(hz(bar % 8 === 0 ? 0 : 1, -1), tempo * 1.1, BASS, 0.30, musicGain);
+    if (bar % 8 === 5) blip(hz(4, 0), tempo * 0.6, LEAD, 0.09, musicGain);
+    if (bar % 4 === 2) noise(0.04, 0.05, 5000);
+    step++;
+    timer = setTimeout(tick, tempo * 1000);
+  }
+
+  return {
+    // must be called from a user gesture — browsers block audio otherwise
+    start() {
+      if (!ensure() || started) return;
+      if (ctx.state === 'suspended') ctx.resume();
+      started = true; step = 0; tick();
+    },
+    stop() { if (timer) { clearTimeout(timer); timer = null; } started = false; },
+    /** speed the music up with the game; 1 = starting pace */
+    setPace(mult) { tempo = Math.max(0.11, 0.25 / Math.max(0.2, mult)); },
+    duck(sec = 1.6) {                                      // for game over
+      if (!ctx) return;
+      musicGain.gain.cancelScheduledValues(ctx.currentTime);
+      musicGain.gain.setValueAtTime(musicGain.gain.value, ctx.currentTime);
+      musicGain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + sec);
+    },
+    unduck() {
+      if (!ctx) return;
+      musicGain.gain.cancelScheduledValues(ctx.currentTime);
+      musicGain.gain.setValueAtTime(0.0001, ctx.currentTime);
+      musicGain.gain.exponentialRampToValueAtTime(1, ctx.currentTime + 0.4);
+    },
+    // --- one-shots: each one short, pitched and recognisable on its own ---
+    // the bat cutting air on every swing — the input blip
+    swing() { ensure(); blip(hz(1, 1), 0.09, LEAD, 0.13, null, hz(3, 1)); },
+    // a clean hit: woody thwack plus a rising two-note ding
+    hitPinata() { ensure(); noise(0.07, 0.22, 900);
+              blip(hz(2, 1), 0.12, 'triangle', 0.26, null, hz(4, 1));
+              setTimeout(() => blip(hz(5, 1), 0.18, 'triangle', 0.2), 90); },
+    // a whiff: dull low thud, obviously NOT the hit sound
+    whiff() { ensure(); blip(120, 0.22, 'sine', 0.22, null, 70);
+              noise(0.1, 0.08, 300); },
+    // the piñata's own call — the ring pulse. A soft bell, high and short.
+    ping()  { ensure(); blip(hz(3, 2), 0.16, 'sine', 0.16);
+              setTimeout(() => blip(hz(3, 2) * 1.5, 0.1, 'sine', 0.07), 45); },
+    // a piñata breaking open
+    breakOpen() { ensure(); noise(0.3, 0.24, 1400);
+              [0, 70, 140, 210].forEach((ms, i) =>
+                setTimeout(() => blip(hz(2 + i, 1), 0.2, 'square', 0.16), ms)); },
+    event() { ensure(); [0, 90, 180].forEach((ms, i) =>
+                setTimeout(() => blip(hz(2 + i, 0), 0.18, 'sawtooth', 0.20), ms)); },
+    hit()   { ensure(); noise(0.35, 0.30, 200);
+              blip(180, 0.5, 'sawtooth', 0.28, null, 40); },
+    over()  { ensure(); [0, 140, 280, 460].forEach((ms, i) =>
+                setTimeout(() => blip(hz(-i, -1), 0.42, 'triangle', 0.26), ms)); },
+    recStart() { ensure(); recStart(); },
+    recStop() { return recStop(); },
+    toggle() { on = !on; if (!on) { this.stop(); } else { this.start(); } return on; },
+    get enabled() { return on; },
+  };
+})();
+
+// --- one place for every action, so touch and keyboard stay in step ---
+function startRun(){
+  titleEl.classList.add('hidden'); reset(); running=true;
+  if(!SILENT){ SND.unduck(); SND.start(); if(REC) SND.recStart(); }
+}
+
+// angular distance between two angles, in [0, PI]
+function angDiff(a, b){
+  let d = (a - b) % (Math.PI*2);
+  if(d > Math.PI) d -= Math.PI*2;
+  if(d < -Math.PI) d += Math.PI*2;
+  return Math.abs(d);
+}
+
+// The entire game is this one function. Both inputs call it.
+const HIT_ARC = .34;        // base arc the bat must point within (radians)
+// A fixed arc makes the difficulty swing wildly: when the bat and the piñata
+// turn the same way the window lasts most of a second, and when they turn
+// against each other it collapses to under a tenth of one. What the player
+// actually feels is TIME, so scale the arc by the closing speed to hold the
+// window near a constant, then clamp so it never becomes a gimme or a coin flip.
+const WINDOW_MS = 210;
+function hitArcFor(p){
+  const rel = Math.abs(batSpin*(reverse>0?-1:1) - p.spin);
+  const arc = rel * (WINDOW_MS/2000);   // half-window in radians
+  return THREE.MathUtils.clamp(arc, HIT_ARC*.55, HIT_ARC*1.5);
+}
+function swing(){
+  if(!running || dead || swinging > 0) return;
+  swinging = .26;                        // lock out until the swing finishes
+  if(!SILENT) SND.swing();
+
+  // Did the bat tip reach a piñata? Check angle AND height, because GUST
+  // lifts the piñata out of the bat's plane.
+  let hitOne = null;
+  for(const p of pinatas){
+    if(!p.alive) continue;
+    if(angDiff(batAng, p.ang) < hitArcFor(p) && Math.abs(p.swingY) < .55){
+      hitOne = p; break;
+    }
+  }
+  // a wasp on the same arc is a worse outcome than a miss: instant end
+  for(const w of wasps){
+    if(w.active && angDiff(batAng, w.ang) < HIT_ARC){
+      if(!SILENT) SND.hit();
+      flash('#ffd23b', .7, 420);
+      dead = true; gameOver('wasp');
+      return;
+    }
+  }
+
+  if(hitOne){
+    combo++;
+    score += 100 + combo*25;
+    const pos = hitOne.group.position.clone();
+    burst(pos);
+    flash('#ffd23b', .42, 300);
+    shake = Math.max(shake, .22);
+    hitOne.hitFlash = .5;
+    if(!SILENT){ SND.hitPinata(); setTimeout(()=>SND.breakOpen(), 110); }
+    // it breaks, then a fresh one drops in faster than the last
+    hitOne.alive = false;
+    hitOne.group.visible = false;
+    const respawnSpin = Math.min(4.6, hitOne.spin + .28);
+    const myRun = runId;
+    setTimeout(()=>{
+      // the run may have restarted, or the DOUBLE guest may have left the
+      // ring, while this respawn was pending
+      if(dead || myRun !== runId || !pinatas.includes(hitOne)) return;
+      hitOne.alive = true; hitOne.group.visible = true;
+      hitOne.spin = respawnSpin * (Math.random()<.5 ? 1 : -1);
+      hitOne.ang = batAng + Math.PI + (Math.random()-.5);   // never right on the bat
+    }, 650);
+  } else {
+    combo = 0;
+    misses++;
+    if(!SILENT) SND.whiff();
+    flash('#ff2b3a', .22, 260);
+    shake = Math.max(shake, .1);
+    if(misses >= MAX_MISS){ dead = true; gameOver('miss'); return; }
+  }
+  updateHud();
+}
+
+const muteBtn = document.getElementById('mute');
+function toggleMute(){ muteBtn.textContent = SND.toggle() ? '🔊' : '🔇'; }
+muteBtn.addEventListener('click', toggleMute);
+muteBtn.addEventListener('touchend', e=>{ e.preventDefault(); toggleMute(); },
+                         {passive:false});
+if(SILENT) muteBtn.style.display='none';   // automated modes have no audio
+addEventListener('keydown', e=>{ if(e.code==='KeyM') toggleMute(); });
+
+startBtn.addEventListener('click', startRun);
+// a touch on the button must start too — click alone is unreliable on touch
+startBtn.addEventListener('touchend', e=>{ e.preventDefault(); startRun(); },
+                          {passive:false});
+
+addEventListener('keydown', e=>{
+  if(e.repeat) return;                     // holding the key is not a rapid swing
+  if(!running){
+    if(e.code==='Space'||e.code==='Enter'||e.code==='ArrowUp'){
+      // after a game over, the same key retries
+      if(dead && Date.now()-deadAt < 900) return;
+      startRun();
+    }
+    return;
+  }
+  if(e.code==='Space'||e.code==='ArrowUp'||e.code==='KeyW'||e.code==='Enter'){
+    e.preventDefault(); swing();
+  }
+});
+
+// mouse: a click anywhere on the canvas swings too
+renderer.domElement.addEventListener('mousedown', ()=>{
+  if(running && !dead) swing();
+  else if(!running && dead && Date.now()-deadAt > 1200) startRun();
+});
+
+// --- touch: a tap anywhere swings ---
+// Most viewers arrive from a phone, so the game has to be playable without
+// a keyboard. There is only one action, so any tap is that action.
+(function(){
+  let st=0, sx=0, sy=0, moved=false;
+  const canvas = renderer.domElement;
+
+  canvas.addEventListener('touchstart', e=>{
+    const tt = e.changedTouches[0];
+    sx=tt.clientX; sy=tt.clientY; st=Date.now(); moved=false;
+    // swing on touchstart so the timing feels immediate — this is a
+    // timing game, waiting for touchend would add input lag
+    if(running && !dead) swing();
+  }, {passive:true});
+
+  canvas.addEventListener('touchmove', e=>{
+    const tt = e.changedTouches[0];
+    if(Math.abs(tt.clientX-sx) > 20 || Math.abs(tt.clientY-sy) > 20) moved = true;
+  }, {passive:true});
+
+  canvas.addEventListener('touchend', e=>{
+    if(dead){
+      // give the K.O. animation time to read, then a tap retries
+      if(!AUTO && Date.now()-deadAt > 1200) startRun();
+      return;
+    }
+    // a tap on the title (canvas showing through) starts the run
+    if(!running && !moved && Date.now()-st < 500) startRun();
+  }, {passive:true});
+
+  // The title overlay sits above the canvas, so a tap anywhere on it never
+  // reaches the canvas handler. Start from the overlay itself.
+  titleEl.addEventListener('touchend', e=>{
+    if(!running){ e.preventDefault(); startRun(); }
+  }, {passive:false});
+
+  // stop the browser treating game taps as scroll / double-tap zoom
+  canvas.addEventListener('touchmove', e=>e.preventDefault(), {passive:false});
+})();
+
+// autoplay mode for recording: ?auto=1
+// recording holds the K.O. longer than play does: ?hold=9000
+const RETRY_MS = Math.max(1200, parseInt(QS.get('hold')||'4200', 10));
+// ?noev=1 records a calm run with no events, for narration beds
+const NOEV = QS.get('noev')==='1';
+if(AUTO){ setTimeout(startRun, 1200); }   // startRun 経由にする（音/録音も始まる）
+
+// The autopilot swings the moment the bat is already inside the hit arc.
+// swing() resolves against the CURRENT angles, so leading the target would
+// aim the check at angles that are never tested — it must not predict.
+let autoCool = 0;
+function autoPilot(dt){
+  autoCool -= dt;
+  if(autoCool > 0 || swinging > 0) return;
+  for(const p of pinatas){
+    if(!p.alive) continue;
+    if(Math.abs(p.swingY) > .5) continue;            // GUST: lifted out of reach
+    if(angDiff(batAng, p.ang) >= hitArcFor(p)*.8) continue;
+    // never trade a hit for a sting
+    if(wasps.some(w => w.active && angDiff(batAng, w.ang) < HIT_ARC*1.2)) continue;
+    swing();
+    autoCool = .35;
+    return;
+  }
+}
+
+// ---------- showcase mode ----------
+// Puts one object on a turntable against an empty stage so the video can
+// talk about it while the real thing is on screen. Uses the game's own
+// meshes, so what the narration describes is exactly what ships.
+const SHOWCASE = QS.get('showcase');
+const showcase = {group:null, spin:.55, label:''};
+
+function buildShowcase(name){
+  const g = new THREE.Group();
+  let label = '', spin = .55, flat = false;
+  if(name==='swinger'){
+    const s = buildSwinger();
+    // The in-game bat reaches all the way out to ARENA_R; at that length the
+    // auto-fit would shrink the body to a speck to keep the tip in frame.
+    // Shorten it to a held-bat length so the whole figure reads at once.
+    const SHORT = 1.5;
+    s.bat.scale.y = SHORT / (ARENA_R-.5);
+    s.bat.position.x = .72 + SHORT/2;
+    s.tip.position.x = .72 + SHORT;
+    s.arm.rotation.y = -.75;          // angled back, mid-swing, not at rest
+    s.arm.rotation.z = .25;
+    g.add(s.group); label = '目隠しの人'; spin = .5;
+  } else if(name==='pinata'){
+    const m = buildPinata(PINATA_COLORS[0]);
+    m.scale.set(1.9,1.9,1.9); g.add(m); label = 'ピニャータ'; spin = .7;
+  } else if(name==='bat'){
+    // the bat on its own: stick plus the glowing tip
+    const wood = new THREE.MeshStandardMaterial({color:0xc9a227, roughness:.55, metalness:.15});
+    const stick = new THREE.Mesh(new THREE.CylinderGeometry(.12,.19, 3.0, 14), wood);
+    const tip = new THREE.Mesh(new THREE.SphereGeometry(.3, 18, 14),
+      new THREE.MeshStandardMaterial({color:0xff9f1c, emissive:0xff9f1c, emissiveIntensity:.9}));
+    tip.position.y = 1.5;
+    const grip = new THREE.Mesh(new THREE.CylinderGeometry(.2,.2,.6,14),
+      new THREE.MeshStandardMaterial({color:0x2a3a6b, roughness:.8}));
+    grip.position.y = -1.3;
+    g.add(stick, tip, grip); g.rotation.z = .35;
+    label = 'ぼう'; spin = .8;
+  } else if(name==='wasp'){
+    const w = wasps[0].group.clone();
+    w.visible = true; w.scale.set(2.4,2.4,2.4);
+    g.add(w); label = 'ハチ'; spin = 1.1;
+  } else if(name==='ring'){
+    // the sound ring: the player's only hint, shown flat and spinning on Z
+    const r = new THREE.Mesh(new THREE.RingGeometry(1.5, 1.78, 56),
+      new THREE.MeshBasicMaterial({color:0xffe9b0, side:THREE.DoubleSide}));
+    const inner = new THREE.Mesh(new THREE.RingGeometry(.8, .95, 48),
+      new THREE.MeshBasicMaterial({color:0xffe9b0, transparent:true, opacity:.55,
+                                   side:THREE.DoubleSide}));
+    g.add(r, inner); g.rotation.x = -.5;
+    label = '音の輪'; spin = .9; flat = true;
+  } else if(name==='lantern'){
+    const body = new THREE.Mesh(new THREE.SphereGeometry(.9, 22, 16),
+      new THREE.MeshStandardMaterial({color:0xff4d6d, emissive:0xff4d6d,
+                                      emissiveIntensity:.6, roughness:.6}));
+    body.scale.set(1,.8,1);
+    const rope = new THREE.Mesh(new THREE.CylinderGeometry(.05,.05,2.0,8),
+      new THREE.MeshStandardMaterial({color:0x5a4a3a}));
+    rope.position.y = 1.6;
+    g.add(body, rope); label = 'ちょうちん'; spin = .6;
+  }
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  scene.add(g);
+
+  // Centre the subject on the origin and pull the camera back to fit it,
+  // so every object is framed the same way regardless of its size.
+  const box = new THREE.Box3().setFromObject(g);
+  const size = box.getSize(new THREE.Vector3());
+  const mid = box.getCenter(new THREE.Vector3());
+  g.position.sub(mid);                       // sit centred at the origin
+  const reach = Math.max(size.x, size.y) * 0.5;
+  const fov = THREE.MathUtils.degToRad(camera.fov);
+  const dist = (reach / Math.tan(fov/2)) * 1.75 + 1.0;   // 1.75 = breathing room
+  camera.position.set(0, size.y*0.10, dist);
+
+  // Slide the subject sideways so a text panel can own the other half.
+  // The offset lives on a parent so the turntable still spins in place —
+  // rotating an offset group would make it orbit instead.
+  const bias = parseFloat(QS.get('sx') || '0');
+  const pivot = new THREE.Group();
+  pivot.position.x = -bias * reach * 1.15;
+  scene.add(pivot);
+  pivot.add(g);
+  showcase.group = g; showcase.pivot = pivot;
+  showcase.spin = spin; showcase.label = label; showcase.flat = flat;
+}
+
+fitCamera();          // SHOWCASE is known by here
+if(SHOWCASE){
+  titleEl.classList.add('hidden');
+  buildShowcase(SHOWCASE);
+  scoreEl.textContent = '';
+  msgEl.textContent = QS.get('nolabel')==='1' ? '' : showcase.label;
+  msgEl.style.fontSize = 'clamp(18px,5vw,28px)';
+  msgEl.style.letterSpacing = '4px';
+  // a plain dark stage: nothing on screen but the subject
+  ground.visible = false; arcRing.visible = false; beam.visible = false;
+  moon.visible = false;
+  player.group.visible = false;        // the playable body is a separate object
+  for(const p of pinatas) p.group.visible = false;
+  for(const w of wasps) w.group.visible = false;
+  for(const l of lanterns) l.visible = false;
+  for(const r of rings) r.mesh.visible = false;
+  scene.traverse(o=>{ if(o.isMesh && o.geometry?.type==='CylinderGeometry'
+                        && Math.abs(o.position.x)>6) o.visible=false; });  // the two posts
+  scene.fog = null;
+  scene.background = new THREE.Color(0x0b0d16);
+  heroLight.position.set(2.6, 3.2, 4.2);
+  heroLight.intensity = 140;
+  hemi.intensity = 3.4;
+  sun.intensity = 4.2; sun.position.set(2.5, 6, 6);
+  // a second light from the other side so the far face is not pure black
+  const fill = new THREE.PointLight(0x88aaff, 45, 26);
+  fill.position.set(-4.5, 2.4, 3.6); scene.add(fill);
+}
+// let the capture script drive the turntable and swap subjects
+window.__showcase = name => {
+  if(showcase.pivot) scene.remove(showcase.pivot);   // pivot owns the group
+  buildShowcase(name);
+  msgEl.textContent = showcase.label;
+};
+
+// ---------- loop ----------
+const clock = new THREE.Clock();
+function tick(){
+  requestAnimationFrame(tick);
+  const raw = Math.min(clock.getDelta(), .05);
+  const dt = raw * timeScale;
+
+  if(SHOWCASE){
+    if(showcase.group){
+      if(showcase.flat) showcase.group.rotation.z += raw*showcase.spin;
+      else showcase.group.rotation.y += raw*showcase.spin;
+    }
+    camera.lookAt(0, 0, 0);        // subject is offset, camera stays on axis
+    renderer.render(scene, camera);
+    return;
+  }
+
+  // lanterns bob whether the run is on or not — the scene is never static
+  for(const l of lanterns){
+    l.position.y = l.userData.base + Math.sin(performance.now()*.001 + l.userData.phase)*.16;
+  }
+
+  if(running && !dead){
+    t += dt;
+    // survival pays a trickle; hits pay the real score
+    score += dt*6;
+    // the bat turns faster the longer the run lasts — the pressure curve
+    batSpin = 2.5 + t*.07;
+    if(!SILENT) SND.setPace(batSpin/2.5);
+    if(AUTO) autoPilot(dt);
+
+    // --- events ---
+    if(t > nextEventAt && !NOEV) triggerEvent();
+    if(reverse>0) reverse -= dt;
+    if(gust>0) gust -= dt;
+    if(hornet>0){
+      hornet -= dt;
+      if(hornet<=0) for(const w of wasps){ w.active=false; w.group.visible=false; }
+    }
+    if(twin>0){
+      twin -= dt;
+      // the second piñata is a guest, not a permanent fixture
+      if(twin<=0) while(pinatas.length > 1){
+        const p = pinatas.pop(); scene.remove(p.group);
+      }
+    }
+
+    // --- the bat: always turning, the player only picks the moment ---
+    batAng += batSpin * dt * (reverse>0 ? -1 : 1);
+    batAng = (batAng + Math.PI*4) % (Math.PI*2);
+
+    // --- the piñatas orbit the player on the same ring ---
+    for(const p of pinatas){
+      p.ang = (p.ang + p.spin*dt + Math.PI*4) % (Math.PI*2);
+      // GUST lifts them clear of the bat's plane, so timing alone is not
+      // enough. Lift only — dipping would put the piñata through the floor.
+      p.swingY = gust>0 ? (1-Math.cos(t*2.3 + p.ang))*.62
+                        : p.swingY*(1-Math.min(1,dt*3));
+      const r = ARENA_R;
+      p.group.position.set(Math.cos(p.ang)*r, HANG_Y + p.swingY, Math.sin(p.ang)*r);
+      p.mesh.rotation.y = -p.ang + Math.PI/2;          // face the direction of travel
+      p.mesh.rotation.z = Math.sin(t*3 + p.ang)*.1;
+      // rope from the beam down to the piñata
+      const ropeLen = 7.4 - (HANG_Y + p.swingY) - .5;
+      p.rope.scale.y = Math.max(.1, ropeLen);
+      p.rope.position.y = .5 + ropeLen/2;
+      if(p.hitFlash>0) p.hitFlash -= dt;
+    }
+
+    // --- sound rings: the hint, on a steady beat tied to the piñata's speed ---
+    if(t > pingAt){
+      const live = pinatas.filter(p=>p.alive);
+      for(const p of live) pingRing(p.group.position, 0xffe9b0);
+      if(live.length && !SILENT) SND.ping();
+      pingAt = t + Math.max(.42, .95 - batSpin*.08);
+    }
+
+    // --- wasps ride the ring a little faster than the piñata ---
+    for(const w of wasps){
+      if(!w.active) continue;
+      w.ang = (w.ang + (pinatas[0].spin*1.35)*dt + Math.PI*4) % (Math.PI*2);
+      w.group.position.set(Math.cos(w.ang)*ARENA_R, HANG_Y + Math.sin(t*6+w.ang)*.18,
+                           Math.sin(w.ang)*ARENA_R);
+      w.group.rotation.y = -w.ang;
+    }
+
+    // --- BLINDFOLD: kill the lights, leave only the glowing edges ---
+    // Pitch black with nothing to aim at is not a challenge, it is a coin
+    // flip. The bat tip and the piñata keep a faint self-lit glow, so the
+    // player still has a read — just a much poorer one.
+    if(dark>0){
+      dark -= dt;
+      const k = dark > .5 ? 0 : 1 - dark/.5;     // fade back in at the end
+      hemi.intensity = 1.3*k; sun.intensity = 2.2*k; heroLight.intensity = 26*k;
+      scene.background.setHex(0x000000).lerp(SKY, k);
+      scene.fog.color.copy(scene.background);
+      moon.visible = k > .5;
+      arcRing.material.opacity = .3*Math.max(k, .6);   // the ring stays lit
+      for(const l of lanterns) l.visible = k > .3;
+      // emissive survives the lights going out, so it is the one hint left
+      player.tip.material.emissiveIntensity = .9 + (1-k)*2.6;
+      for(const p of pinatas) setGlow(p.mesh, (1-k)*.75);
+      // confetti is unlit, so it would stay at full brightness in the dark
+      for(const c of confetti) c.mesh.material.opacity = k*.85 + .15;
+      if(dark<=0){
+        hemi.intensity=1.3; sun.intensity=2.2; heroLight.intensity=26;
+        scene.background.copy(SKY); scene.fog.color.copy(SKY);
+        moon.visible=true; arcRing.material.opacity=.3;
+        player.tip.material.emissiveIntensity = .9;
+        for(const p of pinatas) setGlow(p.mesh, 0);
+        for(const c of confetti) c.mesh.material.opacity = 1;
+        for(const l of lanterns) l.visible = true;
+      }
+    }
+
+    // --- swing animation: the arm snaps out then eases back ---
+    if(swinging>0){
+      swinging -= raw;
+      const k = 1 - Math.max(0, swinging)/.26;        // 0 → 1 over the swing
+      const punch = Math.sin(k*Math.PI);
+      player.arm.position.y = 1.3 + punch*.18;
+      player.group.position.y = punch*.12;
+      player.arm.rotation.x = -punch*.35;
+    } else {
+      player.arm.position.y += (1.3 - player.arm.position.y)*Math.min(1,raw*8);
+      player.group.position.y *= (1-Math.min(1,raw*8));
+      player.arm.rotation.x *= (1-Math.min(1,raw*8));
+    }
+    // the arm always points where the bat points
+    player.arm.rotation.y = -batAng;
+    // the head turns the other way — listening, not looking
+    player.head.rotation.y = Math.sin(t*1.4)*.5;
+    heroLight.position.set(0, 5.2, 2.4);
+
+    updateHud();
+  }
+
+  // --- rings expand and fade whether alive or not ---
+  for(const r of rings){
+    if(r.life<=0) continue;
+    r.life -= raw*1.6;
+    const k = 1 - Math.max(0, r.life);
+    r.mesh.position.set(r.at.x, .06, r.at.z);
+    const s = .6 + k*4.2;
+    r.mesh.scale.set(s, s, s);
+    r.mesh.material.opacity = (1-k)*.8;
+    if(r.life<=0) r.mesh.visible = false;
+  }
+
+  // --- confetti ---
+  for(const c of confetti){
+    if(c.life<=0) continue;
+    c.life -= raw;
+    c.v.y -= 13*raw;
+    c.mesh.position.addScaledVector(c.v, raw);
+    c.mesh.rotation.x += c.spin.x*raw;
+    c.mesh.rotation.y += c.spin.y*raw;
+    c.mesh.rotation.z += c.spin.z*raw;
+    if(c.mesh.position.y < .05){ c.mesh.position.y = .05; c.v.set(0,0,0); }
+    if(c.life<=0) c.mesh.visible = false;
+  }
+
+  // --- death sequence: slow-mo unwinds, the swinger topples over ---
+  if(dead){
+    timeScale += (0 - timeScale)*Math.min(1, raw*1.1);
+    player.group.rotation.x -= raw*1.3;
+    player.group.rotation.z += raw*.6;
+    player.group.position.y += Math.max(0, .6 - (1-timeScale)*.6)*raw*2;
+    // the piñata keeps swinging, untouched — the joke of losing
+    for(const p of pinatas){
+      if(!p.alive) continue;
+      p.ang += raw*.4;
+      p.group.position.set(Math.cos(p.ang)*ARENA_R, HANG_Y, Math.sin(p.ang)*ARENA_R);
+    }
+  }
+
+  // --- camera (runs even while dead, so the zoom and shake still play) ---
+  camDist += (camDistTarget - camDist)*Math.min(1, raw*2.4);
+  camHeight += (camHeightTarget - camHeight)*Math.min(1, raw*2.4);
+  camera.position.set(0, camHeight, camDist);
+  if(shake>0){
+    shake = Math.max(0, shake - raw*.9);
+    camera.position.x += (Math.random()-.5)*shake;
+    camera.position.y += (Math.random()-.5)*shake;
+  }
+  camera.lookAt(0, 2.1, 0);
+
+  renderer.render(scene, camera);
+}
+
+function gameOver(cause){
+  running=false; deadAt=Date.now();
+  if(!SILENT){ SND.hit(); SND.duck(1.6); setTimeout(()=>SND.over(), 700); }
+  // hit feedback: red flash, red vignette, hard shake, camera punches in
+  flash('#ff2b3a', .8, 500);
+  vignetteEl.style.transition='opacity .5s'; vignetteEl.style.opacity=1;
+  shake = .9;
+  camDistTarget = 4.6; camHeightTarget = 3.4;
+  const finalScore = Math.floor(score);
+  koScoreEl.textContent = finalScore;
+  msgEl.textContent = cause==='wasp' ? 'ハチを叩いた' : '空振り 3回';
+  setTimeout(()=>{ koEl.classList.add('on'); }, 620);   // K.O. lands after the slow-mo
+  if(AUTO){ setTimeout(()=>{ reset(); running=true;
+                             if(!SILENT) SND.unduck(); }, RETRY_MS); }
+  else setTimeout(()=>{
+    msgEl.textContent = matchMedia('(pointer:coarse)').matches
+      ? 'タップでもう一度' : 'スペースでもう一度';
+  }, 1800);
+}
+tick();
+
+// --- help (?) : ルールを見せる。録画中は出さない ---
+(function(){
+  const btn = document.getElementById('helpBtn');
+  const panel = document.getElementById('help');
+  if(!btn || !panel) return;
+  if(NOCHROME){                      // 録画・showcase では画面から消す
+    btn.style.display = 'none';
+    const back = document.getElementById('back');
+    if(back) back.style.display = 'none';
+    return;
+  }
+  const open = () => { panel.classList.add('on'); };
+  const close = () => { panel.classList.remove('on'); };
+  btn.addEventListener('click', open);
+  btn.addEventListener('touchend', e => { e.preventDefault(); open(); }, {passive:false});
+  panel.addEventListener('click', e => { if(e.target === panel) close(); });
+  panel.querySelector('.close').addEventListener('click', close);
+  panel.querySelector('.close').addEventListener('touchend',
+    e => { e.preventDefault(); close(); }, {passive:false});
+  addEventListener('keydown', e => {
+    if(e.code === 'Escape') close();
+    else if(e.key === '?' || (e.code === 'Slash' && e.shiftKey)) open();
+  });
+})();
+</script>
+</body>
+</html>

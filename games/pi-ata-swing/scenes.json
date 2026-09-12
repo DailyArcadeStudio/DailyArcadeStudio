@@ -1,0 +1,228 @@
+{
+  "id": "0010_pinata_swing",
+  "title": "ピニャータ・スイング",
+  "video_title": "誕生日会のピニャータが、いつまでも止まらない",
+  "lang": "ja",
+  "voice": "ja_female",
+  "scenes": [
+    {
+      "kind": "hook",
+      "clip": "double",
+      "narration": "目隠しをしたまま、動く的を叩くゲームです。"
+    },
+    {
+      "kind": "image",
+      "prompt": "a small suburban backyard at dusk, a colorful paper pinata hanging from a wooden beam, folding chairs and paper cups on a long table, string lights overhead, warm evening light, photorealistic, cinematic, shallow depth of field, highly detailed",
+      "narration": "ある家の裏庭に、毎年おなじ誕生日会があります。子どもが集まって、ピニャータを叩く会です。ただ、この家にはひとつ決まりがあります。"
+    },
+    {
+      "kind": "image",
+      "prompt": "an adult hand gripping a rope tightly, pulling it taut, blurred colorful pinata swinging in the background, backyard party at dusk, photorealistic, cinematic close-up, warm string lights, shallow depth of field",
+      "narration": "ロープを持つのは、いつも同じおじさんです。そうなんです。絶対に手を離しません。子どもが棒を振るたびに、ピニャータを引き上げてしまいます。"
+    },
+    {
+      "kind": "image",
+      "prompt": "a blindfolded child standing alone in a backyard holding a wooden stick, colorful pinata swinging out of reach above, string lights and empty chairs, dusk, photorealistic, cinematic wide shot, warm tones, highly detailed",
+      "narration": "何度も文句は出ました。でも、おじさんは「そのほうが盛り上がる」と言います。だから子どもは、目隠しのまま、当たる瞬間を待つしかありません。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "swinger",
+      "kicker": "THE SWINGER",
+      "title": "目隠しの子",
+      "bullets": [
+        "体は動かない。**回るのは棒だけ**",
+        "操作はボタンひとつ。振るだけ",
+        "空振り3回で、その回は終わり"
+      ],
+      "narration": "これが今日の主役です。足は動きません。回るのは、手に持った棒だけです。やることはひとつ。押して振る。それだけです。空振りを3回したら、その回は終わります。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "bat",
+      "kicker": "THE STICK",
+      "title": "勝手に回る棒",
+      "bullets": [
+        "ひとりで、**ぐるぐる回り続ける**",
+        "止められない。狙いもつけられない",
+        "時間がたつほど、速くなる"
+      ],
+      "narration": "ここが面白いところです。棒は自分で回り続けます。止められません。向きを変えることもできません。できるのは、振るタイミングを選ぶことだけです。そして時間がたつほど、回る速さが上がっていきます。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "pinata",
+      "kicker": "THE TARGET",
+      "title": "ピニャータ",
+      "bullets": [
+        "棒と**同じ高さ**にぶら下がる",
+        "重なった瞬間だけ、当たる",
+        "割ると、次が**もっと速く**来る"
+      ],
+      "narration": "的のピニャータは、棒とちょうど同じ高さにあります。だから画面の上で重なった瞬間が、当たる瞬間です。当たる時間は、およそ5分の1秒。うまく割れても、喜ぶ間はありません。次のピニャータが、前より速く回って戻ってきます。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "ring",
+      "kicker": "THE SOUND",
+      "title": "音の輪",
+      "bullets": [
+        "ピニャータの位置から**波紋が出る**",
+        "速くなると、間隔が**短くなる**",
+        "暗くなっても、これだけは見える"
+      ],
+      "narration": "目隠しをしているのに、なぜ位置が分かるのか。答えがこれです。ピニャータから、音の波紋が広がります。速く回っているときは、波紋の間隔も短くなります。つまりこれは、リズムを教えてくれる合図です。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "wasp",
+      "kicker": "THE HAZARD",
+      "title": "ハチ",
+      "bullets": [
+        "同じ輪の上を、**一緒に回る**",
+        "叩いたら、その場で終わり",
+        "空振りより、ずっと重い"
+      ],
+      "narration": "庭にはハチもいます。ピニャータと同じ輪の上を回ってきます。見てください。これを叩いてしまうと、空振り3回を待たずに、その場で終わりです。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "lantern",
+      "kicker": "THE YARD",
+      "title": "提灯",
+      "bullets": [
+        "庭をぐるりと囲む、14個の明かり",
+        "ゆれているので、**画面は止まらない**",
+        "消えることもある"
+      ],
+      "narration": "庭をかこんでいるのが、この提灯です。14個あって、ずっとゆれています。明るくて、にぎやかな庭です。ただ、ずっと明るいとは限りません。"
+    },
+    {
+      "kind": "events",
+      "clip": "events",
+      "kicker": "THE PARTY",
+      "title": "おじさんは手を離さない",
+      "bullets": [
+        "**ぎゃくかいてん** — 棒が逆向きに回りだす",
+        "**ふたつめ** — ピニャータが2つになる",
+        "**ていでん** — 明かりが消える",
+        "**つよいかぜ** — 的が上下にゆれて、棒が下を通る"
+      ],
+      "narration": "そしてここからが本題です。会は、静かには進みません。棒が急に逆向きに回りだします。覚えたリズムが、全部ずれます。ピニャータが2つに増えることもあります。2つ見えても、1回の振りで取れるのは1つだけです。明かりが消える回もあります。残るのは、音の波紋だけです。風が吹くと、ピニャータが上下にゆれます。向きが合っているのに、棒が下をすり抜けます。設計の話をすると、どれも変えているのは当たる場所だけです。操作はずっと、ボタンひとつのままです。"
+    },
+    {
+      "kind": "death",
+      "clip": "death",
+      "kicker": "THE END OF A RUN",
+      "title": "終わり方はいつも同じ",
+      "bullets": [
+        "時間が**ゆっくり止まる**",
+        "カメラが寄って、画面が赤くなる",
+        "そのあと、点数だけが残る"
+      ],
+      "narration": "終わり方はいつも同じです。時間がぱっと切れずに、ゆっくり止まります。カメラが寄ってきて、画面が赤くなります。そのあと、点数だけが出ます。あのおじさんは、何年もロープを引き続けています。あなたは、たぶん何回も振れません。"
+    },
+    {
+      "kind": "outro",
+      "title": "概要欄のリンクから遊べます",
+      "subtitle": "チャンネル登録で毎日1本",
+      "narration": "ブラウザで、無料でいま遊べます。概要欄のリンクから遊べます。毎日1本出しているので、よかったらチャンネル登録をお願いします。"
+    }
+  ],
+  "slug": "pi-ata-swing",
+  "channel": "Daily Arcade Studio",
+  "events": [
+    "reverse",
+    "double",
+    "blindfold",
+    "gust",
+    "hornet"
+  ],
+  "short": [
+    {
+      "mark": "double",
+      "lead": -0.3,
+      "dur": 9.0,
+      "headline": "的が2つに増える"
+    },
+    {
+      "mark": "reverse",
+      "lead": -0.5,
+      "dur": 8.0,
+      "headline": "棒が逆に回りだす"
+    },
+    {
+      "mark": "blindfold",
+      "lead": -0.5,
+      "dur": 8.0,
+      "headline": "明かりが消える"
+    },
+    {
+      "mark": "hornet",
+      "lead": -0.3,
+      "dur": 7.0,
+      "headline": "叩いたら即終了"
+    },
+    {
+      "mark": "death",
+      "lead": -2.0,
+      "dur": 9.0,
+      "headline": "空振り3回で終わり"
+    }
+  ],
+  "thumb": {
+    "hook": "目隠しで動く的",
+    "sub": "ボタンひとつ。空振り3回で終わり。ブラウザで無料。",
+    "frame_mark": "double",
+    "frame_lead": 1.0
+  },
+  "short_v2": {
+    "cuts": [
+      {
+        "kind": "clip",
+        "mark": "double",
+        "lead": -0.3,
+        "dur": 4.5,
+        "headline": "今日のゲーム",
+        "narration": "今日のゲームです。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "swinger",
+        "dur": 5.0,
+        "headline": "ピニャータ・スイング",
+        "narration": "目隠しをしたまま、動く的を叩く子です。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "bat",
+        "dur": 5.0,
+        "headline": "棒が回る",
+        "narration": "棒は勝手に回り続けます。選べるのは、振るタイミングだけです。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "wasp",
+        "dur": 5.0,
+        "headline": "ハチ",
+        "narration": "同じ輪の上をハチも回ります。叩いたら、その場で終わりです。"
+      },
+      {
+        "kind": "clip",
+        "mark": "death",
+        "lead": -2.0,
+        "dur": 5.5,
+        "headline": "",
+        "narration": "そして、どんどん速くなります。"
+      },
+      {
+        "kind": "clip",
+        "mark": "run2",
+        "lead": 1.0,
+        "dur": 4.5,
+        "cta": "概要欄のリンクから遊べます",
+        "narration": "ブラウザで無料で遊べます。リンクは概要欄です。"
+      }
+    ]
+  }
+}
