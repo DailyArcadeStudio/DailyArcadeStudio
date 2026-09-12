@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>あなたの「決まり」との付き合い方診断</title>
+<meta property="og:title" content="あなたの「決まり」との付き合い方診断">
+<meta property="og:description" content="車が一台も来ない道で、あなたは赤信号を待ちますか。">
+<meta property="og:type" content="website">
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;background:#0d1117;color:#e6edf3;
+       font-family:-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;
+       line-height:1.7;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+  .wrap{max-width:560px;margin:0 auto;padding:24px 18px 60px}
+  h1{font-size:clamp(22px,6vw,30px);margin:8px 0 6px;line-height:1.4}
+  .lead{color:#8b949e;font-size:15px;margin:0 0 22px}
+  .story{background:#161b22;border-left:3px solid #ffd23b;border-radius:0 10px 10px 0;
+          padding:14px 16px;margin:0 0 26px;font-size:14.5px;color:#c9d1d9}
+  .prog{position:sticky;top:0;background:#0d1117;padding:10px 0 12px;z-index:5}
+  .bar{height:5px;background:#21262d;border-radius:3px;overflow:hidden}
+  .bar i{display:block;height:100%;background:#ffd23b;width:0;transition:width .25s}
+  .count{font-size:13px;color:#8b949e;margin-top:6px}
+  .q{margin:0 0 30px}
+  .qt{font-size:17px;font-weight:700;margin:0 0 14px}
+  .opts{display:grid;gap:8px}
+  .opt{border:1px solid #30363d;background:#161b22;color:#e6edf3;border-radius:10px;
+        padding:13px 14px;font-size:15px;cursor:pointer;text-align:left;
+        font-family:inherit;transition:.15s}
+  .opt:active{transform:scale(.985)}
+  .opt.on{border-color:#ffd23b;background:#1c2128;color:#ffd23b;font-weight:700}
+  .go{width:100%;padding:16px;border:none;border-radius:12px;background:#ffd23b;
+       color:#0d1117;font-size:17px;font-weight:700;cursor:pointer;font-family:inherit;
+       margin-top:8px}
+  .go:disabled{background:#21262d;color:#6e7681;cursor:default}
+  #result{display:none}
+  #result.on{display:block}
+  .rimg{width:100%;border-radius:14px;display:block;margin:0 0 18px;background:#161b22}
+  .rtype{color:#ffd23b;font-size:14px;letter-spacing:.08em;margin:0 0 4px}
+  .rname{font-size:clamp(24px,7vw,34px);margin:0 0 14px;line-height:1.35}
+  .rbody{font-size:15.5px;color:#c9d1d9;margin:0 0 18px}
+  .axes{display:grid;gap:10px;margin:0 0 24px}
+  .ax{font-size:13px;color:#8b949e}
+  .axbar{height:6px;background:#21262d;border-radius:3px;margin-top:5px;position:relative}
+  .axbar i{position:absolute;top:0;height:100%;background:#58a6ff;border-radius:3px}
+  .share{display:grid;gap:10px;margin:24px 0}
+  .share a,.share button{display:block;text-align:center;padding:14px;border-radius:12px;
+        text-decoration:none;font-weight:700;font-size:15px;border:1px solid #30363d;
+        background:#161b22;color:#e6edf3;cursor:pointer;font-family:inherit}
+  .back{display:inline-block;margin-top:8px;color:#8b949e;font-size:14px}
+  footer{margin-top:34px;color:#6e7681;font-size:12.5px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div id="quiz">
+  <h1>あなたの「決まり」との付き合い方診断</h1>
+  <p class="lead">車が一台も来ない道で、あなたは赤信号を待ちますか。</p>
+  <div class="story">ドイツでは、車がいなくても赤信号で待つ人が多いと言われています。罰金は5ユーロほど。高くはありません。それでも待つのは、まわりの目があるからだそうです。「子どもが見ているぞ」と、知らない人に声をかけられることもあるとか。日本は「危ないから待つ」、ドイツは「決まりだから待つ」。同じ行動でも、理由の置き場所が違います。あなたはどちらに近いでしょうか。</div>
+  <div class="prog"><div class="bar"><i id="pbar"></i></div>
+    <div class="count"><span id="pnum">0</span> / 10 問</div></div>
+  <div id="qs"></div>
+  <button class="go" id="submit" disabled>結果を見る</button>
+</div>
+
+<div id="result">
+  <img class="rimg" id="rimg" alt="">
+  <p class="rtype" id="rtype"></p>
+  <h1 class="rname" id="rname"></h1>
+  <p class="rbody" id="rbody"></p>
+  <div class="axes" id="axes"></div>
+  <div class="share">
+    <a id="tw" target="_blank" rel="noopener">結果をXに投稿する</a>
+    <button id="again">もう一度やる</button>
+  </div>
+  <a class="back" href="../../">ほかのゲーム・診断を見る</a>
+</div>
+
+<footer>Daily Arcade Studio</footer>
+</div>
+
+<script>
+const DATA = {"title": "あなたの「決まり」との付き合い方診断", "lead": "車が一台も来ない道で、あなたは赤信号を待ちますか。", "story": "ドイツでは、車がいなくても赤信号で待つ人が多いと言われています。罰金は5ユーロほど。高くはありません。それでも待つのは、まわりの目があるからだそうです。「子どもが見ているぞ」と、知らない人に声をかけられることもあるとか。日本は「危ないから待つ」、ドイツは「決まりだから待つ」。同じ行動でも、理由の置き場所が違います。あなたはどちらに近いでしょうか。", "axes": [{"label": "決まりだから守るか、意味があるから守るか", "pos": "R", "neg": "M"}, {"label": "まわりの目を気にするか、自分の考えで決めるか", "pos": "E", "neg": "S"}, {"label": "人に声をかけるか、そっとしておくか", "pos": "V", "neg": "Q"}, {"label": "細かく分けたいか、まとめてすませたいか", "pos": "B", "neg": "O"}], "questions": [{"text": "決まりは、理由が分からなくても守るものだと思う。", "axis": 0, "sign": 1}, {"text": "誰も困らないなら、少しくらい外れてもいいと思う。", "axis": 0, "sign": -1}, {"text": "車が来なくても、赤信号なら渡らずに待つ。", "axis": 0, "sign": 1}, {"text": "人の目があると、自然と行いが正される気がする。", "axis": 1, "sign": 1}, {"text": "まわりがどうしていても、自分の判断で動きたい。", "axis": 1, "sign": -1}, {"text": "子どもが見ていると聞くと、姿勢を正してしまう。", "axis": 1, "sign": 1}, {"text": "並ばずに割り込む人がいたら、ひとこと言いたくなる。", "axis": 2, "sign": 1}, {"text": "知らない人のふるまいには、口を出さないほうがいい。", "axis": 2, "sign": -1}, {"text": "ごみの分別は、細かいほうがすっきりする。", "axis": 3, "sign": 1}, {"text": "手順は少ないほうがいい。まとめてやってしまいたい。", "axis": 3, "sign": -1}], "results": {"REVB": {"name": "ドイツ・小さな町型", "body": "決まりをきちんと守り、守らない人のことも気になるタイプ。だから安心して暮らせる、という考え方に近いようです。ただ、相手には相手の事情があることもあります。声をかける前に、ひと呼吸おいてみてください。", "image_prompt": "photorealistic quiet small German town street in the morning, a few people standing patiently at the curb in front of a red pedestrian signal, empty cobblestone road, half-timbered houses, soft natural light, cinematic wide shot, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/REVB.jpg"}, "REVO": {"name": "スイス型", "body": "決まりは守るし、まわりの目も気にする。そのうえで、細かい手順よりも全体がきちんと回ることを大事にするタイプ。まとめる力があります。ときには細部にこだわる人の気持ちも、聞いてみるといいかもしれません。", "image_prompt": "photorealistic Swiss town square in daylight, clean stone pavement, people waiting calmly at a crossing, mountains visible in the distance, crisp clear air, cinematic wide shot, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/REVO.jpg"}, "REQB": {"name": "アンペルマン型", "body": "決まりをきちんと守り、まわりの目も気にする。でも、人には口を出さないタイプ。自分がきちんとしていれば伝わる、という考え方でしょうか。黙って立っている姿が、いちばん強いこともあります。", "image_prompt": "photorealistic close-up of a vintage German pedestrian traffic signal showing a red standing figure wearing a hat, mounted on an old metal pole, blurred evening city street behind, shallow depth of field, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/REQB.jpg"}, "REQO": {"name": "日本の住宅街型", "body": "決まりは守るし、まわりの空気も読む。でも、人を注意することはあまりしないタイプ。細かい手順より、なんとなくうまく回ることを選びます。静かに整っている感じが、あなたの良さです。", "image_prompt": "photorealistic quiet Japanese residential street at dusk, a person waiting alone at a small pedestrian crossing, low houses with tidy hedges, warm streetlight glow, cinematic wide shot, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/REQO.jpg"}, "RSVB": {"name": "北欧の役所型", "body": "決まりは決まりとして守り、判断は自分でする。そのうえで、おかしいと思ったことは言葉にするタイプ。手順も細かく分けたい人です。正しさが強く出るので、伝え方をやわらかくすると届きやすくなります。", "image_prompt": "photorealistic modern Nordic public building interior, clean wooden counters, numbered waiting area with people seated in orderly rows, large windows with pale northern daylight, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/RSVB.jpg"}, "RSVO": {"name": "イギリスの行列型", "body": "決まりは守るし、割り込む人には黙っていられない。でも、細かい手順は好みません。要するにきちんと並べばいい、という感じでしょうか。筋の通ったことが好きなタイプです。", "image_prompt": "photorealistic orderly queue of people waiting at a bus stop on a rainy London street, black umbrellas, red double-decker bus approaching, overcast grey light, cinematic wide shot, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/RSVO.jpg"}, "RSQB": {"name": "ドイツの自転車レーン型", "body": "決まりは守る。判断は自分でする。人には言わないが、区分けはきっちりしたい。歩行者と自転車で信号を分けるような、整理の感覚を持っています。分けすぎて疲れないよう、気をつけて。", "image_prompt": "photorealistic German city street with a clearly separated red-paved bicycle lane beside the sidewalk, cyclists riding in one direction, pedestrians walking on their own path, afternoon light, cinematic wide shot, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/RSQB.jpg"}, "RSQO": {"name": "ベルリン型", "body": "決まりは一応守るけれど、判断は自分。人には口を出さないし、細かいことも気にしない。大きな都市の、ゆるくて自由な感じに近いタイプです。ゆるさが心地よさになっています。", "image_prompt": "photorealistic busy Berlin street corner in the evening, some pedestrians crossing while others wait at the curb, city lights, passing bicycles, gentle motion blur, cinematic wide shot, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/RSQO.jpg"}, "MEVB": {"name": "学級委員型", "body": "決まりそのものより、意味があるかどうかを見るタイプ。でも、まわりの目は気になるし、気になったことは言います。手順も細かく決めたい人です。納得できる理由を添えると、まわりが動きやすくなります。", "image_prompt": "photorealistic school hallway with students organizing shoe lockers, one student gesturing while explaining to others, bright daylight through tall windows, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/MEVB.jpg"}, "MEVO": {"name": "イタリアの広場型", "body": "決まりは意味があれば守る。まわりの目は気にするし、思ったことは口に出す。でも、細かい手順は苦手。にぎやかで人間らしいタイプです。その場の空気をつくるのが上手でしょう。", "image_prompt": "photorealistic lively Italian piazza in late afternoon, people gathered in animated conversation at outdoor cafe tables, old stone buildings, warm golden light, cinematic wide shot, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/MEVO.jpg"}, "MEQB": {"name": "職人の工房型", "body": "決まりは意味で判断する。まわりの目は気にするけれど、人には言わない。そのかわり、自分の手順はきっちり決めています。黙って丁寧にやるタイプ。その積み重ねが信用になります。", "image_prompt": "photorealistic craftsman workshop interior, hand tools arranged neatly on a wooden wall in careful order, an artisan working quietly at a bench, warm window light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/MEQB.jpg"}, "MEQO": {"name": "日本の通勤電車型", "body": "決まりより、うまく回るかどうかを見るタイプ。まわりの空気は読むけれど、人には言わないし、細かい手順もこだわらない。静かに合わせる力があります。ときどき自分の希望も出してみてください。", "image_prompt": "photorealistic crowded Japanese commuter train interior in the morning, passengers standing quietly in neat rows holding straps, soft diffused light through windows, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/MEQO.jpg"}, "MSVB": {"name": "実験室型", "body": "決まりは意味で判断し、まわりの目より自分の考えを優先する。おかしいと思えば言うし、手順は細かく詰めたい。筋を通したいタイプです。周りの納得を待つ余裕があると、もっと通りやすくなります。", "image_prompt": "photorealistic research laboratory, labeled glass beakers and precise instruments arranged on a clean bench, a researcher adjusting equipment, cool even lighting, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/MSVB.jpg"}, "MSVO": {"name": "ニューヨーク型", "body": "決まりより中身。まわりは気にせず、言いたいことは言う。細かい手順は飛ばしたい。テンポの速いタイプです。せっかちに見えることもあるので、ひと呼吸おくとちょうどよくなります。", "image_prompt": "photorealistic New York City crosswalk at midday, pedestrians striding across the street against the signal, yellow taxis waiting, tall buildings above, cinematic wide shot, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/MSVO.jpg"}, "MSQB": {"name": "書斎型", "body": "決まりは自分で意味を確かめてから。まわりの目も気にせず、人にも言わない。そのかわり、自分のやり方は細かく整えています。静かに自分の世界を持っているタイプです。", "image_prompt": "photorealistic private study room, bookshelves with volumes arranged by size, a desk with neatly placed papers and a reading lamp, quiet evening light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/MSQB.jpg"}, "MSQO": {"name": "旅人型", "body": "決まりは意味で判断し、まわりも気にせず、人にも言わず、細かいことにもこだわらない。いちばん身軽なタイプです。自由な反面、根を張る場所があると、もっと落ち着けるかもしれません。", "image_prompt": "photorealistic lone traveler with a backpack walking along an empty coastal road at sunrise, open sky, distant hills, long shadow on the asphalt, cinematic wide shot, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/MSQO.jpg"}}};
+const SCALE = ["とてもそう","ややそう","どちらとも","あまり違う","全く違う"];
+
+const qsEl = document.getElementById('qs');
+const ans = new Array(DATA.questions.length).fill(null);
+
+DATA.questions.forEach((q, i) => {
+  const d = document.createElement('div');
+  d.className = 'q';
+  d.innerHTML = `<p class="qt">Q${i+1}. ${q.text}</p>`;
+  const box = document.createElement('div');
+  box.className = 'opts';
+  SCALE.forEach((label, k) => {
+    const b = document.createElement('button');
+    b.className = 'opt'; b.textContent = label;
+    b.onclick = () => {
+      ans[i] = 2 - k;                    // +2(とてもそう) 〜 -2(全く違う)
+      [...box.children].forEach(c => c.classList.remove('on'));
+      b.classList.add('on');
+      update();
+    };
+    box.appendChild(b);
+  });
+  d.appendChild(box);
+  qsEl.appendChild(d);
+});
+
+function update() {
+  const done = ans.filter(a => a !== null).length;
+  document.getElementById('pnum').textContent = done;
+  document.getElementById('pbar').style.width = (done / ans.length * 100) + '%';
+  document.getElementById('submit').disabled = done < ans.length;
+}
+
+document.getElementById('submit').onclick = () => {
+  // 軸ごとにスコアを合計する。q.axis は 0..3、q.sign は +1/-1
+  const score = [0, 0, 0, 0];
+  const max = [0, 0, 0, 0];
+  DATA.questions.forEach((q, i) => {
+    score[q.axis] += ans[i] * q.sign;
+    max[q.axis] += 2;
+  });
+  // 各軸を2値にして 16 タイプのキーを作る
+  const key = score.map((s, i) => s >= 0 ? DATA.axes[i].pos : DATA.axes[i].neg).join('');
+  const r = DATA.results[key] || DATA.results[Object.keys(DATA.results)[0]];
+
+  document.getElementById('rimg').src = r.image;
+  document.getElementById('rimg').alt = r.name;
+  document.getElementById('rtype').textContent = key;
+  document.getElementById('rname').textContent = r.name;
+  document.getElementById('rbody').textContent = r.body;
+
+  const ax = document.getElementById('axes');
+  ax.innerHTML = '';
+  DATA.axes.forEach((a, i) => {
+    const pct = Math.round((score[i] + max[i]) / (max[i] * 2) * 100);
+    const d = document.createElement('div');
+    d.className = 'ax';
+    d.innerHTML = `${a.label}<div class="axbar"><i style="left:0;width:${pct}%"></i></div>`;
+    ax.appendChild(d);
+  });
+
+  const txt = encodeURIComponent(`${DATA.title}\n私は「${r.name}」でした。\n`);
+  document.getElementById('tw').href =
+    `https://twitter.com/intent/tweet?text=${txt}&url=${encodeURIComponent(location.href)}`;
+
+  document.getElementById('quiz').style.display = 'none';
+  document.getElementById('result').classList.add('on');
+  scrollTo(0, 0);
+};
+
+document.getElementById('again').onclick = () => {
+  location.reload();
+};
+</script>
+</body>
+</html>
