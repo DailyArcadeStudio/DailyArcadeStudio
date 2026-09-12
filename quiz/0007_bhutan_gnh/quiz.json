@@ -1,0 +1,177 @@
+{
+  "title": "あなたの「豊かさ」のものさし診断",
+  "lead": "何を数えると、暮らしがうまくいっていると思えますか。",
+  "story": "ヒマラヤの小さな国ブータンは、国の成績をお金だけでは測りません。健康や、時間の使い方や、近所の人を信じられるか。そういうことを、9つの分野に分けて数えていると言われています。何を数えるかで、大事にするものが変わる。その考え方から、この診断を作りました。",
+  "axes": [
+    {
+      "label": "お金で測るか、気持ちで測るか",
+      "pos": "G",
+      "neg": "H"
+    },
+    {
+      "label": "増やしていくか、残しておくか",
+      "pos": "S",
+      "neg": "K"
+    },
+    {
+      "label": "ひとりで決めるか、まわりと決めるか",
+      "pos": "I",
+      "neg": "W"
+    },
+    {
+      "label": "数字で確かめるか、実感で確かめるか",
+      "pos": "N",
+      "neg": "J"
+    }
+  ],
+  "questions": [
+    {
+      "text": "うまくいったかどうかは、金額で見るのがいちばん分かりやすい。",
+      "axis": 0,
+      "sign": 1
+    },
+    {
+      "text": "よく眠れた日は、それだけでいい1日だったと思える。",
+      "axis": 0,
+      "sign": -1
+    },
+    {
+      "text": "収入が増えるなら、忙しくなってもかまわない。",
+      "axis": 0,
+      "sign": 1
+    },
+    {
+      "text": "今より少しでも多く、先へ進んでいたい。",
+      "axis": 1,
+      "sign": 1
+    },
+    {
+      "text": "近所の古い木や景色は、そのまま残ってほしい。",
+      "axis": 1,
+      "sign": -1
+    },
+    {
+      "text": "使わずに置いてあるものは、手放したほうがいい。",
+      "axis": 1,
+      "sign": 1
+    },
+    {
+      "text": "大事なことは、自分ひとりで決めたい。",
+      "axis": 2,
+      "sign": 1
+    },
+    {
+      "text": "地域の行事には、できるだけ顔を出したい。",
+      "axis": 2,
+      "sign": -1
+    },
+    {
+      "text": "家計簿や歩数など、記録をつけると安心する。",
+      "axis": 3,
+      "sign": 1
+    },
+    {
+      "text": "調子がいいかどうかは、体の感じで分かる。",
+      "axis": 3,
+      "sign": -1
+    }
+  ],
+  "results": {
+    "GSIN": {
+      "name": "シンガポール型",
+      "body": "成果を数字で確かめて、自分の判断でどんどん先へ進むタイプ。目標があると力が出ます。ただ、数えていないものは見落としやすいので、ときどき手を止めて、体の感じにも耳を傾けてみてください。",
+      "image_prompt": "photorealistic view of a dense modern city skyline with glass towers rising above green tropical trees, elevated walkway, bright overcast daylight, cinematic wide shot, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/GSIN.jpg"
+    },
+    "GSIJ": {
+      "name": "ドバイ型",
+      "body": "勢いよく積み上げていくタイプ。決めるのは自分、進み方は勘。細かい記録より、手応えを信じて動きます。速さが強みですが、たまに数字で振り返ると、行き先がはっきりします。",
+      "image_prompt": "photorealistic desert city at golden hour, tall modern towers emerging from sand dunes, warm low sunlight, long shadows, clear sky, cinematic wide shot, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/GSIJ.jpg"
+    },
+    "GSWN": {
+      "name": "韓国型",
+      "body": "まわりと足並みをそろえながら、成果をきっちり数えて伸ばしていくタイプ。頑張りどころを外しません。ただ、比べる相手が多いと疲れやすいので、自分の目盛りも持っておくと楽になります。",
+      "image_prompt": "photorealistic view of a busy city street with tall apartment towers and green hills behind, people walking, evening lights beginning to glow, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/GSWN.jpg"
+    },
+    "GSWJ": {
+      "name": "ブラジル型",
+      "body": "人と一緒に、にぎやかに前へ進むタイプ。数字よりも場の空気で動きます。稼ぐことにも前向きですが、仲間との時間はゆずりません。細かい管理は、得意な人に任せるとうまく回ります。",
+      "image_prompt": "photorealistic lively coastal city neighborhood on a hillside, colorful low houses, palm trees, people gathered outside in warm afternoon sunlight, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/GSWJ.jpg"
+    },
+    "GKIN": {
+      "name": "スイス型",
+      "body": "きちんと数えて、無駄なく守るタイプ。増やすことより、減らさないことを大事にします。決めるのは自分です。しっかりした土台が作れますが、たまには使ってみる日もあっていいはずです。",
+      "image_prompt": "photorealistic alpine valley with a small stone village, snow-capped mountains behind, neat green pastures, clear cold morning light, cinematic wide shot, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/GKIN.jpg"
+    },
+    "GKIJ": {
+      "name": "ノルウェー型",
+      "body": "手元のものを大切にしながら、自分のペースで暮らすタイプ。お金は必要な分だけ、あとは静かな時間に使います。記録より実感が頼り。ひとりの時間が、いちばんの充電になります。",
+      "image_prompt": "photorealistic narrow fjord with steep green cliffs, a single small red wooden cabin at the water edge, calm water reflecting the sky, soft northern light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/GKIJ.jpg"
+    },
+    "GKWN": {
+      "name": "ドイツ型",
+      "body": "みんなで決めた約束を守り、数字で確かめながら長く続けるタイプ。急に増やすより、壊さないことを選びます。丁寧さが信用になります。たまの寄り道も、予定に入れておくといいかもしれません。",
+      "image_prompt": "photorealistic old European town square with timber-framed houses and a clock tower, cobblestone ground, bicycles parked, soft overcast daylight, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/GKWN.jpg"
+    },
+    "GKWJ": {
+      "name": "イタリア型",
+      "body": "古いものを残しながら、まわりと一緒に暮らしを楽しむタイプ。細かく数えはしませんが、いいか悪いかは体で分かります。稼ぎも大事、でも食卓の時間はもっと大事、という形です。",
+      "image_prompt": "photorealistic hilltop stone village in the countryside, terracotta roofs, olive trees on the slopes, long outdoor table set under a vine canopy, warm late afternoon light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/GKWJ.jpg"
+    },
+    "HSIN": {
+      "name": "アイスランド型",
+      "body": "気持ちの手応えを大事にしつつ、新しいことに自分から挑むタイプ。しかも記録はきちんと取ります。小さく試して、数字で確かめて、また進む。その回し方が上手な人です。",
+      "image_prompt": "photorealistic volcanic landscape with black rock fields, steam rising from hot springs, a small modern house in the distance, low dramatic sunlight, cinematic wide shot, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/HSIN.jpg"
+    },
+    "HSIJ": {
+      "name": "ニュージーランド型",
+      "body": "心地よさを基準に、身軽に動き出すタイプ。決めるのは自分、頼りにするのは実感です。お金より、今日が気持ちよかったかどうか。外に出た日ほど、調子が上がります。",
+      "image_prompt": "photorealistic rolling green hills with grazing sheep, a winding gravel road, distant snow-capped mountains, bright clear daylight with scattered clouds, cinematic wide shot, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/HSIJ.jpg"
+    },
+    "HSWN": {
+      "name": "フィンランド型",
+      "body": "暮らしの満足を、みんなで測って良くしていくタイプ。気持ちの話も、ちゃんと数字にして考えます。静かですが、前には進みます。世界の幸福度調査で上位にくることが多い国と似た形です。",
+      "image_prompt": "photorealistic calm lake surrounded by pine forest, a small wooden sauna cabin at the shore, wooden jetty, pale summer evening light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/HSWN.jpg"
+    },
+    "HSWJ": {
+      "name": "コスタリカ型",
+      "body": "まわりの人と笑っていられるかを基準に、前向きに動くタイプ。数えるより、感じる。むずかしい話も、まず気分から入ります。明るさが、そのまま周りへ広がっていく形です。",
+      "image_prompt": "photorealistic tropical green valley with a small colorful village, dense rainforest hills behind, birds flying, bright humid morning light, cinematic wide shot, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/HSWJ.jpg"
+    },
+    "HKIN": {
+      "name": "日本型",
+      "body": "気持ちを大事にしながらも、きちんと数えて確かめたいタイプ。使わないものは整理し、決めるときは自分で決めます。ていねいで慎重。数字に追われすぎない日を作ると、もっと楽になります。",
+      "image_prompt": "photorealistic quiet Japanese residential street in early morning, low houses, a narrow canal, neatly trimmed hedges, distant mountains, soft clear light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/HKIN.jpg"
+    },
+    "HKIJ": {
+      "name": "チベット高原型",
+      "body": "静かなところで、自分のペースを守るタイプ。増やすことにも、数えることにも、あまり興味がありません。今日よく眠れたか、風が気持ちよかったか。そのくらいの物差しで、十分だと感じています。",
+      "image_prompt": "photorealistic vast high-altitude plateau with brown grassland, a turquoise lake, snow mountains on the horizon, a lone stone hut, crisp thin air and strong sunlight, cinematic wide shot, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/HKIJ.jpg"
+    },
+    "HKWN": {
+      "name": "ブータン型",
+      "body": "お金以外のものも、まわりの人と一緒にきちんと数えるタイプ。森を残すように、今あるものを守ります。眠れているか、近所を信じられるか。そこを大事にする、この動画の国と同じ考え方です。",
+      "image_prompt": "photorealistic Himalayan valley with a white monastery with golden roof on a green mountainside, terraced fields below, morning mist between deep forested ridges, cinematic wide shot, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/HKWN.jpg"
+    },
+    "HKWJ": {
+      "name": "沖縄型",
+      "body": "近くの人と、のんびり長く暮らすタイプ。急いで増やそうとせず、今あるものでやっていきます。記録はつけませんが、調子は体で分かります。世間話が、いちばんの健康法かもしれません。",
+      "image_prompt": "photorealistic small subtropical island village, low red-tiled roof houses behind stone walls, hibiscus flowers, a quiet lane leading to a blue sea, warm bright daylight, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/HKWJ.jpg"
+    }
+  }
+}
