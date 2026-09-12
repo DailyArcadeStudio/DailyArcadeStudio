@@ -1,0 +1,177 @@
+{
+  "title": "あなたがオデュッセウスだったら",
+  "lead": "トロイアの戦争が、やっと終わりました。あとは船で家に帰るだけです。島までは、そう遠くありません。ここから十年かかると言われても、いまは信じないでしょう。",
+  "axes": [
+    {
+      "label": "目立つか、隠れるか",
+      "pos": "名",
+      "neg": "無"
+    },
+    {
+      "label": "ひとりで決めるか、仲間と決めるか",
+      "pos": "独",
+      "neg": "協"
+    }
+  ],
+  "history": "物語のオデュッセウスは巨人の洞窟で本名を叫び、海の神の恨みを買います。風の袋は部下に開けられ、太陽神の牛のせいで船も部下も失いました。十年目に島へ着き、物ごいの姿で妻のもとへ帰ったと語られます。",
+  "scenes": [
+    {
+      "year": "トロイア陥落の年 城の前",
+      "situation": "十年も落ちなかった城です。力で押しても、また十年かかるかもしれません。あなたの頭には、大きな木馬の案があります。ただし、うまくいく保証はどこにもありません。仲間の王たちは、正面から攻める気でいます。",
+      "options": [
+        {
+          "text": "木馬の案を自分で押し通し、中に入る兵も自分で選ぶ",
+          "a": 2,
+          "b": 2
+        },
+        {
+          "text": "案は出すが、王たちの合議にまかせ、正攻法にも備える",
+          "a": 0,
+          "b": -2
+        }
+      ]
+    },
+    {
+      "year": "帰路 一つ目の巨人の島",
+      "situation": "見知らぬ島に着きました。大きな洞窟があり、チーズと子羊が並んでいます。持ち主は留守のようです。船に運び込めば、すぐ出港できます。ただ、あなたは持ち主の顔を見てみたい。もてなしをもらえるかもしれません。",
+      "options": [
+        {
+          "text": "持ち主を待つ。土産をもらって名乗り、客として会う",
+          "a": 2,
+          "b": 1
+        },
+        {
+          "text": "食べ物だけ積んで、誰にも会わずに島を離れる",
+          "a": -2,
+          "b": -1
+        }
+      ]
+    },
+    {
+      "year": "洞窟の中",
+      "situation": "入口は大岩でふさがれました。巨人ポリュペモスは部下を食べ始めています。眠っているうちに刺し殺せば、今夜は助かります。でも、あの岩はあなたたちには動かせません。中で死ぬだけです。巨人が名前を聞いてきました。",
+      "options": [
+        {
+          "text": "名を「誰でもない」と偽り、酒を飲ませて目をつぶす",
+          "a": -2,
+          "b": 0
+        },
+        {
+          "text": "堂々と名乗り、王として取引をもちかける",
+          "a": 2,
+          "b": 0
+        }
+      ]
+    },
+    {
+      "year": "脱出のあと 船の上",
+      "situation": "羊の腹にしがみついて、全員が外に出ました。船はもう沖です。目の見えない巨人が、岸で岩を投げています。ここで黙っていれば、相手はあなたが誰か永遠に知りません。でも、この見事な手口を、誰かに知ってほしくもあります。",
+      "options": [
+        {
+          "text": "振り返って「やったのはオデュッセウスだ」と叫ぶ",
+          "a": 2,
+          "b": 2
+        },
+        {
+          "text": "何も言わず、そのまま漕いで島を離れる",
+          "a": -2,
+          "b": 0
+        }
+      ]
+    },
+    {
+      "year": "風の神アイオロスの島",
+      "situation": "風の神から革の袋をもらいました。逆風が全部この中に入っています。開けなければ、順風だけで家まで行けます。部下には中身を言っていません。言えば、宝ではないと分かってもらえます。ただ、王だけが神に気に入られた話にはなりません。",
+      "options": [
+        {
+          "text": "中身は自分だけの秘密にして、袋を舵のそばに置く",
+          "a": 1,
+          "b": 2
+        },
+        {
+          "text": "全員を集めて中身を明かし、見張りを交代でつける",
+          "a": 0,
+          "b": -2
+        }
+      ]
+    },
+    {
+      "year": "帰路 キルケの島",
+      "situation": "魔女キルケの島です。豚に変えられた部下は元に戻りました。キルケはもてなしてくれます。食事も寝床もあり、海は荒れていません。ただ、家は遠いままです。船を出すなら、いまが出せます。",
+      "options": [
+        {
+          "text": "一年とどまり、キルケから先の海の知識をもらう",
+          "a": -1,
+          "b": -2
+        },
+        {
+          "text": "礼だけ言って、すぐ船を出す",
+          "a": 1,
+          "b": 1
+        }
+      ]
+    },
+    {
+      "year": "帰路 セイレーンの海",
+      "situation": "歌で船を沈める怪物がいる海です。全員が蝋で耳をふさげば、何事もなく通れます。ただし、あなたも何も聞けません。その歌は世界の全部を知っていると言われます。一度聞いたら、もう二度と機会はありません。",
+      "options": [
+        {
+          "text": "自分だけ柱に縛らせ、耳を開けたまま歌を聞く",
+          "a": 2,
+          "b": 2
+        },
+        {
+          "text": "自分も耳をふさぎ、誰も歌を聞かずに通り抜ける",
+          "a": -2,
+          "b": -1
+        }
+      ]
+    },
+    {
+      "year": "十年目 イタケの岸",
+      "situation": "ついに自分の島です。家には求婚者が百人以上いて、財産を食いつぶしています。王として名乗り出れば、島の人は迎えてくれるかもしれません。でも、百人の中に敵がいたら、その場で終わりです。豚飼いの小屋に、ぼろの服があります。",
+      "options": [
+        {
+          "text": "すぐ名乗り出て、王として広場で求婚者に会う",
+          "a": 2,
+          "b": -1
+        },
+        {
+          "text": "物ごいの姿で家に入り、正体を隠したまま様子を見る",
+          "a": -2,
+          "b": 1
+        }
+      ]
+    }
+  ],
+  "endings": {
+    "名独": {
+      "tag": "ENDING 1",
+      "name": "名前を残した男",
+      "body": "あなたは自分の頭を信じ、そのたびに名前を出しました。木馬は当たり、巨人からも逃げきります。ただ、岸で叫んだ一言で海の神に追われました。十二隻の船は消え、部下はひとりも残りません。帰り着いたのは十年後、板につかまったあなただけです。それでも、名前は三千年残りました。",
+      "image_prompt": "A lone bearded ancient Greek king clinging to a broken ship's mast in a vast wine-dark sea after a storm, distant rocky green island on the horizon, torn sail floating, pale eerie light, 19th century academic history painting, oil on canvas, dramatic chiaroscuro, no text, no letters, no words, no writing, no signage",
+      "image": "img/名独.jpg"
+    },
+    "名協": {
+      "tag": "ENDING 2",
+      "name": "みんなで帰った船団",
+      "body": "あなたは目立つことを選びましたが、いつも全員に話しました。風の袋のことも隠しません。船団はまとまったまま、そこそこ早く帰り着きます。部下も生きています。ただ、語ることが少なすぎました。あなたは無事に年をとり、その帰り道を歌う人は誰もいませんでした。",
+      "image_prompt": "A fleet of ancient Greek wooden ships with oars arriving together at a rocky Ionian harbour at sunrise, crews waving to villagers on the shore, calm sea, 19th century academic history painting, oil on canvas, warm golden light, no text, no letters, no words, no writing, no signage",
+      "image": "img/名協.jpg"
+    },
+    "無独": {
+      "tag": "ENDING 3",
+      "name": "誰でもない者",
+      "body": "あなたは名乗らず、誰にも相談しませんでした。神に目をつけられない代わりに、誰もあなたを頼りません。危ない海はすべて避けて通り、船は静かに進みます。やがて島に着きますが、王だと信じる者はわずかでした。何も起きなかった十年です。物語も、残りませんでした。",
+      "image_prompt": "A hooded man in a plain grey cloak standing alone at the stern of a small wooden ship in thick sea fog, oars dipping quietly, no other vessels in sight, 19th century academic history painting, oil on canvas, muted cold tones, no text, no letters, no words, no writing, no signage",
+      "image": "img/無独.jpg"
+    },
+    "無協": {
+      "tag": "ENDING 4",
+      "name": "十年目の物ごい",
+      "body": "あなたは隠れることを選び、部下とも話しました。それでも海は長かった。島に着いたあなたは、ぼろを着て自分の家に入ります。妻はまだ機を織っていました。息子は二十歳になっています。名乗るのは、弓を引いたあとです。取り戻すのに、これだけの静けさが要りました。",
+      "image_prompt": "A weathered beggar in rags drawing a great bow in a torchlit ancient Greek hall, stunned noblemen at long tables, a row of axe heads lined on the stone floor, 19th century academic history painting, oil on canvas, dramatic firelight, no text, no letters, no words, no writing, no signage",
+      "image": "img/無協.jpg"
+    }
+  }
+}
