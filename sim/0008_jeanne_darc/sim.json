@@ -1,0 +1,177 @@
+{
+  "title": "あなたがジャンヌ・ダルクだったら",
+  "lead": "戦争は、もう90年以上続いています。あなたは17歳の村の娘。文字は読めません。それでも、行きますか。",
+  "axes": [
+    {
+      "label": "攻めるか、待つか",
+      "pos": "攻",
+      "neg": "待"
+    },
+    {
+      "label": "自分で決めるか、合わせるか",
+      "pos": "独",
+      "neg": "協"
+    }
+  ],
+  "history": "史実のジャンヌは村を出て王太子に会い、1429年5月にオルレアンの包囲を9日で解きました。7月にはランスでシャルル7世を戴冠させます。翌年コンピエーニュで捕らえられ、1431年にルーアンで処刑されました。19歳ごろだったと言われます。",
+  "scenes": [
+    {
+      "year": "1428年 春 ドンレミ村",
+      "situation": "13歳のころから、声が聞こえます。フランスを助けなさい、という声です。あなたは農家の娘で、文字は読めません。近くのヴォークルールには、守備隊長のボードリクールがいます。村を出るには、まず彼に会うしかありません。",
+      "options": [
+        {
+          "text": "親に黙って村を出て、隊長に直談判しに行く",
+          "a": 2,
+          "b": 2
+        },
+        {
+          "text": "村に残り、まず親や司祭に声のことを話す",
+          "a": -2,
+          "b": -1
+        }
+      ]
+    },
+    {
+      "year": "1428年 夏 ヴォークルール",
+      "situation": "隊長に会えました。しかし笑われて、追い返されます。「家に帰して、ひっぱたいてやれ」と言われました。村へ帰る道は、まだ開いています。",
+      "options": [
+        {
+          "text": "翌年もう一度行くと決め、町に居座って人に話し続ける",
+          "a": 2,
+          "b": 0
+        },
+        {
+          "text": "いったん村へ戻り、声が本物だと示せる知らせを待つ",
+          "a": -2,
+          "b": 0
+        }
+      ]
+    },
+    {
+      "year": "1429年 2月 ロレーヌからシノンへ",
+      "situation": "今度は護衛をつけてもらえました。ただしシノンの王太子のもとまでは、敵の勢力圏を抜けていきます。十日以上、野宿しながらの道です。女の姿では、まず無事に着きません。",
+      "options": [
+        {
+          "text": "男の服に着替え、髪を切り、夜通し駆け抜ける",
+          "a": 2,
+          "b": -1
+        },
+        {
+          "text": "女の姿のまま、安全な道と町を選んで進む",
+          "a": -1,
+          "b": 1
+        }
+      ]
+    },
+    {
+      "year": "1429年 3月 シノン城",
+      "situation": "王太子シャルルに会えました。けれど信用されません。教会の学者たちが、ポワティエであなたを三週間ほど調べると言います。怪しくないと出るまで、軍は一兵も動きません。",
+      "options": [
+        {
+          "text": "調べを拒み、今すぐオルレアンへ発たせろと迫る",
+          "a": 2,
+          "b": 2
+        },
+        {
+          "text": "三週間の取り調べを受け、学者たちのお墨付きをもらう",
+          "a": -1,
+          "b": -2
+        }
+      ]
+    },
+    {
+      "year": "1429年 4月29日 オルレアン",
+      "situation": "街に入りました。包囲はもう半年以上続いています。将軍たちは、補給を入れながら援軍を待つ作戦です。あなたに戦の経験はありません。持っているのは白い旗だけです。",
+      "options": [
+        {
+          "text": "将軍に黙って兵を集め、敵の砦に打って出る",
+          "a": 2,
+          "b": -2
+        },
+        {
+          "text": "将軍たちと作戦を詰めてから、補給を入れる",
+          "a": -2,
+          "b": 2
+        }
+      ]
+    },
+    {
+      "year": "1429年 5月7日 トゥーレル砦",
+      "situation": "橋のたもとの砦を攻めている最中、肩を矢で射抜かれました。血が止まりません。将軍は「今日はここまでだ」と引き上げを命じます。兵たちが、あなたのほうを見ています。",
+      "options": [
+        {
+          "text": "手当てだけして前線に戻り、もう一度旗を立てる",
+          "a": 2,
+          "b": -1
+        },
+        {
+          "text": "引き上げを受け入れ、傷を治して明日に備える",
+          "a": -2,
+          "b": 1
+        }
+      ]
+    },
+    {
+      "year": "1429年 6月 ロワール河畔",
+      "situation": "包囲は解けました。勢いがあります。あなたはランスでの戴冠を主張しますが、ランスは敵の勢力圏の奥です。宮廷の重臣たちは、まず手近なノルマンディを固めるか、和平の交渉をすべきだと言います。",
+      "options": [
+        {
+          "text": "敵地を突っ切ってでもランスへ行き、王を戴冠させる",
+          "a": 2,
+          "b": 1
+        },
+        {
+          "text": "重臣たちの案に従い、地固めと交渉を優先する",
+          "a": -2,
+          "b": -2
+        }
+      ]
+    },
+    {
+      "year": "1430年 5月23日 コンピエーニュ",
+      "situation": "戴冠のあと、宮廷はあなたを持て余しています。それでもあなたは少人数で出撃しました。日が暮れます。街の跳ね橋は、閉じられようとしています。追手はすぐ後ろです。",
+      "options": [
+        {
+          "text": "しんがりに残り、味方を先に橋の中へ通す",
+          "a": 2,
+          "b": -2
+        },
+        {
+          "text": "先に橋を渡って城内に戻り、守りを固め直す",
+          "a": -1,
+          "b": 1
+        }
+      ]
+    }
+  ],
+  "endings": {
+    "攻独": {
+      "tag": "ENDING 1",
+      "name": "旗を持っていた娘（史実に近い結末）",
+      "body": "あなたは待ちませんでした。半年動かなかったオルレアンが、九日で解けます。七月には敵地の奥で王が戴冠しました。村を出て、まだ一年たっていません。そして翌年、コンピエーニュで捕らえられ、ルーアンで焼かれます。十九歳ごろでした。二十五年後に判決は取り消されます。名前のほうが、ずっと長く残りました。",
+      "image_prompt": "A young woman in white armor holding a white banner high amid charging medieval French soldiers storming a wooden siege fort beside a river bridge, smoke and arrows, dawn light breaking, 19th century academic history painting, oil on canvas, dramatic chiaroscuro, no text, no letters, no words, no writing, no signage",
+      "image": "img/攻独.jpg"
+    },
+    "攻協": {
+      "tag": "ENDING 2",
+      "name": "将軍たちの旗印",
+      "body": "あなたは攻めました。ただし、いつも将軍たちと一緒にです。作戦はうまく回り、あなたは軍の旗印になりました。宮廷はあなたを大事に扱います。手柄は将軍たちのものになり、あなたの名前は書類のすみに小さく残りました。生き延びたぶん、伝説にはなりませんでした。",
+      "image_prompt": "A young woman in armor standing quietly behind seated French commanders bent over a campaign map in a lamplit medieval tent, her white banner furled against the pole, 19th century academic history painting, oil on canvas, warm muted tones, no text, no letters, no words, no writing, no signage",
+      "image": "img/攻協.jpg"
+    },
+    "待独": {
+      "tag": "ENDING 3",
+      "name": "村で聞いていた声",
+      "body": "あなたは自分の声を信じたまま、動きませんでした。誰にも従わず、誰も動かしません。オルレアンは、あなたのいないところで長く揺れ続けました。戦争はそのあとも続きます。村の人たちは、声が聞こえるという娘の話を、ときどき思い出すくらいでした。",
+      "image_prompt": "A young peasant woman alone in an evening field beside a small stone village church in rural Lorraine, distant smoke on the horizon, long shadows, 19th century academic history painting, oil on canvas, quiet melancholy mood, no text, no letters, no words, no writing, no signage",
+      "image": "img/待独.jpg"
+    },
+    "待協": {
+      "tag": "ENDING 4",
+      "name": "交渉の席にいた人",
+      "body": "あなたは無理をしませんでした。調べを受け、将軍に従い、和平の話にも顔を出します。宮廷はあなたを歓迎しました。戦線はじわじわ戻り、王はいずれ戴冠します。ただ、何年もかかりました。空気が変わった日、というものは、ついにありませんでした。",
+      "image_prompt": "A young woman in plain travelling clothes seated at the edge of a long negotiation table among robed medieval courtiers in a stone hall, candlelight, calm still atmosphere, 19th century academic history painting, oil on canvas, no text, no letters, no words, no writing, no signage",
+      "image": "img/待協.jpg"
+    }
+  }
+}

@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>あなたがジャンヌ・ダルクだったら</title>
+<meta property="og:title" content="あなたがジャンヌ・ダルクだったら">
+<meta property="og:description" content="戦争は、もう90年以上続いています。あなたは17歳の村の娘。文字は読めません。それでも、行きますか。">
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;background:#0b0e14;color:#e6edf3;
+       font-family:-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;
+       line-height:1.75;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+  .wrap{max-width:600px;margin:0 auto;padding:22px 18px 60px}
+  h1{font-size:clamp(21px,5.6vw,29px);margin:6px 0 8px;line-height:1.4}
+  .lead{color:#8b949e;font-size:14.5px;margin:0 0 20px}
+  .prog{position:sticky;top:0;background:#0b0e14;padding:10px 0 12px;z-index:5}
+  .bar{height:4px;background:#1c2333;border-radius:2px;overflow:hidden}
+  .bar i{display:block;height:100%;background:#d4a544;width:0;transition:width .3s}
+  .count{font-size:12.5px;color:#8b949e;margin-top:6px;letter-spacing:.04em}
+  .scene{background:#121722;border:1px solid #222b3d;border-radius:14px;
+          padding:20px 18px;margin:0 0 16px}
+  .year{color:#d4a544;font-size:12.5px;letter-spacing:.1em;margin:0 0 8px}
+  .sit{font-size:16px;margin:0 0 18px;color:#dbe3ec}
+  .opts{display:grid;gap:10px}
+  .opt{border:1px solid #2b3550;background:#161d2b;color:#e6edf3;border-radius:11px;
+        padding:15px 16px;font-size:15.5px;cursor:pointer;text-align:left;
+        font-family:inherit;line-height:1.6;transition:.15s}
+  .opt:hover{border-color:#d4a544}
+  .opt:active{transform:scale(.985)}
+  .log{margin:0 0 20px}
+  .logi{border-left:2px solid #2b3550;padding:2px 0 2px 14px;margin:0 0 10px;
+         font-size:13.5px;color:#7d8796}
+  .logi b{color:#b3bdcc;font-weight:600}
+  #end{display:none} #end.on{display:block}
+  .eimg{width:100%;border-radius:14px;display:block;margin:0 0 18px;background:#121722}
+  .etag{color:#d4a544;font-size:13px;letter-spacing:.09em;margin:0 0 4px}
+  .ename{font-size:clamp(23px,6.4vw,32px);margin:0 0 14px;line-height:1.35}
+  .ebody{font-size:15.5px;color:#c9d1d9;margin:0 0 20px;white-space:pre-wrap}
+  .fact{background:#121722;border-left:3px solid #58a6ff;border-radius:0 10px 10px 0;
+         padding:14px 16px;margin:0 0 20px;font-size:14.5px;color:#c9d1d9}
+  .fact b{color:#58a6ff;display:block;margin-bottom:5px;font-size:12.5px;
+           letter-spacing:.08em}
+  .warn{color:#6e7681;font-size:12.5px;margin:18px 0 0;padding:12px 14px;
+         border:1px dashed #2b3550;border-radius:10px}
+  .share{display:grid;gap:10px;margin:22px 0}
+  .share a,.share button{display:block;text-align:center;padding:14px;border-radius:12px;
+        text-decoration:none;font-weight:700;font-size:15px;border:1px solid #2b3550;
+        background:#161d2b;color:#e6edf3;cursor:pointer;font-family:inherit}
+  .back{display:inline-block;margin-top:6px;color:#8b949e;font-size:14px}
+  footer{margin-top:32px;color:#6e7681;font-size:12.5px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div id="sim">
+  <h1>あなたがジャンヌ・ダルクだったら</h1>
+  <p class="lead">戦争は、もう90年以上続いています。あなたは17歳の村の娘。文字は読めません。それでも、行きますか。</p>
+  <div class="prog"><div class="bar"><i id="pbar"></i></div>
+    <div class="count"><span id="pnum">1</span> / 8</div></div>
+  <div class="log" id="log"></div>
+  <div class="scene" id="scene"></div>
+</div>
+
+<div id="end">
+  <img class="eimg" id="eimg" alt="">
+  <p class="etag" id="etag"></p>
+  <h1 class="ename" id="ename"></h1>
+  <p class="ebody" id="ebody"></p>
+  <div class="fact" id="fact"></div>
+  <div class="share">
+    <a id="tw" target="_blank" rel="noopener">結果をXに投稿する</a>
+    <button id="again">やり直す</button>
+  </div>
+  <a class="back" href="../">ほかのシミュレータを見る</a>
+  <p class="warn">これはシミュレータです。あなたの選択によっては史実と異なる結末になります。
+  実際に起きたことは上の「史実」の欄をご覧ください。</p>
+</div>
+
+<footer>MosukeStudio</footer>
+</div>
+
+<script>
+const DATA = {"title": "あなたがジャンヌ・ダルクだったら", "lead": "戦争は、もう90年以上続いています。あなたは17歳の村の娘。文字は読めません。それでも、行きますか。", "axes": [{"label": "攻めるか、待つか", "pos": "攻", "neg": "待"}, {"label": "自分で決めるか、合わせるか", "pos": "独", "neg": "協"}], "history": "史実のジャンヌは村を出て王太子に会い、1429年5月にオルレアンの包囲を9日で解きました。7月にはランスでシャルル7世を戴冠させます。翌年コンピエーニュで捕らえられ、1431年にルーアンで処刑されました。19歳ごろだったと言われます。", "scenes": [{"year": "1428年 春 ドンレミ村", "situation": "13歳のころから、声が聞こえます。フランスを助けなさい、という声です。あなたは農家の娘で、文字は読めません。近くのヴォークルールには、守備隊長のボードリクールがいます。村を出るには、まず彼に会うしかありません。", "options": [{"text": "親に黙って村を出て、隊長に直談判しに行く", "a": 2, "b": 2}, {"text": "村に残り、まず親や司祭に声のことを話す", "a": -2, "b": -1}]}, {"year": "1428年 夏 ヴォークルール", "situation": "隊長に会えました。しかし笑われて、追い返されます。「家に帰して、ひっぱたいてやれ」と言われました。村へ帰る道は、まだ開いています。", "options": [{"text": "翌年もう一度行くと決め、町に居座って人に話し続ける", "a": 2, "b": 0}, {"text": "いったん村へ戻り、声が本物だと示せる知らせを待つ", "a": -2, "b": 0}]}, {"year": "1429年 2月 ロレーヌからシノンへ", "situation": "今度は護衛をつけてもらえました。ただしシノンの王太子のもとまでは、敵の勢力圏を抜けていきます。十日以上、野宿しながらの道です。女の姿では、まず無事に着きません。", "options": [{"text": "男の服に着替え、髪を切り、夜通し駆け抜ける", "a": 2, "b": -1}, {"text": "女の姿のまま、安全な道と町を選んで進む", "a": -1, "b": 1}]}, {"year": "1429年 3月 シノン城", "situation": "王太子シャルルに会えました。けれど信用されません。教会の学者たちが、ポワティエであなたを三週間ほど調べると言います。怪しくないと出るまで、軍は一兵も動きません。", "options": [{"text": "調べを拒み、今すぐオルレアンへ発たせろと迫る", "a": 2, "b": 2}, {"text": "三週間の取り調べを受け、学者たちのお墨付きをもらう", "a": -1, "b": -2}]}, {"year": "1429年 4月29日 オルレアン", "situation": "街に入りました。包囲はもう半年以上続いています。将軍たちは、補給を入れながら援軍を待つ作戦です。あなたに戦の経験はありません。持っているのは白い旗だけです。", "options": [{"text": "将軍に黙って兵を集め、敵の砦に打って出る", "a": 2, "b": -2}, {"text": "将軍たちと作戦を詰めてから、補給を入れる", "a": -2, "b": 2}]}, {"year": "1429年 5月7日 トゥーレル砦", "situation": "橋のたもとの砦を攻めている最中、肩を矢で射抜かれました。血が止まりません。将軍は「今日はここまでだ」と引き上げを命じます。兵たちが、あなたのほうを見ています。", "options": [{"text": "手当てだけして前線に戻り、もう一度旗を立てる", "a": 2, "b": -1}, {"text": "引き上げを受け入れ、傷を治して明日に備える", "a": -2, "b": 1}]}, {"year": "1429年 6月 ロワール河畔", "situation": "包囲は解けました。勢いがあります。あなたはランスでの戴冠を主張しますが、ランスは敵の勢力圏の奥です。宮廷の重臣たちは、まず手近なノルマンディを固めるか、和平の交渉をすべきだと言います。", "options": [{"text": "敵地を突っ切ってでもランスへ行き、王を戴冠させる", "a": 2, "b": 1}, {"text": "重臣たちの案に従い、地固めと交渉を優先する", "a": -2, "b": -2}]}, {"year": "1430年 5月23日 コンピエーニュ", "situation": "戴冠のあと、宮廷はあなたを持て余しています。それでもあなたは少人数で出撃しました。日が暮れます。街の跳ね橋は、閉じられようとしています。追手はすぐ後ろです。", "options": [{"text": "しんがりに残り、味方を先に橋の中へ通す", "a": 2, "b": -2}, {"text": "先に橋を渡って城内に戻り、守りを固め直す", "a": -1, "b": 1}]}], "endings": {"攻独": {"tag": "ENDING 1", "name": "旗を持っていた娘（史実に近い結末）", "body": "あなたは待ちませんでした。半年動かなかったオルレアンが、九日で解けます。七月には敵地の奥で王が戴冠しました。村を出て、まだ一年たっていません。そして翌年、コンピエーニュで捕らえられ、ルーアンで焼かれます。十九歳ごろでした。二十五年後に判決は取り消されます。名前のほうが、ずっと長く残りました。", "image_prompt": "A young woman in white armor holding a white banner high amid charging medieval French soldiers storming a wooden siege fort beside a river bridge, smoke and arrows, dawn light breaking, 19th century academic history painting, oil on canvas, dramatic chiaroscuro, no text, no letters, no words, no writing, no signage", "image": "img/攻独.jpg"}, "攻協": {"tag": "ENDING 2", "name": "将軍たちの旗印", "body": "あなたは攻めました。ただし、いつも将軍たちと一緒にです。作戦はうまく回り、あなたは軍の旗印になりました。宮廷はあなたを大事に扱います。手柄は将軍たちのものになり、あなたの名前は書類のすみに小さく残りました。生き延びたぶん、伝説にはなりませんでした。", "image_prompt": "A young woman in armor standing quietly behind seated French commanders bent over a campaign map in a lamplit medieval tent, her white banner furled against the pole, 19th century academic history painting, oil on canvas, warm muted tones, no text, no letters, no words, no writing, no signage", "image": "img/攻協.jpg"}, "待独": {"tag": "ENDING 3", "name": "村で聞いていた声", "body": "あなたは自分の声を信じたまま、動きませんでした。誰にも従わず、誰も動かしません。オルレアンは、あなたのいないところで長く揺れ続けました。戦争はそのあとも続きます。村の人たちは、声が聞こえるという娘の話を、ときどき思い出すくらいでした。", "image_prompt": "A young peasant woman alone in an evening field beside a small stone village church in rural Lorraine, distant smoke on the horizon, long shadows, 19th century academic history painting, oil on canvas, quiet melancholy mood, no text, no letters, no words, no writing, no signage", "image": "img/待独.jpg"}, "待協": {"tag": "ENDING 4", "name": "交渉の席にいた人", "body": "あなたは無理をしませんでした。調べを受け、将軍に従い、和平の話にも顔を出します。宮廷はあなたを歓迎しました。戦線はじわじわ戻り、王はいずれ戴冠します。ただ、何年もかかりました。空気が変わった日、というものは、ついにありませんでした。", "image_prompt": "A young woman in plain travelling clothes seated at the edge of a long negotiation table among robed medieval courtiers in a stone hall, candlelight, calm still atmosphere, 19th century academic history painting, oil on canvas, no text, no letters, no words, no writing, no signage", "image": "img/待協.jpg"}}};
+let i = 0;
+const score = [0, 0];
+const picks = [];
+
+const sceneEl = document.getElementById('scene');
+const logEl = document.getElementById('log');
+
+function render() {
+  const s = DATA.scenes[i];
+  document.getElementById('pnum').textContent = i + 1;
+  document.getElementById('pbar').style.width = (i / DATA.scenes.length * 100) + '%';
+  sceneEl.innerHTML = `<p class="year">${s.year}</p><p class="sit">${s.situation}</p>`;
+  const box = document.createElement('div');
+  box.className = 'opts';
+  s.options.forEach(o => {
+    const b = document.createElement('button');
+    b.className = 'opt';
+    b.textContent = o.text;
+    b.onclick = () => choose(o);
+    box.appendChild(b);
+  });
+  sceneEl.appendChild(box);
+}
+
+function choose(o) {
+  score[0] += o.a || 0;
+  score[1] += o.b || 0;
+  picks.push(o.text);
+  const d = document.createElement('div');
+  d.className = 'logi';
+  d.innerHTML = `<b>${DATA.scenes[i].year}</b> ${o.text}`;
+  logEl.appendChild(d);
+  i++;
+  if (i < DATA.scenes.length) { render(); scrollTo(0, 0); }
+  else finish();
+}
+
+function finish() {
+  // 2軸の符号で4象限 → 4つの結末
+  const key = (score[0] >= 0 ? DATA.axes[0].pos : DATA.axes[0].neg)
+            + (score[1] >= 0 ? DATA.axes[1].pos : DATA.axes[1].neg);
+  const e = DATA.endings[key] || DATA.endings[Object.keys(DATA.endings)[0]];
+  document.getElementById('eimg').src = e.image;
+  document.getElementById('eimg').alt = e.name;
+  document.getElementById('etag').textContent = e.tag || 'ENDING';
+  document.getElementById('ename').textContent = e.name;
+  document.getElementById('ebody').textContent = e.body;
+  document.getElementById('fact').innerHTML =
+    `<b>史実では</b>${DATA.history}`;
+  const txt = encodeURIComponent(
+    `${DATA.title}\n私の結末は「${e.name}」でした。\n`);
+  document.getElementById('tw').href =
+    `https://twitter.com/intent/tweet?text=${txt}&url=${encodeURIComponent(location.href)}`;
+  document.getElementById('sim').style.display = 'none';
+  document.getElementById('end').classList.add('on');
+  scrollTo(0, 0);
+}
+
+document.getElementById('again').onclick = () => location.reload();
+render();
+</script>
+</body>
+</html>

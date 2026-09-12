@@ -19,7 +19,15 @@ def main(prob_path, out_dir):
     pipe = StableDiffusionXLPipeline.from_pretrained(
         "stabilityai/stable-diffusion-xl-base-1.0",
         torch_dtype=torch.float16, variant="fp16", use_safetensors=True).to("mps")
+    # 16GB Mac ではメモリが厳しい。attention だけでは足りず SIGKILL で
+    # 落ちることがあるので、VAE も分割して処理させる。
+    # （この diffusers では pipe.enable_vae_slicing ではなく vae 側に呼ぶ）
     pipe.enable_attention_slicing()
+    try:
+        pipe.vae.enable_slicing()
+        pipe.vae.enable_tiling()
+    except Exception as e:
+        print(f"VAE slicing 不可: {e}", flush=True)
     for idx, s in img_scenes:
         dst = out/"imgs"/f"{idx:02d}.png"
         if dst.exists():
