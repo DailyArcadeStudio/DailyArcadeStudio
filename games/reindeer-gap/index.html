@@ -1,0 +1,1434 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>トナカイの跳躍</title>
+<style>
+  html,body{margin:0;padding:0;overflow:hidden;background:#050a14;font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Helvetica Neue',Arial,sans-serif;}
+  #ui{position:fixed;top:16px;left:0;right:0;text-align:center;color:#fff;z-index:10;pointer-events:none;}
+  #score{font-size:clamp(26px,6vw,34px);font-weight:800;text-shadow:0 2px 8px #000;}
+  #msg{font-size:clamp(14px,3.6vw,20px);margin-top:6px;opacity:.9;text-shadow:0 2px 6px #000;}
+  #title{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:rgba(4,8,18,.74);z-index:20;color:#fff;transition:opacity .4s;padding:0 5vw;box-sizing:border-box;}
+  #title h1{font-size:clamp(30px,9vw,58px);margin:0 0 8px;letter-spacing:2px;text-shadow:0 4px 18px #2ad6ff;text-align:center;}
+  #title p{font-size:clamp(13px,3.4vw,19px);opacity:.85;margin:4px 0;text-align:center;line-height:1.5;}
+  #title .btn{margin-top:26px;padding:14px 44px;font-size:clamp(18px,4.6vw,22px);font-weight:700;color:#04121c;
+    background:linear-gradient(180deg,#5fe7ff,#12a8d8);border:none;border-radius:12px;cursor:pointer;
+    box-shadow:0 6px 24px rgba(42,214,255,.5);}
+  #title .btn:hover{transform:scale(1.05);}
+  .hidden{opacity:0;pointer-events:none;}
+  #back{position:fixed;top:14px;left:14px;z-index:30;text-decoration:none;
+    background:rgba(10,18,30,.72);color:#fff;font:600 clamp(13px,3.2vw,15px)/1 'Hiragino Sans','Helvetica Neue',Arial,sans-serif;
+    padding:0 16px;height:44px;display:flex;align-items:center;border-radius:12px;white-space:nowrap;}
+  #back:hover{background:rgba(28,44,66,.9);}
+  #mute{position:fixed;top:14px;right:14px;z-index:30;border:none;cursor:pointer;
+    background:rgba(10,18,30,.72);color:#fff;font-size:20px;line-height:1;
+    width:44px;height:44px;border-radius:12px;}
+  #mute:hover{background:rgba(28,44,66,.9);}
+  /* デバイスに合う操作説明だけを出す */
+  .tc{display:none;}
+  @media (pointer:coarse){ .kb{display:none;} .tc{display:block;} }
+  @media (pointer:coarse){ #title .btn{padding:18px 56px;} }
+
+  /* --- チャージメーター: 画面下、力の溜まり具合 --- */
+  #power{position:fixed;left:50%;transform:translateX(-50%);bottom:max(26px,7vh);
+    width:min(66vw,340px);height:16px;border-radius:10px;z-index:12;
+    background:rgba(8,16,28,.72);border:2px solid rgba(120,190,230,.45);
+    overflow:hidden;opacity:0;transition:opacity .18s;pointer-events:none;}
+  #power.on{opacity:1;}
+  #power .fill{height:100%;width:0%;background:linear-gradient(90deg,#2ad6ff,#8affd0,#ffd23b);}
+  /* 目標帯: この幅で離すとちょうど届く */
+  #power .zone{position:absolute;top:0;bottom:0;background:rgba(255,255,255,.22);
+    border-left:2px solid #8affd0;border-right:2px solid #8affd0;}
+  #powerLabel{position:fixed;left:0;right:0;bottom:calc(max(26px,7vh) + 22px);text-align:center;
+    color:#cfefff;font-size:clamp(12px,3.2vw,16px);font-weight:700;z-index:12;
+    text-shadow:0 2px 8px #000;opacity:0;transition:opacity .18s;pointer-events:none;}
+  #powerLabel.on{opacity:.95;}
+
+  /* --- イベントのバナー --- */
+  #banner{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    z-index:15;pointer-events:none;opacity:0;}
+  #banner .b{font-size:clamp(24px,7.4vw,64px);font-weight:900;letter-spacing:.06em;color:#fff;
+    padding:10px 4vw;max-width:94vw;text-align:center;transform:scale(2.4);opacity:0;
+    text-shadow:0 0 26px currentColor, 0 6px 20px #000;
+    border-top:5px solid currentColor;border-bottom:5px solid currentColor;}
+  #banner.go .b{animation:slam .62s cubic-bezier(.12,.85,.2,1) forwards;}
+  @keyframes slam{
+    0%  {transform:scale(2.4) rotate(-4deg);opacity:0;}
+    22% {transform:scale(1)   rotate(0deg); opacity:1;}
+    70% {transform:scale(1)   rotate(0deg); opacity:1;}
+    100%{transform:scale(1.12);opacity:0;}
+  }
+
+  /* --- 全画面フラッシュ --- */
+  #flash{position:fixed;inset:0;z-index:14;pointer-events:none;opacity:0;background:#fff;}
+  #vignette{position:fixed;inset:0;z-index:13;pointer-events:none;opacity:0;
+    background:radial-gradient(ellipse at center,rgba(0,0,0,0) 32%,rgba(120,0,10,.85) 100%);}
+
+  /* --- K.O. 画面 --- */
+  #ko{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    z-index:22;pointer-events:none;opacity:0;color:#fff;transition:opacity .3s;}
+  #ko.on{opacity:1;}
+  #ko .koText{font-size:clamp(88px,24vw,180px);font-weight:900;letter-spacing:10px;color:#fff;
+    text-shadow:0 0 40px #ff3b4a,0 0 90px #ff3b4a,0 10px 30px #000;
+    transform:scale(3);opacity:0;}
+  #ko.on .koText{animation:koSlam .8s cubic-bezier(.1,.9,.2,1) forwards;}
+  @keyframes koSlam{
+    0%  {transform:scale(3) rotate(-8deg);opacity:0;}
+    30% {transform:scale(1) rotate(0deg);opacity:1;}
+    36% {transform:scale(1.06);}
+    100%{transform:scale(1);opacity:1;}
+  }
+  #ko .finalLabel{font-size:clamp(15px,4vw,22px);letter-spacing:4px;opacity:0;margin-top:6px;text-shadow:0 2px 8px #000;}
+  #ko .finalScore{font-size:clamp(48px,13vw,80px);font-weight:800;opacity:0;text-shadow:0 4px 20px #000;}
+  #ko.on .finalLabel{animation:fadeUp .5s .75s forwards;}
+  #ko.on .finalScore{animation:fadeUp .5s .9s forwards;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+
+  /* --- 遊び方 (?) --- */
+  #helpBtn{position:fixed;top:14px;right:66px;z-index:30;border:none;cursor:pointer;
+    background:rgba(10,18,30,.72);color:#fff;font:700 20px/1 'Helvetica Neue',Arial,sans-serif;
+    width:44px;height:44px;border-radius:12px;}
+  #helpBtn:hover{background:rgba(28,44,66,.9);}
+  #help{position:fixed;inset:0;z-index:40;display:none;align-items:center;
+    justify-content:center;background:rgba(3,6,12,.84);padding:20px;}
+  #help.on{display:flex;}
+  #help .box{background:#0e1826;border:1px solid #26405c;border-radius:18px;
+    max-width:560px;width:100%;max-height:86vh;overflow:auto;padding:26px 26px 22px;
+    color:#e6edf3;font-family:'Hiragino Sans','Helvetica Neue',Arial,sans-serif;box-sizing:border-box;}
+  #help h2{margin:0 0 4px;font-size:clamp(20px,5.2vw,26px);}
+  #help .sub{color:#8b9dae;font-size:clamp(12px,3.2vw,14px);margin:0 0 18px;}
+  #help h3{font-size:clamp(13px,3.4vw,15px);color:#8affd0;margin:18px 0 6px;letter-spacing:.04em;}
+  #help ul{margin:0;padding-left:20px;}
+  #help li{font-size:clamp(13px,3.4vw,15px);line-height:1.7;margin:3px 0;}
+  #help b{color:#8affd0;font-weight:700;}
+  #help .close{margin-top:20px;width:100%;padding:12px;border:none;border-radius:10px;
+    background:#26405c;color:#fff;font-size:16px;font-weight:700;cursor:pointer;}
+  #help .close:hover{background:#35577c;}
+</style>
+</head>
+<body>
+<div id="ui"><div id="score">0</div><div id="msg"></div></div>
+<button id="helpBtn" title="遊び方">?</button>
+<div id="help"><div class="box">
+  <h2>トナカイの跳躍</h2>
+  <p class="sub">氷は割れる。溜めて跳ぶ。ブラウザで無料。</p>
+    <h3>操作はひとつだけ</h3>
+    <ul>
+      <li><b>押している間、力が溜まります</b></li>
+      <li><b>離すと跳びます。</b> それだけです</li>
+      <li>弱すぎれば手前の海。強すぎれば向こうの海</li>
+    </ul>
+    <h3>白い帯</h3>
+    <ul>
+      <li>メーターの白い帯が<b>ちょうど届く力</b></li>
+      <li>次の氷が遠いほど、帯は右へ動きます</li>
+      <li>帯は<b>だんだん細く</b>なります。それが難易度です</li>
+    </ul>
+    <h3>氷の板</h3>
+    <ul>
+      <li>着地した瞬間から<b>ひび</b>が入ります</li>
+      <li>止まっていられる時間は長くありません</li>
+      <li>沈む前に、次へ跳んでください</li>
+    </ul>
+    <h3>吹雪</h3>
+    <ul>
+      <li>メーターが<b>見えなくなります</b></li>
+      <li>指の感覚だけが頼りです</li>
+    </ul>
+    <h3>オーロラ</h3>
+    <ul>
+      <li>空が光り、<b>帯が広がります</b></li>
+      <li>唯一やさしい出来事です</li>
+    </ul>
+  <button class="close">とじる</button>
+</div></div>
+<a id="back" href="../../" title="ゲーム一覧へ">‹ ゲーム一覧</a>
+<button id="mute" title="音のオン / オフ">🔊</button>
+<div id="vignette"></div>
+<div id="flash"></div>
+<div id="powerLabel">ためる…</div>
+<div id="power"><div class="zone"></div><div class="fill"></div></div>
+<div id="banner"><div class="b"></div></div>
+<div id="ko">
+  <div class="koText">K.O.</div>
+  <div class="finalLabel">さいごのスコア</div>
+  <div class="finalScore">0</div>
+</div>
+<div id="title">
+  <h1>トナカイの跳躍</h1>
+  <p>割れゆく氷の海を、ソリで跳び渡る。</p>
+  <p class="kb">スペース / ↑ : 押して ためる → 離して 跳ぶ</p>
+  <p class="tc">画面を押して ためる → 離して 跳ぶ</p>
+  <button class="btn" id="startBtn">スタート</button>
+</div>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+// ---------- url flags (declared first: sound and camera both read them) ----------
+const QS = new URLSearchParams(location.search);
+const AUTO = QS.get('auto')==='1';
+const SHOWCASE_Q = QS.get('showcase');
+// Recording must produce clean footage, so every automated mode is muted.
+const REC = QS.get('rec')==='1';   // 録音モード: 音を鳴らして拾う
+const SILENT = (AUTO || !!SHOWCASE_Q || QS.get('mute')==='1') && !REC;
+// 録画・showcase では「?」と「ゲーム一覧」を出さない（動画の邪魔になる）
+const NOCHROME = AUTO || !!SHOWCASE_Q || QS.get('nochrome')==='1';
+
+// ---------- renderer / scene ----------
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.shadowMap.enabled = true;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const SKY = new THREE.Color(0x081428);
+scene.background = SKY.clone();
+scene.fog = new THREE.Fog(0x081428, 26, 78);
+
+// カメラを横へずらす量。跳躍の弧を横から見せるため。
+const CAM_SIDE = 5.2;
+const camera = new THREE.PerspectiveCamera(58, innerWidth/innerHeight, .1, 220);
+camera.position.set(CAM_SIDE, 7.0, 13.5);
+camera.lookAt(0, 1, -4);
+
+// Portrait and landscape both have to work. A phone held upright is far
+// narrower than 16:9, and with a fixed FOV the landing floe falls outside
+// the frame — so widen the vertical FOV as the screen gets taller.
+const BASE_FOV = 58;
+function fitCamera(){
+  const aspect = innerWidth / innerHeight;
+  camera.aspect = aspect;
+  if(typeof SHOWCASE !== 'undefined' && SHOWCASE){
+    camera.fov = aspect < 1 ? 62 : 46;
+  } else {
+    // keep the horizontal field roughly constant across aspect ratios
+    const ref = 16/9;
+    camera.fov = aspect >= ref ? BASE_FOV
+      : Math.min(96, THREE.MathUtils.radToDeg(
+          2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(BASE_FOV)/2) * (ref/aspect))));
+  }
+  camera.__base = camera.fov;    // 突風イベントで戻る先
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+}
+addEventListener('resize', fitCamera);
+addEventListener('orientationchange', ()=>setTimeout(fitCamera, 120));
+
+// ---------- lights ----------
+const hemi = new THREE.HemisphereLight(0x8fc8ff, 0x102038, 1.6);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xdff0ff, 2.2);
+sun.position.set(7, 14, 6); sun.castShadow = true;
+sun.shadow.camera.left=-18; sun.shadow.camera.right=18;
+sun.shadow.camera.top=18; sun.shadow.camera.bottom=-18;
+scene.add(sun);
+
+// ---------- the sea ----------
+const seaMat = new THREE.MeshStandardMaterial({color:0x061020, roughness:.35, metalness:.5});
+const sea = new THREE.Mesh(new THREE.PlaneGeometry(160, 900), seaMat);
+sea.rotation.x = -Math.PI/2; sea.position.set(0, -1.6, -380);
+sea.receiveShadow = true;
+scene.add(sea);
+
+// 遠くの氷山: 視差でスピードを見せるためだけの飾り
+const bergs = [];
+const bergMat = new THREE.MeshStandardMaterial({color:0x1b3050, roughness:.9});
+for(let i=0;i<26;i++){
+  const h = 3 + Math.random()*7;
+  const b = new THREE.Mesh(new THREE.ConeGeometry(2.4+Math.random()*3, h, 5), bergMat);
+  const side = Math.random()<.5 ? -1 : 1;
+  b.position.set(side*(16+Math.random()*22), h*.5-2.2, -i*26 - 12);
+  b.rotation.y = Math.random()*3;
+  scene.add(b); bergs.push(b);
+}
+
+// オーロラ: 空にかかる帯。イベント中だけ濃くなる
+const auroraMat = new THREE.MeshBasicMaterial({
+  color:0x6cffc0, transparent:true, opacity:0, side:THREE.DoubleSide, depthWrite:false});
+const auroras = [];
+for(let i=0;i<3;i++){
+  const a = new THREE.Mesh(new THREE.PlaneGeometry(90, 12, 24, 1), auroraMat);
+  // 板を波打たせて、カーテンらしく見せる
+  const pos = a.geometry.attributes.position;
+  for(let v=0; v<pos.count; v++){
+    pos.setZ(v, Math.sin(pos.getX(v)*.12 + i*2) * 3.5);
+  }
+  pos.needsUpdate = true;
+  // カメラは高さ7から少し下を向いているので、高すぎると画面に入らない。
+  // オーロラは「やさしい出来事」の合図なので、必ず見える高さに置く。
+  a.position.set(0, 9 + i*4.5, -52 - i*13);
+  scene.add(a); auroras.push(a);
+}
+
+// 雪: 吹雪イベントで一気に増える
+const snowMat = new THREE.PointsMaterial({color:0xdff2ff, size:.16, transparent:true, opacity:.0});
+const SNOW_N = 900;
+const snowPos = new Float32Array(SNOW_N*3);
+for(let i=0;i<SNOW_N;i++){
+  snowPos[i*3]   = (Math.random()-.5)*46;
+  snowPos[i*3+1] = Math.random()*22;
+  snowPos[i*3+2] = -Math.random()*80;
+}
+const snowGeo = new THREE.BufferGeometry();
+snowGeo.setAttribute('position', new THREE.BufferAttribute(snowPos, 3));
+const snow = new THREE.Points(snowGeo, snowMat);
+scene.add(snow);
+
+// ---------- 素材 ----------
+const iceMat     = new THREE.MeshStandardMaterial({color:0xbfe4f5, roughness:.42, metalness:.05});
+const iceCrackMat= new THREE.MeshStandardMaterial({color:0x7fb6d4, roughness:.55});
+// ひびは白い氷の上で「割れ目」に見える必要がある。
+// 明るく透けると傷に見えてしまうので、濃紺をしっかり乗せる。
+const crackLineMat = new THREE.MeshBasicMaterial({color:0x06101e, transparent:true, opacity:0});
+const furMat  = new THREE.MeshStandardMaterial({color:0x8a5a34, roughness:.85});
+const furDark = new THREE.MeshStandardMaterial({color:0x5e3a20, roughness:.85});
+const antlerMat = new THREE.MeshStandardMaterial({color:0xe6dcc4, roughness:.7});
+const sledMat = new THREE.MeshStandardMaterial({color:0xc2352f, roughness:.5});
+const runnerMat = new THREE.MeshStandardMaterial({color:0xd8dee8, metalness:.85, roughness:.2});
+const sealMat = new THREE.MeshStandardMaterial({color:0x2e3a4a, roughness:.6});
+const gustMat = new THREE.MeshBasicMaterial({color:0xcfe9ff, transparent:true, opacity:.0});
+
+// ---------- トナカイとソリ（プリミティブのみ） ----------
+function buildSled(){
+  const g = new THREE.Group();
+
+  // --- トナカイ ---
+  const deer = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.CapsuleGeometry(.42, .95, 8, 16), furMat);
+  body.rotation.z = Math.PI/2; body.position.set(0, 1.0, -.15); deer.add(body);
+  const neck = new THREE.Mesh(new THREE.CapsuleGeometry(.2, .55, 6, 12), furMat);
+  neck.position.set(0, 1.45, .62); neck.rotation.x = .55; deer.add(neck);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(.27, 18, 14), furMat);
+  head.scale.set(.9, .85, 1.25); head.position.set(0, 1.72, .95); deer.add(head);
+  const muzzle = new THREE.Mesh(new THREE.SphereGeometry(.13, 14, 12), furDark);
+  muzzle.position.set(0, 1.64, 1.22); deer.add(muzzle);
+  // 赤い鼻: このゲームの一番わかりやすい目印
+  const nose = new THREE.Mesh(new THREE.SphereGeometry(.085, 14, 12),
+    new THREE.MeshStandardMaterial({color:0xff3b4a, emissive:0x991016, roughness:.3}));
+  nose.position.set(0, 1.63, 1.34); deer.add(nose);
+  for(const s of [1,-1]){
+    const eye = new THREE.Mesh(new THREE.SphereGeometry(.055, 10, 8),
+      new THREE.MeshBasicMaterial({color:0x14181f}));
+    eye.position.set(.14*s, 1.79, 1.14); deer.add(eye);
+    const ear = new THREE.Mesh(new THREE.SphereGeometry(.09, 10, 8), furDark);
+    ear.scale.set(.5,1,.35); ear.position.set(.24*s, 1.9, .88); deer.add(ear);
+    // 角: 頭のてっぺん（y≒1.95, z≒.95）から生やす。
+    // 幹を一本立て、そこから枝を外向きに出す。
+    const base = new THREE.Mesh(new THREE.CapsuleGeometry(.045, .46, 4, 8), antlerMat);
+    base.position.set(.13*s, 2.08, .92); base.rotation.z = -.30*s; deer.add(base);
+    for(let b=0;b<3;b++){
+      const br = new THREE.Mesh(new THREE.CapsuleGeometry(.03, .22+b*.05, 4, 8), antlerMat);
+      br.position.set(.20*s + .06*s*b, 2.16 + b*.17, .92 - b*.05);
+      br.rotation.z = -1.0*s; br.rotation.x = .25;
+      deer.add(br);
+    }
+  }
+  const legs = [];
+  for(const [lx,lz] of [[.26,.42],[-.26,.42],[.26,-.5],[-.26,-.5]]){
+    const leg = new THREE.Mesh(new THREE.CapsuleGeometry(.085, .55, 4, 8), furDark);
+    leg.position.set(lx, .42, lz); deer.add(leg); legs.push(leg);
+  }
+  deer.position.z = 1.1;
+  g.add(deer);
+
+  // --- ソリ ---
+  const sled = new THREE.Group();
+  const deck = new THREE.Mesh(new THREE.BoxGeometry(1.0, .18, 1.7), sledMat);
+  deck.position.y = .5; sled.add(deck);
+  const backRest = new THREE.Mesh(new THREE.BoxGeometry(1.0, .55, .14), sledMat);
+  backRest.position.set(0, .82, -.78); sled.add(backRest);
+  // 荷物: 上に積んだ箱ふたつ
+  const crate = new THREE.Mesh(new THREE.BoxGeometry(.6,.42,.6),
+    new THREE.MeshStandardMaterial({color:0x8f6a3c, roughness:.8}));
+  crate.position.set(0,.8,-.2); sled.add(crate);
+  const crate2 = new THREE.Mesh(new THREE.BoxGeometry(.42,.3,.44),
+    new THREE.MeshStandardMaterial({color:0x6f5230, roughness:.8}));
+  crate2.position.set(0,1.16,-.24); sled.add(crate2);
+  for(const s of [1,-1]){
+    const runner = new THREE.Mesh(new THREE.BoxGeometry(.1, .1, 2.1), runnerMat);
+    runner.position.set(.44*s, .18, 0); sled.add(runner);
+    // そりの先の反り
+    const curl = new THREE.Mesh(new THREE.TorusGeometry(.26, .05, 6, 12, Math.PI*.9), runnerMat);
+    curl.position.set(.44*s, .42, 1.02); curl.rotation.y = Math.PI/2; curl.rotation.z = -1.1;
+    sled.add(curl);
+    const strut = new THREE.Mesh(new THREE.BoxGeometry(.08,.36,.08), runnerMat);
+    strut.position.set(.44*s, .34, -.6); sled.add(strut);
+  }
+  // 手綱
+  for(const s of [1,-1]){
+    const rein = new THREE.Mesh(new THREE.BoxGeometry(.03,.03,1.5),
+      new THREE.MeshStandardMaterial({color:0x3a2a1c, roughness:.9}));
+    rein.position.set(.2*s, 1.0, .75); rein.rotation.x = -.18; sled.add(rein);
+  }
+  sled.position.z = -.55;
+  g.add(sled);
+
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  return {group:g, deer, sled, legs, nose};
+}
+const rig = buildSled();
+scene.add(rig.group);
+// 氷の板の天面の高さ。ソリはここに乗る
+
+// 主役を照らすライト
+const heroLight = new THREE.PointLight(0xcfe8ff, 34, 22);
+heroLight.position.set(0, 6, 4);
+scene.add(heroLight);
+
+// ---------- 氷の板（フロー） ----------
+// 一枚が一つの足場。着地すると割れ始め、時間切れで沈む。
+const floes = [];
+
+// 跳躍の物理は y=0 を地面として扱う。板の天面がちょうど y=0 に来るよう、
+// 形状のほうを沈めておく（座標変換を一箇所にまとめるため）。
+function buildFloe(len, width){
+  const g = new THREE.Group();
+  const slab = new THREE.Mesh(new THREE.BoxGeometry(width, .7, len), iceMat);
+  slab.position.y = -.35;
+  slab.receiveShadow = true; slab.castShadow = true;
+  g.add(slab);
+  // 縁の雪。天面を覆うと slab と z ファイトするので、四辺の“ふち”だけ置く
+  const rimMat = new THREE.MeshStandardMaterial({color:0xf2fbff, roughness:.95});
+  for(const [rw, rl, rx, rz] of [[width, .5, 0, len/2-.25], [width, .5, 0, -len/2+.25],
+                                 [.5, len, width/2-.25, 0], [.5, len, -width/2+.25, 0]]){
+    const r = new THREE.Mesh(new THREE.BoxGeometry(rw, .18, rl), rimMat);
+    r.position.set(rx, .03, rz); r.receiveShadow = true; g.add(r);
+  }
+  // ひび: 着地後に濃くなる細い黒線。個別マテリアルなので板ごとに独立して濃くなる
+  const cm = crackLineMat.clone();
+  const cracks = [];
+  for(let i=0;i<5;i++){
+    const c = new THREE.Mesh(new THREE.BoxGeometry(.09, .02, len*(.3+Math.random()*.5)), cm);
+    c.position.set((Math.random()-.5)*width*.55, .02, (Math.random()-.5)*len*.3);
+    c.rotation.y = (Math.random()-.5)*1.2;
+    g.add(c); cracks.push(c);
+  }
+  return {group:g, crackMat:cm, cracks, slab};
+}
+
+/** z を中心に、長さ len の氷板を一枚置く */
+function spawnFloe(z, len){
+  const width = 9.0;
+  const f = buildFloe(len, width);
+  f.group.position.set(0, 0, z);
+  scene.add(f.group);
+  const o = {...f, z, len, width, sink:0, cracking:false, visited:false, seal:null};
+  // たまにアザラシが乗っている。触れても害はない、ただの生き物
+  if(Math.random() < .3 && len > 5){
+    const s = new THREE.Group();
+    const bd = new THREE.Mesh(new THREE.CapsuleGeometry(.28,.7,6,12), sealMat);
+    bd.rotation.z = Math.PI/2; bd.position.y = .65; s.add(bd);
+    const hd = new THREE.Mesh(new THREE.SphereGeometry(.24,14,12), sealMat);
+    hd.position.set(0,.86,.52); s.add(hd);
+    for(const sx of [1,-1]){
+      const fl = new THREE.Mesh(new THREE.BoxGeometry(.32,.07,.2), sealMat);
+      fl.position.set(sx*.3,.5,-.2); fl.rotation.z = sx*.3; s.add(fl);
+      const ey = new THREE.Mesh(new THREE.SphereGeometry(.04,8,6),
+        new THREE.MeshBasicMaterial({color:0x0c1016}));
+      ey.position.set(sx*.1,.92,.7); s.add(ey);
+    }
+    s.position.set((Math.random()<.5?-1:1)*(1.6+Math.random()*.8), 0, (Math.random()-.5)*len*.5);
+    s.rotation.y = Math.random()*6;
+    s.traverse(m=>{ if(m.isMesh) m.castShadow=true; });
+    f.group.add(s);
+    o.seal = s;
+  }
+  floes.push(o);
+  return o;
+}
+
+// ---------- 突風の板（イベント用の視覚） ----------
+const gustPlanes = [];
+for(let i=0;i<24;i++){
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(6, .1), gustMat);
+  m.position.set((Math.random()-.5)*24, .5+Math.random()*6, -Math.random()*60);
+  scene.add(m); gustPlanes.push(m);
+}
+
+// ---------- game state ----------
+let running=false, dead=false, t=0, score=0;
+let timeScale=1;                 // slow-motion multiplier
+let deadAt=0;                    // when the run ended (touch retry gate)
+let shake=0;                     // camera shake amount
+let camDist=13.5, camDistTarget=13.5;   // death zoom pulls the camera in
+let nextEventAt=9;               // seconds until the first event
+let eventQueue=[];               // event names not yet used in this run
+
+// --- チャージと跳躍 ---
+let charging=false, charge=0;    // 0..1 溜まり具合
+let airborne=false;              // 跳んでいる最中か
+let vx=0, vy=0;                  // 跳躍中の速度（z 方向と上下）
+let curFloe=null, nextFloe=null; // 今いる板と、狙う板
+let standTimer=0;                // 今の板に乗ってからの秒数
+let jumps=0;                     // 成功した跳躍の数 = 難易度の目安
+let zoneLo=0, zoneHi=1;          // 「ちょうど届く」チャージの範囲
+let perfectStreak=0;             // ど真ん中で決めた連続回数
+let blizzard=0;                  // >0 の間はメーターが見えない
+let auroraT=0;                   // >0 の間は帯が広い
+let gust=0;                      // >0 の間は横風で軌道が流れる
+let gustDir=1;
+let thin=0;                      // >0 の間は板が細い（薄氷）
+let landedFx=0;                  // 着地の光の残り
+
+const scoreEl = document.getElementById('score');
+const msgEl = document.getElementById('msg');
+const titleEl = document.getElementById('title');
+const bannerEl = document.getElementById('banner');
+const bannerText = bannerEl.querySelector('.b');
+const flashEl = document.getElementById('flash');
+const vignetteEl = document.getElementById('vignette');
+const koEl = document.getElementById('ko');
+const koScoreEl = koEl.querySelector('.finalScore');
+const powerEl = document.getElementById('power');
+const powerFill = powerEl.querySelector('.fill');
+const powerZone = powerEl.querySelector('.zone');
+const powerLabel = document.getElementById('powerLabel');
+
+// ---------- 跳躍の物理 ----------
+// チャージ 0..1 を初速に写す。届く距離が chargeToGap で一意に決まるので、
+// 「ちょうど届く力」を逆算して白い帯を描ける。
+const GRAV = 26;
+const V_MIN = 7, V_MAX = 26;     // 初速の範囲
+const LAUNCH_ANGLE = 0.72;       // rad, 打ち出し角は固定。強さだけが変数
+
+function chargeToSpeed(c){ return V_MIN + (V_MAX - V_MIN) * c; }
+/** そのチャージで進む水平距離（着地高さは発射高さと同じとみなす） */
+function chargeToDist(c){
+  const v = chargeToSpeed(c);
+  return (v*v * Math.sin(2*LAUNCH_ANGLE)) / GRAV;
+}
+/** 距離から必要なチャージを逆算（0..1 の外なら clamp） */
+function distToCharge(d){
+  const v2 = (d * GRAV) / Math.sin(2*LAUNCH_ANGLE);
+  const v = Math.sqrt(Math.max(0, v2));
+  return THREE.MathUtils.clamp((v - V_MIN) / (V_MAX - V_MIN), 0, 1);
+}
+
+/** 今の狙い先に対して「届く」チャージ範囲を求め、白い帯を更新する */
+function updateZone(){
+  if(!curFloe || !nextFloe){ zoneLo=0; zoneHi=1; return; }
+  // 現在位置から次の板の手前端・奥端までの距離
+  const zNow = rig.group.position.z;
+  const nearEdge = (nextFloe.z + nextFloe.len/2) - .5;   // 手前端の少し内側
+  const farEdge  = (nextFloe.z - nextFloe.len/2) + .5;   // 奥端の少し内側
+  const dNear = zNow - nearEdge;
+  const dFar  = zNow - farEdge;
+  let lo = distToCharge(dNear), hi = distToCharge(dFar);
+  // オーロラ中は帯を広げる（唯一の救済）
+  if(auroraT>0){ const mid=(lo+hi)/2, w=(hi-lo)/2; lo=Math.max(0,mid-w*1.7); hi=Math.min(1,mid+w*1.7); }
+  zoneLo = lo; zoneHi = hi;
+  powerZone.style.left  = (lo*100) + '%';
+  powerZone.style.width = Math.max(1.2, (hi-lo)*100) + '%';
+}
+
+// ---------- presentation helpers ----------
+function banner(text, color){
+  bannerText.textContent = text;
+  bannerText.style.color = color;
+  bannerEl.classList.remove('go');
+  void bannerEl.offsetWidth;      // restart the CSS animation
+  bannerEl.style.opacity = 1;
+  bannerEl.classList.add('go');
+}
+function flash(color, strength, ms){
+  flashEl.style.background = color;
+  flashEl.style.transition = 'none';
+  flashEl.style.opacity = strength;
+  requestAnimationFrame(()=>{
+    flashEl.style.transition = `opacity ${ms}ms ease-out`;
+    flashEl.style.opacity = 0;
+  });
+}
+
+// ---------- events ----------
+// それぞれ「別のこと」が起きるようにしてある:
+// 吹雪=メーターを隠す / オーロラ=帯を広げる / 突風=空中で軌道が曲がる
+// 薄氷=板が細くなる / 大裂=次の一枚だけ極端に遠い
+const EVENTS = {
+  blizzard(){
+    banner('ふぶき', '#cfe9ff');
+    blizzard = 7.5;
+    flash('#eaf6ff', .3, 380);
+    shake = Math.max(shake, .18);
+    return 8;
+  },
+  aurora(){
+    banner('オーロラ', '#6cffc0');
+    auroraT = 9;
+    updateZone();
+    return 9.5;
+  },
+  gust(){
+    banner('よこかぜ', '#ffd23b');
+    gust = 8;
+    gustDir = Math.random()<.5 ? -1 : 1;
+    shake = Math.max(shake, .22);
+    return 8.5;
+  },
+  thin(){
+    banner('うすごおり', '#8affd0');
+    thin = 9;                              // 以後しばらく、生まれる板が細い
+    return 9.5;
+  },
+  chasm(){
+    banner('おおわれめ', '#ff3b4a');
+    // 先頭の一枚だけを、うんと遠くへ押しやる。
+    // ただし「満タンでも絶対に届かない」幅にはしない（理不尽になるので）。
+    const last = floes[floes.length-1];
+    const prev = floes[floes.length-2];
+    if(last && prev){
+      const reach = chargeToDist(0.97);                  // 現実的に出せる最大飛距離
+      const nearEdgeNow = (last.z + last.len/2);
+      const from = prev.z;                               // だいたいここから跳ぶ
+      const room = (from - reach) - (nearEdgeNow - last.len*.35);
+      last.z -= Math.max(0, Math.min(4.5, room));
+      last.group.position.z = last.z;
+      last.big = true;
+    }
+    flash('#ff2b3a', .34, 420);
+    shake = Math.max(shake, .3);
+    updateZone();
+    return 5;
+  },
+};
+const EVENT_NAMES = Object.keys(EVENTS);
+// recording/debug hook: fire a named event on cue (used by the capture script)
+// returns false if the run is already over, so a capture script can wait
+// for the next run instead of firing an event onto the K.O. screen
+window.__ev = name => {
+  if(!running || dead || !EVENTS[name]) return false;
+  const busy = EVENTS[name]();
+  if(!SILENT) SND.event(); nextEventAt = t + busy + 5; return true;
+};
+window.__alive = () => running && !dead;
+window.__kill = () => { if(running && !dead){ die('debug'); } };
+window.__recStop = () => SND.recStop();
+window.__snd = () => ({enabled: SND.enabled, silent: SILENT});
+window.__fov = () => +camera.fov.toFixed(1);
+window.__events = EVENT_NAMES.slice();
+window.__probe = () => ({t:+t.toFixed(2), charge:+charge.toFixed(2),
+  zone:[+zoneLo.toFixed(2), +zoneHi.toFixed(2)], air:airborne, jumps,
+  stand:+standTimer.toFixed(2), next:+nextEventAt.toFixed(2)});
+
+function refillEventQueue(){
+  eventQueue = EVENT_NAMES.slice();
+  for(let i=eventQueue.length-1;i>0;i--){        // shuffle so the order varies per run
+    const j = Math.floor(Math.random()*(i+1));
+    [eventQueue[i],eventQueue[j]]=[eventQueue[j],eventQueue[i]];
+  }
+}
+
+function triggerEvent(){
+  if(!eventQueue.length) refillEventQueue();
+  const name = eventQueue.pop();
+  const busy = EVENTS[name]();
+  if(!SILENT) SND.event();
+  nextEventAt = t + busy + 5 + Math.random()*4;  // breathing room between events
+}
+
+// ---------- コースの生成 ----------
+// 常に前方に数枚だけ用意しておき、通り過ぎた板は捨てる。
+// 跳んだ回数が増えるほど、間隔が広く・板が短くなる。
+// 間隔と板の長さは、白い帯がメーターの真ん中あたりに来るよう逆算してある。
+// 弱すぎても強すぎても落ちる状態を保つのが狙いなので、
+// 満タン = 正解 になってしまう間隔にはしない。
+function gapFor(n){
+  // 最初の数回はやさしい。以後じわじわ伸びる
+  const base = 6.5 + Math.min(6.5, n*.30);
+  return base + Math.random()*1.6;
+}
+function lenFor(n){
+  const base = 8.5 - Math.min(3.8, n*.18);
+  return Math.max(4.2, base * (thin>0 ? .68 : 1) + Math.random()*1.2);
+}
+
+function extendCourse(){
+  while(floes.length < 5){
+    const last = floes[floes.length-1];
+    const len = lenFor(jumps + floes.length);
+    const z = last.z - last.len/2 - gapFor(jumps + floes.length) - len/2;
+    spawnFloe(z, len);
+  }
+}
+
+/** 今いる板の「次」を選び直す */
+function pickNext(){
+  const i = floes.indexOf(curFloe);
+  nextFloe = (i >= 0 && i+1 < floes.length) ? floes[i+1] : null;
+  updateZone();
+}
+
+// ---------- reset ----------
+function reset(){
+  for(const f of floes) scene.remove(f.group);
+  floes.length = 0;
+  // 最初の一枚は長め。落ち着いて一回目を溜められるように
+  const first = spawnFloe(0, 11);
+  first.visited = true;
+  curFloe = first;
+  jumps = 0; thin = 0;
+  extendCourse();
+  pickNext();
+
+  rig.group.position.set(0, 0, 0);
+  rig.group.rotation.set(0,0,0);
+  rig.group.scale.set(1,1,1);
+  t=0; score=0; dead=false;
+  charging=false; charge=0; airborne=false; vx=0; vy=0;
+  standTimer=0; perfectStreak=0; landedFx=0;
+  timeScale=1; shake=0; camDist=13.5; camDistTarget=13.5;
+  blizzard=0; auroraT=0; gust=0;
+  nextEventAt = 9;
+  refillEventQueue();
+  msgEl.textContent='';
+  scoreEl.textContent='0';
+  koEl.classList.remove('on');
+  powerEl.classList.remove('on'); powerLabel.classList.remove('on');
+  powerFill.style.width = '0%';
+  vignetteEl.style.transition='opacity .3s'; vignetteEl.style.opacity=0;
+  snowMat.opacity = 0; gustMat.opacity = 0; auroraMat.opacity = 0;
+  camera.position.set(CAM_SIDE, 7.0, 13.5);
+}
+
+const startBtn = document.getElementById('startBtn');
+
+// ---------- sound: everything synthesised, no audio files ----------
+// Keeps the single-HTML rule (nothing to download) and lets the music
+// react to play: the bass line speeds up with the game, events drop a
+// stinger, and the whole thing ducks out on a game over.
+const SND = (() => {
+  let ctx = null, master = null, musicGain = null, on = true, started = false;
+  let step = 0, timer = null, tempo = 0.25;
+
+  // A pentatonic scale never sounds wrong against itself, which matters
+  // when the tempo drifts with the player's speed.
+  // minor pentatonic, driving — a chase that never lets up
+  const SCALE = [0, 3, 5, 7, 10];
+  const ROOT = 196;
+  const BASS = 'square', LEAD = 'sawtooth';
+  const hz = (deg, oct = 0) =>
+    ROOT * Math.pow(2, oct + Math.floor(deg / SCALE.length)) *
+    Math.pow(2, SCALE[((deg % SCALE.length) + SCALE.length) % SCALE.length] / 12);
+
+  function ensure() {
+    if (ctx) return ctx;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    ctx = new AC();
+    master = ctx.createGain();
+    master.gain.value = 0.32;
+    master.connect(ctx.destination);
+    musicGain = ctx.createGain();
+    musicGain.gain.value = 1;
+    musicGain.connect(master);
+    return ctx;
+  }
+
+
+  // ---- 録音用の分岐（?rec=1）----
+  // Playwright の録画には音声が入らないので、ゲーム自身に master バスを
+  // 録らせる。鳴っているものそのものなので映像と必ず同期する。
+  let recDest = null, recorder = null, recChunks = [];
+  function recStart() {
+    if (!ctx || recorder) return;
+    recDest = ctx.createMediaStreamDestination();
+    master.connect(recDest);
+    recorder = new MediaRecorder(recDest.stream, {mimeType: 'audio/webm'});
+    recorder.ondataavailable = e => { if (e.data.size) recChunks.push(e.data); };
+    recorder.start();
+  }
+  function recStop() {
+    return new Promise(res => {
+      if (!recorder) return res(null);
+      recorder.onstop = async () => {
+        const blob = new Blob(recChunks, {type: 'audio/webm'});
+        const buf = await blob.arrayBuffer();
+        res(Array.from(new Uint8Array(buf)));
+      };
+      recorder.stop();
+    });
+  }
+
+  function blip(freq, dur, type = 'square', vol = 0.25, dest = null, slideTo = null) {
+    if (!ctx || !on) return;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, ctx.currentTime);
+    if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, ctx.currentTime + dur);
+    // a short attack stops every note from clicking
+    g.gain.setValueAtTime(0, ctx.currentTime);
+    g.gain.linearRampToValueAtTime(vol, ctx.currentTime + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
+    o.connect(g); g.connect(dest || master);
+    o.start(); o.stop(ctx.currentTime + dur + 0.02);
+  }
+
+  function noise(dur, vol = 0.2, hp = 800) {
+    if (!ctx || !on) return;
+    const n = Math.floor(ctx.sampleRate * dur);
+    const buf = ctx.createBuffer(1, n, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    const f = ctx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = hp;
+    const g = ctx.createGain(); g.gain.value = vol;
+    src.connect(f); f.connect(g); g.connect(master);
+    src.start();
+  }
+
+  // --- the loop: a walking bass plus an offbeat blip ---
+  function tick() {
+    if (!ctx || !on) return;
+    const bar = step % 16;
+    // straight driving pulse: bass on every beat, lead stabs offbeat
+    if (bar % 2 === 0) blip(hz(bar % 8 === 0 ? 0 : 1, -1), tempo * 1.1, BASS, 0.30, musicGain);
+    if (bar % 8 === 5) blip(hz(4, 0), tempo * 0.6, LEAD, 0.09, musicGain);
+    if (bar % 4 === 2) noise(0.04, 0.05, 5000);
+    step++;
+    timer = setTimeout(tick, tempo * 1000);
+  }
+
+  return {
+    // must be called from a user gesture — browsers block audio otherwise
+    start() {
+      if (!ensure() || started) return;
+      if (ctx.state === 'suspended') ctx.resume();
+      started = true; step = 0; tick();
+    },
+    stop() { if (timer) { clearTimeout(timer); timer = null; } started = false; },
+    /** speed the music up with the game; 1 = starting pace */
+    setPace(mult) { tempo = Math.max(0.11, 0.25 / Math.max(0.2, mult)); },
+    duck(sec = 1.6) {                                      // for game over
+      if (!ctx) return;
+      musicGain.gain.cancelScheduledValues(ctx.currentTime);
+      musicGain.gain.setValueAtTime(musicGain.gain.value, ctx.currentTime);
+      musicGain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + sec);
+    },
+    unduck() {
+      if (!ctx) return;
+      musicGain.gain.cancelScheduledValues(ctx.currentTime);
+      musicGain.gain.setValueAtTime(0.0001, ctx.currentTime);
+      musicGain.gain.exponentialRampToValueAtTime(1, ctx.currentTime + 0.4);
+    },
+    // --- one-shots ---
+    // チャージ中のティック: 溜まるほど音程が上がる。目を離していても力がわかる
+    charge(k) { ensure(); blip(hz(0, 0) * (1 + k * 1.1), 0.05, 'square', 0.09); },
+    // 離した瞬間: 強さで音程が変わる短い上昇音
+    leap(k)   { ensure(); blip(hz(1, 0), 0.20, LEAD, 0.20, null, hz(1, 0) * (1.5 + k)); },
+    land()    { ensure(); noise(0.07, 0.13, 420);
+                blip(hz(2, 0), 0.12, BASS, 0.18); },
+    // ど真ん中で決めたとき: 短いきらめきの三連
+    perfect() { ensure(); [0, 70, 140].forEach((ms, i) =>
+                  setTimeout(() => blip(hz(2 + i * 2, 1), 0.10, 'triangle', 0.16), ms)); },
+    crack()   { ensure(); noise(0.09, 0.12, 2600); },        // 氷がきしむ
+    event()   { ensure(); [0, 90, 180].forEach((ms, i) =>
+                  setTimeout(() => blip(hz(2 + i, 0), 0.18, 'sawtooth', 0.20), ms)); },
+    splash()  { ensure(); noise(0.5, 0.26, 240); },          // 海に落ちた
+    hit()     { ensure(); noise(0.35, 0.30, 200);
+                blip(180, 0.5, 'sawtooth', 0.28, null, 40); },
+    over()    { ensure(); [0, 140, 280, 460].forEach((ms, i) =>
+                  setTimeout(() => blip(hz(-i, -1), 0.42, 'triangle', 0.26), ms)); },
+    recStart() { ensure(); recStart(); },
+    recStop() { return recStop(); },
+    toggle() { on = !on; if (!on) { this.stop(); } else { this.start(); } return on; },
+    get enabled() { return on; },
+  };
+})();
+
+// --- one place for every action, so touch and keyboard stay in step ---
+function startRun(){
+  titleEl.classList.add('hidden'); reset(); running=true;
+  if(!SILENT){ SND.unduck(); SND.start(); if(REC) SND.recStart(); }
+}
+
+// 押した = 溜め始め。空中では何も起きない（一回の跳躍で一回の判断）
+function pressDown(){
+  if(!running || dead || airborne || charging) return;
+  charging = true; charge = 0;
+  powerEl.classList.add('on'); powerLabel.classList.add('on');
+  powerLabel.textContent = 'ためる…';
+}
+// 離した = 跳ぶ。溜めた分がそのまま初速になる
+function pressUp(){
+  if(!running || dead || !charging) return;
+  charging = false;
+  powerEl.classList.remove('on'); powerLabel.classList.remove('on');
+  launch(charge);
+}
+
+function launch(c){
+  const v = chargeToSpeed(c);
+  vx = -v * Math.cos(LAUNCH_ANGLE);     // -z 方向へ進む
+  vy =  v * Math.sin(LAUNCH_ANGLE);
+  // 沈みかけの板からでも、跳ぶ高さは必ず y=0 に揃える。
+  // 飛距離の計算（chargeToDist）は発射と着地が同じ高さである前提なので、
+  // 沈んだ位置から跳ばせるとメーターの白い帯が嘘になる。
+  rig.group.position.y = 0;
+  rig.group.rotation.x = 0;
+  airborne = true;
+  standTimer = 0;
+  if(!SILENT) SND.leap(c);
+  // 板を蹴った反動
+  if(curFloe) curFloe.kick = .32;
+  shake = Math.max(shake, .1);
+}
+
+const muteBtn = document.getElementById('mute');
+function toggleMute(){ muteBtn.textContent = SND.toggle() ? '🔊' : '🔇'; }
+muteBtn.addEventListener('click', toggleMute);
+muteBtn.addEventListener('touchend', e=>{ e.preventDefault(); toggleMute(); },
+                         {passive:false});
+if(SILENT) muteBtn.style.display='none';   // automated modes have no audio
+addEventListener('keydown', e=>{ if(e.code==='KeyM') toggleMute(); });
+
+startBtn.addEventListener('click', startRun);
+// a touch on the button must start too — click alone is unreliable on touch
+startBtn.addEventListener('touchend', e=>{ e.preventDefault(); startRun(); },
+                          {passive:false});
+
+const HOLD_KEYS = ['Space','ArrowUp','KeyW','Enter'];
+addEventListener('keydown', e=>{
+  if(!running){
+    if(HOLD_KEYS.includes(e.code)){
+      // 死んだ直後の暴発を防ぐため、K.O. の余韻が過ぎてから再開
+      if(dead && Date.now()-deadAt < 1500) return;
+      e.preventDefault(); startRun();
+    }
+    return;
+  }
+  if(HOLD_KEYS.includes(e.code)){
+    e.preventDefault();
+    if(e.repeat) return;      // 押しっぱなしの自動リピートは無視
+    pressDown();
+  }
+});
+addEventListener('keyup', e=>{
+  if(HOLD_KEYS.includes(e.code)){ e.preventDefault(); pressUp(); }
+});
+// フォーカスが外れたまま溜めっぱなしにならないよう、離した扱いにする
+addEventListener('blur', ()=>{ if(charging) pressUp(); });
+
+// --- touch: 押している間ためて、離すと跳ぶ ---
+// キーボードと同じ pressDown / pressUp を通すので、二つの入力がずれない。
+(function(){
+  const canvas = renderer.domElement;
+
+  canvas.addEventListener('touchstart', e=>{
+    if(!running || dead) return;
+    pressDown();
+  }, {passive:true});
+
+  canvas.addEventListener('touchend', e=>{
+    if(dead){
+      // give the K.O. animation time to read, then a tap retries
+      if(!AUTO && Date.now()-deadAt > 1500) startRun();
+      return;
+    }
+    if(!running){ startRun(); return; }
+    pressUp();
+  }, {passive:true});
+
+  // 指が画面外へ出たときも跳ばせる（溜めっぱなしで固まらないように）
+  canvas.addEventListener('touchcancel', ()=>{ if(charging) pressUp(); }, {passive:true});
+
+  // マウスでも同じ操作ができるように
+  canvas.addEventListener('mousedown', e=>{
+    if(!running || dead) return;
+    pressDown();
+  });
+  addEventListener('mouseup', ()=>{ if(charging) pressUp(); });
+
+  // The title overlay sits above the canvas, so a tap anywhere on it never
+  // reaches the canvas handler. Start from the overlay itself.
+  titleEl.addEventListener('touchend', e=>{
+    if(!running){ e.preventDefault(); startRun(); }
+  }, {passive:false});
+
+  // stop the browser treating game taps as scroll / double-tap zoom
+  canvas.addEventListener('touchmove', e=>e.preventDefault(), {passive:false});
+})();
+
+// autoplay mode for recording: ?auto=1
+// recording holds the K.O. longer than play does: ?hold=9000
+const RETRY_MS = Math.max(1200, parseInt(QS.get('hold')||'4200', 10));
+// ?noev=1 records a calm run with no events, for narration beds
+const NOEV = QS.get('noev')==='1';
+if(AUTO){ setTimeout(startRun, 1200); }   // startRun 経由にする（音/録音も始まる）
+
+// ---------- autopilot ----------
+// 帯の真ん中を狙って溜め、そこに来たら離す。人間と同じ操作しかしない。
+let autoTarget = 0;
+function autoPilot(dt){
+  if(airborne) return;
+  if(!charging){
+    // 板に乗ったら少しだけ間を置いてから溜め始める（機械的に見せない）
+    if(standTimer > .35){
+      pressDown();
+      // 帯の中央に、わずかなブレを足して狙う
+      const mid = (zoneLo + zoneHi)/2;
+      const w = Math.max(.01, (zoneHi - zoneLo)/2);
+      autoTarget = THREE.MathUtils.clamp(mid + (Math.random()-.5)*w*.5, .02, .99);
+    }
+    return;
+  }
+  // 目標を越えたら離す。フレーム跨ぎのぶんだけ早めに切る
+  if(charge >= autoTarget - CHARGE_RATE*dt*.5) pressUp();
+}
+
+// ---------- showcase mode ----------
+// Puts one object on a turntable against the dark sea so the video can
+// talk about it while the real thing is on screen. Uses the game's own
+// meshes, so what the narration describes is exactly what ships.
+const SHOWCASE = QS.get('showcase');
+const showcase = {group:null, spin:.55, label:''};
+// 録画ツールはこの名前で被写体を指定する（中身は英語のまま、表示だけ日本語）
+window.__subjects = ['sled','floe','thinfloe','seal','aurora','gust','berg'];
+
+function buildShowcase(name){
+  const g = new THREE.Group();
+  let label = '', spin = .55, flat = false;
+  if(name==='sled'){
+    const s = buildSled();
+    s.group.scale.set(1.15,1.15,1.15);
+    g.add(s.group); label = 'トナカイとソリ'; spin = .5;
+  } else if(name==='floe'){
+    const f = buildFloe(8.5, 6.4);
+    g.add(f.group); label = '氷の板'; spin = .45;
+  } else if(name==='thinfloe'){
+    const f = buildFloe(4.4, 6.4);
+    f.crackMat.opacity = .85;              // 割れかけの姿で見せる
+    g.add(f.group); label = 'うすごおり'; spin = .45;
+  } else if(name==='seal'){
+    const s = new THREE.Group();
+    const bd = new THREE.Mesh(new THREE.CapsuleGeometry(.28,.7,6,12), sealMat);
+    bd.rotation.z = Math.PI/2; bd.position.y = .65; s.add(bd);
+    const hd = new THREE.Mesh(new THREE.SphereGeometry(.24,14,12), sealMat);
+    hd.position.set(0,.86,.52); s.add(hd);
+    for(const sx of [1,-1]){
+      const fl = new THREE.Mesh(new THREE.BoxGeometry(.32,.07,.2), sealMat);
+      fl.position.set(sx*.3,.5,-.2); fl.rotation.z = sx*.3; s.add(fl);
+      const ey = new THREE.Mesh(new THREE.SphereGeometry(.04,8,6),
+        new THREE.MeshBasicMaterial({color:0x0c1016}));
+      ey.position.set(sx*.1,.92,.7); s.add(ey);
+    }
+    s.scale.set(2.4,2.4,2.4);
+    g.add(s); label = 'アザラシ'; spin = .6;
+  } else if(name==='aurora'){
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(14, 5, 24, 1),
+      new THREE.MeshBasicMaterial({color:0x6cffc0, transparent:true, opacity:.6,
+                                   side:THREE.DoubleSide, depthWrite:false}));
+    const pos = m.geometry.attributes.position;
+    for(let v=0; v<pos.count; v++) pos.setZ(v, Math.sin(pos.getX(v)*.6)*1.2);
+    pos.needsUpdate = true;
+    g.add(m); label = 'オーロラ'; spin = .3;
+  } else if(name==='gust'){
+    // よこかぜ: 流れる線の束。動きそのものが被写体なので、束ごと回す
+    for(let i=0;i<10;i++){
+      const m = new THREE.Mesh(new THREE.BoxGeometry(4.5+Math.random()*2, .07, .07),
+        new THREE.MeshStandardMaterial({color:0xcfe9ff, emissive:0x2a5570, roughness:.4}));
+      m.position.set((Math.random()-.5)*1.6, (Math.random()-.5)*3.2, (Math.random()-.5)*1.6);
+      g.add(m);
+    }
+    label = 'よこかぜ'; spin = 1.0;
+  } else if(name==='berg'){
+    const b = new THREE.Mesh(new THREE.ConeGeometry(3, 7, 5), bergMat);
+    g.add(b); label = '氷山'; spin = .5;
+  }
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  scene.add(g);
+
+  // Centre the subject on the origin and pull the camera back to fit it,
+  // so every object is framed the same way regardless of its size.
+  const box = new THREE.Box3().setFromObject(g);
+  const size = box.getSize(new THREE.Vector3());
+  const mid = box.getCenter(new THREE.Vector3());
+  g.position.sub(mid);                       // sit centred at the origin
+  const reach = Math.max(size.x, size.y, size.z) * 0.5;
+  const fov = THREE.MathUtils.degToRad(camera.fov);
+  const dist = (reach / Math.tan(fov/2)) * 1.32 + 0.6;   // 1.32 = breathing room
+  camera.position.set(0, size.y*0.10, dist);
+
+  // Slide the subject sideways so a text panel can own the other half.
+  // The offset lives on a parent so the turntable still spins in place —
+  // rotating an offset group would make it orbit instead.
+  const bias = parseFloat(QS.get('sx') || '0');
+  const pivot = new THREE.Group();
+  pivot.position.x = -bias * reach * 1.15;
+  scene.add(pivot);
+  pivot.add(g);
+  showcase.group = g; showcase.pivot = pivot;
+  showcase.spin = spin; showcase.label = label; showcase.flat = flat;
+}
+
+fitCamera();          // SHOWCASE is known by here
+if(SHOWCASE){
+  titleEl.classList.add('hidden');
+  buildShowcase(SHOWCASE);
+  scoreEl.textContent = '';
+  msgEl.textContent = QS.get('nolabel')==='1' ? '' : showcase.label;
+  msgEl.style.fontSize = 'clamp(20px,5vw,30px)';
+  msgEl.style.letterSpacing = '6px';
+  // a plain dark stage: nothing on screen but the subject
+  sea.visible = false; snow.visible = false;
+  rig.group.visible = false;              // the playable sled is a separate object
+  for(const b of bergs) b.visible = false;
+  for(const a of auroras) a.visible = false;
+  for(const m of gustPlanes) m.visible = false;
+  scene.fog = null;
+  scene.background = new THREE.Color(0x080d18);
+  heroLight.position.set(2.6, 3.2, 4.2);
+  heroLight.intensity = 150;
+  hemi.intensity = 3.2;
+  sun.intensity = 4.0; sun.position.set(2.5, 6, 6);
+  // a second light from the other side so the far face is not pure black
+  const fill = new THREE.PointLight(0x88ccff, 50, 30);
+  fill.position.set(-4.5, 2.4, 3.6); scene.add(fill);
+}
+// let the capture script drive the turntable and swap subjects
+window.__showcase = name => {
+  if(showcase.pivot) scene.remove(showcase.pivot);   // pivot owns the group
+  buildShowcase(name);
+  msgEl.textContent = showcase.label;
+};
+
+// ---------- 溜めの速さ ----------
+// 一往復に約 1.1 秒。速すぎると狙えず、遅すぎると待たされる。
+const CHARGE_RATE = 0.9;
+
+// ---------- 板が沈むまでの時間 ----------
+function standLimit(){
+  return Math.max(1.5, 4.2 - jumps*.09);   // 進むほど、乗っていられる時間が減る
+}
+
+// ---------- 死ぬ ----------
+function die(cause){
+  if(dead) return;
+  dead = true;
+  gameOver(cause);
+}
+
+// ---------- loop ----------
+const clock = new THREE.Clock();
+function tick(){
+  requestAnimationFrame(tick);
+  const raw = Math.min(clock.getDelta(), .05);
+  const dt = raw * timeScale;
+
+  if(SHOWCASE){
+    if(showcase.group){
+      if(showcase.flat) showcase.group.rotation.z += raw*showcase.spin;
+      else showcase.group.rotation.y += raw*showcase.spin;
+    }
+    camera.lookAt(0, 0, 0);        // subject is offset, camera stays on axis
+    renderer.render(scene, camera);
+    return;
+  }
+
+  if(running && !dead){
+    t += dt;
+    // スコアは生きている間ずっと増え、着地するたび大きく加算される
+    score += dt*6;
+    scoreEl.textContent = Math.floor(score);
+    if(!SILENT) SND.setPace(1 + jumps*.035);
+    if(AUTO) autoPilot(dt);
+
+    // --- events ---
+    if(t > nextEventAt && !NOEV) triggerEvent();
+
+    // ふぶき: 雪を濃くして、メーターを隠す
+    if(blizzard>0){
+      blizzard -= dt;
+      snowMat.opacity = Math.min(.9, snowMat.opacity + dt*2.2);
+      powerEl.style.filter = 'blur(9px) opacity(.12)';
+      scene.fog.far = Math.max(30, scene.fog.far - dt*30);
+      if(blizzard<=0){ powerEl.style.filter=''; }
+    } else {
+      snowMat.opacity = Math.max(0, snowMat.opacity - dt*.7);
+      scene.fog.far += (78 - scene.fog.far)*Math.min(1,dt*1.2);
+    }
+    // 雪の落下
+    if(snowMat.opacity > 0.01){
+      const p = snowGeo.attributes.position;
+      for(let i=0;i<SNOW_N;i++){
+        p.array[i*3+1] -= (6 + (i%7))*dt;
+        p.array[i*3]   -= 3*dt;
+        if(p.array[i*3+1] < -2){
+          p.array[i*3+1] = 20;
+          p.array[i*3]   = rig.group.position.x + (Math.random()-.5)*46;
+          p.array[i*3+2] = rig.group.position.z - Math.random()*70 + 20;
+        }
+      }
+      p.needsUpdate = true;
+    }
+
+    // オーロラ: 空が光り、判定の帯が広がる
+    if(auroraT>0){
+      auroraT -= dt;
+      auroraMat.opacity = Math.min(.72, auroraMat.opacity + dt*1.2);
+      auroraMat.color.setHSL((t*.08)%1 * .35 + .35, .9, .6);
+      hemi.intensity = 1.6 + Math.sin(t*2)*.35 + .8;
+      if(auroraT<=0) updateZone();          // 帯を通常幅へ戻す
+    } else {
+      auroraMat.opacity = Math.max(0, auroraMat.opacity - dt*.6);
+      hemi.intensity += (1.6 - hemi.intensity)*Math.min(1,dt*2);
+    }
+    for(let i=0;i<auroras.length;i++){
+      auroras[i].position.z = rig.group.position.z - 52 - i*13;
+      auroras[i].rotation.z = Math.sin(t*.4 + i)*.06;
+    }
+
+    // よこかぜ: 空中の軌道が横へ流れ、線が走る
+    if(gust>0){
+      gust -= dt;
+      gustMat.opacity = Math.min(.45, gustMat.opacity + dt*1.6);
+      camera.fov += (camera.__base*1.06 - camera.fov)*Math.min(1,dt*3);
+      camera.updateProjectionMatrix();
+    } else {
+      gustMat.opacity = Math.max(0, gustMat.opacity - dt*1.0);
+      if(camera.fov > camera.__base + .05){
+        camera.fov += (camera.__base - camera.fov)*Math.min(1,dt*3);
+        camera.updateProjectionMatrix();
+      }
+    }
+    for(const m of gustPlanes){
+      m.position.x += gustDir*34*dt;
+      if(Math.abs(m.position.x - rig.group.position.x) > 16){
+        m.position.x = rig.group.position.x - gustDir*16;
+        m.position.y = .5 + Math.random()*6;
+        m.position.z = rig.group.position.z - Math.random()*50;
+      }
+    }
+
+    // うすごおり: 効果時間が切れたら板の長さが元に戻る
+    if(thin>0) thin -= dt;
+
+    // --- チャージ ---
+    if(charging){
+      charge += CHARGE_RATE*dt;
+      if(charge >= 1){ charge = 1; }        // 上限で止まる。溜めすぎのペナルティはここ
+      powerFill.style.width = (charge*100) + '%';
+      // 帯の中にいる間だけラベルを変える。目で見て手を離す判断材料
+      const inZone = charge >= zoneLo && charge <= zoneHi;
+      powerLabel.textContent = blizzard>0 ? '見えない…' : (inZone ? 'いま！' : 'ためる…');
+      powerLabel.style.color = inZone ? '#8affd0' : '#cfefff';
+      // 溜め音: 一定間隔でだんだん高く
+      if(!SILENT){
+        const slot = Math.floor(charge*14);
+        if(slot !== rig.__chargeSlot){ rig.__chargeSlot = slot; SND.charge(charge); }
+      }
+    }
+
+    // --- 跳躍中 / 着地判定 ---
+    if(airborne){
+      vy -= GRAV*dt;
+      rig.group.position.z += vx*dt;
+      rig.group.position.y += vy*dt;
+      if(gust>0) rig.group.position.x += gustDir*2.6*dt;   // 横へ流される
+      // 前のめりに回りながら跳ぶ
+      rig.group.rotation.x = THREE.MathUtils.clamp(-vy*.035, -.5, .5);
+
+      if(vy < 0 && rig.group.position.y <= 0){
+        // どの板の上に降りたか
+        const z = rig.group.position.z;
+        const on = floes.find(f => Math.abs(z - f.z) < f.len/2 &&
+                                   Math.abs(rig.group.position.x) < f.width/2);
+        if(on){
+          land(on);
+        } else {
+          // 海。板と板のあいだへ落ちた
+          rig.group.position.y = 0;
+          die('sea');
+        }
+      }
+    } else if(!dead){
+      standTimer += dt;
+      // 乗っている板は、時間とともに割れて沈む
+      if(curFloe){
+        const lim = standLimit();
+        const k = THREE.MathUtils.clamp(standTimer/lim, 0, 1);
+        curFloe.crackMat.opacity = k*.95;
+        // 沈みは終盤だけ。急に落ちるのではなく、はっきり見えるように傾く
+        const s = Math.max(0, (k-.65)/.35);
+        curFloe.group.position.y = -s*1.9;
+        curFloe.group.rotation.x = s*.16;
+        rig.group.position.y = curFloe.group.position.y;
+        rig.group.rotation.x = curFloe.group.rotation.x;
+        // きしむ音を数回だけ
+        if(!SILENT){
+          const slot = Math.floor(k*5);
+          if(k>.4 && slot !== curFloe.__crackSlot){ curFloe.__crackSlot = slot; SND.crack(); }
+        }
+        if(standTimer > lim){ die('sink'); }
+      }
+    }
+
+    // 蹴った反動で板が少し沈む
+    for(const f of floes){
+      if(f.kick > 0){
+        f.kick = Math.max(0, f.kick - dt*1.6);
+        if(f !== curFloe) f.group.position.y = -f.kick*.5;
+      }
+    }
+
+    // 着地の閃光を減衰
+    if(landedFx>0) landedFx = Math.max(0, landedFx - dt*2.4);
+
+    // 走るしぐさ: 空中では脚を伸ばし、地上では小刻みに動かす
+    const gait = airborne ? 0 : Math.sin(t*9)*.35;
+    for(let i=0;i<rig.legs.length;i++){
+      rig.legs[i].rotation.x = airborne ? -.5 : gait*(i%2?1:-1);
+    }
+    rig.deer.position.y = airborne ? .12 : Math.abs(Math.sin(t*9))*.05;   // 板の上での上下動
+    // 赤い鼻が溜めに応じて明るくなる。メーターを見なくても力がわかる
+    rig.nose.material.emissive.setHex(charging ? 0x991016 : 0x551015);
+    rig.nose.scale.setScalar(1 + (charging ? charge*.5 : 0));
+
+    // 前の板を捨てて、先を足す
+    while(floes.length && floes[0] !== curFloe &&
+          floes[0].z > rig.group.position.z + 20){
+      scene.remove(floes[0].group); floes.shift();
+    }
+    extendCourse();
+
+    // メーターは常に最新の狙いを映す
+    if(!airborne) updateZone();
+
+    // 氷山の視差
+    for(const b of bergs){
+      if(b.position.z > rig.group.position.z + 30) b.position.z -= 26*26;
+    }
+    sea.position.z = rig.group.position.z - 380;
+    heroLight.position.set(rig.group.position.x, 6, rig.group.position.z + 4);
+  }
+
+  // --- death sequence: slow-mo unwinds, camera pushes in, the sled tips over ---
+  if(dead){
+    timeScale += (0 - timeScale)*Math.min(1, raw*1.1);   // ease down to a near-freeze
+    // 海へ沈んでいく
+    rig.group.position.y -= raw*2.4*Math.max(.15, timeScale);
+    rig.group.rotation.z += raw*1.6;
+    rig.group.rotation.x -= raw*1.2;
+  }
+
+  // --- camera (runs even while dead, so the zoom and shake still play) ---
+  camDist += (camDistTarget - camDist)*Math.min(1, raw*2.4);
+  camera.position.z = rig.group.position.z + camDist;
+  camera.position.y = 7.0 + rig.group.position.y*.35 - (13.5-camDist)*.3;
+  // 真後ろからだと跳躍の弧が奥行きに潰れて距離が読めない。
+  // 横へずらした四分の三視点にして、跳ぶ先との間隔を横から見せる。
+  // 縦画面は横幅が狭いので、横ずらしを控えめにしないと盤面が端に寄る
+  const side = CAM_SIDE * (innerWidth < innerHeight ? .45 : 1);
+  const camSideX = rig.group.position.x*.5 + side;
+  camera.position.x += (camSideX - camera.position.x)*Math.min(1,raw*5);
+  if(shake>0){
+    shake = Math.max(0, shake - raw*.9);
+    camera.position.x += (Math.random()-.5)*shake;
+    camera.position.y += (Math.random()-.5)*shake;
+  }
+  // 距離を測るゲームなので、跳ぶ先の板まで必ず画面に入れる。
+  // 注視点をソリと次の板のあいだに置き、間隔そのものを見せる。
+  const aim = nextFloe ? (nextFloe.z - nextFloe.len/2) : rig.group.position.z - 14;
+  const look = THREE.MathUtils.lerp(rig.group.position.z, aim, .62);
+  camera.lookAt(rig.group.position.x*.5, .2, look);
+
+  renderer.render(scene, camera);
+}
+
+/** 板に着地した */
+function land(f){
+  rig.group.position.y = 0;
+  rig.group.rotation.x = 0;
+  airborne = false;
+  vx = 0; vy = 0;
+  jumps++;
+  standTimer = 0;
+  f.kick = .3;
+
+  // 着地の質で点が変わる。中央に近いほど高い
+  const centreDist = Math.abs(rig.group.position.z - f.z) / (f.len/2);
+  const perfect = centreDist < .3;
+  const gain = perfect ? 120 : 60;
+  score += gain;
+  if(perfect){
+    perfectStreak++;
+    score += perfectStreak*20;      // 連続で決めるほど伸びる
+    msgEl.textContent = perfectStreak > 1 ? `ど真ん中 ${perfectStreak}連続！` : 'ど真ん中！';
+    flash('#8affd0', .22, 300);
+    if(!SILENT) SND.perfect();
+  } else {
+    perfectStreak = 0;
+    msgEl.textContent = '';
+    if(!SILENT) SND.land();
+  }
+  landedFx = 1;
+  shake = Math.max(shake, .12);
+
+  // 前の板は用済み。次の狙いを決め直す
+  if(curFloe && curFloe !== f) curFloe.crackMat.opacity = .95;
+  curFloe = f;
+  curFloe.visited = true;
+  curFloe.__crackSlot = -1;
+  pickNext();
+  extendCourse();
+}
+
+function gameOver(cause){
+  running=false; deadAt=Date.now();
+  charging=false;
+  powerEl.classList.remove('on'); powerLabel.classList.remove('on');
+  powerEl.style.filter = '';
+  if(!SILENT){
+    if(cause==='sea' || cause==='sink') SND.splash();
+    SND.hit(); SND.duck(1.6); setTimeout(()=>SND.over(), 700);
+  }
+  // hit feedback: red flash, red vignette, hard shake, camera punches in
+  flash('#ff2b3a', .8, 500);
+  vignetteEl.style.transition='opacity .5s'; vignetteEl.style.opacity=1;
+  shake = .9;
+  camDistTarget = 5.2;
+  const finalScore = Math.floor(score);
+  koScoreEl.textContent = finalScore;
+  msgEl.textContent = '';
+  setTimeout(()=>{ koEl.classList.add('on'); }, 620);   // K.O. lands after the slow-mo
+  if(AUTO){ setTimeout(()=>{ reset(); running=true;
+                             if(!SILENT) SND.unduck(); }, RETRY_MS); }
+  else setTimeout(()=>{
+    msgEl.textContent = matchMedia('(pointer:coarse)').matches
+      ? 'タップでもう一度' : 'スペースでもう一度';
+  }, 1800);
+}
+tick();
+
+// --- 遊び方 (?) : ルールを見せる。録画中は出さない ---
+(function(){
+  const btn = document.getElementById('helpBtn');
+  const panel = document.getElementById('help');
+  if(!btn || !panel) return;
+  if(NOCHROME){                      // 録画・showcase では画面から消す
+    btn.style.display = 'none';
+    const back = document.getElementById('back');
+    if(back) back.style.display = 'none';
+    return;
+  }
+  const open = () => { panel.classList.add('on'); };
+  const close = () => { panel.classList.remove('on'); };
+  btn.addEventListener('click', open);
+  btn.addEventListener('touchend', e => { e.preventDefault(); open(); }, {passive:false});
+  panel.addEventListener('click', e => { if(e.target === panel) close(); });
+  panel.querySelector('.close').addEventListener('click', close);
+  panel.querySelector('.close').addEventListener('touchend',
+    e => { e.preventDefault(); close(); }, {passive:false});
+  addEventListener('keydown', e => {
+    if(e.code === 'Escape') close();
+    else if(e.key === '?' || (e.code === 'Slash' && e.shiftKey)) open();
+  });
+})();
+</script>
+</body>
+</html>

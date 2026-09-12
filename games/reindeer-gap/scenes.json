@@ -1,0 +1,216 @@
+{
+  "id": "0009_reindeer_gap",
+  "title": "トナカイの跳躍",
+  "video_title": "氷が割れる海を、ソリで跳んで渡る人がいます",
+  "lang": "ja",
+  "voice": "am_adam",
+  "scenes": [
+    {
+      "kind": "hook",
+      "clip": "chasm",
+      "narration": "冬のあいだだけ現れる道を、今も使っている人がいます。"
+    },
+    {
+      "kind": "image",
+      "prompt": "wide cinematic aerial view of a frozen Arctic inlet at dusk, broken sea ice floes separated by dark open water, a narrow snow track leading to the shore, distant low hills, cold blue and pale orange light, photorealistic, highly detailed",
+      "narration": "ノルウェーの北のほうに、細い入り江があります。冬になると凍って、向こう岸まで歩けます。地元の人は、ずっとその上を通ってきました。"
+    },
+    {
+      "kind": "image",
+      "prompt": "a lone reindeer pulling a wooden sled across cracked sea ice at twilight, thin dark cracks spreading under the runners, a small figure standing on the sled, breath fog in freezing air, cinematic realistic photograph, moody cold tones, highly detailed",
+      "narration": "そこでトナカイを飼っている、ニルスという人がいます。向こう岸には、餌の干し草を置いた小屋があります。行きと帰りで、氷の上を一日二回。"
+    },
+    {
+      "kind": "image",
+      "prompt": "close up of a wide crack in Arctic sea ice, dark seawater visible in the gap, sled runner tracks stopping at the edge, harsh low sunlight, documentary photography style, sharp detail, cold desaturated palette",
+      "narration": "ところが、ここ何年か氷が薄いんです。割れ目が増えました。陸をまわる道もありますが、丸二日かかります。だからニルスは、割れ目を跳びます。そうなんです、跳ぶんです。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "sled",
+      "kicker": "跳ぶ人",
+      "title": "ニルスのソリ",
+      "bullets": [
+        "**押して溜める。離すと跳ぶ**",
+        "角度は固定。変えられるのは**強さだけ**",
+        "空中では何もできない"
+      ],
+      "narration": "これがニルスとソリです。操作はひとつだけ。押している間、力が溜まります。離すと跳びます。跳ぶ角度は変えられません。決められるのは強さだけです。そして空中では、もう何もできません。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "floe",
+      "kicker": "足場",
+      "title": "氷の板",
+      "bullets": [
+        "乗ると**すぐに沈み始める**",
+        "進むほど**立てる時間が短くなる**",
+        "端より**真ん中に降りると得点が高い**"
+      ],
+      "narration": "渡っていくのは、こういう氷の板です。乗った瞬間から沈み始めます。しかも、進むほど立っていられる時間が短くなります。ここが面白いところです。真ん中に降りると点が高い。でも真ん中を狙うと、届かない危険が上がります。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "thinfloe",
+      "kicker": "細い足場",
+      "title": "うすごおり",
+      "bullets": [
+        "板が**細くなる**。着地できる幅が減る",
+        "強さを外せる余裕が**ほとんどない**",
+        "しばらく続く。一枚では終わらない"
+      ],
+      "narration": "そしてこれが、うすごおりです。板が細くなります。着地していい幅が、ぐっと減ります。強すぎても弱すぎても海です。もちろん、一枚では終わりません。しばらく細いままです。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "seal",
+      "kicker": "邪魔をしない",
+      "title": "アザラシ",
+      "bullets": [
+        "板の上に**ときどき乗っている**",
+        "当たっても何も起きない",
+        "ただ、そこにいるだけ"
+      ],
+      "narration": "板の上には、ときどきアザラシがいます。当たっても何も起きません。害はないです。じゃあ何のためにいるのか。いると、氷の板が大きさのわかるものになるんです。意外と大事なんですよ。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "berg",
+      "kicker": "遠くの景色",
+      "title": "氷山",
+      "bullets": [
+        "海のずっと向こうに立っている",
+        "触れない。当たらない",
+        "**どれだけ進んだか**が見える"
+      ],
+      "narration": "遠くには氷山が立っています。これには当たりません。近づくこともできません。でも、横を通り過ぎていくんです。だから、どれだけ進んだかがわかります。"
+    },
+    {
+      "kind": "events",
+      "clip": "events",
+      "kicker": "海のほう",
+      "title": "海は静かにしていない",
+      "bullets": [
+        "**ふぶき** — メーターが見えなくなる",
+        "**よこかぜ** — 空中で軌道が曲がる",
+        "**おおわれめ** — 次の一枚だけ遠い",
+        "**オーロラ** — 成功の幅が広がる"
+      ],
+      "narration": "海は静かにしていません。ふぶきが来ると、力のメーターが見えなくなります。目で覚えるしかない。よこかぜは、跳んだあとに軌道を曲げます。おおわれめは、次の一枚だけをうんと遠くへ押しやります。救いもあります。オーロラが出ている間だけ、成功の幅が広がります。"
+    },
+    {
+      "kind": "death",
+      "clip": "death",
+      "kicker": "終わり方",
+      "title": "最後はいつも海です",
+      "bullets": [
+        "弱すぎれば手前、強すぎれば奥。**どちらも海**",
+        "時間が**ゆっくり止まる**",
+        "そのあと、跳べた回数が出る"
+      ],
+      "narration": "終わり方はいつも同じです。弱すぎれば手前に落ちます。強すぎれば飛び越えて落ちます。どちらも海です。時間がゆっくり止まって、カメラが寄ります。それから、何回跳べたかが出ます。ニルスはこの海を、何年も往復しています。あなたは、たぶん数回で沈みます。"
+    },
+    {
+      "kind": "outro",
+      "title": "概要欄のリンクから遊べます",
+      "subtitle": "チャンネル登録で、毎日ひとつ新作",
+      "narration": "今すぐ遊べます。概要欄のリンクからどうぞ。チャンネル登録もお願いします。明日もまた、新しいのを出します。"
+    }
+  ],
+  "slug": "reindeer-gap",
+  "channel": "Daily Arcade Studio",
+  "events": [
+    "blizzard",
+    "aurora",
+    "gust",
+    "thin",
+    "chasm"
+  ],
+  "short": [
+    {
+      "mark": "chasm",
+      "lead": -0.5,
+      "dur": 9.0,
+      "headline": "次の一枚だけ、遠い"
+    },
+    {
+      "mark": "blizzard",
+      "lead": -0.3,
+      "dur": 8.0,
+      "headline": "メーターが見えない"
+    },
+    {
+      "mark": "thin",
+      "lead": -0.5,
+      "dur": 8.0,
+      "headline": "板が細くなる"
+    },
+    {
+      "mark": "gust",
+      "lead": -0.5,
+      "dur": 7.0,
+      "headline": "空中で曲げられる"
+    },
+    {
+      "mark": "death",
+      "lead": -2.0,
+      "dur": 9.0,
+      "headline": "強すぎても海"
+    }
+  ],
+  "thumb": {
+    "hook": "跳ぶか、沈むか",
+    "sub": "溜めて離すだけ。ブラウザで無料。",
+    "frame_mark": "chasm",
+    "frame_lead": 1.0
+  },
+  "short_v2": {
+    "cuts": [
+      {
+        "kind": "clip",
+        "mark": "chasm",
+        "lead": -0.5,
+        "dur": 4.5,
+        "headline": "今日のゲーム",
+        "narration": "今日のゲームです。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "sled",
+        "dur": 5.0,
+        "headline": "トナカイの跳躍",
+        "narration": "割れた氷の海を、ソリで跳んで渡る人です。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "floe",
+        "dur": 5.0,
+        "headline": "すぐ沈む",
+        "narration": "氷の板は、乗った瞬間から沈み始めます。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "thinfloe",
+        "dur": 5.0,
+        "headline": "うすごおり",
+        "narration": "板が細くなると、着地できる幅が減ります。"
+      },
+      {
+        "kind": "clip",
+        "mark": "death",
+        "lead": -2.0,
+        "dur": 5.5,
+        "headline": "",
+        "narration": "強すぎても、海です。"
+      },
+      {
+        "kind": "clip",
+        "mark": "run2",
+        "lead": 1.0,
+        "dur": 4.5,
+        "cta": "概要欄のリンクから遊べます",
+        "narration": "ブラウザで無料で遊べます。リンクは概要欄です。"
+      }
+    ]
+  }
+}
