@@ -1,0 +1,239 @@
+{
+  "id": "0010_sauna_ladle",
+  "title": "サウナ番",
+  "video_title": "温度計が壊れたサウナを、柄杓一本で守る話",
+  "lang": "ja",
+  "voice": "ja_female",
+  "scenes": [
+    {
+      "kind": "hook",
+      "clip": "fever",
+      "narration": "このゲーム、やることは水を掛けるだけです。それだけなのに、ものすごく難しい。"
+    },
+    {
+      "kind": "image",
+      "prompt": "a small old public sauna building beside a frozen lake in rural Finland, wooden walls, snow on the roof, warm light glowing from one small window, blue dusk, cinematic wide shot, photorealistic, highly detailed",
+      "narration": "フィンランドの湖のそばに、小さな公衆サウナがあります。四十年やっている店です。去年、その店の温度調節が壊れました。"
+    },
+    {
+      "kind": "image",
+      "prompt": "interior of a traditional Finnish sauna, hot stones piled on an iron stove glowing orange, a wooden ladle resting on the rim of a water bucket, steam hanging in the air, warm dim light, cinematic, photorealistic, highly detailed",
+      "narration": "ストーブは止まりません。放っておくと、温度はどんどん上がります。部品はもう作られていないそうです。"
+    },
+    {
+      "kind": "image",
+      "prompt": "a middle aged man in a towel sitting alone on a wooden sauna bench, holding a ladle, looking at the stove, steam and warm orange light, quiet and tired expression, cinematic portrait, photorealistic, highly detailed",
+      "narration": "それで店主のヴェイコさんは、毎日ここに座っています。熱くなったら、水を掛ける。それだけで、温度を保っています。あなたが今日やるのも、それです。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "ladle",
+      "kicker": "あなたの道具",
+      "title": "柄杓",
+      "bullets": [
+        "引いた長さが、**そのまま水の量**になります",
+        "離した瞬間に、石へ掛かります",
+        "掛けたあとは**桶に汲み直し**。連打はできません"
+      ],
+      "narration": "使う道具は、これ一本です。引くと水が溜まります。長く引くほど、たくさん入る。離すと石に掛かります。掛けたあとは汲み直しです。だから連打はできません。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "stone",
+      "kicker": "相手",
+      "title": "サウナストーン",
+      "bullets": [
+        "熱いときほど、**水がよく効きます**",
+        "一杯で下がる幅は、そのとき次第",
+        "同じ強さで引いても、同じ結果にはならない"
+      ],
+      "narration": "水を受けるのが、この石です。ここが面白いところなんですが、石は熱いときほどよく冷えます。つまり同じ量を掛けても、下がり方が毎回ちがう。同じ引き方をしても、同じ結果になりません。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "steam",
+      "kicker": "落とし穴",
+      "title": "ロウリュ",
+      "bullets": [
+        "水を掛けると、**蒸気が溜まります**",
+        "少量なら少し。**大量だと一気に**溜まる",
+        "百まで溜まると、そこで終わりです"
+      ],
+      "narration": "そしてこれが、このゲームの一番いやらしいところです。水を掛けると蒸気が出ます。ちょっとなら、ちょっと。でも、たっぷり掛けると一気に溜まります。溜まりきると、そこで終わりです。楽な道はありません。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "stove",
+      "kicker": "止まらないもの",
+      "title": "ストーブ",
+      "bullets": [
+        "温度は**ひとりでに上がり続けます**",
+        "上がる速さは、時間とともに増える",
+        "百三十度で、焼けて終了"
+      ],
+      "narration": "温度は放っておくと上がります。ずっと上がります。しかも、上がる速さが時間とともに増えていく。最初の一杯で足りた分が、三分後には全然足りません。百三十度まで行くと、焼けて終わりです。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "guest",
+      "kicker": "お客さん",
+      "title": "サウナ客",
+      "bullets": [
+        "座ると、**体が熱を吸います**",
+        "多いほど温度が上がりにくい",
+        "つまり、来てくれた方がありがたい"
+      ],
+      "narration": "途中でお客さんが入ってきます。邪魔者ではありません。人が座ると、その体が熱を吸ってくれる。だから温度が上がりにくくなります。お客さんは、多いほどありがたいんです。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "window",
+      "kicker": "外の空気",
+      "title": "窓",
+      "bullets": [
+        "開くと、**温度が下がっていきます**",
+        "蒸気も一緒に抜けます",
+        "開いている間は、水を我慢する時間"
+      ],
+      "narration": "窓が開くことがあります。外の空気が入って、温度が下がっていく。蒸気も抜けます。ここは水を掛けてはいけません。ただ待つ時間です。じっと我慢してください。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "firedoor",
+      "kicker": "最悪の合図",
+      "title": "焚き口",
+      "bullets": [
+        "開くと、**薪がくべられます**",
+        "火力が一気に跳ね上がる",
+        "たっぷり掛けるしかない。でも蒸気が溜まる"
+      ],
+      "narration": "そして、この焚き口が開いたら要注意です。薪がくべられて、火力が跳ね上がります。こうなると、ちょい掛けでは間に合いません。たっぷり掛けるしかない。でも、たっぷり掛けると蒸気が溜まります。そうなんです。逃げ場がないんです。"
+    },
+    {
+      "kind": "events",
+      "clip": "events",
+      "kicker": "サウナの一日",
+      "title": "静かな日はありません",
+      "bullets": [
+        "**薪をくべた** — 火力が跳ね上がる",
+        "**湿気がこもった** — 蒸気が抜けなくなる",
+        "**ととのいタイム** — 帯が狭くなって、点は三倍"
+      ],
+      "narration": "サウナは静かにしていてくれません。薪がくべられ、窓が開き、客が入ってくる。湿気がこもると、蒸気がほとんど抜けなくなります。そしてここからが本題です。ととのいタイムが来ると、狙う帯がぐっと狭くなる。そのかわり点が三倍です。狙いますよね。もちろん失敗します。"
+    },
+    {
+      "kind": "death",
+      "clip": "death",
+      "kicker": "走行の終わり",
+      "title": "終わり方は二つだけ",
+      "bullets": [
+        "**焼け** — 温度が百三十度に届いた",
+        "**蒸気過多** — 蒸気が百まで溜まった",
+        "時間がゆっくり止まって、カメラが寄ります"
+      ],
+      "narration": "終わり方は二つです。熱くしすぎて焼けるか、水を掛けすぎて蒸気に沈むか。どちらも自分でやったことです。時間がゆっくり止まって、カメラが寄って、点数が出ます。ヴェイコさんは、これを一年続けています。あなたは、たぶん一分もちません。"
+    },
+    {
+      "kind": "outro",
+      "title": "リンクは概要欄です",
+      "subtitle": "チャンネル登録で、毎日ゲームが一本",
+      "narration": "概要欄のリンクから遊べます。ブラウザで、すぐに動きます。毎日一本ゲームを出しているので、よかったらチャンネル登録をお願いします。"
+    }
+  ],
+  "slug": "sauna-ladle",
+  "channel": "Daily Arcade Studio",
+  "events": [
+    "stoke",
+    "window",
+    "guests",
+    "humid",
+    "fever"
+  ],
+  "short": [
+    {
+      "mark": "fever",
+      "lead": -0.3,
+      "dur": 9.0,
+      "headline": "帯が狭くなって、点は三倍"
+    },
+    {
+      "mark": "stoke",
+      "lead": -0.5,
+      "dur": 8.0,
+      "headline": "薪をくべられました"
+    },
+    {
+      "mark": "humid",
+      "lead": -0.5,
+      "dur": 8.0,
+      "headline": "蒸気が抜けません"
+    },
+    {
+      "mark": "window",
+      "lead": -0.5,
+      "dur": 7.0,
+      "headline": "ここは掛けちゃだめ"
+    },
+    {
+      "mark": "death",
+      "lead": -2.0,
+      "dur": 9.0,
+      "headline": "一分もちません"
+    }
+  ],
+  "thumb": {
+    "hook": "水を掛けるだけ",
+    "sub": "温度計は壊れています。ブラウザで無料。",
+    "frame_mark": "stoke",
+    "frame_lead": 1.0
+  },
+  "short_v2": {
+    "cuts": [
+      {
+        "kind": "clip",
+        "mark": "fever",
+        "lead": -0.3,
+        "dur": 4.5,
+        "headline": "今日のゲーム",
+        "narration": "今日のゲームです。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "ladle",
+        "dur": 5.0,
+        "headline": "サウナ番",
+        "narration": "あなたはサウナ番です。柄杓一本で、温度を保ちます。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "stove",
+        "dur": 5.0,
+        "headline": "止まらない",
+        "narration": "ストーブは止まりません。温度は上がり続けます。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "steam",
+        "dur": 5.0,
+        "headline": "掛けすぎ注意",
+        "narration": "でも掛けすぎると、蒸気が溜まって終わります。"
+      },
+      {
+        "kind": "clip",
+        "mark": "death",
+        "lead": -2.0,
+        "dur": 5.5,
+        "headline": "",
+        "narration": "ほら、こうなります。"
+      },
+      {
+        "kind": "clip",
+        "mark": "run2",
+        "lead": 1.0,
+        "dur": 4.5,
+        "cta": "概要欄のリンクから遊べます",
+        "narration": "ブラウザで無料で遊べます。リンクは概要欄です。"
+      }
+    ]
+  }
+}
