@@ -149,25 +149,29 @@
       "tag": "ENDING 1",
       "name": "馬の話が残った皇帝",
       "body": "これが、伝わっているカリグラにいちばん近い道です。あなたは配り、見せつけ、議員たちを笑いました。馬は執政官になっていません。言ってみせただけです。それでも紀元41年1月、暗い通路で近衛兵に囲まれました。28歳。在位3年10か月。そして80年後、あなたを嫌う人たちが本を書きました。",
-      "image_prompt": "A dim underground palace corridor in ancient Rome, Praetorian guards with drawn swords closing in on a young emperor in a purple cloak, torchlight and long shadows on marble walls, 19th century academic history painting, oil on canvas, dramatic chiaroscuro, no text, no letters, no words, no writing, no signage"
+      "image_prompt": "A dim underground palace corridor in ancient Rome, Praetorian guards with drawn swords closing in on a young emperor in a purple cloak, torchlight and long shadows on marble walls, 19th century academic history painting, oil on canvas, dramatic chiaroscuro, no text, no letters, no words, no writing, no signage",
+      "image": "img/示敵.jpg"
     },
     "示和": {
       "tag": "ENDING 2",
       "name": "派手で、憎まれなかった",
       "body": "あなたは見せ物も船の橋も続けましたが、議員たちには丁寧でした。裁判の記録は焼き、席も名誉も分け合います。金庫は空になり、属州からの税は重くなりました。財政の評判は最悪です。それでも、あなたを殺す相談はまとまりませんでした。派手な皇帝として、長く生きたかもしれません。",
-      "image_prompt": "A young Roman emperor in a gilded breastplate riding a horse across a long bridge of moored ships over a sunlit bay, cheering crowds and senators in white togas on the shore, Mount Vesuvius in the distance, 19th century academic history painting, oil on canvas, warm epic light, no text, no letters, no words, no writing, no signage"
+      "image_prompt": "A young Roman emperor in a gilded breastplate riding a horse across a long bridge of moored ships over a sunlit bay, cheering crowds and senators in white togas on the shore, Mount Vesuvius in the distance, 19th century academic history painting, oil on canvas, warm epic light, no text, no letters, no words, no writing, no signage",
+      "image": "img/示和.jpg"
     },
     "抑敵": {
       "tag": "ENDING 3",
       "name": "静かに憎まれた皇帝",
       "body": "あなたは金を配らず、橋もかけず、馬の話もしませんでした。ただ、議員たちを許しもしませんでした。見せ物のない街は、あなたを好きになりません。議場は黙って、あなたを数えています。派手な悪口は残りませんが、残ったのは短い一行だけ。誰にも惜しまれずに終わった皇帝です。",
-      "image_prompt": "A solemn young Roman emperor seated alone on a raised curule chair in an empty senate hall, rows of vacant marble benches, cold grey light from high windows, 19th century academic history painting, oil on canvas, muted tones, no text, no letters, no words, no writing, no signage"
+      "image_prompt": "A solemn young Roman emperor seated alone on a raised curule chair in an empty senate hall, rows of vacant marble benches, cold grey light from high windows, 19th century academic history painting, oil on canvas, muted tones, no text, no letters, no words, no writing, no signage",
+      "image": "img/抑敵.jpg"
     },
     "抑和": {
       "tag": "ENDING 4",
       "name": "何も語られない皇帝",
       "body": "あなたは遺言を守り、支出をしぼり、議員たちと相談して決めました。馬は競走馬のままです。ブリタンニアには渡らず、国境を固めて帰りました。近衛兵には給料が届いています。誰も刺しに来ません。ただ、あなたの名前で語れる話は一つもありません。歴史家は数行で済ませたでしょう。",
-      "image_prompt": "A modest Roman emperor in a plain white toga reading documents with elderly senators around a marble table, grain ships visible through an open colonnade, quiet daylight, 19th century academic history painting, oil on canvas, calm restrained palette, no text, no letters, no words, no writing, no signage"
+      "image_prompt": "A modest Roman emperor in a plain white toga reading documents with elderly senators around a marble table, grain ships visible through an open colonnade, quiet daylight, 19th century academic history painting, oil on canvas, calm restrained palette, no text, no letters, no words, no writing, no signage",
+      "image": "img/抑和.jpg"
     }
   }
 }
