@@ -3,9 +3,19 @@ problem.json の kind=="image" シーンの prompt から <out>/imgs/<idx>.png �
 usage: python gen_images.py <problem.json> <out_dir>
 16:9 (1344x768) で生成。MPS/16GB対策で attention slicing。
 """
+import gc
 import sys, json
 from pathlib import Path
 import torch
+
+# MPS は放っておくとシステムメモリを取り込み続け、swap を食い潰す
+# （実測で 20秒あたり 372MB ずつ増えた）。使用量に上限をかける。
+# 推奨上限のさらに 6割に抑えて、OS と他プロセスの分を残す。
+if torch.backends.mps.is_available():
+    try:
+        torch.mps.set_per_process_memory_fraction(0.6)
+    except Exception as _e:
+        print(f"MPS上限を設定できず: {_e}", flush=True)
 from diffusers import StableDiffusionXLPipeline
 
 NEG = "text, watermark, signature, letters, words, deformed, blurry, low quality, extra limbs, distorted faces"
@@ -37,6 +47,11 @@ def main(prob_path, out_dir):
                      guidance_scale=7.0,
                      generator=torch.Generator("cpu").manual_seed(1200+idx)).images[0]
         image.save(dst)
+        # 1枚ごとにキャッシュを返す。溜めると swap に落ちて戻ってこない。
+        del image
+        gc.collect()
+        if torch.backends.mps.is_available():
+            torch.mps.empty_cache()
         print(f"IMG_OK {dst.name}", flush=True)
     print("ALL_IMG_DONE", flush=True)
 

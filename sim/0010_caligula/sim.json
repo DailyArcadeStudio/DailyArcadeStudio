@@ -1,0 +1,173 @@
+{
+  "title": "あなたがカリグラだったら",
+  "lead": "紀元37年、あなたは24歳で皇帝になりました。前の皇帝は嫌われていたので、街はあなたを待っています。金庫には27億セステルティウス。元老院の議員たちは、頭を下げながらあなたを見ています。ここから3年10か月です。",
+  "axes": [
+    {
+      "label": "見せつけるか、おさえるか",
+      "pos": "示",
+      "neg": "抑"
+    },
+    {
+      "label": "元老院を敵にするか、味方にするか",
+      "pos": "敵",
+      "neg": "和"
+    }
+  ],
+  "history": "カリグラは即位後に人気を集めましたが、半年で重い病気にかかり、そこから変わったと伝わります。愛馬インキタトゥスを豪華に扱い、執政官にするつもりだったと言われますが、実際になった記録はありません。紀元41年、近衛兵に殺されました。",
+  "scenes": [
+    {
+      "year": "紀元37年3月 即位",
+      "situation": "前の皇帝ティベリウスが死にました。遺言では、あなたと従弟のゲメルスが一緒に相続する形になっています。近衛兵の長官マクロが、あなたを皇帝に押し上げてくれました。ただ、遺言のままだと権力が二人に割れます。元老院は、あなたが遺言をどう扱うか見ています。",
+      "options": [
+        {
+          "text": "元老院に遺言を無効にさせ、自分ひとりの皇帝だと宣言する",
+          "a": 2,
+          "b": 1
+        },
+        {
+          "text": "遺言を守り、ゲメルスを養子にして二人の形を残す",
+          "a": -1,
+          "b": -2
+        }
+      ]
+    },
+    {
+      "year": "紀元37年 最初の数か月",
+      "situation": "金庫には、前の皇帝が残した27億セステルティウスがあります。あなたは税をゆるめ、見せ物を開き、市民に金を配りました。街はわきます。ただ、この勢いで配り続けると、1年で底が見えます。財務の係が、そっと紙を持ってきました。",
+      "options": [
+        {
+          "text": "配り続ける。剣闘士も戦車競走も増やし、街を味方にする",
+          "a": 2,
+          "b": 1
+        },
+        {
+          "text": "ここで止める。元老院と相談して、支出をしぼる",
+          "a": -2,
+          "b": -2
+        }
+      ]
+    },
+    {
+      "year": "紀元37年10月 病床",
+      "situation": "即位して半年、あなたは重い病気で倒れました。ローマじゅうが、あなたのために祈っています。熱の中で、あなたは気づきました。自分は神のように愛されているのか、それとも次の皇帝を待たれているのか。回復したあと、どう振るまうかです。",
+      "options": [
+        {
+          "text": "自分は特別な存在だと示す。疑わしい者から先に片づける",
+          "a": 2,
+          "b": 2
+        },
+        {
+          "text": "病気の前と同じ皇帝にもどる。祈ってくれた者に礼を言う",
+          "a": -2,
+          "b": -1
+        }
+      ]
+    },
+    {
+      "year": "紀元38年 元老院との距離",
+      "situation": "議員たちは、前の皇帝の時代に何人も同僚を売ってきました。あなたはその裁判の記録を持っています。焼いてしまえば、過去は消えます。読み上げれば、誰が誰を売ったか全員に分かります。あなたの手の中に、議場の空気があります。",
+      "options": [
+        {
+          "text": "記録を読み上げ、議員たちに自分の過去を見せつける",
+          "a": 2,
+          "b": 2
+        },
+        {
+          "text": "人前で記録を焼き、過去は問わないと約束する",
+          "a": 1,
+          "b": -2
+        }
+      ]
+    },
+    {
+      "year": "紀元39年 愛馬インキタトゥス",
+      "situation": "あなたの馬には、大理石の小屋と象牙のかいば桶があります。紫の毛布に宝石の首輪。家と召使いまでつけました。今日、議場で執政官の話が出ています。あなたは思いつきました。あの席なら、馬にでも務まるのではないか。言えば、必ず伝わります。",
+      "options": [
+        {
+          "text": "「馬でも執政官は務まる」と議場で言ってみせる",
+          "a": 2,
+          "b": 2
+        },
+        {
+          "text": "馬は競走馬のままにして、執政官の話には触れない",
+          "a": -1,
+          "b": -1
+        }
+      ]
+    },
+    {
+      "year": "紀元39年 バイアエ湾",
+      "situation": "ナポリの近くの湾に、船をつないで橋をかけられます。長さはおよそ5キロ。その上を馬で渡れば、海をまたいだ皇帝として語られるでしょう。費用は莫大です。同じ金で、エジプトからの穀物船を増やすこともできます。",
+      "options": [
+        {
+          "text": "船の橋をかけ、金の胸当てをつけて馬で渡る",
+          "a": 2,
+          "b": 1
+        },
+        {
+          "text": "橋はやめて、穀物と港に金を回す",
+          "a": -2,
+          "b": -1
+        }
+      ]
+    },
+    {
+      "year": "紀元40年 北の遠征",
+      "situation": "あなたは軍を率いて、ライン川から海岸まで来ました。向こうはブリタンニアです。父も祖父も、軍で名を上げました。渡れば、大きな戦いになります。渡らずに帰れば、何もしなかったと言われます。兵士たちは、命令を待っています。",
+      "options": [
+        {
+          "text": "海に向かって進軍を命じ、兵に浜で貝がらを拾わせる",
+          "a": 2,
+          "b": 1
+        },
+        {
+          "text": "渡らず、将軍たちと相談して国境の守りを固めて帰る",
+          "a": -2,
+          "b": -2
+        }
+      ]
+    },
+    {
+      "year": "紀元41年1月 宮殿の通路",
+      "situation": "近衛兵の隊長カッシウス・カエレアが、あなたに合言葉を聞きにきます。あなたは毎回、この男をからかってきました。宮殿では見せ物が開かれています。通路は暗く、護衛はゲルマン人の兵だけです。あなたを恨む者の名は、もう耳に入っています。",
+      "options": [
+        {
+          "text": "気にせず通路を歩く。皇帝を殺す度胸などないと見ている",
+          "a": 2,
+          "b": 2
+        },
+        {
+          "text": "カエレアを外し、近衛兵に金を配って、通路を使わない",
+          "a": -2,
+          "b": -2
+        }
+      ]
+    }
+  ],
+  "endings": {
+    "示敵": {
+      "tag": "ENDING 1",
+      "name": "馬の話が残った皇帝",
+      "body": "これが、伝わっているカリグラにいちばん近い道です。あなたは配り、見せつけ、議員たちを笑いました。馬は執政官になっていません。言ってみせただけです。それでも紀元41年1月、暗い通路で近衛兵に囲まれました。28歳。在位3年10か月。そして80年後、あなたを嫌う人たちが本を書きました。",
+      "image_prompt": "A dim underground palace corridor in ancient Rome, Praetorian guards with drawn swords closing in on a young emperor in a purple cloak, torchlight and long shadows on marble walls, 19th century academic history painting, oil on canvas, dramatic chiaroscuro, no text, no letters, no words, no writing, no signage"
+    },
+    "示和": {
+      "tag": "ENDING 2",
+      "name": "派手で、憎まれなかった",
+      "body": "あなたは見せ物も船の橋も続けましたが、議員たちには丁寧でした。裁判の記録は焼き、席も名誉も分け合います。金庫は空になり、属州からの税は重くなりました。財政の評判は最悪です。それでも、あなたを殺す相談はまとまりませんでした。派手な皇帝として、長く生きたかもしれません。",
+      "image_prompt": "A young Roman emperor in a gilded breastplate riding a horse across a long bridge of moored ships over a sunlit bay, cheering crowds and senators in white togas on the shore, Mount Vesuvius in the distance, 19th century academic history painting, oil on canvas, warm epic light, no text, no letters, no words, no writing, no signage"
+    },
+    "抑敵": {
+      "tag": "ENDING 3",
+      "name": "静かに憎まれた皇帝",
+      "body": "あなたは金を配らず、橋もかけず、馬の話もしませんでした。ただ、議員たちを許しもしませんでした。見せ物のない街は、あなたを好きになりません。議場は黙って、あなたを数えています。派手な悪口は残りませんが、残ったのは短い一行だけ。誰にも惜しまれずに終わった皇帝です。",
+      "image_prompt": "A solemn young Roman emperor seated alone on a raised curule chair in an empty senate hall, rows of vacant marble benches, cold grey light from high windows, 19th century academic history painting, oil on canvas, muted tones, no text, no letters, no words, no writing, no signage"
+    },
+    "抑和": {
+      "tag": "ENDING 4",
+      "name": "何も語られない皇帝",
+      "body": "あなたは遺言を守り、支出をしぼり、議員たちと相談して決めました。馬は競走馬のままです。ブリタンニアには渡らず、国境を固めて帰りました。近衛兵には給料が届いています。誰も刺しに来ません。ただ、あなたの名前で語れる話は一つもありません。歴史家は数行で済ませたでしょう。",
+      "image_prompt": "A modest Roman emperor in a plain white toga reading documents with elderly senators around a marble table, grain ships visible through an open colonnade, quiet daylight, 19th century academic history painting, oil on canvas, calm restrained palette, no text, no letters, no words, no writing, no signage"
+    }
+  }
+}
