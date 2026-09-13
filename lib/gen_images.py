@@ -10,10 +10,13 @@ import torch
 
 # MPS は放っておくとシステムメモリを取り込み続け、swap を食い潰す
 # （実測で 20秒あたり 372MB ずつ増えた）。使用量に上限をかける。
-# 推奨上限のさらに 6割に抑えて、OS と他プロセスの分を残す。
+# 上限を上げるだけでは解決しない（0.6=7.1GB も 0.85=10.06GB も超過）。
+# 解像度も原因ではなかった（1152x640 でも UNet は同じ 9.09GB を確保）。
+# 9.09GB の正体は GPU 常駐のモデル重み。enable_model_cpu_offload で
+# 使う瞬間だけ GPU に載せる方式にしたら実測ピーク 5.27GB まで落ちた。
 if torch.backends.mps.is_available():
     try:
-        torch.mps.set_per_process_memory_fraction(0.6)
+        torch.mps.set_per_process_memory_fraction(0.85)
     except Exception as _e:
         print(f"MPS上限を設定できず: {_e}", flush=True)
 from diffusers import StableDiffusionXLPipeline
@@ -28,7 +31,14 @@ def main(prob_path, out_dir):
         print("NO_IMAGE_SCENES"); return
     pipe = StableDiffusionXLPipeline.from_pretrained(
         "stabilityai/stable-diffusion-xl-base-1.0",
-        torch_dtype=torch.float16, variant="fp16", use_safetensors=True).to("mps")
+        torch_dtype=torch.float16, variant="fp16", use_safetensors=True)
+    # .to("mps") はしない。offload が「使うモジュールだけ GPU」を管理する。
+    # これで常駐 9.09GB → ピーク 5.27GB（実測）。
+    try:
+        pipe.enable_model_cpu_offload(device="mps")
+    except Exception as _e:
+        print(f"offload 不可、常駐にフォールバック: {_e}", flush=True)
+        pipe = pipe.to("mps")
     # 16GB Mac ではメモリが厳しい。attention だけでは足りず SIGKILL で
     # 落ちることがあるので、VAE も分割して処理させる。
     # （この diffusers では pipe.enable_vae_slicing ではなく vae 側に呼ぶ）

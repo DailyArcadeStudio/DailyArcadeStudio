@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>あなたがチンギス・ハンだったら</title>
+<meta property="og:title" content="あなたがチンギス・ハンだったら">
+<meta property="og:description" content="1180年ごろ、草原です。あなたの名前はテムジン。9歳で父を毒殺され、一族はあなたの家族を草原に置いて出ていきました。羊もいません。仲間もいません。ここから、ユーラシアの半分に手が届くまで、およそ40年です。最初の一歩から、あなたが選びます。">
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;background:#0b0e14;color:#e6edf3;
+       font-family:-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;
+       line-height:1.75;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+  .wrap{max-width:600px;margin:0 auto;padding:22px 18px 60px}
+  h1{font-size:clamp(21px,5.6vw,29px);margin:6px 0 8px;line-height:1.4}
+  .lead{color:#8b949e;font-size:14.5px;margin:0 0 20px}
+  .prog{position:sticky;top:0;background:#0b0e14;padding:10px 0 12px;z-index:5}
+  .bar{height:4px;background:#1c2333;border-radius:2px;overflow:hidden}
+  .bar i{display:block;height:100%;background:#d4a544;width:0;transition:width .3s}
+  .count{font-size:12.5px;color:#8b949e;margin-top:6px;letter-spacing:.04em}
+  .scene{background:#121722;border:1px solid #222b3d;border-radius:14px;
+          padding:20px 18px;margin:0 0 16px}
+  .year{color:#d4a544;font-size:12.5px;letter-spacing:.1em;margin:0 0 8px}
+  .sit{font-size:16px;margin:0 0 18px;color:#dbe3ec}
+  .opts{display:grid;gap:10px}
+  .opt{border:1px solid #2b3550;background:#161d2b;color:#e6edf3;border-radius:11px;
+        padding:15px 16px;font-size:15.5px;cursor:pointer;text-align:left;
+        font-family:inherit;line-height:1.6;transition:.15s}
+  .opt:hover{border-color:#d4a544}
+  .opt:active{transform:scale(.985)}
+  .log{margin:0 0 20px}
+  .logi{border-left:2px solid #2b3550;padding:2px 0 2px 14px;margin:0 0 10px;
+         font-size:13.5px;color:#7d8796}
+  .logi b{color:#b3bdcc;font-weight:600}
+  #end{display:none} #end.on{display:block}
+  .eimg{width:100%;border-radius:14px;display:block;margin:0 0 18px;background:#121722}
+  .etag{color:#d4a544;font-size:13px;letter-spacing:.09em;margin:0 0 4px}
+  .ename{font-size:clamp(23px,6.4vw,32px);margin:0 0 14px;line-height:1.35}
+  .ebody{font-size:15.5px;color:#c9d1d9;margin:0 0 20px;white-space:pre-wrap}
+  .fact{background:#121722;border-left:3px solid #58a6ff;border-radius:0 10px 10px 0;
+         padding:14px 16px;margin:0 0 20px;font-size:14.5px;color:#c9d1d9}
+  .fact b{color:#58a6ff;display:block;margin-bottom:5px;font-size:12.5px;
+           letter-spacing:.08em}
+  .warn{color:#6e7681;font-size:12.5px;margin:18px 0 0;padding:12px 14px;
+         border:1px dashed #2b3550;border-radius:10px}
+  .share{display:grid;gap:10px;margin:22px 0}
+  .share a,.share button{display:block;text-align:center;padding:14px;border-radius:12px;
+        text-decoration:none;font-weight:700;font-size:15px;border:1px solid #2b3550;
+        background:#161d2b;color:#e6edf3;cursor:pointer;font-family:inherit}
+  .back{display:inline-block;margin-top:6px;color:#8b949e;font-size:14px}
+  footer{margin-top:32px;color:#6e7681;font-size:12.5px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div id="sim">
+  <h1>あなたがチンギス・ハンだったら</h1>
+  <p class="lead">1180年ごろ、草原です。あなたの名前はテムジン。9歳で父を毒殺され、一族はあなたの家族を草原に置いて出ていきました。羊もいません。仲間もいません。ここから、ユーラシアの半分に手が届くまで、およそ40年です。最初の一歩から、あなたが選びます。</p>
+  <div class="prog"><div class="bar"><i id="pbar"></i></div>
+    <div class="count"><span id="pnum">1</span> / 8</div></div>
+  <div class="log" id="log"></div>
+  <div class="scene" id="scene"></div>
+</div>
+
+<div id="end">
+  <img class="eimg" id="eimg" alt="">
+  <p class="etag" id="etag"></p>
+  <h1 class="ename" id="ename"></h1>
+  <p class="ebody" id="ebody"></p>
+  <div class="fact" id="fact"></div>
+  <div class="share">
+    <a id="tw" target="_blank" rel="noopener">結果をXに投稿する</a>
+    <button id="again">やり直す</button>
+  </div>
+  <a class="back" href="../">ほかのシミュレータを見る</a>
+  <p class="warn">これはシミュレータです。あなたの選択によっては史実と異なる結末になります。
+  実際に起きたことは上の「史実」の欄をご覧ください。</p>
+</div>
+
+<footer>MosukeStudio</footer>
+</div>
+
+<script>
+const DATA = {"title": "あなたがチンギス・ハンだったら", "lead": "1180年ごろ、草原です。あなたの名前はテムジン。9歳で父を毒殺され、一族はあなたの家族を草原に置いて出ていきました。羊もいません。仲間もいません。ここから、ユーラシアの半分に手が届くまで、およそ40年です。最初の一歩から、あなたが選びます。", "axes": [{"label": "攻めるか、待つか", "pos": "攻", "neg": "守"}, {"label": "外から借りるか、身内でかためるか", "pos": "外", "neg": "内"}], "history": "テムジンは父の死後に追放されますが、盟友や庇護者を頼って力を伸ばし、1206年に草原を統一してチンギス・ハンと呼ばれました。十進法の軍、替え馬、外から借りた攻城技術で西へ広がり、1227年に遠征の途中で亡くなったと伝わります。", "scenes": [{"year": "1180年ごろ 追放された冬", "situation": "父が死に、一族はあなたの家族を置いて去りました。母と弟たちで、木の実と魚で冬を越しています。ここで、異母兄のベクテルが、獲った魚と鳥をひとりじめしはじめました。家の中の順番が、彼のものになりつつあります。弟のカサルが、あなたを見ています。", "options": [{"text": "弟と二人でベクテルを射る。家の頭は自分だと、はっきりさせる", "a": 2, "b": -2}, {"text": "我慢して兄を立てる。今は家族が減るほうが危ない", "a": -2, "b": 0}]}, {"year": "1180年代 首かせの日々", "situation": "タイチウト部につかまりました。首に木のかせをはめられ、見張りつきで生かされています。ある夜、宴で見張りが一人になりました。逃げれば、草原に一人です。残れば、いつか彼らの下で兵として使われるかもしれません。川の音が聞こえます。", "options": [{"text": "見張りを殴って逃げ、川に身を沈めてやりすごす", "a": 2, "b": 0}, {"text": "逃げない。おとなしくして、タイチウトの中で信用を得ていく", "a": -2, "b": 1}]}, {"year": "1180年代後半 妻を奪われた夜", "situation": "メルキト部が来て、妻のボルテを連れ去りました。手元の兵はわずかです。父の盟友だったケレイト部のトオリル・ハン、それに幼なじみのジャムカ。二人に頭を下げれば、兵を出してくれるかもしれません。ただ、借りた兵で取り返せば、あなたは彼らの下につきます。", "options": [{"text": "トオリルとジャムカに頭を下げ、二万の兵を借りて叩きつぶす", "a": 2, "b": 2}, {"text": "借りない。自分の手勢だけで、少しずつ力をためてから動く", "a": -1, "b": -2}]}, {"year": "1190年ごろ ジャムカとの別れ道", "situation": "幼なじみのジャムカと、同じ草原で暮らしています。彼は名門の出です。あなたの下には、部族から落ちこぼれた者、奴隷だった者が集まってきました。ある日の移動で、彼が言います。山のふもとに行くか、川のそばに行くか。どちらかを選べば、道が分かれます。", "options": [{"text": "別れて自分の集団を作る。出身を問わず、腕と忠義で人を集める", "a": 2, "b": 2}, {"text": "ジャムカの下に残る。名門の後ろにいたほうが、草原では安全だ", "a": -2, "b": -1}]}, {"year": "1203年 ケレイト部との決裂", "situation": "長く後ろ盾だったトオリル・ハンが、あなたを警戒しはじめました。息子のセングムが、婚礼にかこつけてあなたを殺す相談をしています。知らせが届いたのは、直前でした。手勢はわずか。逃げれば、泥水をすする日々にもどります。", "options": [{"text": "夜襲をかける。相手が油断している今しか、勝ち目はない", "a": 2, "b": 0}, {"text": "いったん退く。バルジュナの泥水を飲み、残った者と誓いを立て直す", "a": -2, "b": 1}]}, {"year": "1206年 クリルタイ", "situation": "草原の部族が、あなたの前に集まりました。これから軍を作りなおします。血のつながりで部隊を組めば、まとまりは速い。ばらばらに混ぜて、10人、100人、1000人の単位にすれば、部族の恨みは薄まりますが、族長たちは面白くないでしょう。白い旗が立っています。", "options": [{"text": "部族をわざと混ぜ、十進法で組む。1人逃げたら10人を罰する", "a": 1, "b": 2}, {"text": "部族ごとに部隊を残す。族長たちの顔を立て、まとまりを保つ", "a": -1, "b": -2}]}, {"year": "1215年ごろ 城壁の前で", "situation": "金の街を囲みました。高い城壁です。草原の民に、壁を崩す技術はありません。降った街には、投石機を作れる技術者や、文字を書ける役人がいます。殺せば、後ろの憂いは消えます。生かして連れていけば、次の城が落ちるかもしれません。ただ、彼らは敵の言葉を話します。", "options": [{"text": "技術者と役人を生かして連れていく。文字も、よそから借りる", "a": 1, "b": 2}, {"text": "草原のやり方で押しきる。よそ者を軍の中に入れない", "a": 1, "b": -2}]}, {"year": "1218年 西へ送った隊商", "situation": "西のホラズムへ、およそ450人の隊商と使節を送りました。商売の話です。ところが、国境の街オトラルで全員が殺され、送り直した使節も、ひげを焼かれて返されました。西へ行けば、東の金との戦いが止まります。のむなら、草原の顔がつぶれます。", "options": [{"text": "全軍を西へ向ける。オトラルから順に、街を落としていく", "a": 2, "b": 1}, {"text": "西は捨てて、東の金に集中する。商人の件は賠償で手を打つ", "a": -2, "b": -1}]}], "endings": {"攻外": {"tag": "ENDING 1", "name": "世界の半分に届いた男", "body": "これが、伝わっているチンギス・ハンにいちばん近い道です。あなたは動くべきときに動き、足りないものは外から借りました。十進法の軍、替え馬、よその技術者、よその文字。急ぐときは1日に100キロ前後進んだと言われます。知らせより速い軍です。1227年、あなたは遠征の途中で亡くなりました。墓の場所は、今も分かっていません。", "image_prompt": "A Mongol supreme khan in fur-trimmed lamellar armor on horseback at the head of a vast host of mounted archers crossing an endless steppe, horsehair banners, spare horses in long columns, dust and low sun, 19th century academic history painting, oil on canvas, epic cinematic light, no text, no letters, no words, no writing, no signage", "image": "img/攻外.jpg"}, "攻内": {"tag": "ENDING 2", "name": "草原だけの覇者", "body": "あなたは攻め続けましたが、よそ者を軍の中に入れませんでした。騎馬は強く、野戦では負けません。ただ、高い城壁の前で止まります。壁を崩す技術も、字を書く役人もいないからです。草原は一つになりました。その外には、届きませんでした。強いのに、線から先へ出られない帝国です。", "image_prompt": "Mongol horse archers halted on open ground before the towering brick walls and gate towers of a Central Asian city, no siege engines anywhere, riders milling in dust at a distance, evening light, 19th century academic history painting, oil on canvas, muted earth tones, no text, no letters, no words, no writing, no signage", "image": "img/攻内.jpg"}, "守外": {"tag": "ENDING 3", "name": "草原の大きな商人", "body": "あなたは無理に攻めず、人と技術を集めました。隊商が行き来し、駅が置かれ、紙や品物が東西を動きます。街は焼けず、人も減りません。ただ、あなたの下には、あなたより大きな軍を持つ者が何人もいます。うまくいっているうちは、みんな笑っています。誰かが機嫌を変えた日に、それは終わるでしょう。", "image_prompt": "A large caravan of camels and merchants arriving at a prosperous Mongol camp of great white tents, foreign craftsmen and scribes among the traders, bales of goods and grazing horses, warm morning light on the steppe, 19th century academic history painting, oil on canvas, rich detail, no text, no letters, no words, no writing, no signage", "image": "img/守外.jpg"}, "守内": {"tag": "ENDING 4", "name": "名前が残らなかったテムジン", "body": "あなたは待ち、身内でかためました。兄を立て、名門の後ろにつき、部族ごとの部隊を残しました。命は守れます。家族も無事です。ただ、草原はいつも通りです。部族が争い、勝った者が名乗り、次の冬にまた変わる。あなたはそのうちの一人でした。テムジンという名は、どこにも書き残されませんでした。", "image_prompt": "A middle aged Mongol herdsman in plain worn furs standing beside a single small tent with a modest flock of sheep on a wide empty steppe at dusk, distant hills, no army, no banners, 19th century academic history painting, oil on canvas, quiet melancholy tones, no text, no letters, no words, no writing, no signage", "image": "img/守内.jpg"}}};
+let i = 0;
+const score = [0, 0];
+const picks = [];
+
+const sceneEl = document.getElementById('scene');
+const logEl = document.getElementById('log');
+
+function render() {
+  const s = DATA.scenes[i];
+  document.getElementById('pnum').textContent = i + 1;
+  document.getElementById('pbar').style.width = (i / DATA.scenes.length * 100) + '%';
+  sceneEl.innerHTML = `<p class="year">${s.year}</p><p class="sit">${s.situation}</p>`;
+  const box = document.createElement('div');
+  box.className = 'opts';
+  s.options.forEach(o => {
+    const b = document.createElement('button');
+    b.className = 'opt';
+    b.textContent = o.text;
+    b.onclick = () => choose(o);
+    box.appendChild(b);
+  });
+  sceneEl.appendChild(box);
+}
+
+function choose(o) {
+  score[0] += o.a || 0;
+  score[1] += o.b || 0;
+  picks.push(o.text);
+  const d = document.createElement('div');
+  d.className = 'logi';
+  d.innerHTML = `<b>${DATA.scenes[i].year}</b> ${o.text}`;
+  logEl.appendChild(d);
+  i++;
+  if (i < DATA.scenes.length) { render(); scrollTo(0, 0); }
+  else finish();
+}
+
+function finish() {
+  // 2軸の符号で4象限 → 4つの結末
+  const key = (score[0] >= 0 ? DATA.axes[0].pos : DATA.axes[0].neg)
+            + (score[1] >= 0 ? DATA.axes[1].pos : DATA.axes[1].neg);
+  const e = DATA.endings[key] || DATA.endings[Object.keys(DATA.endings)[0]];
+  document.getElementById('eimg').src = e.image;
+  document.getElementById('eimg').alt = e.name;
+  document.getElementById('etag').textContent = e.tag || 'ENDING';
+  document.getElementById('ename').textContent = e.name;
+  document.getElementById('ebody').textContent = e.body;
+  document.getElementById('fact').innerHTML =
+    `<b>史実では</b>${DATA.history}`;
+  const txt = encodeURIComponent(
+    `${DATA.title}\n私の結末は「${e.name}」でした。\n`);
+  document.getElementById('tw').href =
+    `https://twitter.com/intent/tweet?text=${txt}&url=${encodeURIComponent(location.href)}`;
+  document.getElementById('sim').style.display = 'none';
+  document.getElementById('end').classList.add('on');
+  scrollTo(0, 0);
+}
+
+document.getElementById('again').onclick = () => location.reload();
+render();
+</script>
+</body>
+</html>
