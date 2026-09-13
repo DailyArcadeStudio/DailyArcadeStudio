@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>確認問題｜写真共有サービスの設計</title>
+<meta property="og:title" content="確認問題｜写真共有サービスの設計">
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;background:#0d1117;color:#e6edf3;
+       font-family:-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;
+       line-height:1.7;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+  .wrap{max-width:620px;margin:0 auto;padding:22px 18px 60px}
+  h1{font-size:clamp(20px,5.4vw,27px);margin:6px 0 6px;line-height:1.4}
+  .lead{color:#8b949e;font-size:14.5px;margin:0 0 22px}
+  .q{background:#161b22;border:1px solid #21262d;border-radius:13px;
+      padding:18px 16px;margin:0 0 14px}
+  .qn{color:#58a6ff;font-size:12.5px;letter-spacing:.1em;margin:0 0 8px}
+  .qt{font-size:16px;font-weight:700;margin:0 0 12px;line-height:1.65}
+  pre{background:#0d1117;border:1px solid #21262d;border-radius:9px;
+       padding:13px 14px;overflow-x:auto;margin:0 0 14px;
+       font-family:"SF Mono",Menlo,monospace;font-size:13px;line-height:1.65;
+       color:#c9d1d9}
+  .opts{display:grid;gap:9px}
+  .opt{border:1px solid #30363d;background:#0d1117;color:#e6edf3;border-radius:10px;
+        padding:14px;font-size:15px;cursor:pointer;text-align:left;
+        font-family:inherit;line-height:1.6;transition:.15s}
+  .opt:hover:not(:disabled){border-color:#58a6ff}
+  .opt:disabled{cursor:default;opacity:.75}
+  .opt.ok{border-color:#3fb950;background:#122117;color:#7ee787;font-weight:700}
+  .opt.ng{border-color:#f85149;background:#21121380;color:#ff9492}
+  .exp{margin:13px 0 0;padding:13px 14px;background:#0d1117;border-left:3px solid #58a6ff;
+        border-radius:0 9px 9px 0;font-size:14.5px;color:#c9d1d9;display:none}
+  .exp.on{display:block}
+  .score{display:none;background:#161b22;border:1px solid #21262d;border-radius:14px;
+          padding:24px 20px;text-align:center;margin:18px 0 0}
+  .score.on{display:block}
+  .snum{font-size:44px;font-weight:800;color:#ffd23b;line-height:1.1}
+  .smsg{font-size:16px;margin:10px 0 0}
+  .share{display:grid;gap:10px;margin:20px 0 0}
+  .share a,.share button{display:block;text-align:center;padding:14px;border-radius:12px;
+        text-decoration:none;font-weight:700;font-size:15px;border:1px solid #30363d;
+        background:#0d1117;color:#e6edf3;cursor:pointer;font-family:inherit}
+  .back{display:inline-block;margin-top:14px;color:#8b949e;font-size:14px}
+  footer{margin-top:30px;color:#6e7681;font-size:12.5px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>確認問題｜写真共有サービスの設計</h1>
+  <p class="lead">動画で見た見積り、写真の置き方、押し込むか取りにいくか、そして代償。5問で確かめましょう。</p>
+  <div id="qs"></div>
+  <div class="score" id="score">
+    <div class="snum"><span id="sn">0</span> / 5</div>
+    <p class="smsg" id="sm"></p>
+    <div class="share">
+      <a id="tw" target="_blank" rel="noopener">結果をXに投稿する</a>
+      <button id="again">もう一度</button>
+    </div>
+  </div>
+  <a class="back" href="../">ほかの確認問題を見る</a>
+  <footer>Algo-Gym</footer>
+</div>
+<script>
+const DATA = {"title": "確認問題｜写真共有サービスの設計", "lead": "動画で見た見積り、写真の置き方、押し込むか取りにいくか、そして代償。5問で確かめましょう。", "messages": {"perfect": "全問正解です。有名人だけ別の道を通す理由まで、しっかり入っています。", "good": "いい線です。間違えたところの解説をもう一度読んでみてください。", "retry": "大丈夫です。もう一度動画を見てから戻ってくると、すっと入ります。"}, "questions": [{"text": "1日に写真が1億枚、タイムラインを開く回数が50億回。この設計で何がいちばん大事だと言っていましたか。", "code": "writes: 100M/day   reads: 5B/day   -> 50x", "options": ["読む方が50倍多いので、開いたときに速いこと", "書く方が重いので、出すときに速いこと"], "answer": 0, "explain": "読み取りが50倍です。1秒におよそ5万8千回開かれます。だから開いたときに速いことを、いちばん優先します。"}, {"text": "写真の本体をデータベースの表にそのまま入れると、どうなると言っていましたか。", "code": "2MB blob x 100,000,000 rows / day", "options": ["2メガの塊が1億行ぶん入って、表がすぐ動かなくなる", "表は平気だが、写真の画質が落ちてしまう"], "answer": 0, "explain": "本体はS3のような専用の置き場へ送ります。表には場所を指す1行だけ。たった数百バイトで済みます。"}, {"text": "写真を出すとき、動画では大きさをどう用意すると言っていましたか。", "code": "on upload -> thumbnail / medium / full", "options": ["出すときに3つの大きさを先に作っておく", "見る人の画面に合わせて、そのつど縮める"], "answer": 0, "explain": "一覧用、タイムライン用、拡大用の3つです。後から縮めると間に合いません。先に作れば、あとは選ぶだけです。"}, {"text": "1億人にフォローされている人が1枚出したとき、押し込む方式だと何が起きますか。", "options": ["その1枚で、書き込みが1億回になる", "その1枚が、フォロワーの半分にしか届かない"], "answer": 0, "explain": "フォロワー全員の並びに、その場で書き込むからです。ふつうの人なら軽いのに、有名人1人で爆発します。"}, {"text": "その答えとして、動画ではどうすると言っていましたか。", "code": "followers < 1M -> push on write\nfollowers >= 1M -> pull on read, then merge", "options": ["ふつうの人は押し込み、百万人超えの人だけ開いたときに取りにいって混ぜる", "全員まとめて、開いたときに取りにいく方式にそろえる"], "answer": 0, "explain": "混ぜる、いわゆるハイブリッドです。極端に多い人はほんの一握り。その一握りだけ別の道を通します。"}]};
+let done = 0, ok = 0;
+const qsEl = document.getElementById('qs');
+
+DATA.questions.forEach((q, i) => {
+  const d = document.createElement('div');
+  d.className = 'q';
+  let h = `<p class="qn">Q${i+1}</p><p class="qt">${q.text}</p>`;
+  if (q.code) h += `<pre>${q.code.replace(/[&<>]/g, c =>
+      ({'&':'&amp;','<':'&lt;','>':'&gt;'})[c])}</pre>`;
+  d.innerHTML = h;
+  const box = document.createElement('div');
+  box.className = 'opts';
+  const exp = document.createElement('div');
+  exp.className = 'exp';
+  exp.textContent = q.explain;
+  q.options.forEach((o, k) => {
+    const b = document.createElement('button');
+    b.className = 'opt';
+    b.textContent = o;
+    b.onclick = () => {
+      [...box.children].forEach(c => c.disabled = true);
+      const hit = (k === q.answer);
+      b.classList.add(hit ? 'ok' : 'ng');
+      if (!hit) box.children[q.answer].classList.add('ok');
+      exp.classList.add('on');
+      done++; if (hit) ok++;
+      if (done === DATA.questions.length) finish();
+    };
+    box.appendChild(b);
+  });
+  d.appendChild(box); d.appendChild(exp);
+  qsEl.appendChild(d);
+});
+
+function finish() {
+  const n = DATA.questions.length;
+  document.getElementById('sn').textContent = ok;
+  const msgs = DATA.messages || {};
+  document.getElementById('sm').textContent =
+    ok === n ? (msgs.perfect || '全問正解です。') :
+    ok >= n * 0.6 ? (msgs.good || 'だいたい掴めています。') :
+    (msgs.retry || 'もう一度動画を見てみてください。');
+  const txt = encodeURIComponent(`${DATA.title}\n${ok}/${n} 正解でした。\n`);
+  document.getElementById('tw').href =
+    `https://twitter.com/intent/tweet?text=${txt}&url=${encodeURIComponent(location.href)}`;
+  document.getElementById('score').classList.add('on');
+  document.getElementById('score').scrollIntoView({behavior:'smooth'});
+}
+document.getElementById('again').onclick = () => location.reload();
+</script>
+</body>
+</html>
