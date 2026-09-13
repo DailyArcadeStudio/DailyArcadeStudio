@@ -1,0 +1,177 @@
+{
+  "title": "あなたの「窓」診断",
+  "lead": "夜、家の明かりがついたとき。あなたはカーテンを閉めますか。",
+  "story": "オランダでは、カーテンを閉めない家が多いと言われています。理由は二つあるそうです。ひとつは、北緯52度という北の国だから。冬は夕方4時半ごろに日が沈み、光がとても貴重です。もうひとつは、うちには隠すものがない、という考え方。閉めると、かえって何か隠していると思われるのだとか。そして通る人のほうにも約束があります。ちらっと見るのはいい。でも、じっと見るのはだめ。隠さない人と、のぞかない人。その二つがそろって成り立っています。あなたの窓は、どちら向きでしょうか。",
+  "axes": [
+    {
+      "label": "見せて平気か、隠しておきたいか",
+      "pos": "O",
+      "neg": "C"
+    },
+    {
+      "label": "光がほしいか、暗さが落ち着くか",
+      "pos": "L",
+      "neg": "D"
+    },
+    {
+      "label": "通りに顔を向けるか、内側を向くか",
+      "pos": "S",
+      "neg": "I"
+    },
+    {
+      "label": "飾って整えるか、置いたままでいいか",
+      "pos": "A",
+      "neg": "P"
+    }
+  ],
+  "questions": [
+    {
+      "text": "部屋の中を人に見られても、あまり気にならない。",
+      "axis": 0,
+      "sign": 1
+    },
+    {
+      "text": "家に帰ったら、まずカーテンを閉めたくなる。",
+      "axis": 0,
+      "sign": -1
+    },
+    {
+      "text": "散らかっていないなら、見せても平気だと思う。",
+      "axis": 0,
+      "sign": 1
+    },
+    {
+      "text": "部屋はできるだけ明るいほうがうれしい。",
+      "axis": 1,
+      "sign": 1
+    },
+    {
+      "text": "照明は暗めのほうが、気持ちが落ち着く。",
+      "axis": 1,
+      "sign": -1
+    },
+    {
+      "text": "日が短い季節は、気分まで沈む気がする。",
+      "axis": 1,
+      "sign": 1
+    },
+    {
+      "text": "居間は、通りが見える側にあるほうがいい。",
+      "axis": 2,
+      "sign": 1
+    },
+    {
+      "text": "くつろぐ場所は、奥まった静かな側がいい。",
+      "axis": 2,
+      "sign": -1
+    },
+    {
+      "text": "窓辺には、花や小さな置きものを並べたい。",
+      "axis": 3,
+      "sign": 1
+    },
+    {
+      "text": "飾りつけより、使いやすさのほうが大事だ。",
+      "axis": 3,
+      "sign": -1
+    }
+  ],
+  "results": {
+    "OLSA": {
+      "name": "オランダの運河ぞい型",
+      "body": "見せて平気で、光がほしくて、通りを向いていて、窓辺も整えたい。動画に出てきたオランダの家に、いちばん近いタイプです。暮らしそのものが、ひとつの景色になっています。ときには全部閉めて、誰にも見られない夜も悪くありません。",
+      "image_prompt": "photorealistic row of tall narrow canal houses in Amsterdam at blue hour, large uncurtained windows glowing warm, tidy windowsills with plants and vases, reflections in the still canal water, cinematic wide shot, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/OLSA.jpg"
+    },
+    "OLSP": {
+      "name": "デンマークの通り型",
+      "body": "見せて平気で、明るいのが好きで、通りに顔を向けるタイプ。でも、飾りつけには時間をかけません。ありのままの部屋が、そのまま外から見えている感じです。気取らないところが、あなたの良さでしょう。",
+      "image_prompt": "photorealistic Copenhagen residential street in the early evening, wide bright windows with simple interiors visible, bicycles parked along the pavement, pale northern light fading, cinematic wide shot, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/OLSP.jpg"
+    },
+    "OLIA": {
+      "name": "北欧の窓辺型",
+      "body": "見せることに抵抗はないし、光も好き。でも、くつろぐ場所は奥まった側。そのかわり窓辺はきれいに整えます。見せるための場所と、休むための場所を、上手に分けているタイプです。",
+      "image_prompt": "photorealistic Nordic home interior, a bright windowsill with potted plants and a small glowing lamp, soft winter daylight outside, a cozy armchair set back in the quiet depth of the room, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/OLIA.jpg"
+    },
+    "OLIP": {
+      "name": "縁側型",
+      "body": "隠すものはないし、明るいのも好き。でも、向いているのは通りではなく内側で、飾りにもこだわらない。日の当たる場所にただ座っているのが、いちばん合っているタイプかもしれません。",
+      "image_prompt": "photorealistic traditional Japanese wooden veranda facing an inner garden, sliding doors open wide, bright afternoon sunlight falling on the floorboards, green moss and stones outside, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/OLIP.jpg"
+    },
+    "ODSA": {
+      "name": "ショーウィンドウ型",
+      "body": "見せるのは平気で、通りにも顔を向けていて、飾るのも好き。でも、まぶしい明るさは苦手です。ほどよい暗さの中に、見せたいものだけを浮かび上がらせる。そんな感覚を持っているタイプです。",
+      "image_prompt": "photorealistic shop window at night on a quiet European street, a few carefully arranged objects lit by a single warm spotlight, dark interior behind the glass, wet cobblestones reflecting the light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/ODSA.jpg"
+    },
+    "ODSP": {
+      "name": "夜のカフェ型",
+      "body": "見られても平気で、通りのほうを向いている。でも、明るすぎるのは好まないし、飾りつけもしない。薄暗い店の窓ぎわに、ふらっと座っているような感じのタイプです。",
+      "image_prompt": "photorealistic small cafe at night seen from the street, a single person sitting by the window under a dim warm lamp, dark quiet pavement outside, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/ODSP.jpg"
+    },
+    "ODIA": {
+      "name": "京都の町家型",
+      "body": "隠すことはしないけれど、暮らしの中心は奥にある。暗さも落ち着くし、整えるのは好き。表からは細く静かに見えて、中には手をかけた空間が続いている。そんなタイプです。",
+      "image_prompt": "photorealistic narrow traditional Kyoto machiya townhouse interior, a long dim corridor leading to a small inner courtyard garden, carefully placed ceramics and a single branch arrangement, soft shadowed light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/ODIA.jpg"
+    },
+    "ODIP": {
+      "name": "山小屋型",
+      "body": "見せることにこだわりはないし、隠すつもりもない。暗くて静かな場所が落ち着いて、飾りもいらない。人の目から遠いところで、ゆっくりしているのが合っているタイプです。",
+      "image_prompt": "photorealistic wooden mountain cabin interior at night, a dim lantern on a plain table, a small dark window showing forest outside, plain unadorned walls, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/ODIP.jpg"
+    },
+    "CLSA": {
+      "name": "レースのカーテン型",
+      "body": "光はほしいし、通りのほうも向いている。窓辺も整えたい。でも、中まで見られるのは落ち着かない。だから薄い一枚をはさむ。日本でいちばん多い形に近いタイプでしょう。",
+      "image_prompt": "photorealistic Japanese living room window covered with a sheer white lace curtain, bright daylight filtering through, potted plants and small ornaments on the sill inside, soft diffused light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/CLSA.jpg"
+    },
+    "CLSP": {
+      "name": "マンションのベランダ型",
+      "body": "明るいのは好きだし、外の景色も見たい。でも、中を見られるのは苦手だし、飾りつけもしない。景色は受け取るけれど、こちらは見せない。そんな距離の取り方をするタイプです。",
+      "image_prompt": "photorealistic view from a high-rise apartment balcony in the afternoon, bright city skyline in the distance, plain concrete railing, an empty simple interior visible behind the glass door, cinematic wide shot, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/CLSP.jpg"
+    },
+    "CLIA": {
+      "name": "中庭型",
+      "body": "光は大事にするけれど、それは外に向けてではありません。塀の内側に、自分だけの明るい場所をつくるタイプ。整えるのも好きです。閉じているのに、中はとても明るい。そんな家に似ています。",
+      "image_prompt": "photorealistic sunlit inner courtyard of a walled house, white plaster walls, potted flowers arranged neatly around a small fountain, blue sky above, no view of the street, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/CLIA.jpg"
+    },
+    "CLIP": {
+      "name": "日だまりの部屋型",
+      "body": "明るいのは好きだけれど、見られるのは苦手。通りより内側が落ち着くし、飾りつけもしない。日の当たる床に座って、ただぼんやりしている。そんな時間がいちばん合っているタイプです。",
+      "image_prompt": "photorealistic simple empty room with sunlight falling across a bare wooden floor, a single cushion, a closed curtain on one side letting warm light through, quiet and uncluttered, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/CLIP.jpg"
+    },
+    "CDSA": {
+      "name": "ロンドンの出窓型",
+      "body": "中は見せたくないけれど、通りのほうは向いている。暗さも落ち着くし、飾るのは好き。厚いカーテンの手前に、きれいに整えた小さな舞台をつくるタイプです。見せる分だけ見せています。",
+      "image_prompt": "photorealistic Victorian London bay window seen from the street at dusk, heavy dark curtains drawn behind, a small arrangement of objects and a lamp on the sill in front, brick facade, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/CDSA.jpg"
+    },
+    "CDSP": {
+      "name": "夜の路地型",
+      "body": "中は見せない。明るさもいらない。でも、通りの気配は感じていたい。飾りもしない。閉めた窓の内側で、外の音だけを聞いているような、そんなタイプです。",
+      "image_prompt": "photorealistic narrow alley at night, rows of shuttered and curtained windows with only thin slivers of light leaking out, wet pavement, distant streetlamp, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/CDSP.jpg"
+    },
+    "CDIA": {
+      "name": "書斎型",
+      "body": "見せるつもりはないし、暗さも落ち着く。向いているのは内側。そのかわり、自分の空間は細かく整えます。誰にも見せない場所を、いちばん丁寧につくっているタイプでしょう。",
+      "image_prompt": "photorealistic private study at night, heavy curtains fully closed, bookshelves neatly arranged, a desk lamp lighting a small circle on the desk, deep shadows around, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/CDIA.jpg"
+    },
+    "CDIP": {
+      "name": "洞窟型",
+      "body": "見せない。明るくしない。内側を向く。飾らない。いちばん静かにこもるタイプです。しっかり閉めて自分を休ませるのが上手だとも言えます。たまに窓を開けると、思わぬものが見えるかもしれません。",
+      "image_prompt": "photorealistic dim quiet room with all curtains closed, a single small candle on the floor, dark walls, a blanket and cushions gathered in one corner, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/CDIP.jpg"
+    }
+  }
+}

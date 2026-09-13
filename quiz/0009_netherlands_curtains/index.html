@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>あなたの「窓」診断</title>
+<meta property="og:title" content="あなたの「窓」診断">
+<meta property="og:description" content="夜、家の明かりがついたとき。あなたはカーテンを閉めますか。">
+<meta property="og:type" content="website">
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;background:#0d1117;color:#e6edf3;
+       font-family:-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;
+       line-height:1.7;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+  .wrap{max-width:560px;margin:0 auto;padding:24px 18px 60px}
+  h1{font-size:clamp(22px,6vw,30px);margin:8px 0 6px;line-height:1.4}
+  .lead{color:#8b949e;font-size:15px;margin:0 0 22px}
+  .story{background:#161b22;border-left:3px solid #ffd23b;border-radius:0 10px 10px 0;
+          padding:14px 16px;margin:0 0 26px;font-size:14.5px;color:#c9d1d9}
+  .prog{position:sticky;top:0;background:#0d1117;padding:10px 0 12px;z-index:5}
+  .bar{height:5px;background:#21262d;border-radius:3px;overflow:hidden}
+  .bar i{display:block;height:100%;background:#ffd23b;width:0;transition:width .25s}
+  .count{font-size:13px;color:#8b949e;margin-top:6px}
+  .q{margin:0 0 30px}
+  .qt{font-size:17px;font-weight:700;margin:0 0 14px}
+  .opts{display:grid;gap:8px}
+  .opt{border:1px solid #30363d;background:#161b22;color:#e6edf3;border-radius:10px;
+        padding:13px 14px;font-size:15px;cursor:pointer;text-align:left;
+        font-family:inherit;transition:.15s}
+  .opt:active{transform:scale(.985)}
+  .opt.on{border-color:#ffd23b;background:#1c2128;color:#ffd23b;font-weight:700}
+  .go{width:100%;padding:16px;border:none;border-radius:12px;background:#ffd23b;
+       color:#0d1117;font-size:17px;font-weight:700;cursor:pointer;font-family:inherit;
+       margin-top:8px}
+  .go:disabled{background:#21262d;color:#6e7681;cursor:default}
+  #result{display:none}
+  #result.on{display:block}
+  .rimg{width:100%;border-radius:14px;display:block;margin:0 0 18px;background:#161b22}
+  .rtype{color:#ffd23b;font-size:14px;letter-spacing:.08em;margin:0 0 4px}
+  .rname{font-size:clamp(24px,7vw,34px);margin:0 0 14px;line-height:1.35}
+  .rbody{font-size:15.5px;color:#c9d1d9;margin:0 0 18px}
+  .axes{display:grid;gap:10px;margin:0 0 24px}
+  .ax{font-size:13px;color:#8b949e}
+  .axbar{height:6px;background:#21262d;border-radius:3px;margin-top:5px;position:relative}
+  .axbar i{position:absolute;top:0;height:100%;background:#58a6ff;border-radius:3px}
+  .share{display:grid;gap:10px;margin:24px 0}
+  .share a,.share button{display:block;text-align:center;padding:14px;border-radius:12px;
+        text-decoration:none;font-weight:700;font-size:15px;border:1px solid #30363d;
+        background:#161b22;color:#e6edf3;cursor:pointer;font-family:inherit}
+  .back{display:inline-block;margin-top:8px;color:#8b949e;font-size:14px}
+  footer{margin-top:34px;color:#6e7681;font-size:12.5px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div id="quiz">
+  <h1>あなたの「窓」診断</h1>
+  <p class="lead">夜、家の明かりがついたとき。あなたはカーテンを閉めますか。</p>
+  <div class="story">オランダでは、カーテンを閉めない家が多いと言われています。理由は二つあるそうです。ひとつは、北緯52度という北の国だから。冬は夕方4時半ごろに日が沈み、光がとても貴重です。もうひとつは、うちには隠すものがない、という考え方。閉めると、かえって何か隠していると思われるのだとか。そして通る人のほうにも約束があります。ちらっと見るのはいい。でも、じっと見るのはだめ。隠さない人と、のぞかない人。その二つがそろって成り立っています。あなたの窓は、どちら向きでしょうか。</div>
+  <div class="prog"><div class="bar"><i id="pbar"></i></div>
+    <div class="count"><span id="pnum">0</span> / 10 問</div></div>
+  <div id="qs"></div>
+  <button class="go" id="submit" disabled>結果を見る</button>
+</div>
+
+<div id="result">
+  <img class="rimg" id="rimg" alt="">
+  <p class="rtype" id="rtype"></p>
+  <h1 class="rname" id="rname"></h1>
+  <p class="rbody" id="rbody"></p>
+  <div class="axes" id="axes"></div>
+  <div class="share">
+    <a id="tw" target="_blank" rel="noopener">結果をXに投稿する</a>
+    <button id="again">もう一度やる</button>
+  </div>
+  <a class="back" href="../../">ほかのゲーム・診断を見る</a>
+</div>
+
+<footer>Daily Arcade Studio</footer>
+</div>
+
+<script>
+const DATA = {"title": "あなたの「窓」診断", "lead": "夜、家の明かりがついたとき。あなたはカーテンを閉めますか。", "story": "オランダでは、カーテンを閉めない家が多いと言われています。理由は二つあるそうです。ひとつは、北緯52度という北の国だから。冬は夕方4時半ごろに日が沈み、光がとても貴重です。もうひとつは、うちには隠すものがない、という考え方。閉めると、かえって何か隠していると思われるのだとか。そして通る人のほうにも約束があります。ちらっと見るのはいい。でも、じっと見るのはだめ。隠さない人と、のぞかない人。その二つがそろって成り立っています。あなたの窓は、どちら向きでしょうか。", "axes": [{"label": "見せて平気か、隠しておきたいか", "pos": "O", "neg": "C"}, {"label": "光がほしいか、暗さが落ち着くか", "pos": "L", "neg": "D"}, {"label": "通りに顔を向けるか、内側を向くか", "pos": "S", "neg": "I"}, {"label": "飾って整えるか、置いたままでいいか", "pos": "A", "neg": "P"}], "questions": [{"text": "部屋の中を人に見られても、あまり気にならない。", "axis": 0, "sign": 1}, {"text": "家に帰ったら、まずカーテンを閉めたくなる。", "axis": 0, "sign": -1}, {"text": "散らかっていないなら、見せても平気だと思う。", "axis": 0, "sign": 1}, {"text": "部屋はできるだけ明るいほうがうれしい。", "axis": 1, "sign": 1}, {"text": "照明は暗めのほうが、気持ちが落ち着く。", "axis": 1, "sign": -1}, {"text": "日が短い季節は、気分まで沈む気がする。", "axis": 1, "sign": 1}, {"text": "居間は、通りが見える側にあるほうがいい。", "axis": 2, "sign": 1}, {"text": "くつろぐ場所は、奥まった静かな側がいい。", "axis": 2, "sign": -1}, {"text": "窓辺には、花や小さな置きものを並べたい。", "axis": 3, "sign": 1}, {"text": "飾りつけより、使いやすさのほうが大事だ。", "axis": 3, "sign": -1}], "results": {"OLSA": {"name": "オランダの運河ぞい型", "body": "見せて平気で、光がほしくて、通りを向いていて、窓辺も整えたい。動画に出てきたオランダの家に、いちばん近いタイプです。暮らしそのものが、ひとつの景色になっています。ときには全部閉めて、誰にも見られない夜も悪くありません。", "image_prompt": "photorealistic row of tall narrow canal houses in Amsterdam at blue hour, large uncurtained windows glowing warm, tidy windowsills with plants and vases, reflections in the still canal water, cinematic wide shot, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/OLSA.jpg"}, "OLSP": {"name": "デンマークの通り型", "body": "見せて平気で、明るいのが好きで、通りに顔を向けるタイプ。でも、飾りつけには時間をかけません。ありのままの部屋が、そのまま外から見えている感じです。気取らないところが、あなたの良さでしょう。", "image_prompt": "photorealistic Copenhagen residential street in the early evening, wide bright windows with simple interiors visible, bicycles parked along the pavement, pale northern light fading, cinematic wide shot, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/OLSP.jpg"}, "OLIA": {"name": "北欧の窓辺型", "body": "見せることに抵抗はないし、光も好き。でも、くつろぐ場所は奥まった側。そのかわり窓辺はきれいに整えます。見せるための場所と、休むための場所を、上手に分けているタイプです。", "image_prompt": "photorealistic Nordic home interior, a bright windowsill with potted plants and a small glowing lamp, soft winter daylight outside, a cozy armchair set back in the quiet depth of the room, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/OLIA.jpg"}, "OLIP": {"name": "縁側型", "body": "隠すものはないし、明るいのも好き。でも、向いているのは通りではなく内側で、飾りにもこだわらない。日の当たる場所にただ座っているのが、いちばん合っているタイプかもしれません。", "image_prompt": "photorealistic traditional Japanese wooden veranda facing an inner garden, sliding doors open wide, bright afternoon sunlight falling on the floorboards, green moss and stones outside, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/OLIP.jpg"}, "ODSA": {"name": "ショーウィンドウ型", "body": "見せるのは平気で、通りにも顔を向けていて、飾るのも好き。でも、まぶしい明るさは苦手です。ほどよい暗さの中に、見せたいものだけを浮かび上がらせる。そんな感覚を持っているタイプです。", "image_prompt": "photorealistic shop window at night on a quiet European street, a few carefully arranged objects lit by a single warm spotlight, dark interior behind the glass, wet cobblestones reflecting the light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/ODSA.jpg"}, "ODSP": {"name": "夜のカフェ型", "body": "見られても平気で、通りのほうを向いている。でも、明るすぎるのは好まないし、飾りつけもしない。薄暗い店の窓ぎわに、ふらっと座っているような感じのタイプです。", "image_prompt": "photorealistic small cafe at night seen from the street, a single person sitting by the window under a dim warm lamp, dark quiet pavement outside, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/ODSP.jpg"}, "ODIA": {"name": "京都の町家型", "body": "隠すことはしないけれど、暮らしの中心は奥にある。暗さも落ち着くし、整えるのは好き。表からは細く静かに見えて、中には手をかけた空間が続いている。そんなタイプです。", "image_prompt": "photorealistic narrow traditional Kyoto machiya townhouse interior, a long dim corridor leading to a small inner courtyard garden, carefully placed ceramics and a single branch arrangement, soft shadowed light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/ODIA.jpg"}, "ODIP": {"name": "山小屋型", "body": "見せることにこだわりはないし、隠すつもりもない。暗くて静かな場所が落ち着いて、飾りもいらない。人の目から遠いところで、ゆっくりしているのが合っているタイプです。", "image_prompt": "photorealistic wooden mountain cabin interior at night, a dim lantern on a plain table, a small dark window showing forest outside, plain unadorned walls, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/ODIP.jpg"}, "CLSA": {"name": "レースのカーテン型", "body": "光はほしいし、通りのほうも向いている。窓辺も整えたい。でも、中まで見られるのは落ち着かない。だから薄い一枚をはさむ。日本でいちばん多い形に近いタイプでしょう。", "image_prompt": "photorealistic Japanese living room window covered with a sheer white lace curtain, bright daylight filtering through, potted plants and small ornaments on the sill inside, soft diffused light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/CLSA.jpg"}, "CLSP": {"name": "マンションのベランダ型", "body": "明るいのは好きだし、外の景色も見たい。でも、中を見られるのは苦手だし、飾りつけもしない。景色は受け取るけれど、こちらは見せない。そんな距離の取り方をするタイプです。", "image_prompt": "photorealistic view from a high-rise apartment balcony in the afternoon, bright city skyline in the distance, plain concrete railing, an empty simple interior visible behind the glass door, cinematic wide shot, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/CLSP.jpg"}, "CLIA": {"name": "中庭型", "body": "光は大事にするけれど、それは外に向けてではありません。塀の内側に、自分だけの明るい場所をつくるタイプ。整えるのも好きです。閉じているのに、中はとても明るい。そんな家に似ています。", "image_prompt": "photorealistic sunlit inner courtyard of a walled house, white plaster walls, potted flowers arranged neatly around a small fountain, blue sky above, no view of the street, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/CLIA.jpg"}, "CLIP": {"name": "日だまりの部屋型", "body": "明るいのは好きだけれど、見られるのは苦手。通りより内側が落ち着くし、飾りつけもしない。日の当たる床に座って、ただぼんやりしている。そんな時間がいちばん合っているタイプです。", "image_prompt": "photorealistic simple empty room with sunlight falling across a bare wooden floor, a single cushion, a closed curtain on one side letting warm light through, quiet and uncluttered, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/CLIP.jpg"}, "CDSA": {"name": "ロンドンの出窓型", "body": "中は見せたくないけれど、通りのほうは向いている。暗さも落ち着くし、飾るのは好き。厚いカーテンの手前に、きれいに整えた小さな舞台をつくるタイプです。見せる分だけ見せています。", "image_prompt": "photorealistic Victorian London bay window seen from the street at dusk, heavy dark curtains drawn behind, a small arrangement of objects and a lamp on the sill in front, brick facade, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/CDSA.jpg"}, "CDSP": {"name": "夜の路地型", "body": "中は見せない。明るさもいらない。でも、通りの気配は感じていたい。飾りもしない。閉めた窓の内側で、外の音だけを聞いているような、そんなタイプです。", "image_prompt": "photorealistic narrow alley at night, rows of shuttered and curtained windows with only thin slivers of light leaking out, wet pavement, distant streetlamp, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/CDSP.jpg"}, "CDIA": {"name": "書斎型", "body": "見せるつもりはないし、暗さも落ち着く。向いているのは内側。そのかわり、自分の空間は細かく整えます。誰にも見せない場所を、いちばん丁寧につくっているタイプでしょう。", "image_prompt": "photorealistic private study at night, heavy curtains fully closed, bookshelves neatly arranged, a desk lamp lighting a small circle on the desk, deep shadows around, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/CDIA.jpg"}, "CDIP": {"name": "洞窟型", "body": "見せない。明るくしない。内側を向く。飾らない。いちばん静かにこもるタイプです。しっかり閉めて自分を休ませるのが上手だとも言えます。たまに窓を開けると、思わぬものが見えるかもしれません。", "image_prompt": "photorealistic dim quiet room with all curtains closed, a single small candle on the floor, dark walls, a blanket and cushions gathered in one corner, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/CDIP.jpg"}}};
+const SCALE = ["とてもそう","ややそう","どちらとも","あまり違う","全く違う"];
+
+const qsEl = document.getElementById('qs');
+const ans = new Array(DATA.questions.length).fill(null);
+
+DATA.questions.forEach((q, i) => {
+  const d = document.createElement('div');
+  d.className = 'q';
+  d.innerHTML = `<p class="qt">Q${i+1}. ${q.text}</p>`;
+  const box = document.createElement('div');
+  box.className = 'opts';
+  SCALE.forEach((label, k) => {
+    const b = document.createElement('button');
+    b.className = 'opt'; b.textContent = label;
+    b.onclick = () => {
+      ans[i] = 2 - k;                    // +2(とてもそう) 〜 -2(全く違う)
+      [...box.children].forEach(c => c.classList.remove('on'));
+      b.classList.add('on');
+      update();
+    };
+    box.appendChild(b);
+  });
+  d.appendChild(box);
+  qsEl.appendChild(d);
+});
+
+function update() {
+  const done = ans.filter(a => a !== null).length;
+  document.getElementById('pnum').textContent = done;
+  document.getElementById('pbar').style.width = (done / ans.length * 100) + '%';
+  document.getElementById('submit').disabled = done < ans.length;
+}
+
+document.getElementById('submit').onclick = () => {
+  // 軸ごとにスコアを合計する。q.axis は 0..3、q.sign は +1/-1
+  const score = [0, 0, 0, 0];
+  const max = [0, 0, 0, 0];
+  DATA.questions.forEach((q, i) => {
+    score[q.axis] += ans[i] * q.sign;
+    max[q.axis] += 2;
+  });
+  // 各軸を2値にして 16 タイプのキーを作る
+  const key = score.map((s, i) => s >= 0 ? DATA.axes[i].pos : DATA.axes[i].neg).join('');
+  const r = DATA.results[key] || DATA.results[Object.keys(DATA.results)[0]];
+
+  document.getElementById('rimg').src = r.image;
+  document.getElementById('rimg').alt = r.name;
+  document.getElementById('rtype').textContent = key;
+  document.getElementById('rname').textContent = r.name;
+  document.getElementById('rbody').textContent = r.body;
+
+  const ax = document.getElementById('axes');
+  ax.innerHTML = '';
+  DATA.axes.forEach((a, i) => {
+    const pct = Math.round((score[i] + max[i]) / (max[i] * 2) * 100);
+    const d = document.createElement('div');
+    d.className = 'ax';
+    d.innerHTML = `${a.label}<div class="axbar"><i style="left:0;width:${pct}%"></i></div>`;
+    ax.appendChild(d);
+  });
+
+  const txt = encodeURIComponent(`${DATA.title}\n私は「${r.name}」でした。\n`);
+  document.getElementById('tw').href =
+    `https://twitter.com/intent/tweet?text=${txt}&url=${encodeURIComponent(location.href)}`;
+
+  document.getElementById('quiz').style.display = 'none';
+  document.getElementById('result').classList.add('on');
+  scrollTo(0, 0);
+};
+
+document.getElementById('again').onclick = () => {
+  location.reload();
+};
+</script>
+</body>
+</html>
