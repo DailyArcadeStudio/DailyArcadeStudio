@@ -80,82 +80,98 @@
     "DNWR": {
       "name": "ドイツの窓口型",
       "body": "はっきり言うし、断れるし、言葉で伝える。そのうえで相手の顔もよく見ています。話が早くて、あとで困らないタイプです。ただ、ぼかしたい人には少しまっすぐに響くかもしれません。ときどき、言わないやさしさも思い出してみてください。",
-      "image_prompt": "photorealistic portrait of a calm public-office clerk behind a wooden counter in a tidy German municipal building, direct eye contact, neutral friendly expression, tall windows with soft daylight, muted greys and blues, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage"
+      "image_prompt": "photorealistic portrait of a calm public-office clerk behind a wooden counter in a tidy German municipal building, direct eye contact, neutral friendly expression, tall windows with soft daylight, muted greys and blues, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/DNWR.jpg"
     },
     "DNWL": {
       "name": "アメリカの会議室型",
       "body": "思ったことを言葉にして、断るときも断る。そして言われたことは、そのまま受け取ります。裏を読まないので、気持ちが軽いタイプです。相手が遠回しに返してきたときだけ、少し立ち止まってみるといいかもしれません。",
-      "image_prompt": "photorealistic wide shot of a bright modern meeting room with a glass wall, a few colleagues talking openly across a long table, laptops and coffee cups, natural daylight, candid documentary style, ultra detailed, no text, no letters, no words, no writing, no signage"
+      "image_prompt": "photorealistic wide shot of a bright modern meeting room with a glass wall, a few colleagues talking openly across a long table, laptops and coffee cups, natural daylight, candid documentary style, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/DNWL.jpg"
     },
     "DNBR": {
       "name": "イタリアの広場型",
       "body": "言うことははっきり、断るときもはっきり。でも伝え方は、手も顔も全部使います。相手の表情も、しっかり見ています。にぎやかで、分かりやすいタイプです。静かな場では、少し音量を落とすくらいでちょうどよさそうです。",
-      "image_prompt": "photorealistic candid scene of two Italian men gesturing energetically while talking in a sunlit piazza, expressive hands, warm stone buildings behind, late afternoon light, documentary photography, ultra detailed, no text, no letters, no words, no writing, no signage"
+      "image_prompt": "photorealistic candid scene of two Italian men gesturing energetically while talking in a sunlit piazza, expressive hands, warm stone buildings behind, late afternoon light, documentary photography, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/DNBR.jpg"
     },
     "DNBL": {
       "name": "スペインのバル型",
       "body": "はっきり言って、はっきり断る。体ごと伝えるし、相手の言葉も素直に受け取ります。やりとりがからっとしていて、後に残りません。相手が言いにくそうにしているときだけ、間を少しあけてみてください。",
-      "image_prompt": "photorealistic lively tapas bar interior in Spain, patrons standing at the counter talking with animated hand gestures, hanging hams and small plates, warm tungsten light, candid documentary style, ultra detailed, no text, no letters, no words, no writing, no signage"
+      "image_prompt": "photorealistic lively tapas bar interior in Spain, patrons standing at the counter talking with animated hand gestures, hanging hams and small plates, warm tungsten light, candid documentary style, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/DNBL.jpg"
     },
     "DYWR": {
       "name": "韓国の食卓型",
       "body": "言いたいことは言葉にする。でも、断るのは苦手です。そして相手の顔色をよく読みます。情に厚くて、面倒見のいいタイプです。全部引き受けてしまう前に、ひとつだけ手放す練習をしてみてもいいかもしれません。",
-      "image_prompt": "photorealistic scene of a family and friends sharing a Korean meal around a crowded table, one person warmly serving another, many side dishes, warm indoor light, candid documentary style, ultra detailed, no text, no letters, no words, no writing, no signage"
+      "image_prompt": "photorealistic scene of a family and friends sharing a Korean meal around a crowded table, one person warmly serving another, many side dishes, warm indoor light, candid documentary style, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/DYWR.jpg"
     },
     "DYWL": {
       "name": "ブラジルの海辺型",
       "body": "よく話すし、思いも言葉にします。でも、人を断るのは気が重い。言われたことはそのまま信じます。人と人の間が近くて、あたたかいタイプです。約束が重なりすぎたときは、先にひとつ返しておくと楽になります。",
-      "image_prompt": "photorealistic candid scene of friends laughing together on a Brazilian beach promenade at golden hour, arms around shoulders, coconut drinks, palm trees and ocean behind, documentary photography, ultra detailed, no text, no letters, no words, no writing, no signage"
+      "image_prompt": "photorealistic candid scene of friends laughing together on a Brazilian beach promenade at golden hour, arms around shoulders, coconut drinks, palm trees and ocean behind, documentary photography, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/DYWL.jpg"
     },
     "DYBR": {
       "name": "トルコのお茶型",
       "body": "言うことは言う。けれど、断れない。体ごと伝えて、相手の表情も細かく見ています。もてなし上手で、人が集まるタイプです。相手のためを思って無理をしすぎないよう、気をつけてください。",
-      "image_prompt": "photorealistic scene of a Turkish shopkeeper offering a small tulip glass of tea to a visitor with an open welcoming gesture, patterned rugs and copper ware around, warm afternoon light through a doorway, ultra detailed, no text, no letters, no words, no writing, no signage"
+      "image_prompt": "photorealistic scene of a Turkish shopkeeper offering a small tulip glass of tea to a visitor with an open welcoming gesture, patterned rugs and copper ware around, warm afternoon light through a doorway, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/DYBR.jpg"
     },
     "DYBL": {
       "name": "メキシコの市場型",
       "body": "はっきり話すし、身ぶりも大きい。でも断るのは苦手で、言われたことは素直に受け取ります。陽気で、話しかけやすいタイプです。頼まれごとが増えすぎたら、先に自分の予定を見せてしまうのが早そうです。",
-      "image_prompt": "photorealistic bustling Mexican market aisle, a vendor gesturing warmly toward fresh produce while chatting with a customer, colorful stacked fruit and chilies, bright daylight under awnings, documentary photography, ultra detailed, no text, no letters, no words, no writing, no signage"
+      "image_prompt": "photorealistic bustling Mexican market aisle, a vendor gesturing warmly toward fresh produce while chatting with a customer, colorful stacked fruit and chilies, bright daylight under awnings, documentary photography, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/DYBL.jpg"
     },
     "VNWR": {
       "name": "イギリスの立ち話型",
       "body": "言い方はやわらかいのに、中身はしっかり断っています。言葉を選びながら、相手の表情も読んでいます。角を立てずに線を引くのが上手なタイプです。ただ、伝わりにくい相手には、一度だけ直球も使ってみてください。",
-      "image_prompt": "photorealistic candid scene of two people in coats chatting politely on a London street corner, slight reserved smiles, red brick terraces and overcast sky, soft diffused light, documentary photography, ultra detailed, no text, no letters, no words, no writing, no signage"
+      "image_prompt": "photorealistic candid scene of two people in coats chatting politely on a London street corner, slight reserved smiles, red brick terraces and overcast sky, soft diffused light, documentary photography, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/VNWR.jpg"
     },
     "VNWL": {
       "name": "フィンランドの湖畔型",
       "body": "言葉は少なめ。でも必要なら断ります。裏は読まず、言われたことをそのまま受け取ります。静かで、無理をしないタイプです。相手が遠回しに助けを求めていることもあるので、そこだけ気づけると強そうです。",
-      "image_prompt": "photorealistic quiet Finnish lakeside scene, one person sitting alone on a wooden jetty looking at still water, pine forest, pale soft summer light, minimal composition, ultra detailed, no text, no letters, no words, no writing, no signage"
+      "image_prompt": "photorealistic quiet Finnish lakeside scene, one person sitting alone on a wooden jetty looking at still water, pine forest, pale soft summer light, minimal composition, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/VNWL.jpg"
     },
     "VNBR": {
       "name": "日本の「検討します」型",
       "body": "言い方はぼかすけれど、心の中では断っています。表情や間で伝えて、相手の顔もよく読みます。動画に出てきた「検討します」に、いちばん近いタイプです。角は立ちませんが、相手が本気で待っていることもあります。",
-      "image_prompt": "photorealistic scene of two Japanese businesspeople exchanging a slight bow in a quiet office corridor, restrained polite expressions, soft grey daylight through blinds, muted tones, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage"
+      "image_prompt": "photorealistic scene of two Japanese businesspeople exchanging a slight bow in a quiet office corridor, restrained polite expressions, soft grey daylight through blinds, muted tones, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/VNBR.jpg"
     },
     "VNBL": {
       "name": "ネパールの山道型",
       "body": "言葉は控えめ。でも断ることはできます。伝えるのは、うなずきや目線。相手の言葉は、そのまま受け取ります。落ち着いていて、ぶれないタイプです。ときには一言だけ、はっきり足してみてください。",
-      "image_prompt": "photorealistic scene of a Nepali villager on a mountain trail nodding quietly to a passing traveler, terraced hillsides and distant Himalayan peaks, clear morning light, documentary photography, ultra detailed, no text, no letters, no words, no writing, no signage"
+      "image_prompt": "photorealistic scene of a Nepali villager on a mountain trail nodding quietly to a passing traveler, terraced hillsides and distant Himalayan peaks, clear morning light, documentary photography, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/VNBL.jpg"
     },
     "VYWR": {
       "name": "タイの「マイペンライ」型",
       "body": "断らないし、はっきりも言わない。でも言葉はやわらかく選びます。相手の表情も、よく見ています。人と衝突しないタイプです。ただ、気を使いすぎて疲れる日もあるので、自分の分も残しておいてください。",
-      "image_prompt": "photorealistic candid scene of a smiling Thai street food vendor greeting a customer with a gentle wai gesture, steaming wok and plastic stools, warm evening light, documentary photography, ultra detailed, no text, no letters, no words, no writing, no signage"
+      "image_prompt": "photorealistic candid scene of a smiling Thai street food vendor greeting a customer with a gentle wai gesture, steaming wok and plastic stools, warm evening light, documentary photography, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/VYWR.jpg"
     },
     "VYWL": {
       "name": "台湾の夜市型",
       "body": "言葉はやわらかく、断るのも苦手。それでも相手の言葉は素直に受け取ります。人がよくて、誘われやすいタイプです。予定がいっぱいになる前に、ひとつ断る日を作っておくと、ちょうどよさそうです。",
-      "image_prompt": "photorealistic crowded Taiwanese night market lane, a friendly stall owner handing food to a customer with both hands, glowing lanterns and steam, humid evening atmosphere, documentary photography, ultra detailed, no text, no letters, no words, no writing, no signage"
+      "image_prompt": "photorealistic crowded Taiwanese night market lane, a friendly stall owner handing food to a customer with both hands, glowing lanterns and steam, humid evening atmosphere, documentary photography, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/VYWL.jpg"
     },
     "VYBR": {
       "name": "インドの首ゆらし型",
       "body": "はっきり言わず、断らず、身ぶりで返して、相手の表情を読む。動画のインドの首の動きに、いちばん近いタイプです。はいでもあり、たぶんでもある返し方ができます。便利ですが、相手が本気で受け取ることもあるので、大事な話だけは形をはっきりさせてみてください。",
-      "image_prompt": "photorealistic portrait of a friendly Indian shopkeeper behind a small street stall tilting his head sideways with a warm smile, colorful goods stacked around, busy sunlit market street behind, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage"
+      "image_prompt": "photorealistic portrait of a friendly Indian shopkeeper behind a small street stall tilting his head sideways with a warm smile, colorful goods stacked around, busy sunlit market street behind, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/VYBR.jpg"
     },
     "VYBL": {
       "name": "スリランカの縁側型",
       "body": "断らず、ぼかして、うなずきで返す。そして相手の言葉は、そのまま受け取ります。おだやかで、そばにいると安心するタイプです。困ったときは、あいまいに返す前にひと呼吸おくと、あとが楽になります。",
-      "image_prompt": "photorealistic scene of two Sri Lankan neighbors sitting on a shaded veranda, one tilting his head gently while listening, tropical plants and tea cups, soft humid afternoon light, documentary photography, ultra detailed, no text, no letters, no words, no writing, no signage"
+      "image_prompt": "photorealistic scene of two Sri Lankan neighbors sitting on a shaded veranda, one tilting his head gently while listening, tropical plants and tea cups, soft humid afternoon light, documentary photography, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/VYBL.jpg"
     }
   }
 }
