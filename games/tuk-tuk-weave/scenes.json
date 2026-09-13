@@ -1,0 +1,223 @@
+{
+  "id": "0012_tuk_tuk_weave",
+  "title": "トゥクトゥク・ウィーブ",
+  "video_title": "この渋滞、車の隙間だけが道です",
+  "lang": "ja",
+  "voice": "voicevox",
+  "scenes": [
+    {
+      "kind": "hook",
+      "clip": "motorcade",
+      "narration": "バンコクに、動かない道があります。動かないのに、間に合わせないといけません。"
+    },
+    {
+      "kind": "image",
+      "prompt": "a gridlocked Bangkok street at dusk, four lanes of cars packed bumper to bumper, red brake lights glowing, overhead power lines and street food carts on the roadside, humid haze, cinematic wide shot, photorealistic, highly detailed",
+      "narration": "バンコクの夕方です。この道は、毎日この時間に止まります。動く気配は、ありません。"
+    },
+    {
+      "kind": "image",
+      "prompt": "a weathered green and yellow tuk-tuk squeezing through a narrow gap between two stopped sedans, close view from behind, driver's hands on the handlebar, wet asphalt reflecting tail lights, evening, photorealistic, cinematic, highly detailed",
+      "narration": "運転手のソムチャイさんには、毎週火曜の決まった客がいます。病院の予約時間は、動かせません。だからソムチャイさんは、車の隙間を通ります。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "tuktuk",
+      "kicker": "あなた",
+      "title": "ソムチャイさんのトゥクトゥク",
+      "bullets": [
+        "**止まれません。** 速度は勝手に上がります",
+        "ハンドルは押している間だけ切れます",
+        "車体は**滑ります**。急には曲がれません"
+      ],
+      "narration": "これがあなたの乗る車です。止まるボタンはありません。速度は勝手に上がっていきます。ハンドルは、押している間だけ切れます。そして少し滑ります。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "car",
+      "kicker": "道",
+      "title": "渋滞の車",
+      "bullets": [
+        "道幅いっぱいに並びます",
+        "通れる隙間は、**毎列ひとつだけ**",
+        "隙間の位置は、少しずつ横にずれます"
+      ],
+      "narration": "車は道幅いっぱいに並んでいます。通れる隙間は、一列にひとつだけです。しかもその隙間、少しずつ横にずれていきます。指を止めたら、終わりです。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "bike",
+      "kicker": "邪魔者 その1",
+      "title": "バイクタクシー",
+      "bullets": [
+        "道を**横切って**きます",
+        "隙間そのものが動きます",
+        "一台ではありません。群れで来ます"
+      ],
+      "narration": "バイクタクシーは、道を横切ってきます。つまり隙間が動くんです。ここが面白いところで、一台では来ません。群れで来ます。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "cart",
+      "kicker": "邪魔者 その2",
+      "title": "屋台のリヤカー",
+      "bullets": [
+        "**片側を広く塞ぎます**",
+        "四台つづけて並びます",
+        "寄る側を間違えると、詰みます"
+      ],
+      "narration": "屋台のリヤカーは、片側をまるごと塞ぎます。四台つづけて来ます。早めに反対側へ寄っておく。それだけです。間違えると、もう戻れません。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "bus",
+      "kicker": "邪魔者 その3",
+      "title": "バスの壁",
+      "bullets": [
+        "車体が**長い**。抜けるまで時間がかかります",
+        "横位置を保ち続けることになります",
+        "その間も、車は前から来ます"
+      ],
+      "narration": "バスは長いです。横に並ぶと、抜けきるまでずっと同じ位置を保つことになります。そのあいだも、渋滞の列は前から来ます。そうなんです。休めません。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "rain",
+      "kicker": "邪魔者 その4",
+      "title": "スコール",
+      "bullets": [
+        "**グリップが半分**になります",
+        "手を離しても、車が止まりません",
+        "霧が寄って、先が見えなくなります"
+      ],
+      "narration": "そしてスコールです。路面のグリップが半分になります。手を離しても、車は止まってくれません。先に指を置く走り方に、いきなり変えさせられます。"
+    },
+    {
+      "kind": "events",
+      "clip": "events",
+      "kicker": "起きること",
+      "title": "道は静かにしていてくれません",
+      "bullets": [
+        "**細いソイ** — 道幅そのものが縮みます",
+        "**一斉クラクション** — 画面が揺れて、視線が散ります",
+        "**バイクの群れ** — 隙間が横に流れ続けます"
+      ],
+      "narration": "道は静かにしていてくれません。細い路地に入ると、道幅そのものが縮みます。クラクションが一斉に鳴ると、画面が揺れます。操作は何も変わりません。でも、隙間が見えなくなります。"
+    },
+    {
+      "kind": "death",
+      "clip": "death",
+      "kicker": "走りの終わり",
+      "title": "かすっても、終わりです",
+      "bullets": [
+        "当たり判定は箱。**かすっただけで止まります**",
+        "時間がゆっくり止まって、カメラが寄ります",
+        "隙間を縫うたびに、点が入ります"
+      ],
+      "narration": "終わりはいつも同じです。かすっただけで、止まります。時間がゆっくり止まって、カメラが寄ってきます。ソムチャイさんは、これを毎週やっています。あなたは、たぶん三十秒です。"
+    },
+    {
+      "kind": "outro",
+      "title": "概要欄のリンクから遊べます",
+      "subtitle": "チャンネル登録で、毎日一本",
+      "narration": "ブラウザで無料で遊べます。概要欄のリンクからどうぞ。チャンネル登録もお願いします。毎日一本、出しています。"
+    }
+  ],
+  "slug": "tuk-tuk-weave",
+  "channel": "Daily Arcade Studio",
+  "events": [
+    "motorcade",
+    "stall",
+    "monsoon",
+    "soi",
+    "buswall",
+    "hornstorm"
+  ],
+  "short": [
+    {
+      "mark": "motorcade",
+      "lead": -0.3,
+      "dur": 9.0,
+      "headline": "隙間が動きます"
+    },
+    {
+      "mark": "soi",
+      "lead": -0.5,
+      "dur": 7.0,
+      "headline": "道幅が縮む"
+    },
+    {
+      "mark": "monsoon",
+      "lead": -0.5,
+      "dur": 8.0,
+      "headline": "グリップ半分"
+    },
+    {
+      "mark": "buswall",
+      "lead": -0.5,
+      "dur": 7.0,
+      "headline": "抜けるまで休めない"
+    },
+    {
+      "mark": "death",
+      "lead": -2.0,
+      "dur": 9.0,
+      "headline": "かすっても終わり"
+    }
+  ],
+  "thumb": {
+    "hook": "隙間だけが道",
+    "sub": "バンコクの渋滞を縫う。ブラウザで無料。",
+    "frame_mark": "motorcade",
+    "frame_lead": 1.0
+  },
+  "short_v2": {
+    "cuts": [
+      {
+        "kind": "clip",
+        "mark": "motorcade",
+        "lead": -0.3,
+        "dur": 4.5,
+        "headline": "今日のゲーム",
+        "narration": "今日のゲームです。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "tuktuk",
+        "dur": 5.0,
+        "headline": "トゥクトゥク・ウィーブ",
+        "narration": "あなたは、渋滞を縫って客を運ぶ運転手です。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "car",
+        "dur": 5.0,
+        "headline": "隙間は一つ",
+        "narration": "車が道幅いっぱいに並びます。通れる隙間は、一列にひとつです。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "rain",
+        "dur": 5.0,
+        "headline": "雨で滑る",
+        "narration": "スコールが来ると、グリップが半分になります。指を先に置くしかありません。"
+      },
+      {
+        "kind": "clip",
+        "mark": "death",
+        "lead": -2.0,
+        "dur": 5.0,
+        "headline": "",
+        "narration": "かすっただけで、終わります。"
+      },
+      {
+        "kind": "clip",
+        "mark": "run2",
+        "lead": 1.0,
+        "dur": 4.5,
+        "cta": "概要欄のリンクから遊べます",
+        "narration": "ブラウザで無料で遊べます。リンクは概要欄です。"
+      }
+    ]
+  }
+}

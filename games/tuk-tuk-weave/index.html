@@ -1,0 +1,1306 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>トゥクトゥク・ウィーブ</title>
+<style>
+  html,body{margin:0;padding:0;overflow:hidden;background:#0a0e14;font-family:'Hiragino Sans','Helvetica Neue',Arial,sans-serif;}
+  #ui{position:fixed;top:16px;left:0;right:0;text-align:center;color:#fff;z-index:10;pointer-events:none;}
+  #score{font-size:clamp(24px,6vw,34px);font-weight:800;text-shadow:0 2px 8px #000;}
+  #msg{font-size:clamp(14px,3.6vw,20px);margin-top:6px;opacity:.9;text-shadow:0 2px 6px #000;}
+  #title{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:rgba(6,9,16,.74);z-index:20;color:#fff;transition:opacity .4s;padding:0 16px;box-sizing:border-box;}
+  /* 日本語は幅を取るので英字より控えめな上限にする */
+  #title h1{font-size:clamp(26px,8vw,50px);margin:0 0 10px;letter-spacing:1px;text-align:center;
+    text-shadow:0 4px 18px #ffb020;}
+  #title p{font-size:clamp(13px,3.4vw,19px);opacity:.86;margin:4px 0;text-align:center;line-height:1.5;}
+  #title .btn{margin-top:26px;padding:14px 44px;font-size:clamp(18px,5vw,22px);font-weight:700;color:#231400;
+    background:linear-gradient(180deg,#ffc53d,#e0860c);border:none;border-radius:12px;cursor:pointer;
+    box-shadow:0 6px 24px rgba(255,176,32,.45);}
+  #title .btn:hover{transform:scale(1.05);}
+  .hidden{opacity:0;pointer-events:none;}
+  #back{position:fixed;top:14px;left:14px;z-index:30;text-decoration:none;
+    background:rgba(12,16,26,.72);color:#fff;font:600 14px/1 'Hiragino Sans','Helvetica Neue',Arial,sans-serif;
+    padding:0 14px;height:44px;display:flex;align-items:center;border-radius:12px;}
+  #back:hover{background:rgba(30,38,56,.9);}
+  #mute{position:fixed;top:14px;right:14px;z-index:30;border:none;cursor:pointer;
+    background:rgba(12,16,26,.72);color:#fff;font-size:20px;line-height:1;
+    width:44px;height:44px;border-radius:12px;}
+  #mute:hover{background:rgba(30,38,56,.9);}
+  /* 端末に合う操作説明だけを出す */
+  .tc{display:none;}
+  @media (pointer:coarse){ .kb{display:none;} .tc{display:block;} }
+  @media (pointer:coarse){ #title .btn{padding:18px 52px;} }
+
+  /* --- イベントのバナー：画面中央に叩きつける --- */
+  #banner{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    z-index:15;pointer-events:none;opacity:0;}
+  #banner .b{font-size:clamp(24px,7vw,60px);font-weight:900;letter-spacing:.06em;color:#fff;
+    padding:10px 4vw;max-width:94vw;text-align:center;transform:scale(2.4);opacity:0;
+    text-shadow:0 0 26px currentColor, 0 6px 20px #000;
+    border-top:5px solid currentColor;border-bottom:5px solid currentColor;}
+  #banner.go .b{animation:slam .62s cubic-bezier(.12,.85,.2,1) forwards;}
+  @keyframes slam{
+    0%  {transform:scale(2.4) rotate(-4deg);opacity:0;}
+    22% {transform:scale(1)   rotate(0deg); opacity:1;}
+    70% {transform:scale(1)   rotate(0deg); opacity:1;}
+    100%{transform:scale(1.12);opacity:0;}
+  }
+
+  /* --- 全画面フラッシュ --- */
+  #flash{position:fixed;inset:0;z-index:14;pointer-events:none;opacity:0;background:#fff;}
+  #vignette{position:fixed;inset:0;z-index:13;pointer-events:none;opacity:0;
+    background:radial-gradient(ellipse at center,rgba(0,0,0,0) 32%,rgba(130,10,0,.85) 100%);}
+
+  /* --- K.O. 画面 --- */
+  #ko{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    z-index:22;pointer-events:none;opacity:0;color:#fff;transition:opacity .3s;}
+  #ko.on{opacity:1;}
+  #ko .koText{font-size:clamp(84px,24vw,180px);font-weight:900;letter-spacing:10px;color:#fff;
+    text-shadow:0 0 40px #ff5a1f,0 0 90px #ff5a1f,0 10px 30px #000;
+    transform:scale(3);opacity:0;}
+  #ko.on .koText{animation:koSlam .8s cubic-bezier(.1,.9,.2,1) forwards;}
+  @keyframes koSlam{
+    0%  {transform:scale(3) rotate(-8deg);opacity:0;}
+    30% {transform:scale(1) rotate(0deg);opacity:1;}
+    36% {transform:scale(1.06);}
+    100%{transform:scale(1);opacity:1;}
+  }
+  #ko .finalLabel{font-size:clamp(14px,3.6vw,20px);letter-spacing:4px;opacity:0;margin-top:6px;text-shadow:0 2px 8px #000;}
+  #ko .finalScore{font-size:clamp(44px,13vw,78px);font-weight:800;opacity:0;text-shadow:0 4px 20px #000;}
+  #ko.on .finalLabel{animation:fadeUp .5s .75s forwards;}
+  #ko.on .finalScore{animation:fadeUp .5s .9s forwards;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+
+  /* --- ルール説明 (?) --- */
+  #helpBtn{position:fixed;top:14px;right:66px;z-index:30;border:none;cursor:pointer;
+    background:rgba(12,16,26,.72);color:#fff;font:700 20px/1 'Helvetica Neue',Arial,sans-serif;
+    width:44px;height:44px;border-radius:12px;}
+  #helpBtn:hover{background:rgba(30,38,56,.9);}
+  #help{position:fixed;inset:0;z-index:40;display:none;align-items:center;
+    justify-content:center;background:rgba(4,6,12,.84);padding:20px;}
+  #help.on{display:flex;}
+  #help .box{background:#141a26;border:1px solid #2f3a52;border-radius:18px;
+    max-width:560px;width:100%;max-height:86vh;overflow:auto;padding:24px 24px 20px;
+    color:#e6edf3;font-family:'Hiragino Sans','Helvetica Neue',Arial,sans-serif;}
+  #help h2{margin:0 0 4px;font-size:clamp(19px,5vw,25px);}
+  #help .sub{color:#8b949e;font-size:clamp(12px,3.2vw,14px);margin:0 0 16px;}
+  #help h3{font-size:clamp(13px,3.4vw,15px);color:#ffc53d;margin:16px 0 6px;letter-spacing:.04em;}
+  #help ul{margin:0;padding-left:20px;}
+  #help li{font-size:clamp(13px,3.4vw,15px);line-height:1.7;margin:3px 0;}
+  #help b{color:#ffc53d;font-weight:700;}
+  #help .close{margin-top:20px;width:100%;padding:12px;border:none;border-radius:10px;
+    background:#2f3a52;color:#fff;font-size:16px;font-weight:700;cursor:pointer;}
+  #help .close:hover{background:#3f4d70;}
+</style>
+</head>
+<body>
+<div id="ui"><div id="score">0</div><div id="msg"></div></div>
+<button id="helpBtn" title="遊び方">?</button>
+<div id="help"><div class="box">
+  <h2>トゥクトゥク・ウィーブ</h2>
+  <p class="sub">バンコクの渋滞。隙間はある。細いだけ。</p>
+    <h3>トゥクトゥク</h3>
+    <ul><li>ハンドルは<b>指の位置そのまま</b>。押している間だけ曲がる</li><li>車線という概念はない。<b>どこでも通れる</b></li><li>停まれない。<b>進み続ける</b>のが仕事</li></ul>
+    <h3>渋滞（停まっている車）</h3>
+    <ul><li>道の8割を埋めている。動かない</li><li><b>隙間を縫って</b>抜ける。それだけ</li><li>ぶつかれば終わり。かすってもだめ</li></ul>
+    <h3>バイクタクシー</h3>
+    <ul><li>横から入ってくる。<b>こちらは見ていない</b></li><li>隙間そのものが動くので、<b>指も動かし続ける</b></li></ul>
+    <h3>屋台のリヤカー</h3>
+    <ul><li>幅が広い。片側に寄せると<b>逃げ場がなくなる</b></li><li>早めに反対側へ</li></ul>
+    <h3>スコール</h3>
+    <ul><li>視界が落ち、路面が滑る</li><li>ハンドルの<b>戻りが遅れる</b>。指を先に置くこと</li></ul>
+  <button class="close">わかった</button>
+</div></div>
+<a id="back" href="../../" title="ゲーム一覧へ">‹ ゲーム一覧</a>
+<button id="mute" title="音の オン / オフ">🔊</button>
+<div id="vignette"></div>
+<div id="flash"></div>
+<div id="banner"><div class="b"></div></div>
+<div id="ko">
+  <div class="koText">K.O.</div>
+  <div class="finalLabel">スコア</div>
+  <div class="finalScore">0</div>
+</div>
+<div id="title">
+  <h1>トゥクトゥク・ウィーブ</h1>
+  <p>バンコクの渋滞を、隙間だけで抜ける。</p>
+  <p class="kb">← → / A D を押している間 ハンドルを切る</p>
+  <p class="tc">画面を指で押さえて 左右に動かす</p>
+  <button class="btn" id="startBtn">スタート</button>
+</div>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+// ---------- url flags (declared first: sound and camera both read them) ----------
+const QS = new URLSearchParams(location.search);
+const AUTO = QS.get('auto')==='1';
+const SHOWCASE_Q = QS.get('showcase');
+// Recording must produce clean footage, so every automated mode is muted.
+const REC = QS.get('rec')==='1';   // 録音モード: 音を鳴らして拾う
+const SILENT = (AUTO || !!SHOWCASE_Q || QS.get('mute')==='1') && !REC;
+// 録画・showcase では「?」と「ゲーム一覧」を出さない（動画の邪魔になる）
+const NOCHROME = AUTO || !!SHOWCASE_Q || QS.get('nochrome')==='1';
+
+// ---------- renderer / scene ----------
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.shadowMap.enabled = true;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const SKY = new THREE.Color(0x101722);
+scene.background = SKY.clone();
+scene.fog = new THREE.Fog(0x101722, 26, 74);
+
+const camera = new THREE.PerspectiveCamera(58, innerWidth/innerHeight, .1, 140);
+camera.position.set(0, 5.0, 9.0);
+camera.lookAt(0, 1, -5);
+
+// 縦持ちと横持ちの両方で成立させる。スマホの縦は 16:9 よりずっと狭いので
+// 固定 FOV だと道幅が画面から外れる。縦長になるほど垂直 FOV を広げる。
+const BASE_FOV = 58;
+function fitCamera(){
+  const aspect = innerWidth / innerHeight;
+  camera.aspect = aspect;
+  if(typeof SHOWCASE !== 'undefined' && SHOWCASE){
+    camera.fov = aspect < 1 ? 62 : 46;
+  } else {
+    // 水平方向の画角をアスペクト比によらずほぼ一定に保つ
+    const ref = 16/9;
+    camera.fov = aspect >= ref ? BASE_FOV
+      : Math.min(96, THREE.MathUtils.radToDeg(
+          2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(BASE_FOV)/2) * (ref/aspect))));
+  }
+  camera.__base = camera.fov;    // スコール/追い越しの寄りはここへ戻る
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+}
+addEventListener('resize', fitCamera);
+addEventListener('orientationchange', ()=>setTimeout(fitCamera, 120));
+
+// ---------- lights ----------
+const hemi = new THREE.HemisphereLight(0x6688cc, 0x221a12, 1.4);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xffd8a0, 2.2);
+sun.position.set(-6, 13, 5); sun.castShadow = true;
+sun.shadow.camera.left=-16; sun.shadow.camera.right=16;
+sun.shadow.camera.top=16; sun.shadow.camera.bottom=-16;
+scene.add(sun);
+
+// ---------- road ----------
+// 車線はない（それがこのゲームの主張）。連続した横位置で走る。
+const ROAD_HALF = 5.4;                    // 走れる範囲 ±5.4
+const roadGeo = new THREE.PlaneGeometry(ROAD_HALF*2 + 1.6, 520);
+const roadMat = new THREE.MeshStandardMaterial({color:0x2b2f38, roughness:.9});
+const road = new THREE.Mesh(roadGeo, roadMat);
+road.rotation.x = -Math.PI/2; road.position.z = -230; road.receiveShadow = true;
+scene.add(road);
+
+// 路肩：走れる幅の目印。破線ではなく実線で「車線がない」ことを示す
+const kerbs = [];
+for(const sx of [-ROAD_HALF-0.2, ROAD_HALF+0.2]){
+  const k = new THREE.Mesh(new THREE.PlaneGeometry(.5, 520),
+    new THREE.MeshBasicMaterial({color:0xffc53d, transparent:true, opacity:.32}));
+  k.rotation.x = -Math.PI/2; k.position.set(sx, .012, -230);
+  scene.add(k); kerbs.push(k);
+}
+
+// 道の両側：屋台の灯りと電柱。流れて速度感を出す
+const props = [];
+const poleMat = new THREE.MeshStandardMaterial({color:0x3a3f4c, roughness:.8});
+const stallMats = [0xff6b3d, 0x35c8a0, 0xffc53d, 0x7f6bff].map(c =>
+  new THREE.MeshStandardMaterial({color:c, roughness:.55, emissive:c, emissiveIntensity:.25}));
+for(let i=0;i<28;i++){
+  for(const sx of [-1, 1]){
+    const g = new THREE.Group();
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(.14,.16,6.6,7), poleMat);
+    pole.position.y = 3.3; g.add(pole);
+    // 屋台の日よけ（板一枚）。派手な色でバンコクの夜市を示唆する
+    const awn = new THREE.Mesh(new THREE.BoxGeometry(1.9,.18,2.4),
+      stallMats[(i+(sx>0?1:0))%stallMats.length]);
+    awn.position.set(sx*1.1, 2.5, 0); awn.rotation.z = sx*.12; g.add(awn);
+    g.position.set(sx*(ROAD_HALF+2.4), 0, -i*18 - 6);
+    g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+    scene.add(g); props.push(g);
+  }
+}
+
+// 遠景：高架のシルエット
+const skyline = new THREE.Group();
+for(let i=0;i<18;i++){
+  const h = 6 + Math.random()*22;
+  const b = new THREE.Mesh(new THREE.BoxGeometry(3+Math.random()*4, h, 3),
+    new THREE.MeshBasicMaterial({color:0x171d2b}));
+  b.position.set((Math.random()-.5)*70, h/2, -60 - Math.random()*22);
+  skyline.add(b);
+}
+scene.add(skyline);
+
+// 雨（スコールのときだけ見える）
+const rainDrops = [];
+const rainMat = new THREE.MeshBasicMaterial({color:0xaad4ff, transparent:true, opacity:0});
+for(let i=0;i<180;i++){
+  const m = new THREE.Mesh(new THREE.BoxGeometry(.03,.9,.03), rainMat);
+  m.position.set((Math.random()-.5)*24, Math.random()*12, -Math.random()*70);
+  scene.add(m); rainDrops.push(m);
+}
+
+// ---------- tuk-tuk (primitives only) ----------
+function buildTukTuk(){
+  const g = new THREE.Group();
+  const shell = new THREE.MeshStandardMaterial({color:0xffc53d, roughness:.45, metalness:.25});
+  const dark  = new THREE.MeshStandardMaterial({color:0x1d2230, roughness:.7});
+  const chrome= new THREE.MeshStandardMaterial({color:0xb9c2d0, metalness:.9, roughness:.2});
+  const glass = new THREE.MeshStandardMaterial({color:0x8fd8ff, transparent:true, opacity:.45, roughness:.2});
+
+  // 客室：三輪タクシーの箱。丸みのある箱で表現
+  const cab = new THREE.Mesh(new THREE.BoxGeometry(1.25, .92, 1.5), shell);
+  cab.position.set(0, .95, -.15); g.add(cab);
+  // 屋根：前へ伸びる庇
+  const roof = new THREE.Mesh(new THREE.BoxGeometry(1.42, .12, 2.2), shell);
+  roof.position.set(0, 1.48, .05); g.add(roof);
+  // 前の鼻先（一輪のフォーク側）
+  const nose = new THREE.Mesh(new THREE.BoxGeometry(.62, .58, .9), shell);
+  nose.position.set(0, .76, 1.05); g.add(nose);
+  // 風防
+  const ws = new THREE.Mesh(new THREE.BoxGeometry(.9, .5, .06), glass);
+  ws.position.set(0, 1.18, .72); ws.rotation.x = -.18; g.add(ws);
+  // 屋根の柱
+  for(const sx of [-1,1]) for(const sz of [1,-1]){
+    const p = new THREE.Mesh(new THREE.CylinderGeometry(.05,.05,.62,6), chrome);
+    p.position.set(sx*.66, 1.17, sz*.62 + .05); g.add(p);
+  }
+  // 車輪：前1・後2
+  const wheelGeo = new THREE.CylinderGeometry(.34,.34,.22,16);
+  const front = new THREE.Mesh(wheelGeo, dark);
+  front.rotation.z = Math.PI/2; front.position.set(0,.34,1.32); g.add(front);
+  const rear = [];
+  for(const sx of [-.66,.66]){
+    const w = new THREE.Mesh(wheelGeo, dark);
+    w.rotation.z = Math.PI/2; w.position.set(sx,.34,-.72); g.add(w); rear.push(w);
+  }
+  // ヘッドライト
+  const lamp = new THREE.Mesh(new THREE.SphereGeometry(.15,12,10),
+    new THREE.MeshBasicMaterial({color:0xfff0c0}));
+  lamp.position.set(0,.86,1.5); g.add(lamp);
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  return {group:g, front, rear, roof};
+}
+const tuk = buildTukTuk();
+scene.add(tuk.group);
+const heroLight = new THREE.PointLight(0xffe6b0, 26, 20);
+heroLight.position.set(0, 5, 3);
+scene.add(heroLight);
+
+// ---------- hazards ----------
+// 渋滞の車・バイク・リヤカー。全部「横位置 x と幅 w」を持つ箱として扱う。
+const hazards = [];
+const carColors = [0x5a6b86, 0x8a5b4a, 0x3f6f5a, 0x6b5a80, 0x7d7a5a, 0x4a5a72];
+const carMats = carColors.map(c => new THREE.MeshStandardMaterial({color:c, roughness:.6}));
+const tyreMat = new THREE.MeshStandardMaterial({color:0x15181f, roughness:.9});
+const bikeMat = new THREE.MeshStandardMaterial({color:0xff6b3d, roughness:.5});
+const cartMat = new THREE.MeshStandardMaterial({color:0xb0713c, roughness:.8});
+const canopyMat = new THREE.MeshStandardMaterial({color:0x35c8a0, roughness:.55,
+  emissive:0x35c8a0, emissiveIntensity:.2});
+const busMat = new THREE.MeshStandardMaterial({color:0xd94b3a, roughness:.6});
+
+function buildCar(mat){
+  const g = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.BoxGeometry(1.7, .78, 3.5), mat);
+  body.position.y = .68; g.add(body);
+  const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.55, .6, 1.8), mat);
+  cabin.position.set(0, 1.32, -.2); g.add(cabin);
+  // テールランプ：こちらを向いている面に赤を置くと「止まっている」が読める
+  for(const sx of [-.6,.6]){
+    const t = new THREE.Mesh(new THREE.BoxGeometry(.3,.16,.06),
+      new THREE.MeshBasicMaterial({color:0xff3b2f}));
+    t.position.set(sx, .78, 1.77); g.add(t);
+  }
+  for(const sx of [-.86,.86]) for(const sz of [1.1,-1.1]){
+    const w = new THREE.Mesh(new THREE.CylinderGeometry(.3,.3,.2,12), tyreMat);
+    w.rotation.z = Math.PI/2; w.position.set(sx,.3,sz); g.add(w);
+  }
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  return g;
+}
+function buildBike(){
+  const g = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.BoxGeometry(.42,.36,1.5), bikeMat);
+  body.position.y = .62; g.add(body);
+  const rider = new THREE.Mesh(new THREE.CapsuleGeometry(.22,.5,6,10),
+    new THREE.MeshStandardMaterial({color:0x2b3145, roughness:.7}));
+  rider.position.set(0,1.25,-.1); g.add(rider);
+  const helm = new THREE.Mesh(new THREE.SphereGeometry(.24,14,12),
+    new THREE.MeshStandardMaterial({color:0xff9f1c, roughness:.4}));
+  helm.position.set(0,1.78,-.06); g.add(helm);
+  for(const sz of [.62,-.62]){
+    const w = new THREE.Mesh(new THREE.CylinderGeometry(.28,.28,.12,12), tyreMat);
+    w.rotation.z = Math.PI/2; w.position.set(0,.28,sz); g.add(w);
+  }
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  return g;
+}
+function buildCart(){
+  const g = new THREE.Group();
+  const bed = new THREE.Mesh(new THREE.BoxGeometry(3.0, .5, 1.5), cartMat);
+  bed.position.y = .8; g.add(bed);
+  const canopy = new THREE.Mesh(new THREE.BoxGeometry(3.3, .14, 1.9), canopyMat);
+  canopy.position.y = 1.95; g.add(canopy);
+  for(const sx of [-1.35,1.35]) for(const sz of [.6,-.6]){
+    const p = new THREE.Mesh(new THREE.CylinderGeometry(.05,.05,1.1,6),
+      new THREE.MeshStandardMaterial({color:0x8a8f9c, metalness:.6, roughness:.4}));
+    p.position.set(sx,1.4,sz); g.add(p);
+  }
+  // 積荷：果物の山のつもり
+  for(let i=0;i<7;i++){
+    const f = new THREE.Mesh(new THREE.SphereGeometry(.16+Math.random()*.08,10,8),
+      new THREE.MeshStandardMaterial({color:[0xffc53d,0xff6b3d,0x9fd356][i%3], roughness:.6}));
+    f.position.set((Math.random()-.5)*2.6, 1.12, (Math.random()-.5)*1.0); g.add(f);
+  }
+  for(const sx of [-1.2,1.2]){
+    const w = new THREE.Mesh(new THREE.CylinderGeometry(.34,.34,.14,12), tyreMat);
+    w.rotation.z = Math.PI/2; w.position.set(sx,.34,0); g.add(w);
+  }
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  return g;
+}
+function buildBus(){
+  const g = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.BoxGeometry(2.6, 2.6, 9.0), busMat);
+  body.position.y = 1.7; g.add(body);
+  // 窓の列：長さを読ませるための横縞
+  for(let i=0;i<6;i++) for(const sx of [-1.32,1.32]){
+    const w = new THREE.Mesh(new THREE.BoxGeometry(.06,.7,1.1),
+      new THREE.MeshBasicMaterial({color:0x2a3550}));
+    w.position.set(sx, 2.3, -3.6 + i*1.35); g.add(w);
+  }
+  for(const sx of [-1.3,1.3]) for(const sz of [3.2,-2.6]){
+    const w = new THREE.Mesh(new THREE.CylinderGeometry(.42,.42,.26,12), tyreMat);
+    w.rotation.z = Math.PI/2; w.position.set(sx,.42,sz); g.add(w);
+  }
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  return g;
+}
+
+/**
+ * 渋滞の一列を置く。道幅いっぱいに車を並べ、通れる隙間をひとつだけ残す。
+ * 隙間の幅は難易度で細くなる。「隙間の位置」が毎回変わるので指を動かし続ける。
+ */
+let lastGapX = 0;      // 隙間は前の列から少しずつずれる（瞬間移動させない）
+function spawnJamRow(z, gapW){
+  // gapW は「トゥクトゥクが通れる実効クリアランス」。当たり判定と同じ単位で
+  // 考えないと、見た目には隙間があるのに絶対通れない列ができてしまう。
+  const CAR_HALF = 0.85, CAR_PAD = 0.08;      // 当たり判定の半幅 = 0.93
+  const TUK_HALF = 0.72;                      // 当たり判定でトゥクトゥクに足される分
+  // 車の中心をここまで離せば、クリアランスが gapW になる
+  const half = gapW*0.5 + TUK_HALF + CAR_HALF + CAR_PAD;
+  // 隙間の位置は前の列から一定量までしか動かない。これがないと、道の端から
+  // 端へ飛ぶ隙間が生まれて、どう操作しても間に合わない列ができる。
+  const lim = Math.max(0, ROAD_HALF - half - 0.3);
+  const step = 2.6;
+  const gapX = THREE.MathUtils.clamp(
+    lastGapX + (Math.random()*2-1)*step, -lim, lim);
+  lastGapX = gapX;
+  for(const dir of [-1, 1]){
+    let cx = gapX + dir*half;
+    let guard = 0;
+    while(Math.abs(cx) < ROAD_HALF + 1.2){
+      if(guard++ > 8) break;
+      const mesh = buildCar(carMats[Math.floor(Math.random()*carMats.length)]);
+      // z のばらつきは小さく保つ。大きいと「列」に見えず隙間も読めない
+      mesh.position.set(cx, 0, z + (Math.random()-.5)*0.5);
+      mesh.rotation.y = (Math.random()-.5)*.08;      // きれいに並んでいない渋滞
+      scene.add(mesh);
+      hazards.push({mesh, type:'car', halfW:CAR_HALF + CAR_PAD, halfL:1.85, vx:0});
+      cx += dir*(CAR_HALF*2 + 0.08);
+    }
+  }
+}
+
+// バイクタクシー：横切ってくる。隙間そのものが動く
+function spawnBike(z, fromLeft){
+  const mesh = buildBike();
+  const x = fromLeft ? -ROAD_HALF-1.5 : ROAD_HALF+1.5;
+  mesh.position.set(x, 0, z);
+  mesh.rotation.y = fromLeft ? .5 : -.5;
+  scene.add(mesh);
+  hazards.push({mesh, type:'bike', halfW:.55, halfL:.85, vx:(fromLeft?1:-1)*(2.2+Math.random()*1.6), temp:true});
+}
+// リヤカー：幅が広い。片側に寄っていると詰む
+function spawnCart(z, side){
+  const mesh = buildCart();
+  mesh.position.set(side * (ROAD_HALF - 1.7), 0, z);
+  scene.add(mesh);
+  hazards.push({mesh, type:'cart', halfW:1.7, halfL:.9, vx:0, temp:true});
+}
+// バス：長い壁。抜けきるまで横位置を保ち続けることになる
+function spawnBus(z, side){
+  const mesh = buildBus();
+  mesh.position.set(side * (ROAD_HALF - 1.4), 0, z);
+  scene.add(mesh);
+  hazards.push({mesh, type:'bus', halfW:1.4, halfL:4.6, vx:0, temp:true});
+}
+
+// ---------- game state ----------
+let running=false, dead=false, t=0, speed=16, score=0;
+let carX=0;                      // トゥクトゥクの横位置（連続値）
+let carVX=0;                     // 横速度（慣性がある＝滑る）
+let steer=0;                     // -1..1 現在のハンドル入力
+let keyL=false, keyR=false;      // キーは押している間だけ切れる
+let touchTarget=null;            // 指の位置から作った目標 x（指を離すと null）
+let touchHold=0;                 // 指を離した後に舵が残る秒数（短いタップ用）
+let grip=1;                      // 1=乾いた路面, 小さいほど滑る
+let timeScale=1;                 // スローモーション
+let deadAt=0;
+let shake=0;
+let camDist=9.0, camDistTarget=9.0;
+let nextRowZ=-40;                // 次の渋滞列を置く z
+let gapW=2.6;                    // 通れる実効クリアランス（難易度で細くなる）
+let rowGapZ=16;                  // 列の間隔。速度に比例させて時間を一定に保つ
+let nextEventAt=9;
+let eventQueue=[];
+let rain=0;                      // スコールの残り秒
+let horn=0;                      // クラクションの余韻（演出用）
+let narrow=0;                    // 「ソイ（路地）」で道幅が狭まっている残り秒
+let roadSquash=1;                // 路肩の見た目の縮み
+const scoreEl = document.getElementById('score');
+const msgEl = document.getElementById('msg');
+const titleEl = document.getElementById('title');
+const bannerEl = document.getElementById('banner');
+const bannerText = bannerEl.querySelector('.b');
+const flashEl = document.getElementById('flash');
+const vignetteEl = document.getElementById('vignette');
+const koEl = document.getElementById('ko');
+const koScoreEl = koEl.querySelector('.finalScore');
+
+// 実際に走れる半幅。ソイ・イベント中は狭くなる
+function halfWidth(){ return ROAD_HALF * roadSquash; }
+
+// ---------- presentation helpers ----------
+function banner(text, color){
+  bannerText.textContent = text;
+  bannerText.style.color = color;
+  bannerEl.classList.remove('go');
+  void bannerEl.offsetWidth;      // CSS アニメーションを再スタートさせる
+  bannerEl.style.opacity = 1;
+  bannerEl.classList.add('go');
+}
+function flash(color, strength, ms){
+  flashEl.style.background = color;
+  flashEl.style.transition = 'none';
+  flashEl.style.opacity = strength;
+  requestAnimationFrame(()=>{
+    flashEl.style.transition = `opacity ${ms}ms ease-out`;
+    flashEl.style.opacity = 0;
+  });
+}
+
+// ---------- events ----------
+// どれも「指の動かし方」が違うように作る：横切る / 片側を塞ぐ / 滑る / 幅が縮む / 一斉に鳴る
+const EVENTS = {
+  // バイクの群れ：隙間が横に動く。指を動かし続けるしかない
+  motorcade(){
+    banner('バイクの群れ', '#ff6b3d');
+    let n = 0;
+    const id = setInterval(()=>{
+      if(!running || dead || n>=9){ clearInterval(id); return; }
+      spawnBike(tuk.group.position.z - 46 - n*3, Math.random()<.5);
+      n++;
+    }, 240);
+    shake = Math.max(shake, .12);
+    return 6;
+  },
+  // 屋台のリヤカー：片側を広く塞ぐ。早めに反対へ寄る判断
+  stall(){
+    banner('屋台の行列', '#35c8a0');
+    const side = Math.random()<.5 ? -1 : 1;
+    for(let i=0;i<4;i++) spawnCart(tuk.group.position.z - 48 - i*16, side);
+    return 5.5;
+  },
+  // スコール：グリップが落ちる。ハンドルの戻りが遅れる
+  monsoon(){
+    banner('スコール', '#8fd8ff');
+    rain = 6.5;
+    flash('#8fd8ff', .3, 500);
+    return 7;
+  },
+  // ソイ（路地）：道幅そのものが縮む。中央へ寄せ続ける
+  soi(){
+    banner('細いソイ', '#ffc53d');
+    narrow = 6.0;
+    return 6.5;
+  },
+  // バスの壁：長い車体に沿って走らされる
+  buswall(){
+    banner('バスの壁', '#d94b3a');
+    const side = Math.random()<.5 ? -1 : 1;
+    for(let i=0;i<3;i++) spawnBus(tuk.group.position.z - 50 - i*22, side);
+    shake = Math.max(shake, .1);
+    return 6.5;
+  },
+  // 一斉クラクション：画面が揺れて視線が散る。操作はそのまま
+  hornstorm(){
+    banner('一斉クラクション', '#ffd23b');
+    horn = 3.2;
+    shake = Math.max(shake, .4);
+    flash('#ffd23b', .22, 320);
+    return 4.5;
+  },
+};
+const EVENT_NAMES = Object.keys(EVENTS);
+// 録画・デバッグ用フック：名前でイベントを起こす
+// 走行が終わっていれば false を返す（K.O. 画面にイベントを撃たないため）
+window.__ev = name => {
+  if(!running || dead || !EVENTS[name]) return false;
+  const busy = EVENTS[name]();
+  if(!SILENT) SND.event(); nextEventAt = t + busy + 5; return true;
+};
+window.__alive = () => running && !dead;
+window.__kill = () => { if(running && !dead){ dead=true; gameOver(); } };
+window.__recStop = () => SND.recStop();
+window.__snd = () => ({enabled: SND.enabled, silent: SILENT});
+window.__x = () => +carX.toFixed(2);
+window.__fov = () => +camera.fov.toFixed(1);
+window.__probe = () => ({t:+t.toFixed(2), x:+carX.toFixed(2), grip:+grip.toFixed(2),
+  gap:+gapW.toFixed(2), haz:hazards.length, next:+nextEventAt.toFixed(2)});
+// 録画ツールが名前で参照する（推測できないので必ず公開する）
+window.__events = EVENT_NAMES.slice();
+
+function refillEventQueue(){
+  eventQueue = EVENT_NAMES.slice();
+  for(let i=eventQueue.length-1;i>0;i--){        // 走行ごとに順番を変える
+    const j = Math.floor(Math.random()*(i+1));
+    [eventQueue[i],eventQueue[j]]=[eventQueue[j],eventQueue[i]];
+  }
+}
+
+function triggerEvent(){
+  if(!eventQueue.length) refillEventQueue();
+  const name = eventQueue.pop();
+  const busy = EVENTS[name]();
+  if(!SILENT) SND.event();
+  nextEventAt = t + busy + 5 + Math.random()*4;  // イベントの間に息をつかせる
+}
+
+// ---------- reset ----------
+function reset(){
+  for(const h of hazards) scene.remove(h.mesh);
+  hazards.length=0;
+  tuk.group.position.set(0,0,0);
+  tuk.group.rotation.set(0,0,0);
+  carX=0; carVX=0; steer=0; touchTarget=null; touchHold=0; keyL=keyR=false;
+  t=0; speed=16; score=0; dead=false;
+  timeScale=1; shake=0; camDist=9.0; camDistTarget=9.0;
+  grip=1; rain=0; horn=0; narrow=0; roadSquash=1;
+  gapW=3.4; nextRowZ=-40;
+  // 最初の渋滞をあらかじめ並べておく
+  lastGapX = 0;
+  for(let i=0;i<14;i++){ spawnJamRow(nextRowZ, 2.6); nextRowZ -= 16*(1.15 + Math.random()*0.35); }
+  nextEventAt = 9;
+  refillEventQueue();
+  msgEl.textContent='';
+  koEl.classList.remove('on');
+  vignetteEl.style.transition='opacity .3s'; vignetteEl.style.opacity=0;
+  rainMat.opacity = 0;
+  scene.fog.near = 26; scene.fog.far = 74;
+  camera.position.set(0,5.0,9.0);
+}
+
+const startBtn = document.getElementById('startBtn');
+
+// ---------- sound: everything synthesised, no audio files ----------
+// 単一 HTML の原則（落とすものが無い）を守りつつ、音が遊びに反応する：
+// ベースは速度で速くなり、イベントでスティンガー、ゲームオーバーで全体がしぼむ。
+const SND = (() => {
+  let ctx = null, master = null, musicGain = null, on = true, started = false;
+  let step = 0, timer = null, tempo = 0.25;
+
+  // ペンタトニックは自分自身と当たっても外れないので、テンポが
+  // プレイ速度で揺れるこの構成に向く。
+  // minor pentatonic, driving — 止まらない渋滞
+  const SCALE = [0, 3, 5, 7, 10];
+  const ROOT = 196;
+  const BASS = 'square', LEAD = 'sawtooth';
+  const hz = (deg, oct = 0) =>
+    ROOT * Math.pow(2, oct + Math.floor(deg / SCALE.length)) *
+    Math.pow(2, SCALE[((deg % SCALE.length) + SCALE.length) % SCALE.length] / 12);
+
+  function ensure() {
+    if (ctx) return ctx;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    ctx = new AC();
+    master = ctx.createGain();
+    master.gain.value = 0.32;
+    master.connect(ctx.destination);
+    musicGain = ctx.createGain();
+    musicGain.gain.value = 1;
+    musicGain.connect(master);
+    return ctx;
+  }
+
+
+  // ---- 録音用の分岐（?rec=1）----
+  // Playwright の録画には音声が入らないので、ゲーム自身に master バスを
+  // 録らせる。鳴っているものそのものなので映像と必ず同期する。
+  let recDest = null, recorder = null, recChunks = [];
+  function recStart() {
+    if (!ctx || recorder) return;
+    recDest = ctx.createMediaStreamDestination();
+    master.connect(recDest);
+    recorder = new MediaRecorder(recDest.stream, {mimeType: 'audio/webm'});
+    recorder.ondataavailable = e => { if (e.data.size) recChunks.push(e.data); };
+    recorder.start();
+  }
+  function recStop() {
+    return new Promise(res => {
+      if (!recorder) return res(null);
+      recorder.onstop = async () => {
+        const blob = new Blob(recChunks, {type: 'audio/webm'});
+        const buf = await blob.arrayBuffer();
+        res(Array.from(new Uint8Array(buf)));
+      };
+      recorder.stop();
+    });
+  }
+
+  function blip(freq, dur, type = 'square', vol = 0.25, dest = null, slideTo = null) {
+    if (!ctx || !on) return;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, ctx.currentTime);
+    if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, ctx.currentTime + dur);
+    // 短いアタックを付けて、どの音もクリックしないようにする
+    g.gain.setValueAtTime(0, ctx.currentTime);
+    g.gain.linearRampToValueAtTime(vol, ctx.currentTime + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
+    o.connect(g); g.connect(dest || master);
+    o.start(); o.stop(ctx.currentTime + dur + 0.02);
+  }
+
+  function noise(dur, vol = 0.2, hp = 800) {
+    if (!ctx || !on) return;
+    const n = Math.floor(ctx.sampleRate * dur);
+    const buf = ctx.createBuffer(1, n, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    const f = ctx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = hp;
+    const g = ctx.createGain(); g.gain.value = vol;
+    src.connect(f); f.connect(g); g.connect(master);
+    src.start();
+  }
+
+  // --- ループ：歩くベース＋裏で鳴る短い音 ---
+  function tick() {
+    if (!ctx || !on) return;
+    const bar = step % 16;
+    // まっすぐ進む拍：ベースは表、リードは裏で刺す
+    if (bar % 2 === 0) blip(hz(bar % 8 === 0 ? 0 : 1, -1), tempo * 1.1, BASS, 0.30, musicGain);
+    if (bar % 8 === 5) blip(hz(4, 0), tempo * 0.6, LEAD, 0.09, musicGain);
+    if (bar % 4 === 2) noise(0.04, 0.05, 5000);
+    step++;
+    timer = setTimeout(tick, tempo * 1000);
+  }
+
+  return {
+    // ユーザー操作から呼ぶ必要がある（ブラウザが音をブロックするため）
+    start() {
+      if (!ensure() || started) return;
+      if (ctx.state === 'suspended') ctx.resume();
+      started = true; step = 0; tick();
+    },
+    stop() { if (timer) { clearTimeout(timer); timer = null; } started = false; },
+    /** 音楽をゲームの速度に合わせる。1 = 開始時のテンポ */
+    setPace(mult) { tempo = Math.max(0.11, 0.25 / Math.max(0.2, mult)); },
+    duck(sec = 1.6) {                                      // ゲームオーバー用
+      if (!ctx) return;
+      musicGain.gain.cancelScheduledValues(ctx.currentTime);
+      musicGain.gain.setValueAtTime(musicGain.gain.value, ctx.currentTime);
+      musicGain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + sec);
+    },
+    unduck() {
+      if (!ctx) return;
+      musicGain.gain.cancelScheduledValues(ctx.currentTime);
+      musicGain.gain.setValueAtTime(0.0001, ctx.currentTime);
+      musicGain.gain.exponentialRampToValueAtTime(1, ctx.currentTime + 0.4);
+    },
+    // --- 単発音（短く・音程がはっきりしたものだけ。ナレーションの下でも読める） ---
+    // ハンドルを切り始めた合図。左右で音程を変えて向きが耳で分かる
+    steerL(){ ensure(); blip(hz(2, 0), 0.06, LEAD, 0.11, null, hz(0, 0)); },
+    steerR(){ ensure(); blip(hz(2, 0), 0.06, LEAD, 0.11, null, hz(4, 0)); },
+    // 隙間を抜けた：短い上向きの2音
+    weave(){ ensure(); blip(hz(3, 1), 0.05, 'triangle', 0.10);
+             setTimeout(()=>blip(hz(4, 1), 0.05, 'triangle', 0.08), 55); },
+    // 路肩ぎりぎり：警告のうなり
+    edge(){ ensure(); blip(hz(0, -1), 0.12, 'square', 0.12); },
+    // クラクション：三輪車の甲高いラッパ
+    honk(){ ensure(); blip(hz(2, 1), 0.16, 'square', 0.16);
+            setTimeout(()=>blip(hz(1, 1), 0.14, 'square', 0.13), 120); },
+    event() { ensure(); [0, 90, 180].forEach((ms, i) =>
+                setTimeout(() => blip(hz(2 + i, 0), 0.18, 'sawtooth', 0.20), ms)); },
+    hit()   { ensure(); noise(0.35, 0.30, 200);
+              blip(180, 0.5, 'sawtooth', 0.28, null, 40); },
+    over()  { ensure(); [0, 140, 280, 460].forEach((ms, i) =>
+                setTimeout(() => blip(hz(-i, -1), 0.42, 'triangle', 0.26), ms)); },
+    recStart() { ensure(); recStart(); },
+    recStop() { return recStop(); },
+    toggle() { on = !on; if (!on) { this.stop(); } else { this.start(); } return on; },
+    get enabled() { return on; },
+  };
+})();
+
+// --- 操作はここに一箇所だけ置く。タッチとキーボードがずれないようにする ---
+function startRun(){
+  titleEl.classList.add('hidden'); reset(); running=true;
+  if(!SILENT){ SND.unduck(); SND.start(); if(REC) SND.recStart(); }
+}
+// ハンドルは「押している間だけ切れている」連続入力。
+// キーは -1 / +1、タッチは指の位置から作った目標へ向かう量。
+function steerLeftDown(){  if(!keyL && !SILENT) SND.steerL(); keyL=true; }
+function steerRightDown(){ if(!keyR && !SILENT) SND.steerR(); keyR=true; }
+function steerLeftUp(){  keyL=false; }
+function steerRightUp(){ keyR=false; }
+/** 画面上の x（0..1）を目標の横位置に変換して押さえる */
+function steerToward(frac){
+  const prev = touchTarget;
+  touchHold = 0;
+  touchTarget = (frac*2 - 1) * halfWidth();
+  // 指を置いた瞬間だけ鳴らす（動かすたびに鳴らすと音が潰れる）
+  if(prev === null && !SILENT){ if(touchTarget < carX) SND.steerL(); else SND.steerR(); }
+}
+// 指を離しても少しだけ舵を残す。短いタップでも「その側へ寄る」が成立し、
+// 押さえ続けている間の操作と地続きになる。
+function steerRelease(){ touchHold = 0.22; }
+
+const muteBtn = document.getElementById('mute');
+function toggleMute(){ muteBtn.textContent = SND.toggle() ? '🔊' : '🔇'; }
+muteBtn.addEventListener('click', toggleMute);
+muteBtn.addEventListener('touchend', e=>{ e.preventDefault(); toggleMute(); },
+                         {passive:false});
+if(SILENT) muteBtn.style.display='none';   // 自動モードは無音
+addEventListener('keydown', e=>{ if(e.code==='KeyM') toggleMute(); });
+
+startBtn.addEventListener('click', startRun);
+// タッチでも始まらないといけない（click だけでは取りこぼす）
+startBtn.addEventListener('touchend', e=>{ e.preventDefault(); startRun(); },
+                          {passive:false});
+
+addEventListener('keydown', e=>{
+  if(!running){
+    if(e.code==='Space'||e.code==='Enter'){
+      // K.O. 直後の誤爆を避けるため、少し待ってから再開できる
+      if(!dead || Date.now()-deadAt > 1200) startRun();
+    }
+    return;
+  }
+  if(e.code==='ArrowLeft'||e.code==='KeyA')  steerLeftDown();
+  if(e.code==='ArrowRight'||e.code==='KeyD') steerRightDown();
+});
+addEventListener('keyup', e=>{
+  if(e.code==='ArrowLeft'||e.code==='KeyA')  steerLeftUp();
+  if(e.code==='ArrowRight'||e.code==='KeyD') steerRightUp();
+});
+// フォーカスが外れたらハンドルは戻す（押したままになる事故を防ぐ）
+addEventListener('blur', ()=>{ keyL=keyR=false; touchTarget=null; touchHold=0; });
+
+// --- タッチ：画面を押さえて左右に動かす（指の位置がハンドル） ---
+// 大半の視聴者はスマホから来るので、キーボード無しで完全に遊べること。
+// キーと同じ steer* 関数を通すので、二つの入力経路がずれない。
+(function(){
+  const canvas = renderer.domElement;
+  const frac = e => e.changedTouches[0].clientX / innerWidth;
+
+  canvas.addEventListener('touchstart', e=>{
+    if(dead) return;
+    if(!running){ return; }          // 開始判定は touchend 側で行う
+    steerToward(frac(e));
+  }, {passive:true});
+
+  canvas.addEventListener('touchmove', e=>{
+    if(!running || dead) return;
+    steerToward(frac(e));
+  }, {passive:true});
+
+  canvas.addEventListener('touchend', e=>{
+    if(dead){
+      // K.O. の演出を読む時間を置いてから、タップで再開
+      if(!AUTO && Date.now()-deadAt > 1500) startRun();
+      return;
+    }
+    if(!running){ startRun(); return; }
+    steerRelease();
+  }, {passive:true});
+  canvas.addEventListener('touchcancel', steerRelease, {passive:true});
+
+  // タイトルは canvas の上に乗っているので、タップは canvas まで届かない。
+  // オーバーレイ自身から開始させる。
+  titleEl.addEventListener('touchend', e=>{
+    if(!running){ e.preventDefault(); startRun(); }
+  }, {passive:false});
+
+  // ゲーム中のタップをスクロール／ダブルタップ拡大にさせない
+  canvas.addEventListener('touchmove', e=>e.preventDefault(), {passive:false});
+})();
+
+// マウスでも同じ操作ができるようにしておく（PC で押さえて動かす人向け）
+(function(){
+  const canvas = renderer.domElement;
+  let down = false;
+  canvas.addEventListener('mousedown', e=>{
+    if(!running || dead) return;
+    down = true; touchTarget = null; steerToward(e.clientX/innerWidth);
+  });
+  canvas.addEventListener('mousemove', e=>{
+    if(down && running && !dead) steerToward(e.clientX/innerWidth);
+  });
+  addEventListener('mouseup', ()=>{ if(down){ down=false; steerRelease(); } });
+})();
+
+// 録画用の自動運転： ?auto=1
+// 録画では K.O. を長めに見せる： ?hold=9000
+const RETRY_MS = Math.max(1200, parseInt(QS.get('hold')||'4200', 10));
+// ?noev=1 でイベント無しの静かな走行を録る（ナレーション用の下敷き）
+const NOEV = QS.get('noev')==='1';
+if(AUTO){ setTimeout(startRun, 1200); }   // startRun 経由にする（音/録音も始まる）
+
+/**
+ * 自動運転：いちばん近い「壁になっている一列」を見つけ、その列の隙間へ
+ * 舵を向け続ける。人間と同じ連続した横位置の操作しかしない。
+ *
+ * 全部の障害物をひとつの占有図にまとめると、別々の列の隙間が互いに
+ * 打ち消し合って「通れる場所が無い」と誤判定する。だから列ごとに見る。
+ */
+function autoPilot(dt){
+  const zTuk = tuk.group.position.z;
+  const hw = halfWidth();
+  const look = 26 + speed*0.85;          // 速いほど先を見る（早めに決める）
+
+  // 前方の障害物を z の近い順に並べ、近いものから列にまとめる
+  const ahead = [];
+  for(const h of hazards){
+    const dz = zTuk - h.mesh.position.z;                 // 正 = 前方
+    if(dz < 0.5 || dz > look) continue;
+    ahead.push({h, dz});
+  }
+  if(!ahead.length){
+    // 何も無ければ中央へ寄せておく（次の列にどちらへでも振れる位置）
+    autoSteer = THREE.MathUtils.clamp((0 - carX)*0.8 - carVX*0.25, -1, 1);
+    return;
+  }
+  ahead.sort((a,b)=>a.dz-b.dz);
+
+  /** ある列の占有区間から、通れる隙間の一覧を作る */
+  const gapsOf = (members) => {
+    const spans = members.map(({h, dz}) => {
+      // 動くものは到達までに進む分を見込む（バイクは横切ってくる）
+      const eta = dz / Math.max(6, speed);
+      const cx = h.mesh.position.x + (h.vx||0)*eta;
+      // 濡れているほど余裕を多く取る
+      // 0.72 は当たり判定でトゥクトゥクに足される分。これより小さくすると
+      // 通れない隙間を通れると誤認する。上に乗せる分だけが安全マージン。
+      const pad = 0.72 + 0.16 + (h.vx ? 0.55 : 0) + (1-grip)*0.5;
+      return [cx - h.halfW - pad, cx + h.halfW + pad];
+    }).sort((a,b)=>a[0]-b[0]);
+    const gaps = [];
+    let cursor = -hw;
+    for(const sp of spans){
+      if(sp[0] - cursor > 0.35) gaps.push([cursor, sp[0]]);
+      cursor = Math.max(cursor, sp[1]);
+    }
+    if(hw - cursor > 0.35) gaps.push([cursor, hw]);
+    return gaps;
+  };
+
+  // 近い側の一列（z が 6 以内にかたまっているものを同じ列として扱う）
+  const rowZ = ahead[0].dz;
+  const row  = ahead.filter(a => a.dz < rowZ + 6);
+  const next = ahead.filter(a => a.dz >= rowZ + 6 && a.dz < rowZ + 20);
+
+  const gaps = gapsOf(row);
+  if(!gaps.length){
+    // 逃げ場が無い：いちばん空いている方へ全力で逃げる
+    let sum = 0; for(const a of row) sum += a.h.mesh.position.x;
+    autoSteer = Math.sign(-(sum/row.length) || 1);
+    return;
+  }
+  // 次の列の隙間も見て、続けて通れる隙間を優先する
+  const nextGaps = next.length ? gapsOf(next) : [];
+  const timeToRow = rowZ / Math.max(6, speed);
+
+  let best = null;
+  for(const [lo, hi] of gaps){
+          // 隙間の中心を狙う。端を狙うと少し遅れただけで引っかかる。
+      // 広い隙間だけ、今の位置に近い側へ寄ってよい。
+      const mid = (lo + hi)/2;
+      const slack = Math.max(0, (hi - lo)/2 - 0.85);
+      const aim = THREE.MathUtils.clamp(carX, mid - slack, mid + slack);
+    const dist = Math.abs(aim - carX);
+    // その隙間まで間に合うか（横に出せる速さには限りがある）
+    // 今の横速度を打ち消してから動き出す分を引く
+    const dir = Math.sign(aim - carX) || 1;
+    const against = Math.max(0, -carVX*dir);
+    const reach = Math.max(0, 7.0*timeToRow*grip - against*0.35) + 0.4;
+    let cost = dist - (hi - lo)*0.55;
+    if(dist > reach) cost += (dist - reach)*4;        // 間に合わないものは避ける
+    // 次の列にもつながっているとうれしい
+    if(nextGaps.length){
+      let link = Infinity;
+      for(const [nlo, nhi] of nextGaps){
+        const c = THREE.MathUtils.clamp(aim, nlo + 0.5, nhi - 0.5);
+        link = Math.min(link, Math.abs(c - aim));
+      }
+      cost += Math.min(link, 4) * 0.5;
+    }
+    if(!best || cost < best.cost) best = {cost, aim};
+  }
+  const target = best.aim;
+  // 目標へ向けてハンドルを切る（キーと同じ steer の値域を使う）
+  const err = target - carX;
+  // 近いほど強く、行き過ぎないように横速度でブレーキをかける
+  const urgency = THREE.MathUtils.clamp(2.4 / Math.max(0.25, timeToRow), 1, 3.2);
+  autoSteer = THREE.MathUtils.clamp(err*urgency - carVX*0.38, -1, 1);
+}
+let autoSteer = 0;
+
+// ---------- showcase mode ----------
+// ひとつの被写体をターンテーブルに載せて、空の舞台で回す。
+// ゲーム本体と同じメッシュを使うので、ナレーションが指すものが出荷物そのものになる。
+const SHOWCASE = QS.get('showcase');
+const showcase = {group:null, spin:.55, label:''};
+// 録画ツールが参照する被写体の一覧（プレイヤーと全ハザードを網羅する）
+window.__subjects = ['tuktuk','car','bike','cart','bus','rain'];
+
+function buildShowcase(name){
+  const g = new THREE.Group();
+  let label = '', spin = .55, flat = false;
+  if(name==='tuktuk'){
+    const n = buildTukTuk();
+    n.group.scale.set(1.5,1.5,1.5);
+    g.add(n.group); label = 'トゥクトゥク'; spin = .5;
+  } else if(name==='car'){
+    const m = buildCar(carMats[0]);
+    m.scale.set(1.2,1.2,1.2); g.add(m); label = '渋滞の車'; spin = .45;
+  } else if(name==='bike'){
+    const m = buildBike();
+    m.scale.set(1.5,1.5,1.5); g.add(m); label = 'バイクタクシー'; spin = .7;
+  } else if(name==='cart'){
+    const m = buildCart();
+    m.scale.set(1.1,1.1,1.1); g.add(m); label = '屋台のリヤカー'; spin = .5;
+  } else if(name==='bus'){
+    const m = buildBus();
+    m.scale.set(.8,.8,.8); g.add(m); label = 'バスの壁'; spin = .4;
+  } else if(name==='rain'){
+    // スコールは物体がないので、雨柱の束を一本の被写体として立てる
+    const drops = new THREE.Group();
+    for(let i=0;i<140;i++){
+      const d = new THREE.Mesh(new THREE.BoxGeometry(.05,.9,.05),
+        new THREE.MeshBasicMaterial({color:0xaad4ff}));
+      d.position.set((Math.random()-.5)*3.2, (Math.random()-.5)*4.4, (Math.random()-.5)*3.2);
+      drops.add(d);
+    }
+    g.add(drops); label = 'スコール'; spin = .35;
+  }
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  scene.add(g);
+
+  // 被写体を原点に中心合わせして、バウンディングボックスに合わせて引く。
+  // どの大きさの物体でも同じ画角で収まる。
+  const box = new THREE.Box3().setFromObject(g);
+  const size = box.getSize(new THREE.Vector3());
+  const mid = box.getCenter(new THREE.Vector3());
+  g.position.sub(mid);                       // 原点に座らせる
+  const reach = Math.max(size.x, size.y) * 0.5;
+  const fov = THREE.MathUtils.degToRad(camera.fov);
+  const dist = (reach / Math.tan(fov/2)) * 1.75 + 1.0;   // 1.75 = 余白
+  camera.position.set(0, size.y*0.10, dist);
+
+  // 被写体を横へずらして、反対側をテキストに明け渡す。
+  // ずらしは親に持たせる（ずれた group を回すと公転してしまう）。
+  const bias = parseFloat(QS.get('sx') || '0');
+  const pivot = new THREE.Group();
+  pivot.position.x = -bias * reach * 1.15;
+  scene.add(pivot);
+  pivot.add(g);
+  showcase.group = g; showcase.pivot = pivot;
+  showcase.spin = spin; showcase.label = label; showcase.flat = flat;
+}
+
+fitCamera();          // ここまで来れば SHOWCASE は決まっている
+if(SHOWCASE){
+  titleEl.classList.add('hidden');
+  buildShowcase(SHOWCASE);
+  scoreEl.textContent = '';
+  msgEl.textContent = QS.get('nolabel')==='1' ? '' : showcase.label;
+  msgEl.style.fontSize = 'clamp(20px,5vw,30px)';
+  msgEl.style.letterSpacing = '4px';
+  // 暗い無地の舞台：被写体以外は何も出さない
+  road.visible = false; skyline.visible = false;
+  tuk.group.visible = false;             // 遊べる本体は別オブジェクト
+  for(const p of props) p.visible = false;
+  for(const k of kerbs) k.visible = false;
+  for(const d of rainDrops) d.visible = false;
+  scene.fog = null;
+  scene.background = new THREE.Color(0x0b0d16);
+  // 被写体（トゥクトゥク）は明るい黄色なので、光を強くすると白飛びする。
+  // キーは控えめにして、補助光で裏面を起こす程度に留める。
+  heroLight.position.set(2.6, 3.2, 4.2);
+  heroLight.intensity = 42;
+  hemi.intensity = 1.1;
+  sun.intensity = 1.5; sun.position.set(2.5, 6, 6);
+  // 反対側からの補助光。裏面が真っ黒にならないように
+  const fill = new THREE.PointLight(0x88aaff, 16, 26);
+  fill.position.set(-4.5, 2.4, 3.6); scene.add(fill);
+}
+// 録画スクリプトから被写体を差し替えられるようにする
+window.__showcase = name => {
+  if(showcase.pivot) scene.remove(showcase.pivot);   // pivot が group を持っている
+  buildShowcase(name);
+  msgEl.textContent = showcase.label;
+};
+
+// ---------- loop ----------
+const clock = new THREE.Clock();
+let lastWeaveZ = 0;      // 抜けた合図を鳴らしすぎないための間隔
+let edgeCool = 0;        // 路肩警告の連続防止
+function tick(){
+  requestAnimationFrame(tick);
+  const raw = Math.min(clock.getDelta(), .05);
+  const dt = raw * timeScale;
+
+  if(SHOWCASE){
+    if(showcase.group){
+      if(showcase.flat) showcase.group.rotation.z += raw*showcase.spin;
+      else showcase.group.rotation.y += raw*showcase.spin;
+    }
+    camera.lookAt(0, 0, 0);        // 被写体はずれていてもカメラは軸上
+    renderer.render(scene, camera);
+    return;
+  }
+
+  if(running && !dead){
+    t += dt;
+    speed = 16 + t*0.55;
+    score += dt*speed;
+    scoreEl.textContent = Math.floor(score);
+    if(!SILENT) SND.setPace(speed/16);
+    if(AUTO) autoPilot(dt);
+
+    // --- 難易度：隙間がゆっくり細くなる ---
+    gapW = Math.max(1.30, 2.60 - t*0.016);   // 実効クリアランス（1.30 でもぎりぎり通る）
+
+    // --- イベント ---
+    if(t > nextEventAt && !NOEV) triggerEvent();
+
+    // スコール：グリップが落ち、霧が近づき、雨柱が見える
+    if(rain>0){
+      rain -= dt;
+      grip += (0.48 - grip)*Math.min(1, dt*2.5);
+      rainMat.opacity = Math.min(.55, rainMat.opacity + dt*1.6);
+      scene.fog.far += (44 - scene.fog.far)*Math.min(1, dt*1.5);
+      for(const d of rainDrops){
+        d.position.y -= (22 + speed*0.4)*raw;
+        d.position.z += speed*raw*0.6;
+        if(d.position.y < 0 || d.position.z > tuk.group.position.z + 8){
+          d.position.set(tuk.group.position.x + (Math.random()-.5)*24,
+                         8 + Math.random()*6,
+                         tuk.group.position.z - Math.random()*60);
+        }
+      }
+      if(rain<=0){ /* 戻しは下の else 側が引き受ける */ }
+    } else {
+      grip += (1 - grip)*Math.min(1, dt*1.2);
+      rainMat.opacity = Math.max(0, rainMat.opacity - dt*.8);
+      scene.fog.far += (74 - scene.fog.far)*Math.min(1, dt*1.0);
+    }
+
+    // 細いソイ：走れる幅そのものが縮む。路肩の見た目も一緒に寄せる
+    if(narrow>0){
+      narrow -= dt;
+      roadSquash += (0.56 - roadSquash)*Math.min(1, dt*2.0);
+    } else {
+      roadSquash += (1 - roadSquash)*Math.min(1, dt*1.6);
+    }
+    for(const k of kerbs) k.position.x = Math.sign(k.position.x)*(halfWidth()+0.2);
+
+    // 一斉クラクション：揺れと、間を置いた複数のラッパ
+    if(horn>0){
+      horn -= dt;
+      shake = Math.max(shake, .18);
+      if(Math.random() < dt*6 && !SILENT) SND.honk();
+    }
+
+    // --- ハンドル：押している間だけ切れる連続入力 ---
+    let want = 0;
+    // 離した後の余韻が切れたら、ようやく舵を戻す
+    if(touchHold > 0){
+      touchHold -= dt;
+      if(touchHold <= 0) touchTarget = null;
+    }
+    if(AUTO) want = autoSteer;
+    else if(touchTarget !== null){
+      // 指の位置へ向かう量。近いと弱く、遠いと強く切る＝指の動きがそのまま舵
+      want = THREE.MathUtils.clamp((touchTarget - carX)*1.4 - carVX*0.18, -1, 1);
+    } else {
+      want = (keyR?1:0) - (keyL?1:0);
+    }
+    // ハンドルにも遊びがある。急には切れない
+    steer += (want - steer)*Math.min(1, dt*18);
+    // 横加速はグリップで決まる。雨だと効かない＝滑る
+    const STEER_ACC = 40;
+    carVX += steer*STEER_ACC*grip*dt;
+    // 摩擦：1秒あたりに残る割合。乾いていれば手を離すとすぐ止まり、
+    // 雨では残って滑る。ここが「指を先に置く」感触を作っている。
+    const keep = grip > .8 ? 0.0004 : 0.05 + 0.35*(1-grip);
+    carVX *= Math.pow(keep, dt);
+    carVX = THREE.MathUtils.clamp(carVX, -13, 13);
+    carX += carVX*dt;
+    // 路肩：出そうとすると跳ね返される（ここで死にはしない）
+    const hw = halfWidth();
+    if(Math.abs(carX) > hw){
+      carX = Math.sign(carX)*hw;
+      carVX *= -0.25;
+      edgeCool -= raw;
+      if(edgeCool<=0){ if(!SILENT) SND.edge(); shake=Math.max(shake,.12); edgeCool=.5; }
+    }
+    tuk.group.position.x = carX;
+    // 車体の傾きと前輪の切れ角で、いま舵が入っていることを見せる
+    tuk.group.rotation.z = -carVX*0.045;
+    tuk.group.rotation.y = -carVX*0.035;
+    tuk.front.rotation.y = steer*0.5;
+    const spin = speed*raw*2.6;
+    tuk.front.rotation.x += spin;
+    for(const w of tuk.rear) w.rotation.x += spin;
+
+    // --- 前進 ---
+    tuk.group.position.z -= speed*dt;
+
+    // 渋滞の列を足し続ける
+    // 列の間隔は「距離」ではなく「時間」で決める。速くなっても、
+    // 次の隙間へ寄る時間はだいたい一定に保たれる。
+    while(nextRowZ > tuk.group.position.z - 210){
+      spawnJamRow(nextRowZ, gapW);
+      rowGapZ = speed * (1.15 + Math.random()*0.35);
+      nextRowZ -= rowGapZ;
+    }
+
+    // --- ハザード：移動・掃除・当たり判定 ---
+    const zTuk = tuk.group.position.z;
+    for(let i=hazards.length-1;i>=0;i--){
+      const h = hazards[i];
+      if(h.vx){
+        h.mesh.position.x += h.vx*dt;
+        // 道を渡り切ったものは消す
+        if(Math.abs(h.mesh.position.x) > ROAD_HALF+2.6){
+          scene.remove(h.mesh); hazards.splice(i,1); continue;
+        }
+      }
+      if(h.mesh.position.z > zTuk + 10){
+        scene.remove(h.mesh); hazards.splice(i,1); continue;
+      }
+      // 当たり判定：箱同士。かすってもだめ
+      const dx = Math.abs(h.mesh.position.x - carX);
+      const dz = Math.abs(h.mesh.position.z - zTuk);
+      if(dx < h.halfW + 0.72 && dz < h.halfL + 0.95){
+        dead = true; gameOver(h); break;
+      }
+    }
+    // 隙間を抜けた合図：真横に車がいる状態を通過したら鳴らす
+    if(!dead){
+      let flanked = 0;
+      for(const h of hazards){
+        if(Math.abs(h.mesh.position.z - zTuk) < 2.2 &&
+           Math.abs(h.mesh.position.x - carX) < h.halfW + 2.4) flanked++;
+      }
+      if(flanked >= 2 && zTuk < lastWeaveZ - 11){
+        lastWeaveZ = zTuk;
+        if(!SILENT) SND.weave();
+        score += 8;                     // 縫った分だけ加点される
+      }
+    }
+
+    // 背景を流して速度感を出す
+    for(const g of props){
+      if(g.position.z > zTuk + 14) g.position.z -= 28*18;
+    }
+    heroLight.position.set(carX, 5, zTuk + 3);
+    skyline.position.z = zTuk;
+  }
+
+  // --- 死亡演出：スローモーションが解け、カメラが寄り、車体が跳ねる ---
+  if(dead){
+    timeScale += (0 - timeScale)*Math.min(1, raw*1.1);
+    tuk.group.rotation.z += raw*2.6;
+    tuk.group.rotation.x -= raw*1.3;
+    tuk.group.position.y += Math.max(0, 1.5 - (1-timeScale)*1.5)*raw*2.2;
+  }
+
+  // --- カメラ（死亡中も動かして寄りと揺れを見せる） ---
+  camDist += (camDistTarget - camDist)*Math.min(1, raw*2.4);
+  camera.position.z = tuk.group.position.z + camDist;
+  camera.position.y = 4.6 + tuk.group.position.y*.3 - (9.0-camDist)*.20;
+  camera.position.x += (tuk.group.position.x*.62 - camera.position.x)*Math.min(1,raw*6);
+  if(shake>0){
+    shake = Math.max(0, shake - raw*.9);
+    camera.position.x += (Math.random()-.5)*shake;
+    camera.position.y += (Math.random()-.5)*shake;
+  }
+  camera.lookAt(tuk.group.position.x*.72, 1.1, tuk.group.position.z - 6);
+
+  renderer.render(scene, camera);
+}
+
+function gameOver(hitBy){
+  running=false; deadAt=Date.now();
+  if(!SILENT){ SND.hit(); SND.duck(1.6); setTimeout(()=>SND.over(), 700); }
+  // 当たった感触：赤いフラッシュ、赤いビネット、強い揺れ、カメラが突っ込む
+  flash('#ff3b2a', .8, 500);
+  vignetteEl.style.transition='opacity .5s'; vignetteEl.style.opacity=1;
+  shake = .95;
+  camDistTarget = 5.4;
+  const finalScore = Math.floor(score);
+  koScoreEl.textContent = finalScore;
+  msgEl.textContent = '';
+  setTimeout(()=>{ koEl.classList.add('on'); }, 620);   // スローモーションの後に K.O.
+  if(AUTO){ setTimeout(()=>{ reset(); running=true;
+                             if(!SILENT) SND.unduck(); }, RETRY_MS); }
+  else setTimeout(()=>{
+    msgEl.textContent = matchMedia('(pointer:coarse)').matches
+      ? 'タップして もう一度' : 'スペースで もう一度';
+  }, 1800);
+}
+tick();
+
+// --- ルール説明 (?) ：録画中は出さない ---
+(function(){
+  const btn = document.getElementById('helpBtn');
+  const panel = document.getElementById('help');
+  if(!btn || !panel) return;
+  if(NOCHROME){                      // 録画・showcase では画面から消す
+    btn.style.display = 'none';
+    const back = document.getElementById('back');
+    if(back) back.style.display = 'none';
+    return;
+  }
+  const open = () => { panel.classList.add('on'); };
+  const close = () => { panel.classList.remove('on'); };
+  btn.addEventListener('click', open);
+  btn.addEventListener('touchend', e => { e.preventDefault(); open(); }, {passive:false});
+  panel.addEventListener('click', e => { if(e.target === panel) close(); });
+  panel.querySelector('.close').addEventListener('click', close);
+  panel.querySelector('.close').addEventListener('touchend',
+    e => { e.preventDefault(); close(); }, {passive:false});
+  addEventListener('keydown', e => {
+    if(e.code === 'Escape') close();
+    else if(e.key === '?' || (e.code === 'Slash' && e.shiftKey)) open();
+  });
+})();
+</script>
+</body>
+</html>

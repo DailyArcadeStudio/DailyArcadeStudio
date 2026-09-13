@@ -29,6 +29,12 @@ def main(prob_path, out_dir):
     img_scenes = [(i,s) for i,s in enumerate(prob["scenes"]) if s.get("kind")=="image"]
     if not img_scenes:
         print("NO_IMAGE_SCENES"); return
+    # 全部そろっていたらモデルを読み込まない。
+    # 読み込むだけで数GB使い、スワップで処理が進まなくなる
+    # （実測で 1ステップ 820秒 = 通常の200倍まで落ちた）。
+    todo = [(i,s) for i,s in img_scenes if not (out/"imgs"/f"{i:02d}.png").exists()]
+    if not todo:
+        print("ALL_IMG_EXIST", flush=True); print("ALL_IMG_DONE", flush=True); return
     pipe = StableDiffusionXLPipeline.from_pretrained(
         "stabilityai/stable-diffusion-xl-base-1.0",
         torch_dtype=torch.float16, variant="fp16", use_safetensors=True)
