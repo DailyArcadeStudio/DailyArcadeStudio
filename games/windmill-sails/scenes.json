@@ -1,0 +1,226 @@
+{
+  "id": "0013_windmill_sails",
+  "title": "風車の帆",
+  "video_title": "この風車、モーターは付けられません",
+  "lang": "ja",
+  "voice": "voicevox",
+  "scenes": [
+    {
+      "kind": "hook",
+      "clip": "gale",
+      "narration": "オランダに、300年前のまま回っている風車があります。帆をたたむのは、今も人の手です。"
+    },
+    {
+      "kind": "image",
+      "prompt": "an old Dutch windmill with four canvas sails standing alone on a flat green polder, dark storm clouds gathering on the horizon, a narrow canal in the foreground, wind bending the reeds, late afternoon light breaking through, cinematic wide shot, photorealistic, highly detailed",
+      "narration": "オランダの平らな田舎です。この風車は、今も小麦をひいています。造りは300年前のままです。つまり、モーターはありません。"
+    },
+    {
+      "kind": "image",
+      "prompt": "a weathered Dutch miller in a wool cap and work apron gripping a thick hemp rope at the base of a windmill, looking up at a canvas sail flapping hard in a gust, dramatic low angle, storm light, flour dust on his sleeves, photorealistic, cinematic, highly detailed",
+      "narration": "粉屋のヤンさんは、この風車を一人で回しています。風が強くなると、帆の布が裂けます。だからヤンさんは、突風が来るたびに走ります。ロープ1本で、帆をたたみに行くんです。"
+    },
+    {
+      "kind": "image",
+      "prompt": "a torn canvas windmill sail hanging in shreds from its wooden frame, loose cloth whipping in strong wind against a grey sky, close-up from below, moody overcast light, photorealistic, cinematic, highly detailed",
+      "narration": "一枚でも裂けたら、粉屋の落ち度です。布の張り替えは、自分でやります。だから裂ける前に、たたみます。今日も風は待ってくれません。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "miller",
+      "kicker": "あなた",
+      "title": "粉屋のヤンさん",
+      "bullets": [
+        "風車のふもとに立って、**ロープを1本だけ**持っています",
+        "赤くなった帆の向きにスワイプ。または、その帆をタップ",
+        "赤くない帆を引くと**空振り**。よろけて、しばらく動けません"
+      ],
+      "narration": "これがあなたです。風車のふもとに立って、ロープを1本だけ持っています。赤くなった帆の向きにスワイプすると、その帆をたたみます。ここが大事なところです。赤くない帆を引くと、空振りします。よろけて、半秒くらい動けません。その半秒が、あとで効いてきます。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "mill",
+      "kicker": "舞台",
+      "title": "風車",
+      "bullets": [
+        "帆は**4枚**。ずっと回っています",
+        "回転は**だんだん速く**なります",
+        "上だった帆が、次の瞬間には右にいます"
+      ],
+      "narration": "風車です。帆は4枚で、止まりません。しかも回転は、だんだん速くなります。つまり、さっき上にあった帆が、もう右にいます。向きは、引く瞬間に読みます。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "sail",
+      "kicker": "操作対象",
+      "title": "帆",
+      "bullets": [
+        "突風を受けると**赤く光って**バタつきます",
+        "赤いゲージが尽きたら、裂けます",
+        "たたんだ帆は、風が抜けると**勝手に開きます**"
+      ],
+      "narration": "帆です。突風を受けると、赤く光ってバタつきます。赤いゲージが減っていって、尽きたら裂けます。たたんだ帆は、風が抜けると勝手に開きます。そうなんです。一度たたんでも、終わりません。しかも開いている帆が多いほど、点が入ります。休めない仕組みです。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "gust",
+      "kicker": "困りごと その1",
+      "title": "突風",
+      "bullets": [
+        "3枚が**立て続けに**赤くなります",
+        "ゲージは、いつもより短めです",
+        "順番に。焦ると空振りします"
+      ],
+      "narration": "突風です。3枚が立て続けに赤くなります。ゲージも短めです。ここで焦ると、赤くない帆を引きます。空振りです。よろけている間も、ゲージは減ります。順番に、ひとつずつです。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "fog",
+      "kicker": "困りごと その2",
+      "title": "濃霧",
+      "bullets": [
+        "風車そのものが**見えなくなります**",
+        "頼れるのは、赤い光だけ",
+        "回転は、霧の中でも続いています"
+      ],
+      "narration": "濃霧です。風車そのものが見えなくなります。見えるのは、赤い光だけです。その光の向きにスワイプします。もちろん、霧の中でも風車は回っています。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "lightning",
+      "kicker": "困りごと その3",
+      "title": "落雷",
+      "bullets": [
+        "光った瞬間、どこかの帆が**いきなり赤く**なります",
+        "予告はありません",
+        "ゲージは、いつもより短いです"
+      ],
+      "narration": "そして落雷です。光った瞬間、どこかの帆がいきなり赤くなります。予告はありません。ゲージも、いつもより短いです。見てください。光ったら、もう探しています。"
+    },
+    {
+      "kind": "events",
+      "clip": "events",
+      "kicker": "起きること",
+      "title": "風は静かにしていてくれません",
+      "bullets": [
+        "**逆回転** — 風車が逆向きに、速く回ります",
+        "**突風** — 3枚が続けて赤くなります",
+        "**濃霧・落雷** — 見えないか、突然か"
+      ],
+      "narration": "風は静かにしていてくれません。いちばん厄介なのが、逆回転です。風車が逆向きに、しかも速く回ります。操作は何も変わりません。でも、向きの読みが全部ずれます。突風、濃霧、落雷。順番は、毎回変わります。"
+    },
+    {
+      "kind": "death",
+      "clip": "death",
+      "kicker": "終わり方",
+      "title": "一枚裂けたら、そこで終わりです",
+      "bullets": [
+        "布が**ちぎれて飛びます**。カメラがその帆に寄ります",
+        "時間がゆっくり止まって、K.O.が出ます",
+        "何秒もったかが、点になります"
+      ],
+      "narration": "終わりはいつも同じです。一枚裂けたら、そこで終わりです。布がちぎれて飛んで、カメラがその帆に寄ります。時間がゆっくり止まって、点が出ます。ヤンさんは、これを40年続けています。あなたは、たぶん1分です。"
+    },
+    {
+      "kind": "outro",
+      "title": "概要欄のリンクから遊べます",
+      "subtitle": "チャンネル登録で、毎日一本",
+      "narration": "ブラウザで無料で遊べます。概要欄のリンクからどうぞ。チャンネル登録もお願いします。毎日一本、出しています。"
+    }
+  ],
+  "slug": "windmill-sails",
+  "channel": "Daily Arcade Studio",
+  "events": [
+    "gale",
+    "reverse",
+    "fog",
+    "lightning"
+  ],
+  "short": [
+    {
+      "mark": "gale",
+      "lead": -0.3,
+      "dur": 9.0,
+      "headline": "3枚つづけて赤"
+    },
+    {
+      "mark": "reverse",
+      "lead": -0.5,
+      "dur": 7.0,
+      "headline": "逆向きに、速く"
+    },
+    {
+      "mark": "fog",
+      "lead": -0.5,
+      "dur": 8.0,
+      "headline": "赤い光だけが頼り"
+    },
+    {
+      "mark": "lightning",
+      "lead": -0.5,
+      "dur": 7.0,
+      "headline": "予告なしで赤"
+    },
+    {
+      "mark": "death",
+      "lead": -2.0,
+      "dur": 9.0,
+      "headline": "一枚裂けたら終わり"
+    }
+  ],
+  "thumb": {
+    "hook": "裂ける前にたたむ",
+    "sub": "帆は4枚。風は待たない。ブラウザで無料。",
+    "frame_mark": "gale",
+    "frame_lead": 1.0
+  },
+  "short_v2": {
+    "cuts": [
+      {
+        "kind": "clip",
+        "mark": "gale",
+        "lead": -0.3,
+        "dur": 4.5,
+        "headline": "今日のゲーム",
+        "narration": "今日のゲームです。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "miller",
+        "dur": 5.0,
+        "headline": "風車の帆",
+        "narration": "あなたは、突風が来るたびに帆をたたむ粉屋です。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "sail",
+        "dur": 5.0,
+        "headline": "赤くなる",
+        "narration": "突風を受けた帆は、赤く光ります。ゲージが尽きる前に、その向きにスワイプします。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "gust",
+        "dur": 5.0,
+        "headline": "3枚つづけて",
+        "narration": "突風では、3枚が立て続けに赤くなります。焦って違う帆を引くと、空振りです。"
+      },
+      {
+        "kind": "clip",
+        "mark": "death",
+        "lead": -2.0,
+        "dur": 5.0,
+        "headline": "",
+        "narration": "一枚裂けたら、終わりです。"
+      },
+      {
+        "kind": "clip",
+        "mark": "run2",
+        "lead": 1.0,
+        "dur": 4.5,
+        "cta": "概要欄のリンクから遊べます",
+        "narration": "ブラウザで無料で遊べます。リンクは概要欄です。"
+      }
+    ]
+  }
+}

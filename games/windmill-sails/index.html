@@ -1,0 +1,1187 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>風車の帆</title>
+<style>
+  html,body{margin:0;padding:0;overflow:hidden;background:#0a0c14;font-family:'Helvetica Neue',Arial,'Hiragino Sans','Noto Sans JP',sans-serif;}
+  #ui{position:fixed;top:16px;left:0;right:0;text-align:center;color:#fff;z-index:10;pointer-events:none;}
+  #score{font-size:clamp(26px,6vw,34px);font-weight:800;text-shadow:0 2px 8px #000;}
+  #msg{font-size:clamp(15px,4vw,20px);margin-top:6px;opacity:.9;text-shadow:0 2px 6px #000;}
+  #title{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:rgba(6,8,16,.74);z-index:20;color:#fff;transition:opacity .4s;padding:0 16px;box-sizing:border-box;}
+  #title h1{font-size:clamp(36px,10vw,64px);margin:0 0 8px;letter-spacing:4px;text-shadow:0 4px 18px #ff7a1a;}
+  #title p{font-size:clamp(13px,3.4vw,19px);opacity:.85;margin:4px 0;text-align:center;line-height:1.5;}
+  #title .btn{margin-top:26px;padding:14px 44px;font-size:22px;font-weight:700;color:#fff;
+    background:linear-gradient(180deg,#ff8a2a,#c94f0a);border:none;border-radius:12px;cursor:pointer;
+    box-shadow:0 6px 24px rgba(255,122,26,.5);}
+  #title .btn:hover{transform:scale(1.05);}
+  .hidden{opacity:0;pointer-events:none;}
+  #back{position:fixed;top:14px;left:14px;z-index:30;text-decoration:none;
+    background:rgba(12,16,26,.72);color:#fff;font:600 15px/1 'Helvetica Neue',Arial,sans-serif;
+    padding:0 16px;height:44px;display:flex;align-items:center;border-radius:12px;}
+  #back:hover{background:rgba(30,38,56,.9);}
+  #mute{position:fixed;top:14px;right:14px;z-index:30;border:none;cursor:pointer;
+    background:rgba(12,16,26,.72);color:#fff;font-size:20px;line-height:1;
+    width:44px;height:44px;border-radius:12px;}
+  #mute:hover{background:rgba(30,38,56,.9);}
+  /* show the hint that matches the device */
+  .tc{display:none;}
+  @media (pointer:coarse){ .kb{display:none;} .tc{display:block;} }
+  /* a finger-sized START button on touch devices */
+  @media (pointer:coarse){ #title .btn{padding:18px 56px;font-size:24px;} }
+
+  /* --- event banner: slams into the middle of the screen --- */
+  #banner{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    z-index:15;pointer-events:none;opacity:0;}
+  #banner .b{font-size:clamp(34px,9vw,80px);font-weight:900;letter-spacing:.12em;color:#fff;
+    padding:10px 4vw;max-width:94vw;text-align:center;transform:scale(2.4);opacity:0;
+    text-shadow:0 0 26px currentColor, 0 6px 20px #000;
+    border-top:5px solid currentColor;border-bottom:5px solid currentColor;}
+  #banner.go .b{animation:slam .62s cubic-bezier(.12,.85,.2,1) forwards;}
+  @keyframes slam{
+    0%  {transform:scale(2.4) rotate(-4deg);opacity:0;}
+    22% {transform:scale(1)   rotate(0deg); opacity:1;}
+    70% {transform:scale(1)   rotate(0deg); opacity:1;}
+    100%{transform:scale(1.12);opacity:0;}
+  }
+
+  /* --- full-screen colour flashes --- */
+  #flash{position:fixed;inset:0;z-index:14;pointer-events:none;opacity:0;background:#fff;}
+  #vignette{position:fixed;inset:0;z-index:13;pointer-events:none;opacity:0;
+    background:radial-gradient(ellipse at center,rgba(0,0,0,0) 32%,rgba(120,0,10,.85) 100%);}
+
+  /* --- K.O. screen --- */
+  #ko{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    z-index:22;pointer-events:none;opacity:0;color:#fff;transition:opacity .3s;}
+  #ko.on{opacity:1;}
+  #ko .koText{font-size:clamp(96px,26vw,190px);font-weight:900;letter-spacing:10px;color:#fff;
+    text-shadow:0 0 40px #ff7a1a,0 0 90px #ff3b1a,0 10px 30px #000;
+    transform:scale(3);opacity:0;}
+  #ko.on .koText{animation:koSlam .8s cubic-bezier(.1,.9,.2,1) forwards;}
+  @keyframes koSlam{
+    0%  {transform:scale(3) rotate(-8deg);opacity:0;}
+    30% {transform:scale(1) rotate(0deg);opacity:1;}
+    36% {transform:scale(1.06);}
+    100%{transform:scale(1);opacity:1;}
+  }
+  #ko .finalLabel{font-size:clamp(14px,3.6vw,20px);letter-spacing:4px;opacity:0;margin-top:6px;text-shadow:0 2px 8px #000;}
+  #ko .finalScore{font-size:clamp(52px,14vw,82px);font-weight:800;opacity:0;text-shadow:0 4px 20px #000;}
+  #ko.on .finalLabel{animation:fadeUp .5s .75s forwards;}
+  #ko.on .finalScore{animation:fadeUp .5s .9s forwards;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+
+  /* --- help (?) --- */
+  #helpBtn{position:fixed;top:14px;right:66px;z-index:30;border:none;cursor:pointer;
+    background:rgba(12,16,26,.72);color:#fff;font:700 20px/1 'Helvetica Neue',Arial,sans-serif;
+    width:44px;height:44px;border-radius:12px;}
+  #helpBtn:hover{background:rgba(30,38,56,.9);}
+  #help{position:fixed;inset:0;z-index:40;display:none;align-items:center;
+    justify-content:center;background:rgba(4,6,12,.82);padding:20px;}
+  #help.on{display:flex;}
+  #help .box{background:#111726;border:1px solid #2b3550;border-radius:18px;
+    max-width:560px;width:100%;max-height:86vh;overflow:auto;padding:26px 28px 22px;
+    color:#e6edf3;font-family:'Helvetica Neue',Arial,'Hiragino Sans','Noto Sans JP',sans-serif;}
+  #help h2{margin:0 0 4px;font-size:26px;}
+  #help .sub{color:#8b949e;font-size:14px;margin:0 0 18px;}
+  #help h3{font-size:15px;color:#ffb066;margin:18px 0 6px;letter-spacing:.04em;}
+  #help ul{margin:0;padding-left:20px;}
+  #help li{font-size:15px;line-height:1.65;margin:3px 0;}
+  #help b{color:#ffb066;font-weight:700;}
+  #help .close{margin-top:20px;width:100%;padding:12px;border:none;border-radius:10px;
+    background:#2b3550;color:#fff;font-size:16px;font-weight:700;cursor:pointer;}
+  #help .close:hover{background:#3a4668;}
+</style>
+</head>
+<body>
+<div id="ui"><div id="score">0</div><div id="msg"></div></div>
+<button id="helpBtn" title="遊び方">?</button>
+<div id="help"><div class="box">
+  <h2>風車の帆</h2>
+  <p class="sub">帆は4枚。風は待ってくれない。ブラウザで無料。</p>
+    <h3>粉屋</h3>
+    <ul><li>風車のふもとに立って、ロープを1本だけ持っている</li><li><b>赤くなった帆の向きにスワイプ</b>（または その帆をタップ）で帆をたたむ</li><li>キーボードは ↑ ↓ ← → か W A S D</li></ul>
+    <h3>帆</h3>
+    <ul><li>4枚とも回り続ける。回転は<b>だんだん速くなる</b></li><li>突風を受けた帆は<b>赤く光ってバタつく</b>。赤いゲージが尽きると裂ける</li><li>たたんだ帆は、風が抜けると勝手に開く</li></ul>
+    <h3>空振り</h3>
+    <ul><li>赤くない帆をたたもうとすると<b>空振り</b></li><li>粉屋がよろけて、しばらく動けない。その間もゲージは減る</li></ul>
+    <h3>突風</h3>
+    <ul><li>3枚が立て続けに赤くなる</li><li>順番に。焦ると空振りする</li></ul>
+    <h3>逆回転</h3>
+    <ul><li>風車が<b>逆向きに、速く</b>回る</li><li>向きの読み間違いが増える</li></ul>
+    <h3>濃霧</h3>
+    <ul><li>霧で風車そのものが見えなくなる</li><li><b>赤い光だけ</b>を頼りにたたむ</li></ul>
+    <h3>落雷</h3>
+    <ul><li>光った瞬間、どこかの帆が<b>いきなり赤く</b>なる</li><li>ゲージはいつもより短い</li></ul>
+    <h3>1枚でも裂けたら</h3>
+    <ul><li>その場で終わり。粉屋の落ち度になる</li></ul>
+  <button class="close">わかった</button>
+</div></div>
+<a id="back" href="../../" title="ゲーム一覧へ">‹ ゲーム一覧</a>
+<button id="mute" title="音の オン / オフ">🔊</button>
+<div id="vignette"></div>
+<div id="flash"></div>
+<div id="banner"><div class="b"></div></div>
+<div id="ko">
+  <div class="koText">K.O.</div>
+  <div class="finalLabel">スコア</div>
+  <div class="finalScore">0</div>
+</div>
+<div id="title">
+  <h1>風車の帆</h1>
+  <p>突風に裂かれる前に、赤くなった帆をたたむ。</p>
+  <p class="kb">↑ ↓ ← → / W A S D : その向きの帆をたたむ</p>
+  <p class="tc">赤い帆をタップ / その向きにスワイプ</p>
+  <button class="btn" id="startBtn">スタート</button>
+</div>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+// ---------- url flags (declared first: sound and camera both read them) ----------
+const QS = new URLSearchParams(location.search);
+const AUTO = QS.get('auto')==='1';
+const SHOWCASE_Q = QS.get('showcase');
+// Recording must produce clean footage, so every automated mode is muted.
+const REC = QS.get('rec')==='1';   // 録音モード: 音を鳴らして拾う
+const SILENT = (AUTO || !!SHOWCASE_Q || QS.get('mute')==='1') && !REC;
+// 録画・showcase では「?」と「ゲーム一覧」を出さない（動画の邪魔になる）
+const NOCHROME = AUTO || !!SHOWCASE_Q || QS.get('nochrome')==='1';
+
+// ---------- renderer / scene ----------
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.shadowMap.enabled = true;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const SKY = new THREE.Color(0x0c1020);
+scene.background = SKY.clone();
+const FOG_NEAR = 34, FOG_FAR = 95;
+scene.fog = new THREE.Fog(0x0c1020, FOG_NEAR, FOG_FAR);
+
+// The mill faces the camera: the sail plane is XY, the camera looks down -Z.
+// That is what lets screen directions map straight onto sail directions.
+const HUB_Y = 6.0;
+const CAM_DIST = 17;
+const camera = new THREE.PerspectiveCamera(52, innerWidth/innerHeight, .1, 140);
+camera.position.set(0, 5.4, CAM_DIST);
+camera.lookAt(0, HUB_Y, 0);
+
+// Portrait and landscape both have to work. A phone held upright is far
+// narrower than 16:9, and with a fixed FOV the sail circle gets clipped at
+// the sides — so widen the vertical FOV as the screen gets taller.
+const BASE_FOV = 52;
+function fitCamera(){
+  const aspect = innerWidth / innerHeight;
+  camera.aspect = aspect;
+  if(SHOWCASE_Q){
+    camera.fov = aspect < 1 ? 62 : 46;
+  } else {
+    // keep the horizontal field roughly constant across aspect ratios
+    const ref = 16/9;
+    camera.fov = aspect >= ref ? BASE_FOV
+      : Math.min(96, THREE.MathUtils.radToDeg(
+          2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(BASE_FOV)/2) * (ref/aspect))));
+  }
+  camera.__base = camera.fov;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+}
+addEventListener('resize', fitCamera);
+addEventListener('orientationchange', ()=>setTimeout(fitCamera, 120));
+
+// ---------- lights ----------
+const hemi = new THREE.HemisphereLight(0x8fa4ff, 0x2a2018, 1.4);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xffe6c0, 2.2);
+sun.position.set(7, 14, 10); sun.castShadow = true;
+sun.shadow.camera.left=-16; sun.shadow.camera.right=16;
+sun.shadow.camera.top=18; sun.shadow.camera.bottom=-6;
+scene.add(sun);
+// warm light on the mill face so the cloth reads against the dark sky
+const heroLight = new THREE.PointLight(0xffd9a8, 60, 30);
+heroLight.position.set(0, 7, 8);
+scene.add(heroLight);
+
+// ---------- polder: ground, canal, tulips, dike, moon, stars ----------
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(160, 160),
+  new THREE.MeshStandardMaterial({color:0x152418, roughness:.95}));
+ground.rotation.x = -Math.PI/2; ground.receiveShadow = true; scene.add(ground);
+const canal = new THREE.Mesh(new THREE.PlaneGeometry(160, 2.6),
+  new THREE.MeshStandardMaterial({color:0x132a44, roughness:.2, metalness:.4}));
+canal.rotation.x = -Math.PI/2; canal.position.set(0, .01, 8.5); scene.add(canal);
+const dike = new THREE.Mesh(new THREE.BoxGeometry(160, 1.2, 4),
+  new THREE.MeshStandardMaterial({color:0x1d3020, roughness:.9}));
+dike.position.set(0, .6, -30); scene.add(dike);
+const tulipMat = [0xff7a1a, 0xff3355, 0xffd23b].map(c =>
+  new THREE.MeshStandardMaterial({color:c, roughness:.6, emissive:c, emissiveIntensity:.15}));
+const stemMat = new THREE.MeshStandardMaterial({color:0x2c5a2e, roughness:.8});
+const tulips = new THREE.Group();
+for(let i=0;i<70;i++){
+  const t = new THREE.Group();
+  const stem = new THREE.Mesh(new THREE.CylinderGeometry(.04,.04,.6,6), stemMat);
+  stem.position.y = .3; t.add(stem);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(.16,10,8), tulipMat[i%3]);
+  head.scale.set(1,1.3,1); head.position.y = .68; t.add(head);
+  // two rows: in front of the canal, and a far field behind the mill
+  const row = i%2;
+  t.position.set((i/70-.5)*40 + (Math.random()-.5)*.8, 0, row ? 11 + Math.random()*1.5 : -7 - Math.random()*3);
+  tulips.add(t);
+}
+scene.add(tulips);
+const moon = new THREE.Mesh(new THREE.CircleGeometry(3.6, 40),
+  new THREE.MeshBasicMaterial({color:0xfff2d0, fog:false}));
+moon.position.set(-11, 16, -50); scene.add(moon);
+const stars = (()=>{
+  const n = 180, pos = new Float32Array(n*3);
+  for(let i=0;i<n;i++){
+    pos[i*3] = (Math.random()-.5)*120; pos[i*3+1] = 8 + Math.random()*40; pos[i*3+2] = -55 - Math.random()*20;
+  }
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  const p = new THREE.Points(g, new THREE.PointsMaterial({color:0xcfd8ff, size:.18, fog:false}));
+  scene.add(p); return p;
+})();
+
+// wind streaks: thin bars blowing left-to-right; opacity follows the wind
+const streaks = [];
+const streakMat = new THREE.MeshBasicMaterial({color:0xcfe8ff, transparent:true, opacity:.14});
+for(let i=0;i<50;i++){
+  const m = new THREE.Mesh(new THREE.BoxGeometry(2.2 + Math.random()*2,.04,.04), streakMat);
+  m.position.set((Math.random()-.5)*36, 1 + Math.random()*12, -6 + Math.random()*12);
+  scene.add(m); streaks.push(m);
+}
+let wind = .2;                   // 0..1, drives streak speed and opacity
+
+// ---------- materials ----------
+const ACCENT = new THREE.Color(0xff7a1a);
+const CLOTH  = new THREE.Color(0xf1e6cc);
+const STRAIN = new THREE.Color(0xff4a1a);
+const FURLED = new THREE.Color(0x9a8f7c);
+const woodMat    = new THREE.MeshStandardMaterial({color:0x5a3f2a, roughness:.85});
+const latticeMat = new THREE.MeshStandardMaterial({color:0x8a6a48, roughness:.8});
+const gaugeMat   = new THREE.MeshBasicMaterial({color:0xff3b2a});
+const towerMat   = new THREE.MeshStandardMaterial({color:0x3d2b20, roughness:.9});
+const capMat     = new THREE.MeshStandardMaterial({color:0x22242f, roughness:.8});
+const windowMat  = new THREE.MeshBasicMaterial({color:0xffc86a});
+// soft additive halo; fog:false so it still shows through the fog event
+function haloMat(){
+  return new THREE.ShaderMaterial({
+    transparent:true, depthWrite:false, blending:THREE.AdditiveBlending,
+    uniforms:{c:{value:new THREE.Color(0xff4a1a)}, k:{value:0}},
+    vertexShader:`varying vec2 vUv; void main(){ vUv=uv;
+      gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }`,
+    fragmentShader:`uniform vec3 c; uniform float k; varying vec2 vUv;
+      void main(){ float d=distance(vUv,vec2(.5));
+        float a=pow(max(0.,1.-d*2.),2.0)*k;
+        gl_FragColor=vec4(c,a); }`,
+  });
+}
+
+// ---------- one sail (stock + lattice + cloth + strain gauge) ----------
+// Sail k points along its local +X; the arm group is rotated k*90° around Z.
+// The cloth hangs off one side of the stock, like a real Dutch sail.
+const SAIL_LEN = 4.3;
+function buildSail(k){
+  const g = new THREE.Group();
+  g.rotation.z = k*Math.PI/2;
+  const stock = new THREE.Mesh(new THREE.BoxGeometry(SAIL_LEN,.16,.14), woodMat);
+  stock.position.x = SAIL_LEN/2; g.add(stock);
+  const clothMat = new THREE.MeshStandardMaterial({color:CLOTH.clone(), roughness:.8,
+    side:THREE.DoubleSide, emissive:0x000000});
+  const cloth = new THREE.Mesh(new THREE.PlaneGeometry(3.2,.95), clothMat);
+  cloth.position.set(2.5,.56,.03); g.add(cloth);
+  for(let i=0;i<6;i++){
+    const bar = new THREE.Mesh(new THREE.BoxGeometry(.05,1.0,.05), latticeMat);
+    bar.position.set(1.0+i*.6,.56,-.03); g.add(bar);
+  }
+  // strain gauge: shrinks toward the hub as the fuse burns
+  const gauge = new THREE.Mesh(new THREE.BoxGeometry(1,.13,.08), gaugeMat);
+  gauge.position.set(2.5,1.2,.06); gauge.visible = false; g.add(gauge);
+  const halo = new THREE.Mesh(new THREE.CircleGeometry(1.9,32), haloMat());
+  halo.position.set(2.5,.56,-.3); halo.visible = false; g.add(halo);
+  g.traverse(o=>{ if(o.isMesh && o!==halo) o.castShadow = true; });
+  return {group:g, k, stock, cloth, clothMat, gauge, halo,
+          state:'open',        // open | furled | torn
+          strain:false, fuse:0, fuseMax:1, furl:0, furlT:0};
+}
+
+// ---------- the mill ----------
+function buildMill(){
+  const g = new THREE.Group();
+  const tower = new THREE.Mesh(new THREE.CylinderGeometry(1.7, 2.4, 6.4, 8), towerMat);
+  tower.position.y = 3.2; g.add(tower);
+  const gallery = new THREE.Mesh(new THREE.CylinderGeometry(2.9, 2.9, .18, 8), woodMat);
+  gallery.position.y = 2.4; g.add(gallery);
+  const cap = new THREE.Mesh(new THREE.ConeGeometry(2.1, 1.9, 8), capMat);
+  cap.position.y = 7.3; g.add(cap);
+  const door = new THREE.Mesh(new THREE.BoxGeometry(.8, 1.4, .2), capMat);
+  door.position.set(0, .7, 2.3); g.add(door);
+  for(const [x,y] of [[-.7,4.2],[.7,4.2],[0,5.4]]){
+    const w = new THREE.Mesh(new THREE.BoxGeometry(.42,.5,.1), windowMat);
+    w.position.set(x, y, 1.85); g.add(w);
+  }
+  // the hub sits proud of the face so the sails clear the tower
+  const hub = new THREE.Group(); hub.position.set(0, HUB_Y, 2.1); g.add(hub);
+  const axle = new THREE.Mesh(new THREE.CylinderGeometry(.34,.34,.9,14), woodMat);
+  axle.rotation.x = Math.PI/2; hub.add(axle);
+  const rotor = new THREE.Group(); hub.add(rotor);
+  const sails = [0,1,2,3].map(buildSail);
+  for(const s of sails) rotor.add(s.group);
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  return {group:g, hub, rotor, sails};
+}
+const mill = buildMill();
+scene.add(mill.group);
+const sails = mill.sails;
+
+// ---------- the miller (player) ----------
+function buildMiller(){
+  const g = new THREE.Group();
+  const coat = new THREE.MeshStandardMaterial({color:0x2a3f7a, roughness:.7});
+  const skin = new THREE.MeshStandardMaterial({color:0xe8c19e, roughness:.6});
+  const clog = new THREE.MeshStandardMaterial({color:0xe0b23a, roughness:.5});
+  const hat  = new THREE.MeshStandardMaterial({color:0x1a1c2b, roughness:.7});
+  const body = new THREE.Mesh(new THREE.CapsuleGeometry(.34,.55,6,12), coat);
+  body.position.y = .95; g.add(body);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(.3,20,16), skin);
+  head.position.y = 1.7; g.add(head);
+  const cap = new THREE.Mesh(new THREE.CylinderGeometry(.33,.33,.16,14), hat);
+  cap.position.y = 1.95; g.add(cap);
+  const brim = new THREE.Mesh(new THREE.CylinderGeometry(.42,.42,.05,14), hat);
+  brim.position.y = 1.87; g.add(brim);
+  for(const s of [1,-1]){
+    const c = new THREE.Mesh(new THREE.BoxGeometry(.24,.16,.42), clog);
+    c.position.set(.18*s,.08,.05); g.add(c);
+  }
+  // the rope arm pivots at the shoulder and points where the miller pulls
+  const arm = new THREE.Group(); arm.position.set(0,1.35,.1); g.add(arm);
+  const armMesh = new THREE.Mesh(new THREE.CapsuleGeometry(.1,.5,6,10), coat);
+  armMesh.position.y = .3; arm.add(armMesh);
+  const hand = new THREE.Mesh(new THREE.SphereGeometry(.11,10,8), skin);
+  hand.position.y = .62; arm.add(hand);
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  return {group:g, arm, hand};
+}
+const miller = buildMiller();
+miller.group.position.set(1.4, 0, 3.6);
+scene.add(miller.group);
+// the rope: a thin cylinder stretched between the hand and the sail it grabbed
+const rope = new THREE.Mesh(new THREE.CylinderGeometry(.035,.035,1,6),
+  new THREE.MeshBasicMaterial({color:0xffe0a0, fog:false}));
+rope.visible = false; scene.add(rope);
+let ropeT = 0, ropeTarget = null;
+function stretchRope(a, b){
+  const mid = a.clone().add(b).multiplyScalar(.5);
+  const dir = b.clone().sub(a);
+  rope.position.copy(mid);
+  rope.scale.set(1, dir.length(), 1);
+  rope.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), dir.normalize());
+}
+
+// ---------- hazards as objects (for the showcase and the events) ----------
+// a bundle of streaks: what a gust looks like
+function buildGust(){
+  const g = new THREE.Group();
+  const m = new THREE.MeshBasicMaterial({color:0xdff0ff, transparent:true, opacity:.8});
+  for(let i=0;i<14;i++){
+    const b = new THREE.Mesh(new THREE.BoxGeometry(1.4 + Math.random()*2.6,.06,.06), m);
+    b.position.set((Math.random()-.5)*3, (Math.random()-.5)*2.4, (Math.random()-.5)*1.6);
+    g.add(b);
+  }
+  return g;
+}
+// a fog bank: a loose cluster of dull spheres
+function buildFogCloud(){
+  const g = new THREE.Group();
+  const m = new THREE.MeshStandardMaterial({color:0x9aa4b8, roughness:1, transparent:true, opacity:.85});
+  for(let i=0;i<9;i++){
+    const s = new THREE.Mesh(new THREE.SphereGeometry(.7 + Math.random()*.6, 16, 12), m);
+    s.position.set((i-4)*.55 + (Math.random()-.5)*.4, (Math.random()-.5)*.8, (Math.random()-.5)*.8);
+    g.add(s);
+  }
+  return g;
+}
+// a lightning bolt: zigzag of bars from the sky down to the hub
+function buildBolt(){
+  const g = new THREE.Group();
+  const m = new THREE.MeshBasicMaterial({color:0xffffff, fog:false});
+  let x = 0, y = 0;
+  for(let i=0;i<7;i++){
+    const nx = x + (i%2 ? -.9 : .9) * (0.5 + Math.random()*.6), ny = y - 1.4;
+    const dx = nx-x, dy = ny-y, len = Math.hypot(dx,dy);
+    const seg = new THREE.Mesh(new THREE.BoxGeometry(.14, len, .14), m);
+    seg.position.set((x+nx)/2, (y+ny)/2, 0);
+    seg.rotation.z = Math.atan2(dy,dx) - Math.PI/2;
+    g.add(seg); x = nx; y = ny;
+  }
+  return g;
+}
+const bolt = buildBolt();
+bolt.position.set(0, HUB_Y + 10.4, 1.5); bolt.visible = false; scene.add(bolt);
+let boltT = 0;
+
+// shreds of cloth that fly off a torn sail
+const shreds = [];
+function spawnShreds(worldPos){
+  for(let i=0;i<12;i++){
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(.5,.32),
+      new THREE.MeshStandardMaterial({color: i%3 ? CLOTH : STRAIN, side:THREE.DoubleSide}));
+    m.position.copy(worldPos).add(new THREE.Vector3((Math.random()-.5)*2,(Math.random()-.5)*1.2,0));
+    m.userData.v = new THREE.Vector3(3 + Math.random()*5, (Math.random()-.2)*6, (Math.random()-.5)*4);
+    m.userData.w = new THREE.Vector3(Math.random()*6, Math.random()*6, Math.random()*6);
+    scene.add(m); shreds.push(m);
+  }
+}
+
+// ---------- game state ----------
+let running=false, dead=false, t=0, score=0;
+let rot=0;                       // rotor angle (radians)
+let spinDir=1;                   // +1 normal, -1 during 逆回転
+let lock=0;                      // >0 while the miller is stumbling (空振り)
+let nextGust=3;                  // seconds until the next ordinary gust
+let pending=[];                  // scheduled strains: {at, fuse}
+let timeScale=1;                 // slow-motion multiplier
+let deadAt=0;                    // when the run ended (touch retry gate)
+let shake=0;                     // camera shake amount
+let camDist=CAM_DIST, camDistTarget=CAM_DIST;   // death zoom pulls the camera in
+const lookAt = new THREE.Vector3(0, HUB_Y, 0), lookTarget = new THREE.Vector3(0, HUB_Y, 0);
+let galeT=0, reverseT=0, fogT=0, lightningT=0, boltTimes=[];
+let msgT=0;                      // seconds the current HUD message stays
+let nextEventAt=9;               // seconds until the first event
+let eventQueue=[];               // event names not yet used in this run
+let tornSail=null;
+const scoreEl = document.getElementById('score');
+const msgEl = document.getElementById('msg');
+const titleEl = document.getElementById('title');
+const bannerEl = document.getElementById('banner');
+const bannerText = bannerEl.querySelector('.b');
+const flashEl = document.getElementById('flash');
+const vignetteEl = document.getElementById('vignette');
+const koEl = document.getElementById('ko');
+const koScoreEl = koEl.querySelector('.finalScore');
+
+// difficulty ramps over about 90 s: faster spin, shorter fuses, closer gusts
+const diff = () => Math.min(1, t/90);
+const spinSpeed = () => (0.45 + 1.5*diff()) * (reverseT>0 ? 1.8 : 1);
+const fuseLen = () => 2.8 - 1.6*diff();
+const gustGap = () => 3.4 - 2.1*diff() + Math.random()*.9;
+
+// ---------- presentation helpers ----------
+function banner(text, color){
+  bannerText.textContent = text;
+  bannerText.style.color = color;
+  bannerEl.classList.remove('go');
+  void bannerEl.offsetWidth;      // restart the CSS animation
+  bannerEl.style.opacity = 1;
+  bannerEl.classList.add('go');
+}
+function flash(color, strength, ms){
+  flashEl.style.background = color;
+  flashEl.style.transition = 'none';
+  flashEl.style.opacity = strength;
+  requestAnimationFrame(()=>{
+    flashEl.style.transition = `opacity ${ms}ms ease-out`;
+    flashEl.style.opacity = 0;
+  });
+}
+function say(text, sec){ msgEl.textContent = text; msgT = sec; }
+
+// ---------- sail logic ----------
+const sailAngle = s => rot + s.k*Math.PI/2;      // where sail s points, in the XY plane
+const angDiff = (a, b) => Math.atan2(Math.sin(a-b), Math.cos(a-b));
+function openSails(){ return sails.filter(s => s.state==='open' && !s.strain); }
+
+// a gust catches one open sail: it turns red and its fuse starts burning
+function strainRandom(fuse){
+  const pool = openSails();
+  if(!pool.length) return null;
+  const s = pool[Math.floor(Math.random()*pool.length)];
+  s.strain = true; s.fuse = s.fuseMax = fuse;
+  s.gauge.visible = true; s.halo.visible = true;
+  return s;
+}
+function furlSail(s){
+  s.strain = false; s.state = 'furled'; s.furlT = 2.6 + Math.random()*1.2;
+  s.gauge.visible = false; s.halo.visible = false;
+}
+function unfurlSail(s){ s.state = 'open'; }
+function tearSail(s){
+  s.strain = false; s.state = 'torn';
+  s.gauge.visible = false; s.halo.visible = false;
+  s.cloth.visible = false;
+  const p = s.cloth.getWorldPosition(new THREE.Vector3());
+  spawnShreds(p);
+  tornSail = s;
+  lookTarget.copy(p);
+}
+
+// ---------- events ----------
+const EVENTS = {
+  gale(){
+    banner('突風', '#ff7a1a');
+    galeT = 4.5;
+    // three sails go red one after another; each has a shortish fuse
+    for(let i=0;i<3;i++) pending.push({at:t + .3 + i*.75, fuse:2.4});
+    shake = Math.max(shake, .3);
+    return 5;
+  },
+  reverse(){
+    banner('逆回転', '#55f0c0');
+    reverseT = 6.5;
+    flash('#9ffff0', .3, 400);
+    return 6.5;
+  },
+  fog(){
+    banner('濃霧', '#9b6bff');
+    fogT = 6.5;
+    return 6.5;
+  },
+  lightning(){
+    banner('落雷', '#ffd23b');
+    lightningT = 4.2;
+    boltTimes = [t+.9, t+2.1, t+3.3];
+    return 5;
+  },
+};
+const EVENT_NAMES = Object.keys(EVENTS);
+window.__events = EVENT_NAMES.slice();
+// recording/debug hook: fire a named event on cue (used by the capture script)
+// returns false if the run is already over, so a capture script can wait
+// for the next run instead of firing an event onto the K.O. screen
+window.__ev = name => {
+  if(!running || dead || !EVENTS[name]) return false;
+  const busy = EVENTS[name]();
+  if(!SILENT) SND.event(); nextEventAt = t + busy + 5; return true;
+};
+window.__alive = () => running && !dead;
+window.__kill = () => { if(running && !dead){ dead=true; gameOver(); } };
+window.__recStop = () => SND.recStop();
+window.__snd = () => ({enabled: SND.enabled, silent: SILENT});
+window.__fov = () => +camera.fov.toFixed(1);
+window.__probe = () => ({t:+t.toFixed(2), rot:+rot.toFixed(2), lock:+lock.toFixed(2),
+  sails:sails.map(s=>s.state + (s.strain?'!':'')), next:+nextEventAt.toFixed(2)});
+
+function refillEventQueue(){
+  eventQueue = EVENT_NAMES.slice();
+  for(let i=eventQueue.length-1;i>0;i--){        // shuffle so the order varies per run
+    const j = Math.floor(Math.random()*(i+1));
+    [eventQueue[i],eventQueue[j]]=[eventQueue[j],eventQueue[i]];
+  }
+}
+
+function triggerEvent(){
+  if(!eventQueue.length) refillEventQueue();
+  const name = eventQueue.pop();
+  const busy = EVENTS[name]();
+  if(!SILENT) SND.event();
+  nextEventAt = t + busy + 5 + Math.random()*4;  // breathing room between events
+}
+
+// ---------- reset ----------
+function reset(){
+  for(const m of shreds) scene.remove(m);
+  shreds.length = 0;
+  for(const s of sails){
+    s.state='open'; s.strain=false; s.fuse=0; s.fuseMax=1; s.furl=0; s.furlT=0;
+    s.cloth.visible = true; s.gauge.visible=false; s.halo.visible=false;
+    s.cloth.rotation.x = 0; s.cloth.scale.set(1,1,1); s.cloth.position.y = .56;
+    s.clothMat.color.copy(CLOTH); s.clothMat.emissive.setHex(0);
+  }
+  rot = .35; spinDir = 1; lock = 0; nextGust = 3; pending = [];
+  t=0; score=0; dead=false; tornSail=null;
+  timeScale=1; shake=0; camDist=CAM_DIST; camDistTarget=CAM_DIST;
+  lookAt.set(0, HUB_Y, 0); lookTarget.set(0, HUB_Y, 0);
+  galeT=0; reverseT=0; fogT=0; lightningT=0; boltTimes=[]; boltT=0; bolt.visible=false;
+  wind = .2; scene.fog.near = FOG_NEAR; scene.fog.far = FOG_FAR;
+  miller.group.rotation.set(0,0,0); miller.arm.rotation.set(0,0,0);
+  rope.visible=false; ropeT=0;
+  nextEventAt = 9;
+  refillEventQueue();
+  msgEl.textContent=''; msgT=0;
+  koEl.classList.remove('on');
+  vignetteEl.style.transition='opacity .3s'; vignetteEl.style.opacity=0;
+  camera.position.set(0, 5.4, CAM_DIST);
+}
+
+const startBtn = document.getElementById('startBtn');
+
+// ---------- sound: everything synthesised, no audio files ----------
+// Keeps the single-HTML rule (nothing to download) and lets the music
+// react to play: the bass line speeds up with the game, events drop a
+// stinger, and the whole thing ducks out on a game over.
+const SND = (() => {
+  let ctx = null, master = null, musicGain = null, on = true, started = false;
+  let step = 0, timer = null, tempo = 0.25;
+
+  // A pentatonic scale never sounds wrong against itself, which matters
+  // when the tempo drifts with the player's speed.
+  // minor pentatonic, driving — a chase that never lets up
+  const SCALE = [0, 3, 5, 7, 10];
+  const ROOT = 196;
+  const BASS = 'square', LEAD = 'sawtooth';
+  const hz = (deg, oct = 0) =>
+    ROOT * Math.pow(2, oct + Math.floor(deg / SCALE.length)) *
+    Math.pow(2, SCALE[((deg % SCALE.length) + SCALE.length) % SCALE.length] / 12);
+
+  function ensure() {
+    if (ctx) return ctx;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    ctx = new AC();
+    master = ctx.createGain();
+    master.gain.value = 0.32;
+    master.connect(ctx.destination);
+    musicGain = ctx.createGain();
+    musicGain.gain.value = 1;
+    musicGain.connect(master);
+    return ctx;
+  }
+
+
+  // ---- 録音用の分岐（?rec=1）----
+  // Playwright の録画には音声が入らないので、ゲーム自身に master バスを
+  // 録らせる。鳴っているものそのものなので映像と必ず同期する。
+  let recDest = null, recorder = null, recChunks = [];
+  function recStart() {
+    if (!ctx || recorder) return;
+    recDest = ctx.createMediaStreamDestination();
+    master.connect(recDest);
+    recorder = new MediaRecorder(recDest.stream, {mimeType: 'audio/webm'});
+    recorder.ondataavailable = e => { if (e.data.size) recChunks.push(e.data); };
+    recorder.start();
+  }
+  function recStop() {
+    return new Promise(res => {
+      if (!recorder) return res(null);
+      recorder.onstop = async () => {
+        const blob = new Blob(recChunks, {type: 'audio/webm'});
+        const buf = await blob.arrayBuffer();
+        res(Array.from(new Uint8Array(buf)));
+      };
+      recorder.stop();
+    });
+  }
+
+  function blip(freq, dur, type = 'square', vol = 0.25, dest = null, slideTo = null) {
+    if (!ctx || !on) return;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, ctx.currentTime);
+    if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, ctx.currentTime + dur);
+    // a short attack stops every note from clicking
+    g.gain.setValueAtTime(0, ctx.currentTime);
+    g.gain.linearRampToValueAtTime(vol, ctx.currentTime + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
+    o.connect(g); g.connect(dest || master);
+    o.start(); o.stop(ctx.currentTime + dur + 0.02);
+  }
+
+  function noise(dur, vol = 0.2, hp = 800) {
+    if (!ctx || !on) return;
+    const n = Math.floor(ctx.sampleRate * dur);
+    const buf = ctx.createBuffer(1, n, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    const f = ctx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = hp;
+    const g = ctx.createGain(); g.gain.value = vol;
+    src.connect(f); f.connect(g); g.connect(master);
+    src.start();
+  }
+
+  // --- the loop: a walking bass plus an offbeat blip ---
+  function tick() {
+    if (!ctx || !on) return;
+    const bar = step % 16;
+    // straight driving pulse: bass on every beat, lead stabs offbeat
+    if (bar % 2 === 0) blip(hz(bar % 8 === 0 ? 0 : 1, -1), tempo * 1.1, BASS, 0.30, musicGain);
+    if (bar % 8 === 5) blip(hz(4, 0), tempo * 0.6, LEAD, 0.09, musicGain);
+    if (bar % 4 === 2) noise(0.04, 0.05, 5000);
+    step++;
+    timer = setTimeout(tick, tempo * 1000);
+  }
+
+  return {
+    // must be called from a user gesture — browsers block audio otherwise
+    start() {
+      if (!ensure() || started) return;
+      if (ctx.state === 'suspended') ctx.resume();
+      started = true; step = 0; tick();
+    },
+    stop() { if (timer) { clearTimeout(timer); timer = null; } started = false; },
+    /** speed the music up with the game; 1 = starting pace */
+    setPace(mult) { tempo = Math.max(0.11, 0.25 / Math.max(0.2, mult)); },
+    duck(sec = 1.6) {                                      // for game over
+      if (!ctx) return;
+      musicGain.gain.cancelScheduledValues(ctx.currentTime);
+      musicGain.gain.setValueAtTime(musicGain.gain.value, ctx.currentTime);
+      musicGain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + sec);
+    },
+    unduck() {
+      if (!ctx) return;
+      musicGain.gain.cancelScheduledValues(ctx.currentTime);
+      musicGain.gain.setValueAtTime(0.0001, ctx.currentTime);
+      musicGain.gain.exponentialRampToValueAtTime(1, ctx.currentTime + 0.4);
+    },
+    // --- one-shots ---
+    move()  { ensure(); blip(hz(3, 1), 0.07, LEAD, 0.12); },
+    jump()  { ensure(); blip(hz(0, 0), 0.16, LEAD, 0.18, null, hz(4, 1)); },
+    land()  { ensure(); noise(0.06, 0.10, 500); },
+    place() { ensure(); blip(hz(2, 0), 0.10, BASS, 0.22, null, hz(4, 1)); },
+    event() { ensure(); [0, 90, 180].forEach((ms, i) =>
+                setTimeout(() => blip(hz(2 + i, 0), 0.18, 'sawtooth', 0.20), ms)); },
+    hit()   { ensure(); noise(0.35, 0.30, 200);
+              blip(180, 0.5, 'sawtooth', 0.28, null, 40); },
+    over()  { ensure(); [0, 140, 280, 460].forEach((ms, i) =>
+                setTimeout(() => blip(hz(-i, -1), 0.42, 'triangle', 0.26), ms)); },
+    recStart() { ensure(); recStart(); },
+    recStop() { return recStop(); },
+    toggle() { on = !on; if (!on) { this.stop(); } else { this.start(); } return on; },
+    get enabled() { return on; },
+  };
+})();
+
+// --- one place for every action, so touch and keyboard stay in step ---
+function startRun(){
+  titleEl.classList.add('hidden'); reset(); running=true;
+  if(!SILENT){ SND.unduck(); SND.start(); if(REC) SND.recStart(); }
+}
+// The single verb of the game: pull the rope toward a screen direction.
+// The nearest sail to that angle is grabbed. Red sail → furled (saved).
+// Any other sail → 空振り: the miller stumbles and is locked out briefly.
+// Keyboard, swipe and tap all end up here, so they cannot drift apart.
+function furlToward(angle){
+  if(!running || dead) return;
+  if(!SILENT) SND.move();
+  if(lock > 0) return;                       // still stumbling from the last whiff
+  let best = null, bd = 99;
+  for(const s of sails){
+    const d = Math.abs(angDiff(sailAngle(s), angle));
+    if(d < bd){ bd = d; best = s; }
+  }
+  // the rope arm swings to the chosen direction, and the rope flashes out
+  miller.arm.rotation.z = -Math.cos(angle)*1.2;
+  miller.arm.rotation.x = -Math.sin(angle)*1.0 - .2;
+  ropeTarget = best; ropeT = .28;
+  if(best.state==='open' && best.strain){
+    furlSail(best);
+    if(!SILENT) SND.place();
+    shake = Math.max(shake, .08);
+  } else {
+    lock = .55;
+    shake = Math.max(shake, .16);
+    say('空振り！', .7);
+    if(!SILENT) SND.land();
+  }
+}
+const DIR = {up:Math.PI/2, right:0, down:-Math.PI/2, left:Math.PI};
+
+const muteBtn = document.getElementById('mute');
+function toggleMute(){ muteBtn.textContent = SND.toggle() ? '🔊' : '🔇'; }
+muteBtn.addEventListener('click', toggleMute);
+muteBtn.addEventListener('touchend', e=>{ e.preventDefault(); toggleMute(); },
+                         {passive:false});
+if(SILENT) muteBtn.style.display='none';   // automated modes have no audio
+addEventListener('keydown', e=>{ if(e.code==='KeyM') toggleMute(); });
+
+startBtn.addEventListener('click', startRun);
+// a touch on the button must start too — click alone is unreliable on touch
+startBtn.addEventListener('touchend', e=>{ e.preventDefault(); startRun(); },
+                          {passive:false});
+
+addEventListener('keydown', e=>{
+  if(!running){
+    if(e.code==='Space'||e.code==='Enter') startRun();
+    return;
+  }
+  if(e.code==='ArrowUp'||e.code==='KeyW')    furlToward(DIR.up);
+  if(e.code==='ArrowRight'||e.code==='KeyD') furlToward(DIR.right);
+  if(e.code==='ArrowDown'||e.code==='KeyS')  furlToward(DIR.down);
+  if(e.code==='ArrowLeft'||e.code==='KeyA')  furlToward(DIR.left);
+});
+
+// --- touch: swipe in a direction, or tap the sail itself ---
+// Most viewers arrive from a phone, so the game has to be playable without
+// a keyboard. A swipe gives a direction directly; a tap is turned into a
+// direction by measuring from the hub's position on screen to the finger.
+(function(){
+  let sx=0, sy=0, st=0, moved=false;
+  const SWIPE = 28;          // px before a drag counts as a swipe
+  const canvas = renderer.domElement;
+  const hubScreen = () => {
+    const p = mill.hub.getWorldPosition(new THREE.Vector3()).project(camera);
+    return {x:(p.x+1)/2*innerWidth, y:(1-p.y)/2*innerHeight};
+  };
+
+  canvas.addEventListener('touchstart', e=>{
+    const t = e.changedTouches[0];
+    sx=t.clientX; sy=t.clientY; st=Date.now(); moved=false;
+  }, {passive:true});
+
+  canvas.addEventListener('touchmove', e=>{
+    if(moved || !running || dead) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX-sx, dy = t.clientY-sy;
+    if(Math.hypot(dx,dy) > SWIPE){
+      furlToward(Math.atan2(-dy, dx));       // screen y grows downward
+      moved = true;                          // one pull per swipe
+    }
+  }, {passive:true});
+
+  canvas.addEventListener('touchend', e=>{
+    if(dead){
+      // give the K.O. animation time to read, then a tap retries
+      if(!AUTO && Date.now()-deadAt > 1500) startRun();
+      return;
+    }
+    if(!running){ startRun(); return; }
+    // a short touch that never became a swipe is a tap → pull toward it
+    if(!moved && Date.now()-st < 350){
+      const t = e.changedTouches[0], h = hubScreen();
+      furlToward(Math.atan2(-(t.clientY-h.y), t.clientX-h.x));
+    }
+  }, {passive:true});
+
+  // The title overlay sits above the canvas, so a tap anywhere on it never
+  // reaches the canvas handler. Start from the overlay itself.
+  titleEl.addEventListener('touchend', e=>{
+    if(!running){ e.preventDefault(); startRun(); }
+  }, {passive:false});
+
+  // stop the browser treating game taps as scroll / double-tap zoom
+  canvas.addEventListener('touchmove', e=>e.preventDefault(), {passive:false});
+})();
+
+// autoplay mode for recording: ?auto=1
+// recording holds the K.O. longer than play does: ?hold=9000
+const RETRY_MS = Math.max(1200, parseInt(QS.get('hold')||'4200', 10));
+// ?noev=1 records a calm run with no events, for narration beds
+const NOEV = QS.get('noev')==='1';
+if(AUTO){ setTimeout(startRun, 1200); }   // startRun 経由にする（音/録音も始まる）
+
+// The autopilot reads the same state a player sees: it waits a human-ish
+// reaction time after a sail goes red, then pulls toward it with a little
+// aim error. It never whiffs on purpose, so it plays cleanly.
+let aiReact = 0;
+function autoPilot(dt){
+  if(lock > 0) return;
+  let target = null;
+  for(const s of sails) if(s.strain && (!target || s.fuse < target.fuse)) target = s;
+  if(!target){ aiReact = 0; return; }
+  aiReact += dt;
+  const react = target.fuseMax < 1.8 ? .25 : .45;
+  if(aiReact < react) return;
+  aiReact = 0;
+  furlToward(sailAngle(target) + (Math.random()-.5)*.5);
+}
+
+// ---------- showcase mode (?showcase=mill|miller|sail|gust|fog|lightning) ----------
+// Puts one object on a turntable against an empty stage so the video can
+// talk about it while the real thing is on screen. Uses the game's own
+// builders, so what the narration describes is exactly what ships.
+const SHOWCASE = SHOWCASE_Q;
+window.__subjects = ['mill','miller','sail','gust','fog','lightning'];
+const showcase = {group:null, spin:.55, label:''};
+
+function buildShowcase(name){
+  const g = new THREE.Group();
+  let label = '', spin = .55, flat = false;
+  if(name==='mill'){
+    const m = buildMill();
+    m.rotor.rotation.z = .4;
+    g.add(m.group); label = '風車'; spin = .4;
+  } else if(name==='miller'){
+    const n = buildMiller();
+    n.group.scale.set(1.5,1.5,1.5);
+    n.arm.rotation.x = -1.3;                 // mid-pull, so the rope arm reads
+    g.add(n.group); label = '粉屋'; spin = .5;
+  } else if(name==='sail'){
+    const s = buildSail(0);
+    s.clothMat.color.copy(STRAIN); s.clothMat.emissive.copy(STRAIN); s.clothMat.emissiveIntensity = .5;
+    s.gauge.visible = true; s.gauge.scale.x = 2.2; s.gauge.position.x = 1.9;
+    s.halo.visible = true; s.halo.material.uniforms.k.value = .5;
+    s.group.position.x = -SAIL_LEN/2;
+    g.add(s.group); label = '帆'; spin = .8; flat = true;
+    showcase.sail = s;
+  } else if(name==='gust'){
+    g.add(buildGust()); label = '突風'; spin = .9;
+  } else if(name==='fog'){
+    g.add(buildFogCloud()); label = '濃霧'; spin = .35;
+  } else if(name==='lightning'){
+    const b = buildBolt(); b.position.y = 4.5;
+    g.add(b); label = '落雷'; spin = 1.2;
+  }
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  scene.add(g);
+
+  // Centre the subject on the origin and pull the camera back to fit it,
+  // so every object is framed the same way regardless of its size.
+  const box = new THREE.Box3().setFromObject(g);
+  const size = box.getSize(new THREE.Vector3());
+  const mid = box.getCenter(new THREE.Vector3());
+  g.position.sub(mid);                       // sit centred at the origin
+  const reach = Math.max(size.x, size.y) * 0.5;
+  const fov = THREE.MathUtils.degToRad(camera.fov);
+  const dist = (reach / Math.tan(fov/2)) * 1.75 + 1.0;   // 1.75 = breathing room
+  camera.position.set(0, size.y*0.10, dist);
+
+  // Slide the subject sideways so a text panel can own the other half.
+  // The offset lives on a parent so the turntable still spins in place —
+  // rotating an offset group would make it orbit instead.
+  const bias = parseFloat(QS.get('sx') || '0');
+  const pivot = new THREE.Group();
+  pivot.position.x = -bias * reach * 1.15;
+  scene.add(pivot);
+  pivot.add(g);
+  showcase.group = g; showcase.pivot = pivot;
+  showcase.spin = spin; showcase.label = label; showcase.flat = flat;
+}
+
+fitCamera();          // SHOWCASE is known by here
+if(SHOWCASE){
+  titleEl.classList.add('hidden');
+  buildShowcase(SHOWCASE);
+  scoreEl.textContent = '';
+  msgEl.textContent = QS.get('nolabel')==='1' ? '' : showcase.label;
+  msgEl.style.fontSize = '30px';
+  msgEl.style.letterSpacing = '6px';
+  // a plain dark stage: nothing on screen but the subject
+  ground.visible = false; canal.visible = false; dike.visible = false;
+  tulips.visible = false; moon.visible = false; stars.visible = false;
+  mill.group.visible = false; miller.group.visible = false;
+  for(const m of streaks) m.visible = false;
+  scene.fog = null;
+  scene.background = new THREE.Color(0x0b0d16);
+  heroLight.position.set(2.6, 3.2, 4.2);
+  heroLight.intensity = 140;
+  hemi.intensity = 3.4;
+  sun.intensity = 4.2; sun.position.set(2.5, 6, 6);
+  // a second light from the other side so the far face is not pure black
+  const fill = new THREE.PointLight(0x88aaff, 45, 26);
+  fill.position.set(-4.5, 2.4, 3.6); scene.add(fill);
+}
+// let the capture script drive the turntable and swap subjects
+window.__showcase = name => {
+  if(showcase.pivot) scene.remove(showcase.pivot);   // pivot owns the group
+  buildShowcase(name);
+  msgEl.textContent = showcase.label;
+};
+
+// ---------- loop ----------
+const clock = new THREE.Clock();
+function tick(){
+  requestAnimationFrame(tick);
+  const raw = Math.min(clock.getDelta(), .05);
+  const dt = raw * timeScale;
+
+  if(SHOWCASE){
+    if(showcase.group){
+      if(showcase.flat) showcase.group.rotation.z += raw*showcase.spin;
+      else showcase.group.rotation.y += raw*showcase.spin;
+    }
+    if(showcase.sail){                                   // keep the red sail flapping
+      const s = showcase.sail;
+      s.cloth.rotation.x = Math.sin(performance.now()/40)*.22;
+      s.halo.material.uniforms.k.value = .35 + .25*Math.sin(performance.now()/120);
+    }
+    camera.lookAt(0, 0, 0);        // subject is offset, camera stays on axis
+    renderer.render(scene, camera);
+    return;
+  }
+
+  // the rotor turns even on the title screen and in slow-mo
+  if(running || dead) rot += spinSpeed()*spinDir*dt;
+  else rot += .35*raw;
+  mill.rotor.rotation.z = rot;
+
+  if(running && !dead){
+    t += dt;
+    const open = sails.filter(s=>s.state==='open').length;
+    score += dt * (6 + open*2) * (1 + t/80);
+    scoreEl.textContent = Math.floor(score);
+    if(!SILENT) SND.setPace(1 + diff()*.9);
+    if(AUTO) autoPilot(dt);
+    if(lock > 0) lock -= dt;
+    if(msgT > 0){ msgT -= dt; if(msgT <= 0) msgEl.textContent = ''; }
+
+    // --- events ---
+    if(t > nextEventAt && !NOEV) triggerEvent();
+
+    // ordinary gusts, and the scheduled ones from 突風
+    nextGust -= dt;
+    if(nextGust <= 0){
+      strainRandom(fuseLen());
+      if(t > 30 && Math.random() < diff()*.45) strainRandom(fuseLen()+.6);   // two at once, later on
+      nextGust = gustGap();
+    }
+    for(let i=pending.length-1;i>=0;i--){
+      if(t >= pending[i].at){ strainRandom(pending[i].fuse); pending.splice(i,1); }
+    }
+
+    // 突風: stronger wind, more streaks
+    if(galeT > 0) galeT -= dt;
+    wind += ((galeT > 0 ? 1 : .2 + diff()*.25) - wind)*Math.min(1, dt*3);
+
+    // 逆回転: the rotor runs backwards and faster
+    if(reverseT > 0){ reverseT -= dt; spinDir = -1; if(reverseT <= 0) spinDir = 1; }
+
+    // 濃霧: the fog closes in until only the red halos show, then lifts
+    if(fogT > 0){
+      fogT -= dt;
+      const k = fogT > 1.2 ? Math.min(1, (6.5-fogT)/1.2) : fogT/1.2;
+      scene.fog.near = FOG_NEAR + (5 - FOG_NEAR)*k;
+      scene.fog.far  = FOG_FAR  + (18 - FOG_FAR)*k;
+      scene.background.copy(SKY).lerp(new THREE.Color(0x3a3f52), k*.8);
+      scene.fog.color.copy(scene.background);
+      if(fogT <= 0){ scene.fog.near = FOG_NEAR; scene.fog.far = FOG_FAR;
+                     scene.background.copy(SKY); scene.fog.color.copy(SKY); }
+    }
+
+    // 落雷: white flashes, and each bolt sets a sail straining with a short fuse
+    if(lightningT > 0){
+      lightningT -= dt;
+      if(boltTimes.length && t >= boltTimes[0]){
+        boltTimes.shift();
+        flash('#ffffff', .75, 320);
+        bolt.visible = true; boltT = .14;
+        bolt.position.x = (Math.random()-.5)*3;
+        strainRandom(1.5);
+        shake = Math.max(shake, .35);
+      }
+    }
+    if(boltT > 0){ boltT -= raw; if(boltT <= 0) bolt.visible = false; }
+
+    // --- sails: fuses burn, furled ones re-open, visuals follow state ---
+    for(const s of sails){
+      if(s.strain){
+        s.fuse -= dt;
+        if(s.fuse <= 0){ tearSail(s); dead = true; gameOver(); break; }
+        const frac = Math.max(0, s.fuse/s.fuseMax);
+        const urgency = 1 - frac;
+        // gauge shrinks toward the hub; halo pulses faster as it runs out
+        s.gauge.scale.x = 3.2*frac; s.gauge.position.x = .9 + 1.6*frac;
+        const pulse = .5 + .5*Math.sin(t*(10 + urgency*18));
+        s.halo.material.uniforms.k.value = .25 + .35*pulse;
+        s.clothMat.color.copy(CLOTH).lerp(STRAIN, .55 + .45*pulse);
+        s.clothMat.emissive.copy(STRAIN); s.clothMat.emissiveIntensity = .3 + .5*pulse;
+        s.cloth.rotation.x = Math.sin(t*(26 + urgency*20))*(.22 + urgency*.2);
+        s.stock.rotation.x = Math.sin(t*30)*.04;
+      } else {
+        s.clothMat.color.copy(s.state==='furled' ? FURLED : CLOTH);
+        s.clothMat.emissive.setHex(0);
+        s.cloth.rotation.x = Math.sin(t*3 + s.k)*.04*wind;
+        s.stock.rotation.x = 0;
+      }
+      if(s.state==='furled'){
+        s.furlT -= dt;
+        if(s.furlT <= 0){ unfurlSail(s); if(!SILENT) SND.jump(); }
+      }
+      // furl amount eases toward the state; the cloth rolls up onto the stock
+      s.furl += ((s.state==='furled' ? 1 : 0) - s.furl)*Math.min(1, dt*9);
+      s.cloth.scale.y = 1 - .86*s.furl;
+      s.cloth.position.y = .56 - .43*s.furl;
+    }
+
+    // the miller leans into the wind; a whiff makes him stumble
+    miller.group.rotation.z = -wind*.12 + (lock > 0 ? Math.sin(t*40)*.18 : 0);
+    miller.group.position.y = lock > 0 ? Math.abs(Math.sin(t*22))*.12 : 0;
+    miller.arm.rotation.x += (-.2 - miller.arm.rotation.x)*Math.min(1, dt*4);
+    miller.arm.rotation.z += (0 - miller.arm.rotation.z)*Math.min(1, dt*4);
+  }
+
+  // rope flash: from the hand to the grabbed sail's cloth
+  if(ropeT > 0 && ropeTarget){
+    ropeT -= raw;
+    rope.visible = ropeT > 0;
+    stretchRope(miller.hand.getWorldPosition(new THREE.Vector3()),
+                ropeTarget.cloth.getWorldPosition(new THREE.Vector3()));
+  } else rope.visible = false;
+
+  // wind streaks always blow
+  for(const m of streaks){
+    m.position.x += (7 + wind*22)*raw;
+    if(m.position.x > 20){ m.position.x = -20; m.position.y = 1 + Math.random()*12; }
+  }
+  streakMat.opacity = .08 + wind*.42;
+
+  // --- death sequence: slow-mo unwinds, shreds fly, camera pushes in ---
+  if(dead){
+    timeScale += (0 - timeScale)*Math.min(1, raw*1.1);   // ease down to a near-freeze
+    const sdt = raw*Math.max(timeScale, .18);            // shreds keep drifting in slow-mo
+    for(const m of shreds){
+      m.position.addScaledVector(m.userData.v, sdt);
+      m.userData.v.y -= 6*sdt; m.userData.v.x *= (1 - sdt*.4);
+      m.rotation.x += m.userData.w.x*sdt; m.rotation.y += m.userData.w.y*sdt;
+    }
+    if(tornSail) lookTarget.copy(tornSail.stock.getWorldPosition(new THREE.Vector3()));
+    miller.arm.rotation.x = -1.4;                        // hands on head
+  }
+
+  // --- camera (runs even while dead, so the zoom and shake still play) ---
+  camDist += (camDistTarget - camDist)*Math.min(1, raw*2.4);
+  lookAt.lerp(lookTarget, Math.min(1, raw*2.4));
+  camera.position.z = lookAt.z + camDist;
+  camera.position.y = 5.4 + (lookAt.y - HUB_Y)*.6;
+  camera.position.x = lookAt.x*.6;
+  if(shake>0){
+    shake = Math.max(0, shake - raw*.9);
+    camera.position.x += (Math.random()-.5)*shake;
+    camera.position.y += (Math.random()-.5)*shake;
+  }
+  camera.lookAt(lookAt);
+
+  renderer.render(scene, camera);
+}
+
+function gameOver(){
+  running=false; deadAt=Date.now();
+  if(!SILENT){ SND.hit(); SND.duck(1.6); setTimeout(()=>SND.over(), 700); }
+  // hit feedback: red flash, red vignette, hard shake, camera punches in
+  flash('#ff2b3a', .8, 500);
+  vignetteEl.style.transition='opacity .5s'; vignetteEl.style.opacity=1;
+  shake = .9;
+  camDistTarget = 9;
+  const finalScore = Math.floor(score);
+  koScoreEl.textContent = finalScore;
+  msgEl.textContent = '';
+  setTimeout(()=>{ koEl.classList.add('on'); }, 620);   // K.O. lands after the slow-mo
+  if(AUTO){ setTimeout(startRun, RETRY_MS); }           // same path as a real start
+  else setTimeout(()=>{
+    msgEl.textContent = matchMedia('(pointer:coarse)').matches
+      ? 'タップして もう一度' : 'スペースで もう一度';
+  }, 1800);
+}
+tick();
+
+// --- help (?) : ルールを見せる。録画中は出さない ---
+(function(){
+  const btn = document.getElementById('helpBtn');
+  const panel = document.getElementById('help');
+  if(!btn || !panel) return;
+  if(NOCHROME){                      // 録画・showcase では画面から消す
+    btn.style.display = 'none';
+    const back = document.getElementById('back');
+    if(back) back.style.display = 'none';
+    return;
+  }
+  const open = () => { panel.classList.add('on'); };
+  const close = () => { panel.classList.remove('on'); };
+  btn.addEventListener('click', open);
+  btn.addEventListener('touchend', e => { e.preventDefault(); open(); }, {passive:false});
+  panel.addEventListener('click', e => { if(e.target === panel) close(); });
+  panel.querySelector('.close').addEventListener('click', close);
+  panel.querySelector('.close').addEventListener('touchend',
+    e => { e.preventDefault(); close(); }, {passive:false});
+  addEventListener('keydown', e => {
+    if(e.code === 'Escape') close();
+    else if(e.key === '?' || (e.code === 'Slash' && e.shiftKey)) open();
+  });
+})();
+</script>
+</body>
+</html>
