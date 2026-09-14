@@ -1,0 +1,239 @@
+{
+  "id": "0014_bagpipe_breath",
+  "title": "バグパイプ・ブレス",
+  "video_title": "曲が速くなるほど、息が足りなくなる笛があります",
+  "lang": "ja",
+  "voice": "voicevox",
+  "scenes": [
+    {
+      "kind": "hook",
+      "clip": "sheep",
+      "narration": "スコットランドに、曲がどんどん速くなる踊りの会があります。音楽は、笛吹きが一人です。"
+    },
+    {
+      "kind": "image",
+      "prompt": "a small village hall on a Scottish moor at dusk, warm light spilling from open doors, people in wool and tartan dancing inside, rolling heather hills and a few grazing sheep outside, low mist, cinematic wide shot, photorealistic, highly detailed",
+      "narration": "スコットランドの丘の村です。毎週土曜の夜に、村の集会所で踊りの会があります。音楽は、笛吹きが一人で担当です。"
+    },
+    {
+      "kind": "image",
+      "prompt": "a red-faced Scottish piper in a kilt playing the bagpipes, cheeks puffed hard, arm squeezing a green leather bag under his elbow, sweat on his brow, warm hall light, dancers blurred in motion behind him, tight cinematic portrait, photorealistic, highly detailed",
+      "narration": "笛吹きのイアンさんです。バグパイプは、バッグに空気がある間だけ鳴ります。だから、吹き続けます。踊りが盛り上がると、手拍子が速くなります。曲も、速くなります。"
+    },
+    {
+      "kind": "image",
+      "prompt": "a crowd of dancers in a Scottish village hall stamping and clapping in fast rhythm, spinning skirts and flushed faces, wooden floor and low ceiling beams, a lone piper standing at the edge of the frame, energetic motion blur, warm tungsten light, photorealistic, cinematic, highly detailed",
+      "narration": "イアンさんは、頼みました。もう少しゆっくりにしてくれ、と。返事は、テンポは踊る人が決める、でした。だから今夜も、息を切らして吹きます。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "piper",
+      "kicker": "あなた",
+      "title": "笛吹きのイアンさん",
+      "bullets": [
+        "上で**吹き込む**。下で**息を吸う**。タップなら交互",
+        "吹けるのは、**肺がいっぱいのとき**だけ",
+        "空の肺で吹くと、**せき込む**だけです"
+      ],
+      "narration": "これがあなたです。上で吹き込んで、下で息を吸います。タップなら、交互にやってくれます。吹けるのは、肺がいっぱいのときだけです。空っぽで吹こうとすると、せき込みます。空気は、一切入りません。ほっぺたを見てください。膨らんでいれば、吹けます。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "bagpipe",
+      "kicker": "操作対象",
+      "title": "バグパイプ",
+      "bullets": [
+        "バッグの空気は、**鳴っている間ずっと減る**",
+        "ゼロで音が止まる。**いっぱいで破裂**する",
+        "バッグの大きさが、そのまま残りの空気"
+      ],
+      "narration": "バグパイプです。バッグの空気は、鳴っている間ずっと減ります。ゼロになると、音が止まります。それで終わりです。じゃあ、たくさん入れておけばいい。そう思いますよね。いっぱいのバッグにもう一吹きすると、破裂します。これも終わりです。上のゲージを見ながら、真ん中あたりを保ちます。ちなみに、バッグの大きさもそのまま残りの空気です。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "gust",
+      "kicker": "起きること 1",
+      "title": "突風",
+      "bullets": [
+        "4秒間、空気の減りが**2倍**",
+        "丘に風の筋が走って、笛吹きが傾く",
+        "吹く回数を倍にするしかない"
+      ],
+      "narration": "まず突風です。4秒のあいだ、空気の減り方が2倍になります。丘に風の筋が走って、イアンさんも風に傾きます。対処法は、単純です。倍のペースで吹きます。それだけです。でも、吸う時間は短くなりません。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "leak",
+      "kicker": "起きること 2",
+      "title": "バッグの穴",
+      "bullets": [
+        "バッグの横から、6秒間**シューッと漏れる**",
+        "曲で減る分に、漏れの分が**上乗せ**",
+        "6秒たつと、タータンの布で**勝手にふさがる**"
+      ],
+      "narration": "次は、バッグに穴です。横から、6秒間シューッと空気が抜けます。曲で減る分に、漏れの分が上乗せです。ふさぐ操作はありません。6秒たつと、タータンの布で勝手にふさがります。それまで、吹いて耐えます。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "sheep",
+      "kicker": "起きること 3",
+      "title": "羊",
+      "bullets": [
+        "3匹が、**1秒おき**に目の前を横切る",
+        "ぶつかるたびに、空気が**ガクッと減る**",
+        "よけられません。丘だから、羊はいます"
+      ],
+      "narration": "そして羊です。3匹が、1秒おきに目の前を横切ります。1匹ぶつかるたびに、空気がガクッと減ります。画面も揺れます。よけることはできません。丘ですから、羊はいます。ぶつかる前に、少し多めに入れておくのがコツです。ただし、入れすぎると破裂します。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "fog",
+      "kicker": "起きること 4",
+      "title": "霧",
+      "bullets": [
+        "4秒半、**ゲージが消える**。月も丘も消える",
+        "残るのは、**バッグの大きさ**だけ",
+        "曲は止まらないので、減り続ける"
+      ],
+      "narration": "霧が出ると、ゲージが消えます。月も、丘も消えます。見えるのは、バッグの大きさだけです。さっき言いましたよね。バッグの大きさが、残りの空気です。ここで効いてきます。4秒半、バッグだけを見て吹きます。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "note",
+      "kicker": "起きること 5",
+      "title": "ハイノート",
+      "bullets": [
+        "4秒半、ゲージの**赤い帯の中**に空気を保つ",
+        "外れている時間が合計**1.2秒**で、音が割れる",
+        "帯は、**破裂のすぐ手前**にあります"
+      ],
+      "narration": "最後がハイノートです。ここが一番面白いところです。ゲージに、赤い帯が出ます。4秒半、その中に空気を保ちます。外れている時間が合計で1.2秒を超えると、音が割れます。それで終わりです。問題は、帯の場所です。破裂のすぐ手前にあります。一吹き多いと、割れる前に破裂します。"
+    },
+    {
+      "kind": "events",
+      "clip": "events",
+      "kicker": "起きること",
+      "title": "曲は待ってくれません",
+      "bullets": [
+        "曲のテンポは**上がり続ける**。戻りません",
+        "5つの出来事が、**毎回ちがう順番**で来る",
+        "合間の休みは、5秒から9秒だけ"
+      ],
+      "narration": "そして、ここからが本題です。曲のテンポは、上がり続けます。戻りません。40秒で1.5倍、80秒で2倍です。吹くペースも、同じだけ上がります。5つの出来事は、毎回ちがう順番で来ます。合間の休みは、5秒から9秒です。その休みが、だんだん短く感じます。テンポのせいです。"
+    },
+    {
+      "kind": "death",
+      "clip": "death",
+      "kicker": "終わり方",
+      "title": "音が止まるか、破裂するか",
+      "bullets": [
+        "終わり方は3つ。**破裂、音切れ、音割れ**",
+        "時間がゆっくり止まって、カメラが寄ります",
+        "何秒もったかが、点になります"
+      ],
+      "narration": "終わり方は3つです。吹きすぎて破裂するか。足りなくて音が止まるか。ハイノートで音が割れるか。どれでも、時間がゆっくり止まって、カメラが寄ります。破裂だと、イアンさんが後ろに吹き飛びます。そして、何秒もったかが点になります。イアンさんは、毎週これを一晩中やっています。あなたは、たぶん1分ちょっとです。"
+    },
+    {
+      "kind": "outro",
+      "title": "概要欄のリンクから遊べます",
+      "subtitle": "チャンネル登録で、毎日一本",
+      "narration": "ブラウザで無料で遊べます。概要欄のリンクからどうぞ。チャンネル登録もお願いします。毎日一本、出しています。"
+    }
+  ],
+  "slug": "bagpipe-breath",
+  "channel": "Daily Arcade Studio",
+  "events": [
+    "gust",
+    "leak",
+    "sheep",
+    "fog",
+    "high"
+  ],
+  "short": [
+    {
+      "mark": "sheep",
+      "lead": -0.3,
+      "dur": 9.0,
+      "headline": "羊が体当たり"
+    },
+    {
+      "mark": "high",
+      "lead": -0.5,
+      "dur": 7.0,
+      "headline": "破裂の手前を保て"
+    },
+    {
+      "mark": "fog",
+      "lead": -0.5,
+      "dur": 8.0,
+      "headline": "ゲージが消える"
+    },
+    {
+      "mark": "gust",
+      "lead": -0.5,
+      "dur": 7.0,
+      "headline": "減りが2倍"
+    },
+    {
+      "mark": "death",
+      "lead": -2.0,
+      "dur": 9.0,
+      "headline": "息が切れたら終わり"
+    }
+  ],
+  "thumb": {
+    "hook": "息が切れたら終わり",
+    "sub": "吹いて、吸って、また吹く。ブラウザで無料。",
+    "frame_mark": "sheep",
+    "frame_lead": 1.0
+  },
+  "short_v2": {
+    "cuts": [
+      {
+        "kind": "clip",
+        "mark": "sheep",
+        "lead": -0.3,
+        "dur": 4.5,
+        "headline": "今日のゲーム",
+        "narration": "今日のゲームです。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "piper",
+        "dur": 5.0,
+        "headline": "バグパイプ・ブレス",
+        "narration": "あなたは、速くなる曲に息だけで追いつく笛吹きです。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "bagpipe",
+        "dur": 5.0,
+        "headline": "吹いて、吸う",
+        "narration": "バッグの空気は、鳴っている間ずっと減ります。ゼロで音が止まって、いっぱいで破裂します。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "sheep",
+        "dur": 5.0,
+        "headline": "羊が体当たり",
+        "narration": "羊が3匹、目の前を横切ります。ぶつかるたびに、空気がガクッと減ります。"
+      },
+      {
+        "kind": "clip",
+        "mark": "death",
+        "lead": -2.0,
+        "dur": 5.0,
+        "headline": "",
+        "narration": "曲は、どんどん速くなります。"
+      },
+      {
+        "kind": "clip",
+        "mark": "run2",
+        "lead": 1.0,
+        "dur": 4.5,
+        "cta": "概要欄のリンクから遊べます",
+        "narration": "ブラウザで無料で遊べます。リンクは概要欄です。"
+      }
+    ]
+  }
+}
