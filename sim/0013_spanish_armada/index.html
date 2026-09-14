@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>あなたが無敵艦隊の司令官だったら</title>
+<meta property="og:title" content="あなたが無敵艦隊の司令官だったら">
+<meta property="og:description" content="1588年2月、あなたはメディナ・シドニア公。スペインの大貴族ですが、海の経験はほとんどありません。ところが王フェリペ2世から手紙が来ました。前の司令官が急に死んだので、およそ130隻、およそ3万人の艦隊をあなたに任せる、と。目的はイギリス。海の向こうにいる陸軍と合流して、兵を渡すことです。ここから、ひと夏です。">
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;background:#0b0e14;color:#e6edf3;
+       font-family:-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;
+       line-height:1.75;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+  .wrap{max-width:600px;margin:0 auto;padding:22px 18px 60px}
+  h1{font-size:clamp(21px,5.6vw,29px);margin:6px 0 8px;line-height:1.4}
+  .lead{color:#8b949e;font-size:14.5px;margin:0 0 20px}
+  .prog{position:sticky;top:0;background:#0b0e14;padding:10px 0 12px;z-index:5}
+  .bar{height:4px;background:#1c2333;border-radius:2px;overflow:hidden}
+  .bar i{display:block;height:100%;background:#d4a544;width:0;transition:width .3s}
+  .count{font-size:12.5px;color:#8b949e;margin-top:6px;letter-spacing:.04em}
+  .scene{background:#121722;border:1px solid #222b3d;border-radius:14px;
+          padding:20px 18px;margin:0 0 16px}
+  .year{color:#d4a544;font-size:12.5px;letter-spacing:.1em;margin:0 0 8px}
+  .sit{font-size:16px;margin:0 0 18px;color:#dbe3ec}
+  .opts{display:grid;gap:10px}
+  .opt{border:1px solid #2b3550;background:#161d2b;color:#e6edf3;border-radius:11px;
+        padding:15px 16px;font-size:15.5px;cursor:pointer;text-align:left;
+        font-family:inherit;line-height:1.6;transition:.15s}
+  .opt:hover{border-color:#d4a544}
+  .opt:active{transform:scale(.985)}
+  .log{margin:0 0 20px}
+  .logi{border-left:2px solid #2b3550;padding:2px 0 2px 14px;margin:0 0 10px;
+         font-size:13.5px;color:#7d8796}
+  .logi b{color:#b3bdcc;font-weight:600}
+  #end{display:none} #end.on{display:block}
+  .eimg{width:100%;border-radius:14px;display:block;margin:0 0 18px;background:#121722}
+  .etag{color:#d4a544;font-size:13px;letter-spacing:.09em;margin:0 0 4px}
+  .ename{font-size:clamp(23px,6.4vw,32px);margin:0 0 14px;line-height:1.35}
+  .ebody{font-size:15.5px;color:#c9d1d9;margin:0 0 20px;white-space:pre-wrap}
+  .fact{background:#121722;border-left:3px solid #58a6ff;border-radius:0 10px 10px 0;
+         padding:14px 16px;margin:0 0 20px;font-size:14.5px;color:#c9d1d9}
+  .fact b{color:#58a6ff;display:block;margin-bottom:5px;font-size:12.5px;
+           letter-spacing:.08em}
+  .warn{color:#6e7681;font-size:12.5px;margin:18px 0 0;padding:12px 14px;
+         border:1px dashed #2b3550;border-radius:10px}
+  .share{display:grid;gap:10px;margin:22px 0}
+  .share a,.share button{display:block;text-align:center;padding:14px;border-radius:12px;
+        text-decoration:none;font-weight:700;font-size:15px;border:1px solid #2b3550;
+        background:#161d2b;color:#e6edf3;cursor:pointer;font-family:inherit}
+  .back{display:inline-block;margin-top:6px;color:#8b949e;font-size:14px}
+  footer{margin-top:32px;color:#6e7681;font-size:12.5px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div id="sim">
+  <h1>あなたが無敵艦隊の司令官だったら</h1>
+  <p class="lead">1588年2月、あなたはメディナ・シドニア公。スペインの大貴族ですが、海の経験はほとんどありません。ところが王フェリペ2世から手紙が来ました。前の司令官が急に死んだので、およそ130隻、およそ3万人の艦隊をあなたに任せる、と。目的はイギリス。海の向こうにいる陸軍と合流して、兵を渡すことです。ここから、ひと夏です。</p>
+  <div class="prog"><div class="bar"><i id="pbar"></i></div>
+    <div class="count"><span id="pnum">1</span> / 8</div></div>
+  <div class="log" id="log"></div>
+  <div class="scene" id="scene"></div>
+</div>
+
+<div id="end">
+  <img class="eimg" id="eimg" alt="">
+  <p class="etag" id="etag"></p>
+  <h1 class="ename" id="ename"></h1>
+  <p class="ebody" id="ebody"></p>
+  <div class="fact" id="fact"></div>
+  <div class="share">
+    <a id="tw" target="_blank" rel="noopener">結果をXに投稿する</a>
+    <button id="again">やり直す</button>
+  </div>
+  <a class="back" href="../">ほかのシミュレータを見る</a>
+  <p class="warn">これはシミュレータです。あなたの選択によっては史実と異なる結末になります。
+  実際に起きたことは上の「史実」の欄をご覧ください。</p>
+</div>
+
+<footer>MosukeStudio</footer>
+</div>
+
+<script>
+const DATA = {"title": "あなたが無敵艦隊の司令官だったら", "lead": "1588年2月、あなたはメディナ・シドニア公。スペインの大貴族ですが、海の経験はほとんどありません。ところが王フェリペ2世から手紙が来ました。前の司令官が急に死んだので、およそ130隻、およそ3万人の艦隊をあなたに任せる、と。目的はイギリス。海の向こうにいる陸軍と合流して、兵を渡すことです。ここから、ひと夏です。", "axes": [{"label": "攻めるか、待つか", "pos": "攻", "neg": "慎"}, {"label": "王の計画どおりか、現場で変えるか", "pos": "従", "neg": "独"}], "history": "1588年夏、スペインの艦隊は海峡を東へ進み、カレー沖で火船に散らされ、翌日グラヴリーヌ沖で近くから撃たれました。風で北へ流され、スコットランドとアイルランドを回って帰る途中、嵐と病気と飢えで船の3分の1から半分を失ったと言われています。", "scenes": [{"year": "1588年2月 王の手紙", "situation": "王からの手紙を、あなたは何度も読み返しました。自分は船に弱く、海の戦いを知りません。金もありません。それでも王は、あなたの家がらと人望を買っています。返事を書く時間は、ほとんどありません。", "options": [{"text": "「私には向いていません」と正直に書き、海を知る提督に代えてほしいと頼む", "a": -1, "b": -1}, {"text": "黙って引き受け、すぐにリスボンへ向かう", "a": 1, "b": 2}]}, {"year": "1588年4月 リスボンの港", "situation": "港に着いて、船を見て回りました。食べ物はすでにくさりかけ、水のたるからは水がもれています。前の年にドレークが港をおそい、たるの材料を焼いたせいだと聞きました。王からは「一日も早く出ろ」と手紙が来ています。積み直せば、出港はさらに何週間か遅れます。", "options": [{"text": "たるを作り直し、食べ物も積み直す。出港が遅れても構わない", "a": -2, "b": -1}, {"text": "王の急ぎに合わせる。今ある物を積んで、5月に出る", "a": 1, "b": 2}]}, {"year": "1588年6月 コルーニャ", "situation": "出てすぐ、嵐に会いました。艦隊はばらばらになり、スペイン北のコルーニャに集まり直しています。水はもうくさり、病人が出ています。あなたは机に向かい、王への手紙を考えています。この計画は無理です、和平を考えてください、と書くかどうか。", "options": [{"text": "王に「中止か和平を」と書き、返事が来るまで港を動かない", "a": -2, "b": -1}, {"text": "手紙は書かない。集め直して、すぐに海峡へ向かう", "a": 2, "b": 2}]}, {"year": "1588年7月30日 プリマス沖", "situation": "イギリスが見えました。イギリスの艦隊は、まだプリマスの港の中にいます。風はこちらに向いています。船長たちの何人かが言いました。今なら港に突っ込んで、敵をたたけます、と。ただ王の命令は、戦いを求めず、東へ進んで陸軍と合流しろ、です。", "options": [{"text": "今しかない。プリマスに突っ込み、港の中の敵艦隊を襲う", "a": 2, "b": -2}, {"text": "王の命令どおり。戦いは避け、三日月の形を保って東へ進む", "a": -1, "b": 2}]}, {"year": "1588年8月4日 ワイト島沖", "situation": "一週間、イギリスの船が後ろから撃ってきます。遠すぎて、ほとんど当たりません。失った船は事故の2隻だけ。目の前にワイト島があります。島と本土の間の海は、大きな船が止まれる場所です。ここを取れば、陸軍の知らせを安全に待てます。ただ、王の指示ではカレーへ急ぐことになっています。", "options": [{"text": "ワイト島の海に入り、そこを押さえて陸軍の準備を待つ", "a": 1, "b": -2}, {"text": "予定どおり。島には寄らず、カレーへ向かう", "a": -1, "b": 2}]}, {"year": "1588年8月6日 カレー沖", "situation": "カレーの沖まで来ました。ここから陸軍のいる海岸まで、あと少しです。ところがパルマ公からの返事は、準備にあと何日かかかる、でした。大きな船が入れる港は、味方側にありません。いかりを下ろせば、この開けた海で止まったまま待つことになります。", "options": [{"text": "いかりを下ろし、艦隊をまとめてパルマ公の返事を待つ", "a": -2, "b": 1}, {"text": "止まらない。陸軍の港ダンケルクの沖まで寄せて、パルマ公を急がせる", "a": 2, "b": -1}]}, {"year": "1588年8月7日 夜 火船", "situation": "真夜中です。風上から、燃える船が8隻、こちらへ流れてきます。いかりを上げるには、時間がかかりすぎます。綱を切れば、すぐ動けます。でも切った船は、もういかりを持っていません。小さな船を出して火船を押し返す、という手もあります。決めるまで、数分です。", "options": [{"text": "綱を切らせ、全部の船を沖へ散らす。隊形はあとで作り直す", "a": -2, "b": 0}, {"text": "小舟で火船を押し返し、いかりと三日月の形を守り抜く", "a": 2, "b": -1}]}, {"year": "1588年8月9日 北海の入口", "situation": "グラヴリーヌ沖で、近くから何度も撃たれました。船は穴だらけ、死者はおよそ600人。それでも艦隊のほとんどは、まだ浮いています。ただ風が変わり、船は北へ流されています。海峡へ戻れば、イギリスの船が待っています。北へ行けば、スコットランドとアイルランドを回る、とんでもない遠回りです。水はもう足りません。", "options": [{"text": "風が変わるのを待ち、もう一度カレーへ戻って合流をねらう", "a": 2, "b": 2}, {"text": "合流はあきらめる。北を回って、スペインへ帰る", "a": -2, "b": -1}]}], "endings": {"慎従": {"tag": "ENDING 1", "name": "北を回って帰った艦隊", "body": "これが、史実にいちばん近い道です。あなたは王の計画を守り、待ち、火船で散らされ、北へ流されました。スコットランドの北を回り、アイルランドの西で嵐に会います。いかりを切った船は止まれず、20隻以上が岩に当たりました。帰れなかった船は3分の1から半分。死者は1万人を超えたと言われます。あなたは9月、病んだ体でスペインに着きました。王は、あなたを責めなかったと伝わります。", "image_prompt": "A battered Spanish galleon with torn sails and no anchor driven onto black rocks beneath towering Irish cliffs in a violent September storm, huge grey waves, wreckage and barrels in the surf, 19th century academic marine history painting, oil on canvas, dark dramatic light, no text, no letters, no words, no writing, no signage", "image": "img/慎従.jpg"}, "攻従": {"tag": "ENDING 2", "name": "海峡に沈んだ艦隊", "body": "あなたは急いで出て、火船の前でも動かず、撃たれたあとも王の計画にしがみつきました。ところが陸軍は来ません。港もありません。海峡の中で待つ艦隊に、速いイギリスの船が何度も近づき、撃っては離れます。乗り移ろうとしても、つかまりません。史実では北の嵐で消えた船が、この道では海峡で沈みます。数字は、もっと大きくなったかもしれません。それでもあなたは、命令どおりでした。", "image_prompt": "A tall Spanish galleon listing and sinking in the grey English Channel while low sleek English warships circle and fire broadsides, thick gun smoke, splintered masts falling, overcast sky, 19th century academic marine history painting, oil on canvas, cinematic light, no text, no letters, no words, no writing, no signage", "image": "img/攻従.jpg"}, "攻独": {"tag": "ENDING 3", "name": "海峡の主になったが、渡れない", "body": "あなたは王の命令を破り、港の敵を襲い、ワイト島を押さえました。うまくいけば、しばらく海峡はあなたのものです。ところが、計画の穴は消えません。陸軍のいる海岸は浅く、オランダの小船が見張り、大きな船が入れる港はないままです。水と食べ物は、日ごとに減ります。勝ったのに渡れない。そのまま秋が来れば、島を出て帰るしかありません。王は、命令を破ったあなたをどう見たでしょう。", "image_prompt": "A great Spanish fleet anchored in the sheltered waters between the Isle of Wight and the English mainland at sunset, crescent formation intact, red cross sails, soldiers idle on the decks, green hills on shore, 19th century academic marine history painting, oil on canvas, golden melancholic light, no text, no letters, no words, no writing, no signage", "image": "img/攻独.jpg"}, "慎独": {"tag": "ENDING 4", "name": "消えなかった130隻", "body": "あなたは何度も手紙を書き、たるを作り直し、コルーニャで止まりました。王は怒ります。でも、この夏、艦隊はイギリスへ行きませんでした。火船も、グラヴリーヌも、アイルランドの岩もありません。1万人は、死んでいません。ただ、それだけです。港に並んだ130隻は、来年また出ろと言われるかもしれません。歴史の本には、あなたの名前はほとんど残らなかったでしょう。", "image_prompt": "Dozens of Spanish galleons riding quietly at anchor in the harbor of A Coruna under a calm evening sky, sails furled, a nobleman in a black doublet and white ruff watching alone from a stone quay, wooden barrels stacked beside him, 19th century academic history painting, oil on canvas, still muted light, no text, no letters, no words, no writing, no signage", "image": "img/慎独.jpg"}}};
+let i = 0;
+const score = [0, 0];
+const picks = [];
+
+const sceneEl = document.getElementById('scene');
+const logEl = document.getElementById('log');
+
+function render() {
+  const s = DATA.scenes[i];
+  document.getElementById('pnum').textContent = i + 1;
+  document.getElementById('pbar').style.width = (i / DATA.scenes.length * 100) + '%';
+  sceneEl.innerHTML = `<p class="year">${s.year}</p><p class="sit">${s.situation}</p>`;
+  const box = document.createElement('div');
+  box.className = 'opts';
+  s.options.forEach(o => {
+    const b = document.createElement('button');
+    b.className = 'opt';
+    b.textContent = o.text;
+    b.onclick = () => choose(o);
+    box.appendChild(b);
+  });
+  sceneEl.appendChild(box);
+}
+
+function choose(o) {
+  score[0] += o.a || 0;
+  score[1] += o.b || 0;
+  picks.push(o.text);
+  const d = document.createElement('div');
+  d.className = 'logi';
+  d.innerHTML = `<b>${DATA.scenes[i].year}</b> ${o.text}`;
+  logEl.appendChild(d);
+  i++;
+  if (i < DATA.scenes.length) { render(); scrollTo(0, 0); }
+  else finish();
+}
+
+function finish() {
+  // 2軸の符号で4象限 → 4つの結末
+  const key = (score[0] >= 0 ? DATA.axes[0].pos : DATA.axes[0].neg)
+            + (score[1] >= 0 ? DATA.axes[1].pos : DATA.axes[1].neg);
+  const e = DATA.endings[key] || DATA.endings[Object.keys(DATA.endings)[0]];
+  document.getElementById('eimg').src = e.image;
+  document.getElementById('eimg').alt = e.name;
+  document.getElementById('etag').textContent = e.tag || 'ENDING';
+  document.getElementById('ename').textContent = e.name;
+  document.getElementById('ebody').textContent = e.body;
+  document.getElementById('fact').innerHTML =
+    `<b>史実では</b>${DATA.history}`;
+  const txt = encodeURIComponent(
+    `${DATA.title}\n私の結末は「${e.name}」でした。\n`);
+  document.getElementById('tw').href =
+    `https://twitter.com/intent/tweet?text=${txt}&url=${encodeURIComponent(location.href)}`;
+  document.getElementById('sim').style.display = 'none';
+  document.getElementById('end').classList.add('on');
+  scrollTo(0, 0);
+}
+
+document.getElementById('again').onclick = () => location.reload();
+render();
+</script>
+</body>
+</html>
