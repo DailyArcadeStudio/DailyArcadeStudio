@@ -1,0 +1,177 @@
+{
+  "title": "あなたの「ごはん、出す?」診断",
+  "lead": "友達が家にいて、夕食の時間。あなたは声をかける人ですか。それとも、その家にまかせる人ですか。",
+  "story": "子どものころ、友達の家で遊んでいて夕食の時間になったら、どうしていましたか。日本なら「食べていく?」と聞かれることが多いですよね。スウェーデンでは、かつて、ちがったそうです。友達の家族だけで食卓につき、その子は部屋で待つ。2022年にこの話が海外の掲示板から広まり、「スウェーデンゲート」と呼ばれる騒ぎになりました。理由はふたつあると言われています。ひとつは、友達の親が家で用意している夕食を、むだにしないため。もうひとつは、相手の家に借りを作らないため。ケチなのではありません。招かれて行けば、ごちそうは出ます。コーヒーとお菓子でもてなす「フィーカ」も大好きです。日本では客の側が遠慮し、スウェーデンでは家の側が遠慮する。向きはちがっても、相手の負担になりたくない気持ちは同じです。さて、あなたの気づかいは、どちらの向きでしょうか。",
+  "axes": [
+    {
+      "label": "ごはんを出すか、その家にまかせるか",
+      "pos": "S",
+      "neg": "L"
+    },
+    {
+      "label": "お返しし合うか、貸し借りを作らないか",
+      "pos": "G",
+      "neg": "E"
+    },
+    {
+      "label": "予定して会うか、ふらっと会うか",
+      "pos": "P",
+      "neg": "F"
+    },
+    {
+      "label": "人に頼るか、自分でやるか",
+      "pos": "T",
+      "neg": "O"
+    }
+  ],
+  "questions": [
+    {
+      "text": "友達が家にいて夕食の時間になったら、一緒に食べようと声をかける。",
+      "axis": 0,
+      "sign": 1
+    },
+    {
+      "text": "相手の家でも用意しているだろうと思って、ごはんはすすめない。",
+      "axis": 0,
+      "sign": -1
+    },
+    {
+      "text": "人が来たら、とりあえず何か出さなきゃと思う。",
+      "axis": 0,
+      "sign": 1
+    },
+    {
+      "text": "ごちそうになったら、次は自分が返したい。",
+      "axis": 1,
+      "sign": 1
+    },
+    {
+      "text": "借りを作りたくないので、おごられるのは少し苦手。",
+      "axis": 1,
+      "sign": -1
+    },
+    {
+      "text": "おごったりおごられたりの関係は、楽しい。",
+      "axis": 1,
+      "sign": 1
+    },
+    {
+      "text": "人の家に行くときは、前もって日にちを決めたい。",
+      "axis": 2,
+      "sign": 1
+    },
+    {
+      "text": "近くまで来たから、と連絡なしで寄ることがある。",
+      "axis": 2,
+      "sign": -1
+    },
+    {
+      "text": "困ったときは、まわりに助けを頼める。",
+      "axis": 3,
+      "sign": 1
+    },
+    {
+      "text": "自分のことは、自分で何とかしたい。",
+      "axis": 3,
+      "sign": -1
+    }
+  ],
+  "results": {
+    "SGPT": {
+      "name": "日本の「食べていく?」型",
+      "body": "ごはんは出すし、もらったらお返しもする。会う日はちゃんと決めて、困ったら人にも頼れます。いちばん日本の家らしいタイプです。相手が遠慮しても、もう一度すすめてしまうかもしれません。相手の「いえいえ」は、本気のこともあります。",
+      "image_prompt": "photorealistic scene of a Japanese mother smiling and offering an extra bowl of rice to a child's friend at a low wooden dining table, tatami room, warm evening light, steaming dishes, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/SGPT.jpg"
+    },
+    "SGPO": {
+      "name": "フランスの晩ごはん招待型",
+      "body": "招いた人には、しっかりごちそうを出す。呼ばれたら次は自分が呼ぶ。予定はきちんと立てて、準備は自分でやりきります。もてなしに手を抜かないタイプです。ただ、がんばりすぎて疲れることも。たまには手料理でなくても大丈夫です。",
+      "image_prompt": "photorealistic scene of a French host placing a roast dish on a candlelit dinner table in a Parisian apartment, wine glasses, guests seated, warm golden light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/SGPO.jpg"
+    },
+    "SGFT": {
+      "name": "南イタリアの大家族型",
+      "body": "来た人には出す。おごり合いは楽しい。予定なしで人が集まり、困ったらみんなで助け合う。にぎやかで、あたたかいタイプです。人が多いほど元気になります。静かにひとりでいたい相手には、少しだけ間をあけてあげると喜ばれます。",
+      "image_prompt": "photorealistic scene of a large Italian family and friends crowded around a long outdoor table under a vine pergola in a southern Italian village, pasta and bread being passed, laughter, golden afternoon light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/SGFT.jpg"
+    },
+    "SGFO": {
+      "name": "スペインのバル型",
+      "body": "人が来たら何か出すし、一杯おごれば次はあちらが出す。約束はゆるく、ふらっと集まる。でも自分の身のまわりは自分でやります。軽やかに人とつながるタイプです。深く頼るのは少し苦手かもしれません。たまには重い相談もしてみてください。",
+      "image_prompt": "photorealistic scene of friends standing at a lively Spanish tapas bar counter, small plates and glasses of beer, bartender sliding a plate across, evening light through the doorway, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/SGFO.jpg"
+    },
+    "SEPT": {
+      "name": "アメリカの持ち寄りパーティー型",
+      "body": "人が来るならごちそうを用意する。でも貸し借りにはしたくないので、みんなで持ち寄るのが好き。日にちを決めて、準備は手分けします。負担をうまく分けるタイプです。相手が何も持ってこなくても、気にしないでいられると、もっと楽になります。",
+      "image_prompt": "photorealistic scene of an American backyard potluck, guests carrying casserole dishes to a long picnic table, string lights, suburban house in the background, early evening, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/SEPT.jpg"
+    },
+    "SEPO": {
+      "name": "スウェーデンのフィーカ型",
+      "body": "招いた人には、コーヒーとお菓子でしっかりもてなす。でも借りは作らない、作らせない。会う日は決めて、自分のことは自分でやります。きちんとした、静かなやさしさのタイプです。予定にない客には少し戸惑うかもしれません。たまには思いつきの一杯もいいものです。",
+      "image_prompt": "photorealistic scene of a Swedish fika, cinnamon buns and coffee cups on a wooden table, two friends talking in a cozy cafe with candles and soft window light, minimalist Scandinavian interior, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/SEPO.jpg"
+    },
+    "SEFT": {
+      "name": "トルコのチャイ型",
+      "body": "来た人には、まずお茶。見返りは求めない。約束がなくても迎え入れて、困ったときはお互いさま。開けっぱなしの玄関のようなタイプです。相手が受け取るのをためらっても、気にしません。ときどき、相手の予定も聞いてあげるとちょうどいいです。",
+      "image_prompt": "photorealistic scene of a Turkish host pouring tea into small tulip-shaped glasses for guests seated on cushions in a sunlit courtyard, patterned carpets, warm hospitality, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/SEFT.jpg"
+    },
+    "SEFO": {
+      "name": "インドの「お客さまは神さま」型",
+      "body": "突然の客でも、ある物で精いっぱいもてなす。お返しはいらない。でも自分のことは、人に頼らず自分でやります。与えるのは得意で、受け取るのは少し苦手なタイプです。相手もあなたに何かしたいと思っています。たまには受け取ってあげてください。",
+      "image_prompt": "photorealistic scene of an Indian family welcoming an unexpected guest at their doorway, a woman holding a tray of chai and sweets, colorful home interior, warm afternoon light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/SEFO.jpg"
+    },
+    "LGPT": {
+      "name": "ドイツの誕生日型",
+      "body": "ふだんは家の夕食を人にすすめない。でも誕生日には自分がみんなにふるまう。呼んだり呼ばれたりは、しっかりお返しする。予定は前もって決め、困ったら人に頼れます。けじめのあるタイプです。決まりのない日も、少し楽しめると幅が広がります。",
+      "image_prompt": "photorealistic scene of a German birthday coffee gathering, a host cutting a large cake at a tidy dining table, guests with coffee cups, bright apartment with tall windows, afternoon light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/LGPT.jpg"
+    },
+    "LGPO": {
+      "name": "スイスの時計型",
+      "body": "その家のことは、その家にまかせる。お返しはきちんと同じだけ返す。予定は正確に決めて、自分のことは自分でやります。きっちり、ぶれないタイプです。相手に負担をかけないのが上手です。急な誘いも、たまには乗ってみてください。",
+      "image_prompt": "photorealistic scene of a neatly set breakfast table in a Swiss chalet, mountain view through the window, a person precisely arranging cups, wooden interior, crisp morning light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/LGPO.jpg"
+    },
+    "LGFT": {
+      "name": "イギリスのパブ型",
+      "body": "家では、夕食まで人にはすすめない。でもパブに行けば、一杯おごり合う。約束はゆるく、困ったら友達に頼ります。家と外で線を引くタイプです。家の中はしっかり自分の場所。外では気前がいい。そのバランスが心地よい人です。",
+      "image_prompt": "photorealistic scene of friends laughing at a cozy British pub, pints of ale on a worn wooden bar, warm lamplight, rainy street visible through the window, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/LGFT.jpg"
+    },
+    "LGFO": {
+      "name": "ニューヨークのルームメイト型",
+      "body": "冷蔵庫は別々。ごはんはそれぞれ。でも外ではおごったりおごられたり。約束なしで会うのは平気で、自分のことは自分でやります。近いけれど、へだたりも守るタイプです。相手が本当に困っているときは、家のドアも少し開けてあげてください。",
+      "image_prompt": "photorealistic scene of two roommates in a small New York apartment kitchen, one eating takeout at the counter, the other grabbing coffee, city view through the window, morning light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/LGFO.jpg"
+    },
+    "LEPT": {
+      "name": "オランダの手帳型",
+      "body": "夕食は家族のもの。割り勘が基本で、貸し借りは作らない。会うなら手帳に書いてから。でも困ったときは、はっきり助けを頼めます。さっぱりしていて分かりやすいタイプです。相手には、そのはっきりさが少し強く見えることも。ひとこと添えると、ちょうどいいです。",
+      "image_prompt": "photorealistic scene of two Dutch friends checking a paper planner together at a cafe table beside a canal, bicycles parked outside, brick houses, soft overcast light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/LEPT.jpg"
+    },
+    "LEPO": {
+      "name": "スウェーデンの「部屋で待っててね」型",
+      "body": "友達の家の夕食は、その家のこと。だから口を出さない。借りは作らないし、作らせない。会うなら予定を立てて、自分のことは自分でやります。動画に出てきた、かつてのスウェーデンの家そのものです。冷たいのではなく、相手の負担になりたくないだけ。ただ、向きのちがう気づかいの人には、伝わらないこともあります。",
+      "image_prompt": "photorealistic scene of a child sitting quietly on a bed in a cozy Scandinavian bedroom, door slightly open, warm light from a hallway where a family dinner is implied, wooden floor, soft evening light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/LEPO.jpg"
+    },
+    "LEFT": {
+      "name": "フィンランドのサウナ型",
+      "body": "ごはんは家それぞれ。貸し借りは作らない。でも、ふらっと一緒にサウナに入る。無言でも平気で、本当に困ったら頼れます。言葉が少なくても、つながれるタイプです。何も出さないのは、相手を信じているから。それが伝わる相手を大事にしてください。",
+      "image_prompt": "photorealistic scene of a wooden lakeside sauna in Finland at dusk, two people sitting quietly on the dock after a sauna, steam rising, birch forest, calm water, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/LEFT.jpg"
+    },
+    "LEFO": {
+      "name": "ノルウェーの山小屋型",
+      "body": "その家のことは、その家に。借りは作らない。約束はゆるく、でも自分のことは全部自分でやります。ひとりの時間を大事にするタイプです。人に負担をかけないのが得意です。ただ、頼らなすぎると、相手がさみしく思うこともあります。",
+      "image_prompt": "photorealistic scene of a small red wooden cabin alone on a Norwegian mountainside, a hiker with a backpack walking toward it, fjord in the distance, cool evening light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/LEFO.jpg"
+    }
+  }
+}
