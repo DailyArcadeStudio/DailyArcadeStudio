@@ -1,0 +1,216 @@
+{
+  "id": "0016_bull_run_alley",
+  "title": "牛が来る前に、柵の隙間へ",
+  "lang": "python",
+  "voice": "am_adam",
+  "scenes": [
+    {
+      "kind": "hook",
+      "clip": "stampede",
+      "narration": "パン屋の裏口が、牛の通り道の真ん中にあります。"
+    },
+    {
+      "kind": "image",
+      "prompt": "a narrow old stone street in Pamplona at dawn, wooden barricades bolted across the street from wall to wall, a small bakery door with flour dust on the step, warm early light, empty street, cinematic photograph, highly detailed, shallow depth of field",
+      "narration": "スペインのパンプローナに、細い石畳の路地があります。その途中に、小さなパン屋があります。店主はマヌエルさんといいます。毎年七月の朝、この路地は牛が走る道になります。"
+    },
+    {
+      "kind": "image",
+      "prompt": "close view of a heavy wooden barricade across a narrow street, thick timber planks between metal posts, one narrow vertical gap left open between two sections, morning light, worn stone walls, realistic cinematic photograph, highly detailed",
+      "narration": "牛が来る朝は、路地に木の柵が並びます。見てください。柵には、一か所だけ隙間があります。そこ以外は通れません。"
+    },
+    {
+      "kind": "image",
+      "prompt": "a man in a white shirt and red sash carrying a wooden crate of bread, standing beside a barricade in a narrow Pamplona street at dawn, looking back over his shoulder down the empty street, cinematic photograph, natural morning light, highly detailed",
+      "narration": "マヌエルさんは、朝のパンを配達所まで運びます。柵を動かす許可はもらえませんでした。隙間を通ってください、とだけ言われました。そうなんです。だから今日も、隙間を探して横に跳びます。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "runner",
+      "kicker": "走る人",
+      "title": "マヌエル",
+      "bullets": [
+        "止まれない。**路地を走り続ける**",
+        "操作はボタン1つだけ",
+        "**押した長さ**が、横に動く距離になる"
+      ],
+      "narration": "これがマヌエルさんです。止まることはできません。操作はボタン1つだけです。ここが面白いところです。押した長さが、そのまま横に動く距離になります。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "fence",
+      "kicker": "障害",
+      "title": "柵",
+      "bullets": [
+        "路地を**端から端まで**ふさぐ",
+        "ジャンプはできない。**横にずれるだけ**",
+        "ぶつかったら、そこで終わり"
+      ],
+      "narration": "柵は路地を端から端までふさぎます。ジャンプはありません。横にずれる、それだけです。ぶつかったら、その場で終わりです。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "gap",
+      "kicker": "目標",
+      "title": "隙間",
+      "bullets": [
+        "柵に1か所だけ空いている場所",
+        "画面下の**緑の帯**が、その位置",
+        "**帯の中で指を離す**。それが全部"
+      ],
+      "narration": "柵には隙間が1か所あります。画面の下に緑の帯が出ます。あれが隙間の位置です。押して、伸ばして、帯の中で指を離す。ゲームの中身は、本当にこれだけです。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "bull",
+      "kicker": "後ろから",
+      "title": "牛",
+      "bullets": [
+        "**後ろから**ずっとついてくる",
+        "隙間を抜けるたびに、少しだけ離れる",
+        "もたつくと、距離が縮む"
+      ],
+      "narration": "後ろからは牛が来ます。見てください、けっこう近いです。隙間をうまく抜けると、少しだけ距離が空きます。でも、もたついた分はそのまま詰められます。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "herd",
+      "kicker": "後ろから",
+      "title": "群れ",
+      "bullets": [
+        "1頭ではない。**横に並んで来る**",
+        "路地の幅いっぱいに広がる",
+        "追いつかれたら、そこで終わり"
+      ],
+      "narration": "しかも、1頭ではありません。横に並んで来ます。路地の幅いっぱいです。追いつかれたら終わりなので、振り返っている暇はありません。"
+    },
+    {
+      "kind": "events",
+      "clip": "events",
+      "kicker": "路地の都合",
+      "title": "静かなままでは終わらない",
+      "bullets": [
+        "**よこながれ** — 隙間が横にすべる",
+        "**すなけむり** — 緑の帯が消える",
+        "**とっしん** — 牛が一気に詰めてくる",
+        "**にまいざく** — 柵が2枚続けて来る"
+      ],
+      "narration": "路地は静かなままでは終わりません。まず、隙間が横にすべり出します。狙った場所が、押している間に動きます。そして砂けむり。緑の帯が消えます。位置は自分で覚えるしかありません。牛が一気に詰めてくることもあります。極めつけが、柵が2枚続けて来るやつです。1枚目を抜けた直後に、もう溜め直す時間がありません。"
+    },
+    {
+      "kind": "death",
+      "clip": "death",
+      "kicker": "終わり方",
+      "title": "終わりはいつも同じ",
+      "bullets": [
+        "時間が**すっと止まる**",
+        "カメラが寄る",
+        "走った距離が出る"
+      ],
+      "narration": "終わり方はいつも同じです。時間がすっと止まって、カメラが寄って、走った距離が出ます。マヌエルさんは、毎年この路地を走り抜けてパンを届けています。あなたは、たぶん柵の3枚目あたりです。"
+    },
+    {
+      "kind": "outro",
+      "title": "概要欄のリンクから遊べます",
+      "subtitle": "チャンネル登録で毎日1本",
+      "narration": "今すぐ遊べます。リンクは概要欄です。チャンネル登録もお願いします。明日も新しいゲームを出します。"
+    }
+  ],
+  "slug": "bull-run-alley",
+  "channel": "Daily Arcade Studio",
+  "video_title": "パン屋の裏口が、牛の通り道の真ん中にあります",
+  "events": [
+    "drift",
+    "dust",
+    "stampede",
+    "narrow",
+    "double"
+  ],
+  "short": [
+    {
+      "mark": "stampede",
+      "lead": -0.5,
+      "dur": 8.0,
+      "headline": "牛が詰めてくる"
+    },
+    {
+      "mark": "double",
+      "lead": -0.5,
+      "dur": 8.0,
+      "headline": "柵が2枚続く"
+    },
+    {
+      "mark": "dust",
+      "lead": -0.5,
+      "dur": 7.0,
+      "headline": "帯が消える"
+    },
+    {
+      "mark": "drift",
+      "lead": -0.5,
+      "dur": 7.0,
+      "headline": "隙間が動く"
+    },
+    {
+      "mark": "death",
+      "lead": -2.0,
+      "dur": 9.0,
+      "headline": "ボタンは1つだけ"
+    }
+  ],
+  "thumb": {
+    "hook": "隙間は1か所",
+    "sub": "ボタン1つ。後ろは牛。ブラウザで無料。",
+    "frame_mark": "stampede",
+    "frame_lead": 1.0
+  },
+  "short_v2": {
+    "cuts": [
+      {
+        "kind": "clip",
+        "mark": "stampede",
+        "lead": -0.5,
+        "dur": 4.5,
+        "headline": "今日のゲーム",
+        "narration": "今日のゲームです。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "runner",
+        "dur": 5.0,
+        "headline": "BULL RUN ALLEY",
+        "narration": "牛が走る路地で、パンを配達する人です。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "gap",
+        "dur": 5.0,
+        "headline": "隙間",
+        "narration": "柵の隙間は1か所です。緑の帯で指を離します。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "herd",
+        "dur": 5.0,
+        "headline": "牛",
+        "narration": "後ろは牛です。もたつくと、すぐ詰められます。"
+      },
+      {
+        "kind": "clip",
+        "mark": "death",
+        "lead": -2.0,
+        "dur": 5.5,
+        "headline": "",
+        "narration": "ぶつかったら、そこで終わりです。"
+      },
+      {
+        "kind": "clip",
+        "mark": "run2",
+        "lead": 1.0,
+        "dur": 4.5,
+        "cta": "概要欄のリンクから遊べます",
+        "narration": "ブラウザで無料で遊べます。リンクは概要欄です。"
+      }
+    ]
+  }
+}
