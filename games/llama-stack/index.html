@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ラマ・スタック</title>
+<style>
+  html,body{margin:0;padding:0;overflow:hidden;background:#0a0a12;font-family:'Helvetica Neue',Arial,sans-serif;}
+  #ui{position:fixed;top:10px;left:0;right:0;text-align:center;color:#fff;z-index:10;pointer-events:none;}
+  #score{font-size:clamp(24px,5.6vw,34px);font-weight:800;text-shadow:0 2px 8px #000;}
+  #msg{font-size:clamp(14px,3.6vw,20px);margin-top:6px;opacity:.9;text-shadow:0 2px 6px #000;}
+  #title{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:rgba(6,6,14,.72);z-index:20;color:#fff;transition:opacity .4s;padding:0 16px;box-sizing:border-box;}
+  #title h1{font-size:clamp(30px,9vw,60px);margin:0 0 8px;letter-spacing:2px;text-shadow:0 4px 18px #f0a33c;text-align:center;}
+  #title p{font-size:clamp(13px,3.4vw,19px);opacity:.85;margin:4px 0;text-align:center;line-height:1.5;}
+  #title .btn{margin-top:26px;padding:14px 44px;font-size:clamp(18px,5vw,22px);font-weight:700;color:#fff;
+    background:linear-gradient(180deg,#f0a33c,#b96d16);border:none;border-radius:12px;cursor:pointer;
+    box-shadow:0 6px 24px rgba(240,163,60,.5);}
+  #title .btn:hover{transform:scale(1.05);}
+  .hidden{opacity:0;pointer-events:none;}
+  #back{position:fixed;top:14px;left:14px;z-index:30;text-decoration:none;
+    background:rgba(12,16,26,.72);color:#fff;font:600 clamp(13px,3.4vw,15px)/1 'Helvetica Neue',Arial,sans-serif;
+    padding:0 14px;height:44px;display:flex;align-items:center;border-radius:12px;}
+  #back:hover{background:rgba(30,38,56,.9);}
+  #mute{position:fixed;top:14px;right:14px;z-index:30;border:none;cursor:pointer;
+    background:rgba(12,16,26,.72);color:#fff;font-size:20px;line-height:1;
+    width:44px;height:44px;border-radius:12px;}
+  #mute:hover{background:rgba(30,38,56,.9);}
+  /* show the hint that matches the device */
+  .tc{display:none;}
+  @media (pointer:coarse){ .kb{display:none;} .tc{display:block;} }
+  /* a finger-sized START button on touch devices */
+  @media (pointer:coarse){ #title .btn{padding:18px 52px;} }
+
+  /* --- event banner: slams into the middle of the screen --- */
+  #banner{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    z-index:15;pointer-events:none;opacity:0;}
+  #banner .b{font-size:clamp(26px,7.4vw,64px);font-weight:900;letter-spacing:.06em;color:#fff;
+    padding:10px 4vw;max-width:94vw;text-align:center;transform:scale(2.4);opacity:0;
+    text-shadow:0 0 26px currentColor, 0 6px 20px #000;
+    border-top:5px solid currentColor;border-bottom:5px solid currentColor;}
+  #banner.go .b{animation:slam .62s cubic-bezier(.12,.85,.2,1) forwards;}
+  @keyframes slam{
+    0%  {transform:scale(2.4) rotate(-4deg);opacity:0;}
+    22% {transform:scale(1)   rotate(0deg); opacity:1;}
+    70% {transform:scale(1)   rotate(0deg); opacity:1;}
+    100%{transform:scale(1.12);opacity:0;}
+  }
+
+  /* --- full-screen colour flashes --- */
+  #flash{position:fixed;inset:0;z-index:14;pointer-events:none;opacity:0;background:#fff;}
+  #vignette{position:fixed;inset:0;z-index:13;pointer-events:none;opacity:0;
+    background:radial-gradient(ellipse at center,rgba(0,0,0,0) 32%,rgba(120,0,10,.85) 100%);}
+
+  /* --- K.O. screen --- */
+  #ko{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    z-index:22;pointer-events:none;opacity:0;color:#fff;transition:opacity .3s;}
+  #ko.on{opacity:1;}
+  #ko .koText{font-size:clamp(84px,24vw,180px);font-weight:900;letter-spacing:10px;color:#fff;
+    text-shadow:0 0 40px #f0a33c,0 0 90px #e8642a,0 10px 30px #000;
+    transform:scale(3);opacity:0;}
+  #ko.on .koText{animation:koSlam .8s cubic-bezier(.1,.9,.2,1) forwards;}
+  @keyframes koSlam{
+    0%  {transform:scale(3) rotate(-8deg);opacity:0;}
+    30% {transform:scale(1) rotate(0deg);opacity:1;}
+    36% {transform:scale(1.06);}
+    100%{transform:scale(1);opacity:1;}
+  }
+  #ko .finalLabel{font-size:clamp(15px,4vw,22px);letter-spacing:4px;opacity:0;margin-top:6px;text-shadow:0 2px 8px #000;}
+  #ko .finalScore{font-size:clamp(46px,13vw,80px);font-weight:800;opacity:0;text-shadow:0 4px 20px #000;}
+  #ko.on .finalLabel{animation:fadeUp .5s .75s forwards;}
+  #ko.on .finalScore{animation:fadeUp .5s .9s forwards;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+
+  /* --- help (?) --- */
+  #helpBtn{position:fixed;top:14px;right:66px;z-index:30;border:none;cursor:pointer;
+    background:rgba(12,16,26,.72);color:#fff;font:700 20px/1 'Helvetica Neue',Arial,sans-serif;
+    width:44px;height:44px;border-radius:12px;}
+  #helpBtn:hover{background:rgba(30,38,56,.9);}
+  #help{position:fixed;inset:0;z-index:40;display:none;align-items:center;
+    justify-content:center;background:rgba(4,6,12,.82);padding:20px;}
+  #help.on{display:flex;}
+  #help .box{background:#111726;border:1px solid #2b3550;border-radius:18px;
+    max-width:560px;width:100%;max-height:86vh;overflow:auto;padding:26px 28px 22px;
+    color:#e6edf3;font-family:'Helvetica Neue',Arial,sans-serif;}
+  #help h2{margin:0 0 4px;font-size:clamp(20px,5.4vw,26px);}
+  #help .sub{color:#8b949e;font-size:clamp(12px,3.2vw,14px);margin:0 0 18px;}
+  #help h3{font-size:clamp(13px,3.6vw,15px);color:#ffd23b;margin:18px 0 6px;letter-spacing:.04em;}
+  #help ul{margin:0;padding-left:20px;}
+  #help li{font-size:clamp(13px,3.6vw,15px);line-height:1.7;margin:3px 0;}
+  #help b{color:#ffd23b;font-weight:700;}
+  #help .close{margin-top:20px;width:100%;padding:12px;border:none;border-radius:10px;
+    background:#2b3550;color:#fff;font-size:16px;font-weight:700;cursor:pointer;}
+  #help .close:hover{background:#3a4668;}
+</style>
+</head>
+<body>
+<div id="ui"><div id="score">0</div><div id="msg"></div></div>
+<button id="helpBtn" title="あそびかた">?</button>
+<div id="help"><div class="box">
+  <h2>ラマ・スタック</h2>
+  <p class="sub">荷物を左右に振り分ける。かたむけたら終わり。ブラウザで無料。</p>
+    <h3>ラマ</h3>
+    <ul><li>背中に <b>左右ふたつ</b> のかごを積んでいる</li><li>重さの差が かたむきになる</li><li>かたむきが 振り切れたら <b>荷崩れ</b></li></ul>
+    <h3>荷物</h3>
+    <ul><li>上から <b>ひとつずつ</b> 落ちてくる</li><li>着くまでに <b>左か右</b> を選ぶ</li><li>選ばずに落とすと そのまま <b>荷崩れ</b></li></ul>
+    <h3>おもり</h3>
+    <ul><li>色が濃いほど <b>重い</b>（大きさでも分かる）</li><li>軽い荷物で 差を埋めなおせる</li><li>先の荷物は <b>上に見えている</b>。読んで振り分ける</li></ul>
+    <h3>つり合い</h3>
+    <ul><li>左右の差が 小さいほど <b>スコアが伸びる</b></li><li>まっすぐ保つと <b>連続ボーナス</b></li><li>迷った時間は 荷物が待ってくれない</li></ul>
+    <h3>山道</h3>
+    <ul><li>進むほど 荷物が <b>速く落ちる</b></li><li>突風・こぶ・積み替え が 邪魔をする</li><li>それでも やることは <b>左か右</b> だけ</li></ul>
+  <button class="close">とじる</button>
+</div></div>
+<a id="back" href="../../" title="ゲーム一覧">‹ ゲーム一覧</a>
+<button id="mute" title="音のオン・オフ">🔊</button>
+<div id="vignette"></div>
+<div id="flash"></div>
+<div id="banner"><div class="b"></div></div>
+<div id="ko">
+  <div class="koText">K.O.</div>
+  <div class="finalLabel">さいしゅうスコア</div>
+  <div class="finalScore">0</div>
+</div>
+<div id="title">
+  <h1>ラマ・スタック</h1>
+  <p>荷物を 左右に振り分ける。かたむけたら 荷崩れ。</p>
+  <p class="kb">← → / A D : 左のかご / 右のかご に積む</p>
+  <p class="tc">画面の 左半分 / 右半分 をタップ（スワイプでも可）</p>
+  <button class="btn" id="startBtn">スタート</button>
+</div>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+// ---------- url flags (declared first: sound and camera both read them) ----------
+const QS = new URLSearchParams(location.search);
+const AUTO = QS.get('auto')==='1';
+const SHOWCASE_Q = QS.get('showcase');
+// Recording must produce clean footage, so every automated mode is muted.
+const REC = QS.get('rec')==='1';   // 録音モード: 音を鳴らして拾う
+const SILENT = (AUTO || !!SHOWCASE_Q || QS.get('mute')==='1') && !REC;
+// 録画・showcase では「?」と「ゲーム一覧」を出さない（動画の邪魔になる）
+const NOCHROME = AUTO || !!SHOWCASE_Q || QS.get('nochrome')==='1';
+
+// ---------- renderer / scene ----------
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.shadowMap.enabled = true;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const SKY = new THREE.Color(0x141024);
+scene.background = SKY.clone();
+scene.fog = new THREE.Fog(0x141024, 26, 70);
+
+const camera = new THREE.PerspectiveCamera(50, innerWidth/innerHeight, .1, 200);
+
+// Portrait and landscape both have to work. A phone held upright is far
+// narrower than 16:9, and with a fixed FOV the falling crate and both
+// panniers drop out of frame — so widen the vertical FOV as the screen
+// gets taller.
+const BASE_FOV = 50;
+function fitCamera(){
+  const aspect = innerWidth / innerHeight;
+  camera.aspect = aspect;
+  if(typeof SHOWCASE !== 'undefined' && SHOWCASE){
+    camera.fov = aspect < 1 ? 62 : 46;
+  } else {
+    // keep the horizontal field roughly constant across aspect ratios
+    const ref = 16/9;
+    camera.fov = aspect >= ref ? BASE_FOV
+      : Math.min(96, THREE.MathUtils.radToDeg(
+          2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(BASE_FOV)/2) * (ref/aspect))));
+  }
+  camera.__base = camera.fov;    // 「突風」がここへ戻ってくる
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+}
+addEventListener('resize', ()=>{ fitCamera(); layoutQueue(); });
+addEventListener('orientationchange', ()=>setTimeout(()=>{ fitCamera(); layoutQueue(); }, 120));
+
+// ---------- lights ----------
+const hemi = new THREE.HemisphereLight(0x9fb4ff, 0x40301f, 1.4);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xffe4b0, 2.6);
+sun.position.set(5, 14, 7); sun.castShadow = true;
+sun.shadow.camera.left=-14; sun.shadow.camera.right=14;
+sun.shadow.camera.top=14; sun.shadow.camera.bottom=-14;
+scene.add(sun);
+
+// ---------- mountain road ----------
+const ACCENT = 0xf0a33c;                    // 強いアクセント色（橙）
+const roadMat = new THREE.MeshStandardMaterial({color:0x4a4159, roughness:.95});
+const road = new THREE.Mesh(new THREE.PlaneGeometry(14, 600), roadMat);
+road.rotation.x = -Math.PI/2; road.position.z = -280; road.receiveShadow = true;
+scene.add(road);
+
+// 進んでいるのを見せるための路面マーカー（スクロールする）
+const markers = [];
+const markMat = new THREE.MeshBasicMaterial({color:ACCENT, transparent:true, opacity:.3});
+for(let i=0;i<40;i++){
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(9, .12), markMat);
+  m.rotation.x = -Math.PI/2; m.position.set(0, .012, -i*6);
+  scene.add(m); markers.push(m);
+}
+
+// 両側の岩：視差で速度が読めるようにする
+const rocks = [];
+const rockMat = new THREE.MeshStandardMaterial({color:0x574a63, roughness:1});
+for(let i=0;i<40;i++){
+  const sx = (i%2 ? 1 : -1) * (8 + Math.random()*4);
+  const r = new THREE.Mesh(new THREE.DodecahedronGeometry(.9 + Math.random()*1.6), rockMat);
+  r.position.set(sx, -.2 + Math.random()*.8, -i*13 - Math.random()*8);
+  r.rotation.set(Math.random()*3, Math.random()*3, Math.random()*3);
+  r.castShadow = true; scene.add(r); rocks.push(r);
+}
+// 遠景の山（板を並べただけ。背景として読めれば十分）
+const peaks = new THREE.Group();
+for(let i=0;i<9;i++){
+  const h = 8 + Math.random()*11;
+  const p = new THREE.Mesh(new THREE.ConeGeometry(7 + Math.random()*5, h, 4),
+    new THREE.MeshStandardMaterial({color:0x2a2440, roughness:1}));
+  p.position.set(-40 + i*11 + Math.random()*5, h/2 - 2, -78 - Math.random()*22);
+  p.rotation.y = Math.random();
+  peaks.add(p);
+}
+scene.add(peaks);
+// 月
+const moon = new THREE.Mesh(new THREE.CircleGeometry(3.2, 40),
+  new THREE.MeshBasicMaterial({color:0xfff0d2}));
+moon.position.set(9, 13, -88); scene.add(moon);
+
+// ---------- llama (primitive build, swappable with Blender glb) ----------
+// 左右のかごは別グループ。積んだ荷物をそのまま中に置いていくので、
+// 「重さ」が絵としても増えていく。
+function buildLlama(){
+  const g = new THREE.Group();
+  const wool  = new THREE.MeshStandardMaterial({color:0xe8ddc8, roughness:.95});
+  const dark  = new THREE.MeshStandardMaterial({color:0x8a6a4a, roughness:.85});
+  const hoof  = new THREE.MeshStandardMaterial({color:0x2a2230, roughness:.7});
+  const eyeW  = new THREE.MeshStandardMaterial({color:0xf8f8fc, roughness:.3});
+  const basket= new THREE.MeshStandardMaterial({color:0xa9712f, roughness:.85});
+
+  // 体をかたむける支点。ここを回すと荷物ごと全部かたむく。
+  const tilt = new THREE.Group();
+  tilt.position.y = 1.55;
+  g.add(tilt);
+
+  const body = new THREE.Mesh(new THREE.CapsuleGeometry(.72, 1.5, 8, 16), wool);
+  body.rotation.z = Math.PI/2; body.position.y = 0; tilt.add(body);
+
+  // 首と頭（前方＝+Z 側）
+  const neck = new THREE.Mesh(new THREE.CapsuleGeometry(.24, 1.5, 6, 12), wool);
+  neck.position.set(0, .95, .85); neck.rotation.x = .30; tilt.add(neck);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(.36, 20, 16), wool);
+  head.scale.set(.85, .95, 1.25); head.position.set(0, 1.78, 1.18); tilt.add(head);
+  const snout = new THREE.Mesh(new THREE.BoxGeometry(.34, .3, .42), dark);
+  snout.position.set(0, 1.66, 1.55); tilt.add(snout);
+  for(const s of [1,-1]){
+    const ear = new THREE.Mesh(new THREE.ConeGeometry(.1, .46, 8), wool);
+    ear.position.set(.17*s, 2.12, 1.06); ear.rotation.z = s*.22; tilt.add(ear);
+    const eye = new THREE.Mesh(new THREE.SphereGeometry(.075, 12, 10), eyeW);
+    eye.position.set(.22*s, 1.86, 1.34); tilt.add(eye);
+    const pup = new THREE.Mesh(new THREE.SphereGeometry(.04, 10, 8),
+      new THREE.MeshBasicMaterial({color:0x14121c}));
+    pup.position.set(.245*s, 1.86, 1.40); tilt.add(pup);
+  }
+  // 尾
+  const tail = new THREE.Mesh(new THREE.ConeGeometry(.16, .5, 8), wool);
+  tail.position.set(0, .48, -1.05); tail.rotation.x = -.7; tilt.add(tail);
+
+  // 背中の鞍（アクセント色。左右のかごの支点でもある）
+  const saddle = new THREE.Mesh(new THREE.BoxGeometry(1.5, .18, 1.5),
+    new THREE.MeshStandardMaterial({color:ACCENT, roughness:.6}));
+  saddle.position.y = .70; tilt.add(saddle);
+
+  // 左右のかご（中に積んだ荷物が入る）
+  const panniers = [];
+  for(const s of [-1, 1]){
+    const p = new THREE.Group();
+    p.position.set(s*1.22, .34, 0);
+    const shell = new THREE.Mesh(new THREE.BoxGeometry(.95, .78, 1.25), basket);
+    shell.position.y = 0; p.add(shell);
+    const rim = new THREE.Mesh(new THREE.BoxGeometry(1.03, .1, 1.33),
+      new THREE.MeshStandardMaterial({color:0x6d4419, roughness:.8}));
+    rim.position.y = .44; p.add(rim);
+    tilt.add(p); panniers.push(p);
+  }
+
+  // 脚（歩行アニメ用に個別に持つ）
+  const legs = [];
+  for(const [lx, lz] of [[.42,.72],[-.42,.72],[.42,-.72],[-.42,-.72]]){
+    const l = new THREE.Group();
+    l.position.set(lx, -.30, lz);
+    const shin = new THREE.Mesh(new THREE.CapsuleGeometry(.13, 1.0, 6, 10), wool);
+    shin.position.y = -.55; l.add(shin);
+    const foot = new THREE.Mesh(new THREE.BoxGeometry(.28, .16, .38), hoof);
+    foot.position.y = -1.16; l.add(foot);
+    tilt.add(l); legs.push(l);
+  }
+
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  return {group:g, tilt, panniers, legs, head, neck};
+}
+const llama = buildLlama();
+llama.group.position.set(0, 0, 0);
+// 少し斜めに向ける。真後ろ姿だと左右のかごが重なり、顔も見えない。
+llama.group.rotation.y = -0.38;
+scene.add(llama.group);
+
+// ラマを照らすライト（暗い背景から浮かせる）
+const heroLight = new THREE.PointLight(0xffe6c0, 40, 22);
+heroLight.position.set(0, 6, 5);
+scene.add(heroLight);
+
+// ---------- cargo ----------
+// 荷物は「重さ」がひと目で分かる必要がある：重いほど大きく、色が濃い。
+const CARGO_KINDS = [
+  {name:'light',  w:1, size:.46, color:0xffd98a, label:'かるい'},
+  {name:'medium', w:2, size:.62, color:0xf0a33c, label:'ふつう'},
+  {name:'heavy',  w:3, size:.80, color:0xd0552a, label:'おもい'},
+];
+function cargoMesh(kind){
+  const m = new THREE.Mesh(new THREE.BoxGeometry(kind.size, kind.size, kind.size),
+    new THREE.MeshStandardMaterial({color:kind.color, roughness:.55,
+      emissive:kind.color, emissiveIntensity:.18}));
+  // 縄がけ：立方体のままだと荷物に見えないので帯を二本回す
+  const strapMat = new THREE.MeshStandardMaterial({color:0x4a3520, roughness:.9});
+  const s1 = new THREE.Mesh(new THREE.BoxGeometry(kind.size*1.04, kind.size*.13, kind.size*1.04), strapMat);
+  const s2 = new THREE.Mesh(new THREE.BoxGeometry(kind.size*.13, kind.size*1.04, kind.size*1.04), strapMat);
+  m.add(s1, s2);
+  m.castShadow = true;
+  return m;
+}
+
+// ---------- gust (event prop: a wind arrow that shoves the tilt) ----------
+const gustGroup = new THREE.Group();
+(function(){
+  const mat = new THREE.MeshBasicMaterial({color:0x9ce4ff, transparent:true, opacity:.55});
+  for(let i=0;i<7;i++){
+    const s = new THREE.Mesh(new THREE.BoxGeometry(2.6, .1, .1), mat);
+    s.position.set(0, 1.0 + i*.55, -1 + Math.random()*2);
+    gustGroup.add(s);
+  }
+  gustGroup.visible = false;
+  scene.add(gustGroup);
+})();
+
+// ---------- state ----------
+let running=false, dead=false, t=0, score=0;
+let tilt=0;            // -1(左に倒れる) .. +1(右に倒れる)
+let tiltV=0;           // かたむきの速度（バネで戻る）
+let loadL=0, loadR=0;  // 左右のかごの合計重量
+let fallSpeed=2.4;     // 荷物が落ちてくる速さ（進むほど上がる）
+let streak=0;          // まっすぐ保っている連続時間
+let timeScale=1;       // スローモーション
+let deadAt=0;          // 終了時刻（タップ再開のゲート）
+let shake=0;           // カメラ揺れ
+let camDist=9.5, camDistTarget=9.5;
+let scroll=0;          // 路面スクロール量
+let nextEventAt=9;
+let eventQueue=[];
+let gust=0, gustDir=1; // 突風の残り時間と向き
+let fog=0;             // 「濃霧」：先読みの荷物が見えなくなる
+let swapPend=0;        // 「積み替え」：左右が入れ替わるまでの時間
+
+// 落ちてくる荷物と、その先読みキュー
+let falling=null;      // {kind, mesh, y, side(null|-1|1), placedT}
+const queue=[];        // 先読み（画面上に小さく並ぶ）
+const QUEUE_LEN=3;
+const queueMeshes=[];
+const stacked=[];      // かごに積まれた荷物メッシュ（見た目だけ）
+
+const scoreEl = document.getElementById('score');
+const msgEl = document.getElementById('msg');
+const titleEl = document.getElementById('title');
+const bannerEl = document.getElementById('banner');
+const bannerText = bannerEl.querySelector('.b');
+const flashEl = document.getElementById('flash');
+const vignetteEl = document.getElementById('vignette');
+const koEl = document.getElementById('ko');
+const koScoreEl = koEl.querySelector('.finalScore');
+
+// 落下開始の高さと、かごに着く高さ
+const DROP_TOP = 6.4, DROP_BOTTOM = 2.1;
+const _panPos = new THREE.Vector3();   // かごのワールド座標の作業用
+const TILT_LIMIT = 1.0;          // これを超えたら荷崩れ
+
+// ---------- presentation helpers ----------
+function banner(text, color){
+  bannerText.textContent = text;
+  bannerText.style.color = color;
+  bannerEl.classList.remove('go');
+  void bannerEl.offsetWidth;      // restart the CSS animation
+  bannerEl.style.opacity = 1;
+  bannerEl.classList.add('go');
+}
+function flash(color, strength, ms){
+  flashEl.style.background = color;
+  flashEl.style.transition = 'none';
+  flashEl.style.opacity = strength;
+  requestAnimationFrame(()=>{
+    flashEl.style.transition = `opacity ${ms}ms ease-out`;
+    flashEl.style.opacity = 0;
+  });
+}
+
+// ---------- cargo queue ----------
+function pickKind(){
+  // 重い荷物は少なめ。序盤ほど軽い。
+  const r = Math.random() * (1 + Math.min(1, t/50));
+  if(r < .45) return CARGO_KINDS[0];
+  if(r < 1.15) return CARGO_KINDS[1];
+  return CARGO_KINDS[2];
+}
+function refillQueue(){
+  while(queue.length < QUEUE_LEN) queue.push(pickKind());
+  // 先読み表示を作り直す（3個だけなので毎回作っても安い）
+  for(const m of queueMeshes) scene.remove(m);
+  queueMeshes.length = 0;
+  queue.forEach(k=>{
+    const m = cargoMesh(k);
+    m.scale.setScalar(.62);
+    m.visible = fog<=0;
+    scene.add(m); queueMeshes.push(m);
+  });
+  layoutQueue();
+}
+// 先読みの並べ方は画面の向きで変わるので、回転時にも呼び直す。
+function layoutQueue(){
+  const port = innerWidth < innerHeight;   // 縦は横幅がないので真上に積む
+  queueMeshes.forEach((m, i)=>{
+    // カメラが x=-2.2 にいるので、画面の右側に出すには world x をさらに右へ。
+    if(port) m.position.set(1.9 + i*.26, 5.6 + i*1.15, 1.0);
+    else     m.position.set(6.4 + i*.55, 4.6 + i*1.2, 1.0);
+  });
+}
+function nextCargo(){
+  const kind = queue.shift();
+  refillQueue();
+  const mesh = cargoMesh(kind);
+  mesh.position.set(-2.6, DROP_TOP, 1.0);
+  scene.add(mesh);
+  falling = {kind, mesh, side:null, landed:false};
+}
+
+// 左右どちらのかごに積むか決める。これがこのゲームの唯一の操作。
+// 振り分けを確定させる高さ。ここから下は選び直せない。
+// （最後まで選び直せると、次の荷物のつもりの入力が今の荷物を上書きしてしまう）
+const LOCK_Y = DROP_BOTTOM + 1.6;
+function place(side){
+  if(!running || dead || !falling) return;
+  if(falling.side === side) return;
+  // かごに近づいたら確定。それより上なら押し間違いを直せる。
+  if(falling.side !== null && falling.mesh.position.y <= LOCK_Y) return;
+  falling.side = side;
+  if(!SILENT) SND.move();
+  // 選んだ側へ滑り出す（落ちながら横に寄る）
+  falling.mesh.material.emissiveIntensity = .5;
+}
+
+// ---------- events ----------
+const EVENTS = {
+  // 突風：かたむきを片側へ押し続ける。押し返す荷物を選ぶしかない。
+  gust(){
+    banner('突風', '#9ce4ff');
+    gust = 4.2; gustDir = Math.random()<.5 ? -1 : 1;
+    gustGroup.visible = true;
+    gustGroup.position.x = -gustDir*6;
+    flash('#9ce4ff', .28, 380);
+    shake = Math.max(shake, .22);
+    return 5;
+  },
+  // 落石：重い荷物が連続で降る。差を作らずに捌けるか。
+  boulder(){
+    banner('落石', '#d0552a');
+    // これから落ちる分を全部「おもい」にする
+    for(let i=0;i<queue.length;i++) queue[i] = CARGO_KINDS[2];
+    refillQueue();
+    if(falling && falling.side===null){
+      scene.remove(falling.mesh);
+      falling.kind = CARGO_KINDS[2];
+      falling.mesh = cargoMesh(CARGO_KINDS[2]);
+      falling.mesh.position.set(-2.6, DROP_TOP, 1.0);
+      scene.add(falling.mesh);
+    }
+    flash('#d0552a', .3, 420);
+    return 5.5;
+  },
+  // こぶ道：路面が跳ねてかたむきが揺れる。押さえるには軽い荷物が要る。
+  bumps(){
+    banner('こぶ道', '#ffd23b');
+    bumpT = 5.0;
+    shake = Math.max(shake, .3);
+    return 6;
+  },
+  // 積み替え：左右のかごが入れ替わる。今のかたむきが反転する。
+  swap(){
+    banner('積み替え', '#c792ff');
+    swapPend = 1.2;                 // 予告してから入れ替える（理不尽にしない）
+    flash('#c792ff', .3, 400);
+    return 5;
+  },
+  // 濃霧：先読みが消える。次の一個だけで判断することになる。
+  fog(){
+    banner('濃霧', '#9fb4ff');
+    fog = 5.5;
+    return 6;
+  },
+};
+let bumpT = 0;
+const EVENT_NAMES = Object.keys(EVENTS);
+// recording/debug hook: fire a named event on cue (used by the capture script)
+// returns false if the run is already over, so a capture script can wait
+// for the next run instead of firing an event onto the K.O. screen
+window.__ev = name => {
+  if(!running || dead || !EVENTS[name]) return false;
+  const busy = EVENTS[name]();
+  if(!SILENT) SND.event(); nextEventAt = t + busy + 5; return true;
+};
+window.__alive = () => running && !dead;
+window.__kill = () => { if(running && !dead){ dead=true; gameOver(); } };
+window.__recStop = () => SND.recStop();
+window.__snd = () => ({enabled: SND.enabled, silent: SILENT});
+window.__events = EVENT_NAMES.slice();
+window.__tilt = () => +tilt.toFixed(3);
+window.__load = () => ({l:loadL, r:loadR});
+window.__fov = () => +camera.fov.toFixed(1);
+window.__probe = () => ({t:+t.toFixed(2), tilt:+tilt.toFixed(2),
+  l:loadL, r:loadR, fall:+fallSpeed.toFixed(2), next:+nextEventAt.toFixed(2)});
+
+function refillEventQueue(){
+  eventQueue = EVENT_NAMES.slice();
+  for(let i=eventQueue.length-1;i>0;i--){        // shuffle so the order varies per run
+    const j = Math.floor(Math.random()*(i+1));
+    [eventQueue[i],eventQueue[j]]=[eventQueue[j],eventQueue[i]];
+  }
+}
+function triggerEvent(){
+  if(!eventQueue.length) refillEventQueue();
+  const name = eventQueue.pop();
+  const busy = EVENTS[name]();
+  if(!SILENT) SND.event();
+  nextEventAt = t + busy + 5 + Math.random()*4;  // breathing room between events
+}
+
+// ---------- reset ----------
+function reset(){
+  // 積んだ荷物は scene ではなく「かご」の子なので、親から外す
+  for(const m of stacked) m.parent && m.parent.remove(m);
+  stacked.length = 0;
+  for(const m of queueMeshes) scene.remove(m);
+  queueMeshes.length = 0;
+  if(falling){ scene.remove(falling.mesh); falling = null; }
+  queue.length = 0;
+  llama.group.position.set(0,0,0);
+  llama.group.rotation.set(0,0,0);
+  llama.tilt.rotation.set(0,0,0);
+  for(const p of llama.panniers) p.position.y = .34;
+  t=0; score=0; dead=false;
+  tilt=0; tiltV=0; loadL=0; loadR=0;
+  fallSpeed=3.2; streak=0;
+  timeScale=1; shake=0; camDist=9.5; camDistTarget=9.5;
+  gust=0; bumpT=0; fog=0; swapPend=0;
+  gustGroup.visible=false;
+  nextEventAt = 9;
+  refillEventQueue();
+  refillQueue();
+  nextCargo();
+  msgEl.textContent='';
+  koEl.classList.remove('on');
+  vignetteEl.style.transition='opacity .3s'; vignetteEl.style.opacity=0;
+  camera.position.set(0, 4.4, 9.5);
+}
+
+const startBtn = document.getElementById('startBtn');
+
+// ---------- sound: everything synthesised, no audio files ----------
+// Keeps the single-HTML rule (nothing to download) and lets the music
+// react to play: the bass line speeds up with the game, events drop a
+// stinger, and the whole thing ducks out on a game over.
+const SND = (() => {
+  let ctx = null, master = null, musicGain = null, on = true, started = false;
+  let step = 0, timer = null, tempo = 0.25;
+
+  // A pentatonic scale never sounds wrong against itself, which matters
+  // when the tempo drifts with the player's speed.
+  // minor pentatonic, driving — a chase that never lets up
+  const SCALE = [0, 3, 5, 7, 10];
+  const ROOT = 196;
+  const BASS = 'square', LEAD = 'sawtooth';
+  const hz = (deg, oct = 0) =>
+    ROOT * Math.pow(2, oct + Math.floor(deg / SCALE.length)) *
+    Math.pow(2, SCALE[((deg % SCALE.length) + SCALE.length) % SCALE.length] / 12);
+
+  function ensure() {
+    if (ctx) return ctx;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    ctx = new AC();
+    master = ctx.createGain();
+    master.gain.value = 0.32;
+    master.connect(ctx.destination);
+    musicGain = ctx.createGain();
+    musicGain.gain.value = 1;
+    musicGain.connect(master);
+    return ctx;
+  }
+
+
+  // ---- 録音用の分岐（?rec=1）----
+  // Playwright の録画には音声が入らないので、ゲーム自身に master バスを
+  // 録らせる。鳴っているものそのものなので映像と必ず同期する。
+  let recDest = null, recorder = null, recChunks = [];
+  function recStart() {
+    if (!ctx || recorder) return;
+    recDest = ctx.createMediaStreamDestination();
+    master.connect(recDest);
+    recorder = new MediaRecorder(recDest.stream, {mimeType: 'audio/webm'});
+    recorder.ondataavailable = e => { if (e.data.size) recChunks.push(e.data); };
+    recorder.start();
+  }
+  function recStop() {
+    return new Promise(res => {
+      if (!recorder) return res(null);
+      recorder.onstop = async () => {
+        const blob = new Blob(recChunks, {type: 'audio/webm'});
+        const buf = await blob.arrayBuffer();
+        res(Array.from(new Uint8Array(buf)));
+      };
+      recorder.stop();
+    });
+  }
+
+  function blip(freq, dur, type = 'square', vol = 0.25, dest = null, slideTo = null) {
+    if (!ctx || !on) return;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, ctx.currentTime);
+    if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, ctx.currentTime + dur);
+    // a short attack stops every note from clicking
+    g.gain.setValueAtTime(0, ctx.currentTime);
+    g.gain.linearRampToValueAtTime(vol, ctx.currentTime + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
+    o.connect(g); g.connect(dest || master);
+    o.start(); o.stop(ctx.currentTime + dur + 0.02);
+  }
+
+  function noise(dur, vol = 0.2, hp = 800) {
+    if (!ctx || !on) return;
+    const n = Math.floor(ctx.sampleRate * dur);
+    const buf = ctx.createBuffer(1, n, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    const f = ctx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = hp;
+    const g = ctx.createGain(); g.gain.value = vol;
+    src.connect(f); f.connect(g); g.connect(master);
+    src.start();
+  }
+
+  // --- the loop: a walking bass plus an offbeat blip ---
+  function tick() {
+    if (!ctx || !on) return;
+    const bar = step % 16;
+    // straight driving pulse: bass on every beat, lead stabs offbeat
+    if (bar % 2 === 0) blip(hz(bar % 8 === 0 ? 0 : 1, -1), tempo * 1.1, BASS, 0.30, musicGain);
+    if (bar % 8 === 5) blip(hz(4, 0), tempo * 0.6, LEAD, 0.09, musicGain);
+    if (bar % 4 === 2) noise(0.04, 0.05, 5000);
+    step++;
+    timer = setTimeout(tick, tempo * 1000);
+  }
+
+  return {
+    // must be called from a user gesture — browsers block audio otherwise
+    start() {
+      if (!ensure() || started) return;
+      if (ctx.state === 'suspended') ctx.resume();
+      started = true; step = 0; tick();
+    },
+    stop() { if (timer) { clearTimeout(timer); timer = null; } started = false; },
+    /** speed the music up with the game; 1 = starting pace */
+    setPace(mult) { tempo = Math.max(0.11, 0.25 / Math.max(0.2, mult)); },
+    duck(sec = 1.6) {                                      // for game over
+      if (!ctx) return;
+      musicGain.gain.cancelScheduledValues(ctx.currentTime);
+      musicGain.gain.setValueAtTime(musicGain.gain.value, ctx.currentTime);
+      musicGain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + sec);
+    },
+    unduck() {
+      if (!ctx) return;
+      musicGain.gain.cancelScheduledValues(ctx.currentTime);
+      musicGain.gain.setValueAtTime(0.0001, ctx.currentTime);
+      musicGain.gain.exponentialRampToValueAtTime(1, ctx.currentTime + 0.4);
+    },
+    // --- one-shots ---
+    // 左右の振り分けは「どちらを選んだか」が音でも分かるよう高さを変える
+    move()  { ensure(); blip(hz(3, 1), 0.07, LEAD, 0.12); },
+    jump()  { ensure(); blip(hz(0, 0), 0.16, LEAD, 0.18, null, hz(4, 1)); },
+    land()  { ensure(); noise(0.06, 0.10, 500); },
+    place() { ensure(); blip(hz(2, 0), 0.10, BASS, 0.22, null, hz(4, 1)); },
+    event() { ensure(); [0, 90, 180].forEach((ms, i) =>
+                setTimeout(() => blip(hz(2 + i, 0), 0.18, 'sawtooth', 0.20), ms)); },
+    hit()   { ensure(); noise(0.35, 0.30, 200);
+              blip(180, 0.5, 'sawtooth', 0.28, null, 40); },
+    over()  { ensure(); [0, 140, 280, 460].forEach((ms, i) =>
+                setTimeout(() => blip(hz(-i, -1), 0.42, 'triangle', 0.26), ms)); },
+    recStart() { ensure(); recStart(); },
+    recStop() { return recStop(); },
+    toggle() { on = !on; if (!on) { this.stop(); } else { this.start(); } return on; },
+    get enabled() { return on; },
+  };
+})();
+
+// --- one place for every action, so touch and keyboard stay in step ---
+function startRun(){
+  titleEl.classList.add('hidden'); reset(); running=true;
+  if(!SILENT){ SND.unduck(); SND.start(); if(REC) SND.recStart(); }
+}
+// 左右のかごに積む。キーもタップも必ずここを通る。
+function loadLeft(){  place(-1); }
+function loadRight(){ place(1); }
+
+const muteBtn = document.getElementById('mute');
+function toggleMute(){ muteBtn.textContent = SND.toggle() ? '🔊' : '🔇'; }
+muteBtn.addEventListener('click', toggleMute);
+muteBtn.addEventListener('touchend', e=>{ e.preventDefault(); toggleMute(); },
+                         {passive:false});
+if(SILENT) muteBtn.style.display='none';   // automated modes have no audio
+addEventListener('keydown', e=>{ if(e.code==='KeyM') toggleMute(); });
+
+startBtn.addEventListener('click', startRun);
+// a touch on the button must start too — click alone is unreliable on touch
+startBtn.addEventListener('touchend', e=>{ e.preventDefault(); startRun(); },
+                          {passive:false});
+
+addEventListener('keydown', e=>{
+  if(!running){
+    if(e.code==='Space'||e.code==='Enter') startRun();
+    return;
+  }
+  if(e.code==='ArrowLeft'||e.code==='KeyA')  loadLeft();
+  if(e.code==='ArrowRight'||e.code==='KeyD') loadRight();
+});
+
+// --- touch: tap the left or right half of the screen ---
+// 指の動きは「左か右を選ぶ」だけ。スワイプでも同じ動作にしておく。
+(function(){
+  let sx=0, sy=0, st=0, moved=false;
+  const SWIPE = 30;          // px before a drag counts as a swipe
+  const canvas = renderer.domElement;
+
+  canvas.addEventListener('touchstart', e=>{
+    const t = e.changedTouches[0];
+    sx=t.clientX; sy=t.clientY; st=Date.now(); moved=false;
+  }, {passive:true});
+
+  canvas.addEventListener('touchmove', e=>{
+    if(moved || !running || dead) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX-sx, dy = t.clientY-sy;
+    // 横スワイプでもその向きに積める（タップに気づかない人向け）
+    if(Math.abs(dx) > SWIPE && Math.abs(dx) > Math.abs(dy)){
+      dx < 0 ? loadLeft() : loadRight();
+      moved = true;                       // 1スワイプにつき1個
+    }
+  }, {passive:true});
+
+  canvas.addEventListener('touchend', e=>{
+    if(dead){
+      // give the K.O. animation time to read, then a tap retries
+      if(!AUTO && Date.now()-deadAt > 1500) startRun();
+      return;
+    }
+    if(!running){ startRun(); return; }
+    // スワイプにならなかった短いタッチは、触れた側のかごへ積む
+    if(!moved && Date.now()-st < 400){
+      const t = e.changedTouches[0];
+      t.clientX < innerWidth/2 ? loadLeft() : loadRight();
+    }
+  }, {passive:true});
+
+  // The title overlay sits above the canvas, so a tap anywhere on it never
+  // reaches the canvas handler. Start from the overlay itself.
+  titleEl.addEventListener('touchend', e=>{
+    if(!running){ e.preventDefault(); startRun(); }
+  }, {passive:false});
+
+  // stop the browser treating game taps as scroll / double-tap zoom
+  canvas.addEventListener('touchmove', e=>e.preventDefault(), {passive:false});
+})();
+
+// autoplay mode for recording: ?auto=1
+// recording holds the K.O. longer than play does: ?hold=9000
+const RETRY_MS = Math.max(1200, parseInt(QS.get('hold')||'4200', 10));
+// ?noev=1 records a calm run with no events, for narration beds
+const NOEV = QS.get('noev')==='1';
+if(AUTO){ setTimeout(startRun, 1200); }   // startRun 経由にする（音/録音も始まる）
+
+// ---------- autopilot ----------
+// 人間と同じ判断をする：かたむきと左右の重さを見て、軽くなる側へ積む。
+// 突風が吹いていれば、その逆側へ積んで押し返す。
+function autoPilot(){
+  if(!falling || falling.side!==null) return;
+  // 落ちきる前に決める（ぎりぎりまで待つと絵として読みづらいので早めに）
+  if(falling.mesh.position.y > DROP_TOP - 1.0) return;
+  const w = falling.kind.w;
+  // 積んだ後に予想されるかたむきが、より 0 に近い側を選ぶ
+  const bias = tilt * 2.2 + (gust>0 ? gustDir*1.6 : 0);
+  const after = s => Math.abs(((loadR + (s>0?w:0)) - (loadL + (s<0?w:0))) + bias);
+  place(after(-1) <= after(1) ? -1 : 1);
+}
+
+// ---------- showcase mode ----------
+// Puts one object on a turntable against the dark road so the video can
+// talk about it while the real thing is on screen. Uses the game's own
+// meshes, so what the narration describes is exactly what ships.
+const SHOWCASE = QS.get('showcase');
+const showcase = {group:null, spin:.55, label:''};
+// 録画ツールが名前で参照する。日本語にするのはキャプションだけ。
+window.__subjects = ['llama','pannier','light','medium','heavy','gust'];
+
+function buildShowcase(name){
+  const g = new THREE.Group();
+  let label = '', spin = .55;
+  if(name==='llama'){
+    const l = buildLlama();
+    l.group.scale.set(1.0,1.0,1.0);
+    g.add(l.group); label = 'ラマ'; spin = .5;
+    // 歩いている姿勢にしておく（棒立ちだと脚が読めない）
+    l.legs[0].rotation.x =  .35; l.legs[1].rotation.x = -.35;
+    l.legs[2].rotation.x = -.30; l.legs[3].rotation.x =  .30;
+  } else if(name==='pannier'){
+    const basket = new THREE.MeshStandardMaterial({color:0xa9712f, roughness:.85});
+    const shell = new THREE.Mesh(new THREE.BoxGeometry(.95, .78, 1.25), basket);
+    const rim = new THREE.Mesh(new THREE.BoxGeometry(1.03, .1, 1.33),
+      new THREE.MeshStandardMaterial({color:0x6d4419, roughness:.8}));
+    rim.position.y = .44; g.add(shell, rim);
+    // 中に荷物を入れて「積むところ」だと分かるようにする
+    const c = cargoMesh(CARGO_KINDS[1]); c.position.y = .30; g.add(c);
+    g.scale.setScalar(2.1); label = 'かご'; spin = .5;
+  } else if(name==='light'){
+    const m = cargoMesh(CARGO_KINDS[0]); m.scale.setScalar(3.4);
+    g.add(m); label = 'かるい荷物'; spin = .8;
+  } else if(name==='medium'){
+    const m = cargoMesh(CARGO_KINDS[1]); m.scale.setScalar(2.7);
+    g.add(m); label = 'ふつうの荷物'; spin = .8;
+  } else if(name==='heavy'){
+    const m = cargoMesh(CARGO_KINDS[2]); m.scale.setScalar(2.2);
+    g.add(m); label = 'おもい荷物'; spin = .8;
+  } else if(name==='gust'){
+    const mat = new THREE.MeshBasicMaterial({color:0x9ce4ff, transparent:true, opacity:.75});
+    for(let i=0;i<7;i++){
+      const s = new THREE.Mesh(new THREE.BoxGeometry(2.6 - Math.abs(i-3)*.35, .12, .12), mat);
+      s.position.set((i%2?.25:-.25), -1.6 + i*.55, (i%3-1)*.35);
+      g.add(s);
+    }
+    label = '突風'; spin = .7;
+  }
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  scene.add(g);
+
+  // Centre the subject on the origin and pull the camera back to fit it,
+  // so every object is framed the same way regardless of its size.
+  const box = new THREE.Box3().setFromObject(g);
+  const size = box.getSize(new THREE.Vector3());
+  const mid = box.getCenter(new THREE.Vector3());
+  g.position.sub(mid);                       // sit centred at the origin
+  const reach = Math.max(size.x, size.y) * 0.5;
+  const fov = THREE.MathUtils.degToRad(camera.fov);
+  const dist = (reach / Math.tan(fov/2)) * 1.75 + 1.0;   // 1.75 = breathing room
+  camera.position.set(0, size.y*0.10, dist);
+
+  // Slide the subject sideways so a text panel can own the other half.
+  // The offset lives on a parent so the turntable still spins in place —
+  // rotating an offset group would make it orbit instead.
+  const bias = parseFloat(QS.get('sx') || '0');
+  const pivot = new THREE.Group();
+  pivot.position.x = -bias * reach * 1.15;
+  scene.add(pivot);
+  pivot.add(g);
+  showcase.group = g; showcase.pivot = pivot;
+  showcase.spin = spin; showcase.label = label;
+}
+
+fitCamera();          // SHOWCASE is known by here
+if(SHOWCASE){
+  titleEl.classList.add('hidden');
+  buildShowcase(SHOWCASE);
+  scoreEl.textContent = '';
+  msgEl.textContent = QS.get('nolabel')==='1' ? '' : showcase.label;
+  msgEl.style.fontSize = 'clamp(20px,5vw,30px)';
+  msgEl.style.letterSpacing = '6px';
+  // a plain dark stage: nothing on screen but the subject
+  road.visible = false; moon.visible = false; peaks.visible = false;
+  llama.group.visible = false;          // the playable llama is a separate object
+  gustGroup.visible = false;
+  for(const m of markers) m.visible = false;
+  for(const r of rocks) r.visible = false;
+  scene.fog = null;
+  scene.background = new THREE.Color(0x0b0d16);
+  heroLight.position.set(2.6, 3.2, 4.2);
+  heroLight.intensity = 140;
+  hemi.intensity = 3.4;
+  sun.intensity = 4.2; sun.position.set(2.5, 6, 6);
+  // a second light from the other side so the far face is not pure black
+  const fill = new THREE.PointLight(0x88aaff, 45, 26);
+  fill.position.set(-4.5, 2.4, 3.6); scene.add(fill);
+}
+// let the capture script drive the turntable and swap subjects
+window.__showcase = name => {
+  if(showcase.pivot) scene.remove(showcase.pivot);   // pivot owns the group
+  buildShowcase(name);
+  msgEl.textContent = showcase.label;
+};
+
+// ---------- loop ----------
+const clock = new THREE.Clock();
+function tick(){
+  requestAnimationFrame(tick);
+  const raw = Math.min(clock.getDelta(), .05);
+  const dt = raw * timeScale;
+
+  if(SHOWCASE){
+    if(showcase.group) showcase.group.rotation.y += raw*showcase.spin;
+    camera.lookAt(0, 0, 0);        // subject is offset, camera stays on axis
+    renderer.render(scene, camera);
+    return;
+  }
+
+  if(running && !dead){
+    t += dt;
+    fallSpeed = 2.4 + t*0.065;                 // だんだん考える時間が減る
+    if(!SILENT) SND.setPace(fallSpeed/2.4);
+
+    // --- スコア：まっすぐ保っているほど伸びる ---
+    const balance = 1 - Math.min(1, Math.abs(tilt));
+    if(Math.abs(tilt) < .18) streak += dt; else streak = 0;
+    const streakBonus = 1 + Math.min(1.5, streak*.18);
+    score += dt * (10 + fallSpeed*3) * (0.25 + balance) * streakBonus;
+    scoreEl.textContent = Math.floor(score);
+    // つり合いの状態を文字でも出す（かたむきメーターの代わり）
+    if(!dead){
+      msgEl.textContent = Math.abs(tilt) < .18 ? 'つり合い +'
+        : (Math.abs(tilt) < .6 ? 'かたむき' : 'あぶない！');
+      msgEl.style.color = Math.abs(tilt) < .18 ? '#7ff0b0'
+        : (Math.abs(tilt) < .6 ? '#ffd23b' : '#ff5a4a');
+    }
+
+    if(AUTO) autoPilot();
+    if(t > nextEventAt && !NOEV) triggerEvent();
+
+    // --- 落ちてくる荷物 ---
+    if(falling){
+      const f = falling;
+      f.mesh.position.y -= fallSpeed*dt;
+      f.mesh.rotation.y += dt*1.4;
+      // 振り分けられていれば、そのかごの「実際の位置」へ寄っていく。
+      // ラマは斜めを向いているので、決め打ちの x ではかごを外れる。
+      if(f.side!==null){
+        const pan = llama.panniers[f.side<0 ? 0 : 1];
+        pan.getWorldPosition(_panPos);
+        const k = Math.min(1, dt*7);
+        f.mesh.position.x += (_panPos.x - f.mesh.position.x)*k;
+        f.mesh.position.z += (_panPos.z - f.mesh.position.z)*k;
+      }
+      if(f.mesh.position.y <= DROP_BOTTOM){
+        if(f.side===null){
+          // 選ばないまま落ちきった → 背中の真ん中に落ちて荷崩れ
+          dead = true; gameOver('drop');
+        } else {
+          // かごに収まる。重さが加算され、かたむきが動く。
+          const w = f.kind.w;
+          if(f.side<0) loadL += w; else loadR += w;
+          // 落ちた側へ衝撃を与える（積んだ手応え）
+          tiltV += f.side * w * .34;
+          shake = Math.max(shake, .05 + w*.02);
+          if(!SILENT) SND.place();
+          // 見た目：かごの中へ入れて、以後かごと一緒に動く
+          const pan = llama.panniers[f.side<0 ? 0 : 1];
+          scene.remove(f.mesh);
+          f.mesh.position.set((Math.random()-.5)*.24,
+            -.15 + (f.side<0?loadL:loadR)*.055, (Math.random()-.5)*.3);
+          f.mesh.rotation.set(0, Math.random()*1.2, 0);
+          f.mesh.material.emissiveIntensity = .18;
+          pan.add(f.mesh); stacked.push(f.mesh);
+          // かごが少しずつ沈む（重さが見える）
+          pan.position.y = .34 - Math.min(.3, (f.side<0?loadL:loadR)*.012);
+          falling = null;
+          nextCargo();
+          // つり合っていればボーナスの合図
+          if(Math.abs(loadL-loadR) === 0 && !SILENT) SND.move();
+        }
+      }
+    }
+
+    // --- かたむきの物理：重さの差 + 突風 + こぶ。バネで中央へ戻る ---
+    const diff = (loadR - loadL) * 0.055;       // 重さの差が定常のかたむき
+    let force = diff;
+    if(gust>0){
+      gust -= dt;
+      force += gustDir * 0.52;
+      gustGroup.position.x += gustDir * 9 * dt;
+      if(Math.abs(gustGroup.position.x) > 7) gustGroup.position.x = -gustDir*7;
+      gustGroup.position.z = llama.group.position.z;
+      if(gust<=0) gustGroup.visible = false;
+    }
+    if(bumpT>0){
+      bumpT -= dt;
+      force += Math.sin(t*11.5) * 0.30;         // 路面の揺れ
+      shake = Math.max(shake, .12);
+    }
+    if(fog>0){
+      fog -= dt;
+      const show = fog<=0;
+      for(const m of queueMeshes) m.visible = show;
+    }
+    if(swapPend>0){
+      swapPend -= dt;
+      if(swapPend<=0){
+        // 左右のかごの中身をそっくり入れ替える
+        [loadL, loadR] = [loadR, loadL];
+        const a = llama.panniers[0], b = llama.panniers[1];
+        const ac = a.children.slice(2), bc = b.children.slice(2);  // 0,1 は shell/rim
+        for(const m of ac){ a.remove(m); b.add(m); }
+        for(const m of bc){ b.remove(m); a.add(m); }
+        a.position.y = .34 - Math.min(.3, loadL*.012);
+        b.position.y = .34 - Math.min(.3, loadR*.012);
+        tiltV += (loadR-loadL) * .06;
+        shake = Math.max(shake, .35);
+        flash('#c792ff', .35, 300);
+        if(!SILENT) SND.event();
+      }
+    }
+    // バネ（中央へ戻す）＋減衰。差が大きいほど戻りきらない。
+    tiltV += (force - tilt*1.9) * dt * 3.4;
+    tiltV *= Math.pow(0.12, dt);                // 減衰
+    tilt += tiltV * dt;
+
+    if(Math.abs(tilt) >= TILT_LIMIT){
+      tilt = Math.sign(tilt)*TILT_LIMIT;
+      dead = true; gameOver('tilt');
+    }
+
+    // --- ラマのアニメーション ---
+    llama.tilt.rotation.z = -tilt * 0.62;        // かたむきが絵に出る
+    llama.tilt.position.y = 1.55 + Math.sin(t*6.5)*.045;
+    const walk = t*6.5;
+    llama.legs[0].rotation.x =  Math.sin(walk)*.42;
+    llama.legs[1].rotation.x = -Math.sin(walk)*.42;
+    llama.legs[2].rotation.x = -Math.sin(walk)*.38;
+    llama.legs[3].rotation.x =  Math.sin(walk)*.38;
+    llama.head.rotation.z = tilt*.3;
+    llama.neck.rotation.z = tilt*.2;
+
+    // --- 道のスクロール（進んでいるように見せる） ---
+    scroll += (4 + fallSpeed) * dt;
+    for(const m of markers){
+      m.position.z = ((m.position.z + (4+fallSpeed)*dt) % 240);
+      if(m.position.z > 12) m.position.z -= 240;
+    }
+    for(const r of rocks){
+      r.position.z += (4+fallSpeed)*dt;
+      if(r.position.z > 14){
+        r.position.z -= 520;
+        r.position.x = (Math.random()<.5?-1:1) * (8 + Math.random()*4);
+      }
+    }
+    // 先読みの荷物をゆっくり回す（生きている画に見せる）
+    queueMeshes.forEach((m,i)=>{ m.rotation.y += dt*(0.7 + i*.15); });
+
+    heroLight.position.set(0, 6, 5);
+  }
+
+  // --- death sequence: slow-mo unwinds, the llama keels over, cargo spills ---
+  if(dead){
+    timeScale += (0 - timeScale)*Math.min(1, raw*1.1);   // ease down to a near-freeze
+    const dir = Math.sign(tilt) || 1;
+    llama.tilt.rotation.z += dir * raw * 1.5;
+    llama.group.position.y -= raw*.5;
+    // かごの荷物がこぼれる（子のままローカル座標で散らす）
+    for(const m of stacked){
+      m.position.y += raw*1.6;
+      m.position.x += dir*raw*2.2;
+      m.rotation.z += raw*3;
+    }
+    if(falling){ falling.mesh.position.y -= raw*3; falling.mesh.rotation.x += raw*4; }
+  }
+
+  // --- camera (runs even while dead, so the zoom and shake still play) ---
+  camDist += (camDistTarget - camDist)*Math.min(1, raw*2.4);
+  // 縦画面は FOV を広げるだけだと路面が画面の半分で切れるので、
+  // カメラを引いて見下ろし角も足す。横画面は寄り気味のまま。
+  const portrait = Math.max(0, Math.min(1, (1 - innerWidth/innerHeight) / .6));
+  // 縦画面は FOV が既に広いので、さらに引くと被写体が小さくなる。逆に寄せて
+  // 見下ろし角を浅くし、ラマと落下中の荷物で画面を埋める。
+  const dist = camDist * (1 - portrait*.34);
+  camera.position.z = dist;
+  camera.position.y = (4.4 - portrait*1.1) - (9.5-camDist)*.18;
+  // わずかに横へ振る：真後ろだと左右のかごが重なって見分けられない
+  camera.position.x += ((-2.2 + tilt*.8) - camera.position.x)*Math.min(1, raw*3);
+  if(shake>0){
+    shake = Math.max(0, shake - raw*.9);
+    camera.position.x += (Math.random()-.5)*shake;
+    camera.position.y += (Math.random()-.5)*shake;
+  }
+  camera.lookAt(-.5 + tilt*.5, 2.5 + portrait*1.5, 0);
+
+  renderer.render(scene, camera);
+}
+
+function gameOver(cause){
+  running=false; deadAt=Date.now();
+  if(!SILENT){ SND.hit(); SND.duck(1.6); setTimeout(()=>SND.over(), 700); }
+  // hit feedback: red flash, red vignette, hard shake, camera punches in
+  flash('#ff2b3a', .8, 500);
+  vignetteEl.style.transition='opacity .5s'; vignetteEl.style.opacity=1;
+  shake = .9;
+  camDistTarget = 5.4;
+  const finalScore = Math.floor(score);
+  koScoreEl.textContent = finalScore;
+  msgEl.textContent = cause==='drop' ? '振り分けそこねた' : '荷崩れ';
+  msgEl.style.color = '#ff8a7a';
+  setTimeout(()=>{ koEl.classList.add('on'); }, 620);   // K.O. lands after the slow-mo
+  if(AUTO){ setTimeout(()=>{ reset(); running=true;
+                             if(!SILENT) SND.unduck(); }, RETRY_MS); }
+  else setTimeout(()=>{
+    msgEl.style.color = '#fff';
+    msgEl.textContent = matchMedia('(pointer:coarse)').matches
+      ? 'タップで もう一度' : 'スペースで もう一度';
+  }, 1800);
+}
+tick();
+
+// --- help (?) : ルールを見せる。録画中は出さない ---
+(function(){
+  const btn = document.getElementById('helpBtn');
+  const panel = document.getElementById('help');
+  if(!btn || !panel) return;
+  if(NOCHROME){                      // 録画・showcase では画面から消す
+    btn.style.display = 'none';
+    const back = document.getElementById('back');
+    if(back) back.style.display = 'none';
+    return;
+  }
+  const open = () => { panel.classList.add('on'); };
+  const close = () => { panel.classList.remove('on'); };
+  btn.addEventListener('click', open);
+  btn.addEventListener('touchend', e => { e.preventDefault(); open(); }, {passive:false});
+  panel.addEventListener('click', e => { if(e.target === panel) close(); });
+  panel.querySelector('.close').addEventListener('click', close);
+  panel.querySelector('.close').addEventListener('touchend',
+    e => { e.preventDefault(); close(); }, {passive:false});
+  addEventListener('keydown', e => {
+    if(e.code === 'Escape') close();
+    else if(e.key === '?' || (e.code === 'Slash' && e.shiftKey)) open();
+  });
+})();
+</script>
+</body>
+</html>

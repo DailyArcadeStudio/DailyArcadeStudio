@@ -1,0 +1,228 @@
+{
+  "id": "0015_llama_stack",
+  "title": "ラマ・スタック",
+  "video_title": "荷物は左か右にしか置けない",
+  "lang": "ja",
+  "voice": "ja_female",
+  "scenes": [
+    {
+      "kind": "hook",
+      "clip": "gust",
+      "narration": "このゲームの操作は、左か右か、それだけです。"
+    },
+    {
+      "kind": "image",
+      "prompt": "a narrow dirt trailhead in the Peruvian Andes at early morning, a loaded pickup truck parked, wooden crates stacked on the ground, two llamas waiting with woven saddle baskets, cold blue mountain light, photorealistic, cinematic wide shot, highly detailed",
+      "narration": "ペルーの山あいに、小さな登山口の村があります。朝いちばんに、荷物を積んだトラックが来ます。その先は道が細くて、車が入れません。"
+    },
+    {
+      "kind": "image",
+      "prompt": "close-up of a man's hands lifting a heavy wooden crate onto the left woven basket of a llama, the right basket already half full, dusty morning light, shallow depth of field, photorealistic, cinematic, highly detailed",
+      "narration": "だから、ここから先はラマが運びます。荷物を振り分けるのは、マルコさんという人です。荷物は左右のかごに、順番に入れていきます。"
+    },
+    {
+      "kind": "image",
+      "prompt": "a llama on a narrow cliffside mountain path leaning slightly to one side, its loaded baskets tilted, scattered spilled goods on the rocks below, harsh midday andean light, photorealistic, cinematic, highly detailed",
+      "narration": "ここが大事なところです。左右の重さがそろっていないと、途中で荷崩れします。崖の道なので、落としたら回収できません。マルコさんは、来た順にしか置けません。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "llama",
+      "kicker": "運ぶ人",
+      "title": "ラマ",
+      "bullets": [
+        "左右に **かごが1つずつ**",
+        "重さの差が そのまま **かたむき** になる",
+        "かたむきが振り切れたら、そこで終わり"
+      ],
+      "narration": "これがラマです。かごは左右に1つずつ。重さの差が、そのままかたむきになります。かたむきが振り切れたら、そこで荷崩れです。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "pannier",
+      "kicker": "置き場所",
+      "title": "かご",
+      "bullets": [
+        "**左か右か**、置けるのはこの2つだけ",
+        "入れたら **もう出せない**",
+        "重くなった側は、目に見えて沈む"
+      ],
+      "narration": "置き場所は、この2つのかごだけです。左か右か。それだけです。一度入れた荷物は、もう出せません。そうなんです。取り返しがつきません。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "light",
+      "kicker": "荷物 その1",
+      "title": "かるい荷物",
+      "bullets": [
+        "重さは **1**。いちばん小さい",
+        "かたむきを **少しだけ直せる**",
+        "序盤ほど よく降ってくる"
+      ],
+      "narration": "荷物は3種類あります。まず、かるい荷物。重さは1です。かたむきを少しだけ直したいとき、これが欲しくなります。序盤ほど、よく来ます。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "medium",
+      "kicker": "荷物 その2",
+      "title": "ふつうの荷物",
+      "bullets": [
+        "重さは **2**",
+        "いちばん よく降ってくる",
+        "2個そろえば **きれいにつり合う**"
+      ],
+      "narration": "次が、ふつうの荷物。重さは2です。いちばんよく降ってきます。左右に1個ずつ入れば、きれいにつり合います。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "heavy",
+      "kicker": "荷物 その3",
+      "title": "おもい荷物",
+      "bullets": [
+        "重さは **3**。落ちた瞬間に かごを叩く",
+        "軽い荷物 **3個ぶん** の差になる",
+        "時間がたつほど 増える"
+      ],
+      "narration": "そして、おもい荷物です。重さは3。落ちた瞬間に、かごを叩いて揺らします。軽い荷物3個ぶんの差です。しかも、時間がたつほど増えます。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "gust",
+      "kicker": "山の風",
+      "title": "突風",
+      "bullets": [
+        "かたむきを **片側へ押し続ける**",
+        "およそ4秒、止まらない",
+        "押し返せる荷物が来るかは 運"
+      ],
+      "narration": "山なので、風が吹きます。突風はかたむきを片側へ押し続けます。およそ4秒、止まりません。押し返せる荷物が来るかどうかは、運です。"
+    },
+    {
+      "kind": "events",
+      "clip": "events",
+      "kicker": "起きること",
+      "title": "静かなままでは終わりません",
+      "bullets": [
+        "**落石** — 降ってくる荷物が 全部おもいになる",
+        "**こぶ道** — 路面が跳ねて かたむきが暴れる",
+        "**積み替え** — 左右のかごが 入れ替わる",
+        "**濃霧** — 次に何が来るか 見えなくなる"
+      ],
+      "narration": "道は静かなままでは終わりません。落石が来ると、降ってくる荷物が全部おもいになります。こぶ道では、路面が跳ねてかたむきが暴れます。積み替えは、左右のかごがまるごと入れ替わります。今のかたむきが、そのまま反転します。そして濃霧。次に何が来るか、見えなくなります。ここが面白いところです。先読みが3個ぶん表示されているから、みなさん落ち着いていられるんです。それが消えます。"
+    },
+    {
+      "kind": "death",
+      "clip": "death",
+      "kicker": "終わりかた",
+      "title": "終わりかたは2つだけ",
+      "bullets": [
+        "**荷崩れ** — かたむきが 振り切れる",
+        "**振り分けそこね** — どちらも選ばずに 落ちきる",
+        "つり合っているほど 点が伸びる"
+      ],
+      "narration": "終わりかたは2つだけです。かたむきが振り切れて荷崩れするか、どちらも選ばないまま荷物が落ちきるか。点数は、つり合っているほど伸びます。まっすぐ保った時間が長いほど、倍率が上がります。マルコさんは、これを毎朝やっています。みなさんは、たぶん最初の風で終わります。"
+    },
+    {
+      "kind": "outro",
+      "title": "概要欄のリンクから遊べます",
+      "subtitle": "チャンネル登録もお願いします",
+      "narration": "今すぐ遊べます。概要欄のリンクからどうぞ。チャンネル登録もお願いします。明日も新しいゲームを出します。"
+    }
+  ],
+  "slug": "llama-stack",
+  "channel": "Daily Arcade Studio",
+  "events": [
+    "gust",
+    "boulder",
+    "bumps",
+    "swap",
+    "fog"
+  ],
+  "short": [
+    {
+      "mark": "gust",
+      "lead": -0.3,
+      "dur": 9.0,
+      "headline": "風は4秒止まらない"
+    },
+    {
+      "mark": "swap",
+      "lead": -0.5,
+      "dur": 8.0,
+      "headline": "左右がまるごと入れ替わる"
+    },
+    {
+      "mark": "boulder",
+      "lead": -0.5,
+      "dur": 8.0,
+      "headline": "全部おもい荷物"
+    },
+    {
+      "mark": "fog",
+      "lead": -0.5,
+      "dur": 7.0,
+      "headline": "先読みが消える"
+    },
+    {
+      "mark": "death",
+      "lead": -2.0,
+      "dur": 9.0,
+      "headline": "入れた荷物は出せない"
+    }
+  ],
+  "thumb": {
+    "hook": "左か右か、それだけ",
+    "sub": "かたむいたら荷崩れ。ブラウザで無料。",
+    "frame_mark": "gust",
+    "frame_lead": 1.0
+  },
+  "short_v2": {
+    "cuts": [
+      {
+        "kind": "clip",
+        "mark": "swap",
+        "lead": -0.5,
+        "dur": 4.5,
+        "headline": "今日のゲーム",
+        "narration": "今日のゲームです。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "llama",
+        "dur": 5.0,
+        "headline": "ラマ・スタック",
+        "narration": "あなたは、ラマに荷物を積む人です。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "pannier",
+        "dur": 5.0,
+        "headline": "左か右か",
+        "narration": "かごは左右に1つずつ。置けるのは、どちらかだけです。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "heavy",
+        "dur": 5.0,
+        "headline": "おもい荷物",
+        "narration": "おもい荷物は、軽い3個ぶん。片側に寄せると、一気にかたむきます。"
+      },
+      {
+        "kind": "clip",
+        "mark": "death",
+        "lead": -2.0,
+        "dur": 5.0,
+        "headline": "",
+        "narration": "そして、入れた荷物は出せません。"
+      },
+      {
+        "kind": "clip",
+        "mark": "run2",
+        "lead": 1.0,
+        "dur": 4.5,
+        "cta": "概要欄のリンクから遊べます",
+        "narration": "ブラウザで無料で遊べます。リンクは概要欄です。"
+      }
+    ]
+  }
+}
