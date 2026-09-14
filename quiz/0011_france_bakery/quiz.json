@@ -1,0 +1,161 @@
+{
+  "title": "あなたの「休みは義務?」診断",
+  "lead": "パン屋が週に1日、必ず休む国があります。あなたは休みを守る人ですか。それとも、開け続ける人ですか。",
+  "story": "フランスの多くの地域では、パン屋は週に1日、店を閉めなければならないと言われています。休んでもいい、ではなく、休まなければいけない。破ると罰金です。始まりはフランス革命のころ。パンが無いと暴動が起きた時代に、パリではパン屋が7月組と8月組に分かれて順番に夏休みを取る仕組みができました。この当番制は200年以上続き、2015年に終わったそうです。週1日の休みは、働く人と店主の団体が合意すると、県のトップが命令を出して全店に義務づける仕組みです。一店だけ休むと客を取られる。だから、みんなで休む。2018年には、夏に休まず店を開けたパン屋が、およそ3000ユーロの罰金になったと報じられました。日本ではコンビニで夜中でもパンが買えます。便利さと、休み。あなたはどちらの国のタイプに近いでしょうか。",
+  "axes": [
+    {
+      "label": "休みを守るか、開け続けるか",
+      "pos": "R",
+      "neg": "O"
+    },
+    {
+      "label": "みんなで決めるか、自分で決めるか",
+      "pos": "T",
+      "neg": "S"
+    },
+    {
+      "label": "昔ながらを守るか、便利さを取るか",
+      "pos": "H",
+      "neg": "C"
+    },
+    {
+      "label": "朝型か、夜型か",
+      "pos": "E",
+      "neg": "N"
+    }
+  ],
+  "questions": [
+    {
+      "text": "休みは権利ではなく、義務にしたほうがいいと思う。",
+      "axis": 0,
+      "sign": 1
+    },
+    {
+      "text": "休みが無いと、体がもたないタイプだ。",
+      "axis": 0,
+      "sign": 1
+    },
+    {
+      "text": "休むより、開けているほうが落ち着く。",
+      "axis": 0,
+      "sign": -1
+    },
+    {
+      "text": "決まりごとは、みんなで話し合って決めたい。",
+      "axis": 1,
+      "sign": 1
+    },
+    {
+      "text": "自分の店なら、休みは自分で決めたい。",
+      "axis": 1,
+      "sign": -1
+    },
+    {
+      "text": "一人だけ抜けがけするのは、ずるいと思う。",
+      "axis": 1,
+      "sign": 1
+    },
+    {
+      "text": "パンの材料は、小麦粉、水、塩、酵母だけでいい。",
+      "axis": 2,
+      "sign": 1
+    },
+    {
+      "text": "夜中でもコンビニでパンが買えるのは、ありがたい。",
+      "axis": 2,
+      "sign": -1
+    },
+    {
+      "text": "朝は早く起きて、先に動きたい。",
+      "axis": 3,
+      "sign": 1
+    },
+    {
+      "text": "夜のほうが、頭がさえる。",
+      "axis": 3,
+      "sign": -1
+    }
+  ],
+  "results": {
+    "RTHE": {
+      "name": "フランスの村のパン屋型",
+      "body": "週に1日はきちんと休む。決まりはみんなで守る。材料は昔ながら。そして朝は夜中から始まる。動画に出てきた、フランスのパン屋そのものです。休みも仕事の一部だと考えるタイプです。ただ、休まない人を見ると、少し気になってしまうかもしれません。",
+      "image_prompt": "photorealistic scene of a French village bakery at dawn, baker in flour-dusted apron placing fresh baguettes in a wicker basket, stone walls, warm oven glow, quiet cobblestone street outside, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage"
+    },
+    "RTHN": {
+      "name": "イタリアの長い夕食型",
+      "body": "休みは大事。決まりはみんなで。食べ物は昔ながら。でも、本番は夜です。イタリアでは夕食が遅く、長く続くと言われています。仲間と食卓を囲む時間を、何より大切にするタイプです。朝の早い仕事は、少し苦手かもしれません。",
+      "image_prompt": "photorealistic scene of a long outdoor dinner table in an Italian piazza at night, friends sharing pasta and bread, string lights overhead, old stone buildings, warm candlelight, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage"
+    },
+    "RTCE": {
+      "name": "ドイツの日曜休み型",
+      "body": "ドイツでは、日曜に多くの店が閉まると言われています。休みはみんなで守る。でも、開いている日は効率よく。朝も早い。きちんとした仕組みが好きなタイプです。便利さも大事にするので、休みの前にはしっかり買いだめするかもしれません。",
+      "image_prompt": "photorealistic scene of a quiet German town square on a Sunday morning, closed shop shutters, church tower, a person cycling with a bread bag, soft early light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage"
+    },
+    "RTCN": {
+      "name": "デンマークのヒュッゲ型",
+      "body": "仕事は早めに切り上げて、夜は家でゆっくり。休みはみんなで守るのが当たり前。デンマークでは、ろうそくをともして過ごす夜の時間を大切にすると言われています。便利なものは便利に使い、無理をしないタイプです。",
+      "image_prompt": "photorealistic scene of a cozy Danish living room at night, candles on a wooden table, wool blankets, people relaxing with tea, soft warm light, snow outside the window, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage"
+    },
+    "RSHE": {
+      "name": "京都の老舗型",
+      "body": "休みはきちんと取る。でも、休みの日は自分で決めたい。守るのは昔ながらのやり方。朝は早い。京都の古いお店のようなタイプです。人に言われなくても、自分の中に決まりがあります。まわりに合わせるのは、少し苦手かもしれません。",
+      "image_prompt": "photorealistic scene of a traditional Kyoto shop at early morning, wooden lattice front, noren curtain, an elderly craftsman sweeping the entrance, misty narrow street, soft light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage"
+    },
+    "RSHN": {
+      "name": "スペインの深夜ごはん型",
+      "body": "昼はしっかり休んで、夜は遅くまで。スペインでは夕食が夜の9時や10時になることもあると言われています。休み方は自分で決めたい。食べ物は昔ながらが好き。自分のペースを大事にするタイプです。朝が早い人とは、生活の時間がずれるかもしれません。",
+      "image_prompt": "photorealistic scene of a lively Spanish tapas bar late at night, plates of jamon and bread on the counter, people chatting, warm amber light, tiled walls, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage"
+    },
+    "RSCE": {
+      "name": "オーストラリアの朝サーフ型",
+      "body": "朝は早く起きて、まず自分の時間。休みは大事で、取り方は自分で決める。便利なものは遠慮なく使う。オーストラリアの海辺の街のようなタイプです。仕事と休みの切りかえがはっきりしています。人に合わせて休むのは、あまり得意ではないかもしれません。",
+      "image_prompt": "photorealistic scene of an Australian beach at sunrise, a surfer carrying a board past a small cafe, takeaway coffee cups on a bench, golden light, waves in the background, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage"
+    },
+    "RSCN": {
+      "name": "イギリスのパブ型",
+      "body": "仕事が終わったら、夜はパブでひと息。休みは自分で決めて、しっかり取る。便利なものは便利でいい。イギリスの街角のようなタイプです。がんばりすぎず、自分の時間を守ります。ただ、朝はちょっとつらいかもしれません。",
+      "image_prompt": "photorealistic scene of a traditional English pub interior at night, wooden bar, pints of ale, people talking by a fireplace, rain on the windows, warm light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage"
+    },
+    "OTHE": {
+      "name": "日本の商店街型",
+      "body": "朝早くからシャッターを開け、なるべく休まない。でも、まわりの店とは足並みをそろえる。売るものは昔ながら。日本の商店街のようなタイプです。まじめで、みんなのために働きます。休むのが下手なので、体には気をつけてください。",
+      "image_prompt": "photorealistic scene of a Japanese shopping street at early morning, shopkeepers raising shutters, wooden storefronts, delivery bicycle, soft morning light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage"
+    },
+    "OTHN": {
+      "name": "台湾の夜市型",
+      "body": "夜が本番。店はほぼ毎日開ける。まわりの店と一緒に、にぎやかに。売るものは昔ながらの味。台湾の夜市のようなタイプです。人が集まる場所が好きで、休みより活気を取ります。朝はゆっくりでいいと思っているかもしれません。",
+      "image_prompt": "photorealistic scene of a bustling Taiwanese night market, steaming food stalls, crowds of people, colorful lanterns, smoke and warm light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage"
+    },
+    "OTCE": {
+      "name": "ニューヨークの朝デリ型",
+      "body": "朝早くから開けて、休みは少なめ。仲間と一緒に、手早く回す。便利さが第一。ニューヨークの街角のデリのようなタイプです。忙しいのが好きで、じっとしているのが苦手かもしれません。たまには意識して休んでみてください。",
+      "image_prompt": "photorealistic scene of a busy New York corner deli at early morning, bagels and coffee on the counter, commuters in line, yellow taxis outside, morning sunlight between tall buildings, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage"
+    },
+    "OTCN": {
+      "name": "東京のコンビニ型",
+      "body": "夜中でも開いている。休まない。みんなで同じ仕組みを回す。便利さが何より大事。動画の最後に出てきた、日本のコンビニのようなタイプです。いつでも頼れる人ですが、いつ休んでいるのか、まわりが心配しているかもしれません。",
+      "image_prompt": "photorealistic scene of a brightly lit Tokyo convenience store at midnight, shelves of packaged bread, a customer at the counter, rainy street reflections outside, neon glow, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage"
+    },
+    "OSHE": {
+      "name": "ベトナムの朝屋台型",
+      "body": "夜明け前から店を出し、ほぼ毎日働く。休みも仕事も、自分で決める。作るものは昔ながらの味。ベトナムの朝の屋台のようなタイプです。自分の腕ひとつで生きていく人です。人に決められるのは、いちばん苦手かもしれません。",
+      "image_prompt": "photorealistic scene of a Vietnamese street food stall at dawn, steaming bowls of noodle soup, low plastic stools, a vendor cooking over a charcoal fire, motorbikes passing, soft misty light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage"
+    },
+    "OSHN": {
+      "name": "イスタンブールの夜の茶屋型",
+      "body": "夜遅くまで、店を開ける。休みは自分で決める。出すものは昔ながらのお茶とパン。イスタンブールの夜の茶屋のようなタイプです。人と話すのが好きで、夜がふけるほど元気になります。朝の予定は、入れないほうがいいかもしれません。",
+      "image_prompt": "photorealistic scene of an Istanbul tea house at night, tulip-shaped tea glasses on a brass tray, men playing backgammon, lanterns, old stone walls, the Bosphorus visible in the distance, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage"
+    },
+    "OSCE": {
+      "name": "シリコンバレーの起業家型",
+      "body": "朝は早く、休みはほとんど無い。決めるのは自分。便利なものは何でも使う。アメリカのスタートアップのようなタイプです。走り続けるのが好きな人です。でも、フランスならこの働き方は罰金かもしれません。休みも仕事のうちです。",
+      "image_prompt": "photorealistic scene of a young entrepreneur working on a laptop in a sunlit California cafe at early morning, coffee cup, notebook, palm trees outside the window, clean modern interior, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage"
+    },
+    "OSCN": {
+      "name": "シンガポールの深夜ホーカー型",
+      "body": "夜遅くまで開いている。休みは自分で決めて、少なめ。便利で速いのがいちばん。シンガポールの深夜の屋台街のようなタイプです。効率よく動き、夜に強い人です。休む日を決めておかないと、気づいたら働き続けているかもしれません。",
+      "image_prompt": "photorealistic scene of a Singapore hawker centre late at night, rows of food stalls, plates of noodles and satay, people eating under bright lights, humid tropical air, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage"
+    }
+  }
+}

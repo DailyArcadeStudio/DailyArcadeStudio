@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>あなたがルイ14世だったら</title>
+<meta property="og:title" content="あなたがルイ14世だったら">
+<meta property="og:description" content="1643年、あなたは4歳でフランスの王になりました。10歳のとき、パリで反乱が起きます。真夜中、母に起こされて、城からこっそり逃げました。その記憶を持ったまま、あなたは大人になります。これから、王として決める場面が8回あります。宮殿をどこに建てるか。貴族をどう扱うか。朝、誰を寝室に入れるか。ひとつずつ、選んでください。">
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;background:#0b0e14;color:#e6edf3;
+       font-family:-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;
+       line-height:1.75;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+  .wrap{max-width:600px;margin:0 auto;padding:22px 18px 60px}
+  h1{font-size:clamp(21px,5.6vw,29px);margin:6px 0 8px;line-height:1.4}
+  .lead{color:#8b949e;font-size:14.5px;margin:0 0 20px}
+  .prog{position:sticky;top:0;background:#0b0e14;padding:10px 0 12px;z-index:5}
+  .bar{height:4px;background:#1c2333;border-radius:2px;overflow:hidden}
+  .bar i{display:block;height:100%;background:#d4a544;width:0;transition:width .3s}
+  .count{font-size:12.5px;color:#8b949e;margin-top:6px;letter-spacing:.04em}
+  .scene{background:#121722;border:1px solid #222b3d;border-radius:14px;
+          padding:20px 18px;margin:0 0 16px}
+  .year{color:#d4a544;font-size:12.5px;letter-spacing:.1em;margin:0 0 8px}
+  .sit{font-size:16px;margin:0 0 18px;color:#dbe3ec}
+  .opts{display:grid;gap:10px}
+  .opt{border:1px solid #2b3550;background:#161d2b;color:#e6edf3;border-radius:11px;
+        padding:15px 16px;font-size:15.5px;cursor:pointer;text-align:left;
+        font-family:inherit;line-height:1.6;transition:.15s}
+  .opt:hover{border-color:#d4a544}
+  .opt:active{transform:scale(.985)}
+  .log{margin:0 0 20px}
+  .logi{border-left:2px solid #2b3550;padding:2px 0 2px 14px;margin:0 0 10px;
+         font-size:13.5px;color:#7d8796}
+  .logi b{color:#b3bdcc;font-weight:600}
+  #end{display:none} #end.on{display:block}
+  .eimg{width:100%;border-radius:14px;display:block;margin:0 0 18px;background:#121722}
+  .etag{color:#d4a544;font-size:13px;letter-spacing:.09em;margin:0 0 4px}
+  .ename{font-size:clamp(23px,6.4vw,32px);margin:0 0 14px;line-height:1.35}
+  .ebody{font-size:15.5px;color:#c9d1d9;margin:0 0 20px;white-space:pre-wrap}
+  .fact{background:#121722;border-left:3px solid #58a6ff;border-radius:0 10px 10px 0;
+         padding:14px 16px;margin:0 0 20px;font-size:14.5px;color:#c9d1d9}
+  .fact b{color:#58a6ff;display:block;margin-bottom:5px;font-size:12.5px;
+           letter-spacing:.08em}
+  .warn{color:#6e7681;font-size:12.5px;margin:18px 0 0;padding:12px 14px;
+         border:1px dashed #2b3550;border-radius:10px}
+  .share{display:grid;gap:10px;margin:22px 0}
+  .share a,.share button{display:block;text-align:center;padding:14px;border-radius:12px;
+        text-decoration:none;font-weight:700;font-size:15px;border:1px solid #2b3550;
+        background:#161d2b;color:#e6edf3;cursor:pointer;font-family:inherit}
+  .back{display:inline-block;margin-top:6px;color:#8b949e;font-size:14px}
+  footer{margin-top:32px;color:#6e7681;font-size:12.5px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div id="sim">
+  <h1>あなたがルイ14世だったら</h1>
+  <p class="lead">1643年、あなたは4歳でフランスの王になりました。10歳のとき、パリで反乱が起きます。真夜中、母に起こされて、城からこっそり逃げました。その記憶を持ったまま、あなたは大人になります。これから、王として決める場面が8回あります。宮殿をどこに建てるか。貴族をどう扱うか。朝、誰を寝室に入れるか。ひとつずつ、選んでください。</p>
+  <div class="prog"><div class="bar"><i id="pbar"></i></div>
+    <div class="count"><span id="pnum">1</span> / 8</div></div>
+  <div class="log" id="log"></div>
+  <div class="scene" id="scene"></div>
+</div>
+
+<div id="end">
+  <img class="eimg" id="eimg" alt="">
+  <p class="etag" id="etag"></p>
+  <h1 class="ename" id="ename"></h1>
+  <p class="ebody" id="ebody"></p>
+  <div class="fact" id="fact"></div>
+  <div class="share">
+    <a id="tw" target="_blank" rel="noopener">結果をXに投稿する</a>
+    <button id="again">やり直す</button>
+  </div>
+  <a class="back" href="../">ほかのシミュレータを見る</a>
+  <p class="warn">これはシミュレータです。あなたの選択によっては史実と異なる結末になります。
+  実際に起きたことは上の「史実」の欄をご覧ください。</p>
+</div>
+
+<footer>MosukeStudio</footer>
+</div>
+
+<script>
+const DATA = {"title": "あなたがルイ14世だったら", "lead": "1643年、あなたは4歳でフランスの王になりました。10歳のとき、パリで反乱が起きます。真夜中、母に起こされて、城からこっそり逃げました。その記憶を持ったまま、あなたは大人になります。これから、王として決める場面が8回あります。宮殿をどこに建てるか。貴族をどう扱うか。朝、誰を寝室に入れるか。ひとつずつ、選んでください。", "axes": [{"label": "見せて支配するか、実務で支配するか", "pos": "演", "neg": "実"}, {"label": "自分ひとりで決めるか、人に任せるか", "pos": "独", "neg": "任"}], "history": "ルイ14世は1661年に首相を置かず親政を始め、1682年に宮廷をベルサイユへ移しました。儀式で貴族を宮殿につなぎ止める一方、何度も戦争をして財政は苦しくなります。1685年にはナントの王令を取り消し、多くの人が国を出たと言われています。", "scenes": [{"year": "1651年 13歳・成年の宣言", "situation": "フロンドの乱は、まだ終わっていません。あなたは13歳になり、法の上では成年です。母とマザランが、実際の政治を動かしています。ここで「自分で決める」と言うこともできます。ただ、貴族はまだ剣を持って各地にいます。あなたには、まだ何もありません。", "options": [{"text": "今は待つ。マザランの下で、政治のやり方をだまって見て覚える", "a": -1, "b": -2}, {"text": "成年を大きく宣言し、式典を開いて「王はここにいる」と見せる", "a": 2, "b": 1}]}, {"year": "1661年 マザランが死んだ翌朝", "situation": "政治を任せていたマザランが亡くなりました。大臣たちがあなたの部屋に来て、これから誰に相談すればよいか、と聞きます。ふつうなら、次の首相を決めます。あなたは22歳です。返事を、その場で求められています。", "options": [{"text": "「これからは私に」と答え、首相を置かない。会議は自分が仕切る", "a": 1, "b": 2}, {"text": "信頼できる者を次の首相に立て、自分は大きな方針だけを見る", "a": -1, "b": -2}]}, {"year": "1661年 フーケの宴", "situation": "財務のフーケが、新しい城で宴を開きました。あなたが持っていないほど豪華です。噴水、花火、料理。客はみな、フーケをたたえています。招かれたあなたは、席で黙って見ています。国の金の扱いに、疑いもあります。", "options": [{"text": "笑って礼を言い、後日フーケを捕らえる。以後、金はコルベールに任せる", "a": 1, "b": -1}, {"text": "その場では何もせず、代わりに自分がもっと豪華な宮殿を持つと決める", "a": 2, "b": 1}]}, {"year": "1670年ごろ ベルサイユをどうするか", "situation": "父が使っていた狩りの小屋を、どこまで大きくするか。建築家たちが案を持ってきました。パリの城を直す案もあります。ベルサイユを巨大にすれば、途方もない金と年月がかかります。ただし、パリからは20キロ離れています。あの夜のパリから。", "options": [{"text": "パリに残り、城を手堅く直す。金は軍と国の仕事に回す", "a": -2, "b": -1}, {"text": "ベルサイユを、ヨーロッパで一番の宮殿にする。庭も噴水も、全部やる", "a": 2, "b": 1}]}, {"year": "1682年 宮廷の引っ越し", "situation": "宮殿ができてきました。政府ごと移すかどうかを決めます。移すなら、貴族たちも連れてきます。部屋は足りません。身分の高い者が、屋根裏でくらすことになります。それでも来るかどうかは、来てみないと分かりません。", "options": [{"text": "政府も貴族も、まとめてベルサイユへ移す。宮廷はここひとつにする", "a": 2, "b": 2}, {"text": "宮殿は離宮のままにして、政治はパリで続ける。貴族は領地にいてよい", "a": -2, "b": -1}]}, {"year": "1683年ごろ 朝の儀式をどう決めるか", "situation": "朝、目を覚ますところを貴族に見せる。この習わしを、どこまで細かくするか。入れる順番、シャツを渡す役、靴を持つ役。決めれば、貴族はその役を争います。決めなければ、朝は静かです。侍従が、案を書いた紙を持って待っています。", "options": [{"text": "役と順番を細かく決める。小さな役に、大きな意味を持たせる", "a": 2, "b": 1}, {"text": "儀式は短くする。朝は着替えて、すぐ大臣との会議に入る", "a": -2, "b": -1}]}, {"year": "1685年 ナントの王令", "situation": "祖父の代から、プロテスタントには信仰の自由が認められてきました。これをやめるべきだ、という声が周りにあります。国はひとつの信仰でまとまるべきだ、と。ただ、彼らの中には職人や商人が多くいます。取り消せば、国を出る人が出るでしょう。", "options": [{"text": "取り消す。信仰をひとつにそろえ、王の名で決めたと示す", "a": 1, "b": 2}, {"text": "そのままにする。数は減っても、働く人を国に残す", "a": -1, "b": -2}]}, {"year": "1701年 スペインの王位", "situation": "スペインの王が亡くなり、あなたの孫に王位を譲るという遺言が残りました。受ければ、フランスとスペインが近づきます。周りの国は、それを許さないでしょう。断れば、王位はオーストリアの家に行きます。あなたは62歳。国の金は、もう十分ではありません。", "options": [{"text": "受ける。孫をスペイン王として送り出し、大きな戦争も覚悟する", "a": 1, "b": 2}, {"text": "断る。分割の話し合いに乗り、これ以上の戦争を避ける", "a": -1, "b": -2}]}], "endings": {"演独": {"tag": "ENDING 1", "name": "太陽王", "body": "これが、史実にいちばん近い道です。あなたは首相を置かず、自分で決め続けました。ベルサイユを建て、貴族をそこに住まわせ、朝の儀式で順番を争わせました。剣で戦っていた者たちが、シャツを渡す役で戦うようになります。一方で、戦争は続き、金は減りました。1715年、あなたは76歳で亡くなります。ベッドのそばには、5歳のひ孫がいました。国は、光と借金の両方を残しました。", "image_prompt": "King Louis XIV in his fifties standing alone at dawn in the vast mirrored gallery of Versailles, full-bottomed black curled wig, ermine and blue fleur-de-lis robes, red high-heeled shoes, low golden light through tall arched windows, courtiers waiting far behind him, 19th century academic history painting, oil on canvas, cinematic golden light, no text, no letters, no words, no writing, no signage", "image": "img/演独.jpg"}, "演任": {"tag": "ENDING 2", "name": "飾られた王", "body": "あなたは宮殿と儀式を選び、決めることは人に任せました。ベルサイユはできあがり、朝の行列も、夜の燭台も、すべて整っています。ただ、会議の部屋にあなたはいません。方針を決めるのは首相と大臣です。貴族たちは、あなたの前では頭を下げ、廊下に出ると別の名前を口にします。王は、たしかに国の真ん中にいました。中身が、少しずつ外へ出ていっただけです。", "image_prompt": "A magnificently dressed French king seated on a throne in a crowded gilded hall, courtiers bowing before him while ministers confer quietly in a doorway behind the throne, heavy brocade curtains, candlelight, 19th century academic history painting, oil on canvas, rich but cold light, no text, no letters, no words, no writing, no signage", "image": "img/演任.jpg"}, "実独": {"tag": "ENDING 3", "name": "机の上の54年", "body": "あなたは宮殿を大きくせず、儀式も短くしました。朝は着替えて、すぐ会議です。人にも任せません。ほぼ毎日、数時間、書類を読んで決めます。金は建物ではなく、軍と道と港に回りました。ただ、貴族は自分の領地にいます。そこで何を話しているかは、見えません。あなたの名前は、ベルサイユではなく、帳簿と法令の中に残ったでしょう。地味な、しかし途方もなく長い54年です。", "image_prompt": "A French king in plain dark coat and simple wig working late at a document-covered desk in a modest Paris cabinet, two ministers standing with folders, single candle and a fire, maps on the wall, 17th century, 19th century academic history painting, oil on canvas, quiet warm light, no text, no letters, no words, no writing, no signage", "image": "img/実独.jpg"}, "実任": {"tag": "ENDING 4", "name": "首相たちの世紀", "body": "あなたは派手なことをせず、有能な者に任せ続けました。マザランの次にも首相がいて、その次にもいます。国の仕事は回りました。戦争は少し減り、プロテスタントの職人も国に残ります。ただ、王の姿は遠くなりました。貴族は領地で力を保ち、政治は大臣の家がらのものになっていきます。あなたが72年王だったことは、たぶん教科書の一行です。国は、たぶん少し豊かです。", "image_prompt": "A quiet 17th century French council chamber where several ministers debate around a long table covered with papers, the king's empty chair at the head under a canopy, tall windows with grey daylight, 19th century academic history painting, oil on canvas, sober diffuse light, no text, no letters, no words, no writing, no signage", "image": "img/実任.jpg"}}};
+let i = 0;
+const score = [0, 0];
+const picks = [];
+
+const sceneEl = document.getElementById('scene');
+const logEl = document.getElementById('log');
+
+function render() {
+  const s = DATA.scenes[i];
+  document.getElementById('pnum').textContent = i + 1;
+  document.getElementById('pbar').style.width = (i / DATA.scenes.length * 100) + '%';
+  sceneEl.innerHTML = `<p class="year">${s.year}</p><p class="sit">${s.situation}</p>`;
+  const box = document.createElement('div');
+  box.className = 'opts';
+  s.options.forEach(o => {
+    const b = document.createElement('button');
+    b.className = 'opt';
+    b.textContent = o.text;
+    b.onclick = () => choose(o);
+    box.appendChild(b);
+  });
+  sceneEl.appendChild(box);
+}
+
+function choose(o) {
+  score[0] += o.a || 0;
+  score[1] += o.b || 0;
+  picks.push(o.text);
+  const d = document.createElement('div');
+  d.className = 'logi';
+  d.innerHTML = `<b>${DATA.scenes[i].year}</b> ${o.text}`;
+  logEl.appendChild(d);
+  i++;
+  if (i < DATA.scenes.length) { render(); scrollTo(0, 0); }
+  else finish();
+}
+
+function finish() {
+  // 2軸の符号で4象限 → 4つの結末
+  const key = (score[0] >= 0 ? DATA.axes[0].pos : DATA.axes[0].neg)
+            + (score[1] >= 0 ? DATA.axes[1].pos : DATA.axes[1].neg);
+  const e = DATA.endings[key] || DATA.endings[Object.keys(DATA.endings)[0]];
+  document.getElementById('eimg').src = e.image;
+  document.getElementById('eimg').alt = e.name;
+  document.getElementById('etag').textContent = e.tag || 'ENDING';
+  document.getElementById('ename').textContent = e.name;
+  document.getElementById('ebody').textContent = e.body;
+  document.getElementById('fact').innerHTML =
+    `<b>史実では</b>${DATA.history}`;
+  const txt = encodeURIComponent(
+    `${DATA.title}\n私の結末は「${e.name}」でした。\n`);
+  document.getElementById('tw').href =
+    `https://twitter.com/intent/tweet?text=${txt}&url=${encodeURIComponent(location.href)}`;
+  document.getElementById('sim').style.display = 'none';
+  document.getElementById('end').classList.add('on');
+  scrollTo(0, 0);
+}
+
+document.getElementById('again').onclick = () => location.reload();
+render();
+</script>
+</body>
+</html>
