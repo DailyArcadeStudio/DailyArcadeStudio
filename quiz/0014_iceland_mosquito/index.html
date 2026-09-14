@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>あなたの「住みつける場所」診断</title>
+<meta property="og:title" content="あなたの「住みつける場所」診断">
+<meta property="og:description" content="同じ生きものでも、住める土地と住めない土地があります。あなたはどんな場所なら、根を張れる人でしょうか。">
+<meta property="og:type" content="website">
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;background:#0d1117;color:#e6edf3;
+       font-family:-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;
+       line-height:1.7;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+  .wrap{max-width:560px;margin:0 auto;padding:24px 18px 60px}
+  h1{font-size:clamp(22px,6vw,30px);margin:8px 0 6px;line-height:1.4}
+  .lead{color:#8b949e;font-size:15px;margin:0 0 22px}
+  .story{background:#161b22;border-left:3px solid #ffd23b;border-radius:0 10px 10px 0;
+          padding:14px 16px;margin:0 0 26px;font-size:14.5px;color:#c9d1d9}
+  .prog{position:sticky;top:0;background:#0d1117;padding:10px 0 12px;z-index:5}
+  .bar{height:5px;background:#21262d;border-radius:3px;overflow:hidden}
+  .bar i{display:block;height:100%;background:#ffd23b;width:0;transition:width .25s}
+  .count{font-size:13px;color:#8b949e;margin-top:6px}
+  .q{margin:0 0 30px}
+  .qt{font-size:17px;font-weight:700;margin:0 0 14px}
+  .opts{display:grid;gap:8px}
+  .opt{border:1px solid #30363d;background:#161b22;color:#e6edf3;border-radius:10px;
+        padding:13px 14px;font-size:15px;cursor:pointer;text-align:left;
+        font-family:inherit;transition:.15s}
+  .opt:active{transform:scale(.985)}
+  .opt.on{border-color:#ffd23b;background:#1c2128;color:#ffd23b;font-weight:700}
+  .go{width:100%;padding:16px;border:none;border-radius:12px;background:#ffd23b;
+       color:#0d1117;font-size:17px;font-weight:700;cursor:pointer;font-family:inherit;
+       margin-top:8px}
+  .go:disabled{background:#21262d;color:#6e7681;cursor:default}
+  #result{display:none}
+  #result.on{display:block}
+  .rimg{width:100%;border-radius:14px;display:block;margin:0 0 18px;background:#161b22}
+  .rtype{color:#ffd23b;font-size:14px;letter-spacing:.08em;margin:0 0 4px}
+  .rname{font-size:clamp(24px,7vw,34px);margin:0 0 14px;line-height:1.35}
+  .rbody{font-size:15.5px;color:#c9d1d9;margin:0 0 18px}
+  .axes{display:grid;gap:10px;margin:0 0 24px}
+  .ax{font-size:13px;color:#8b949e}
+  .axbar{height:6px;background:#21262d;border-radius:3px;margin-top:5px;position:relative}
+  .axbar i{position:absolute;top:0;height:100%;background:#58a6ff;border-radius:3px}
+  .share{display:grid;gap:10px;margin:24px 0}
+  .share a,.share button{display:block;text-align:center;padding:14px;border-radius:12px;
+        text-decoration:none;font-weight:700;font-size:15px;border:1px solid #30363d;
+        background:#161b22;color:#e6edf3;cursor:pointer;font-family:inherit}
+  .back{display:inline-block;margin-top:8px;color:#8b949e;font-size:14px}
+  footer{margin-top:34px;color:#6e7681;font-size:12.5px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div id="quiz">
+  <h1>あなたの「住みつける場所」診断</h1>
+  <p class="lead">同じ生きものでも、住める土地と住めない土地があります。あなたはどんな場所なら、根を張れる人でしょうか。</p>
+  <div class="story">夏の夜、窓を開けて寝る。耳元でプーンという音がする。日本ではふつうのことですよね。でも、その音が存在しない国があります。アイスランドです。世界には3千種をこえる蚊がいると言われています。そのどれも、この島には住みついていないそうです。水たまりはいくらでもあります。池も沼もあります。条件はそろって見えるのに、わかない。理由はふたつあると言われています。ひとつ。冬に凍って、とけて、また凍る。この繰り返しが、蚊の子どもが育つ途中を邪魔する。ずっと寒いほうが、実は暮らしやすいんです。北極圏には蚊がたくさんいます。安定した寒さより、中途半端な不安定さのほうがきつい。逆なんですね。ふたつ。大陸から遠い島だから。飛行機で一匹来ることはあります。でも、来ることと住みつくことは別です。仲間がいない。増える場所もない。そこで終わってしまいます。ただし、虫がいない国ではありません。千種をこえる虫がいて、ユスリカという蚊そっくりの虫が大群で飛びます。刺さないだけです。日本も島ですよね。大陸にいるのに日本にはいない生きものが、けっこういます。海が線を引いているんです。さて、あなたはどんな場所に、住みつけるタイプですか。</div>
+  <div class="prog"><div class="bar"><i id="pbar"></i></div>
+    <div class="count"><span id="pnum">0</span> / 10 問</div></div>
+  <div id="qs"></div>
+  <button class="go" id="submit" disabled>結果を見る</button>
+</div>
+
+<div id="result">
+  <img class="rimg" id="rimg" alt="">
+  <p class="rtype" id="rtype"></p>
+  <h1 class="rname" id="rname"></h1>
+  <p class="rbody" id="rbody"></p>
+  <div class="axes" id="axes"></div>
+  <div class="share">
+    <a id="tw" target="_blank" rel="noopener">結果をXに投稿する</a>
+    <button id="again">もう一度やる</button>
+  </div>
+  <a class="back" href="../../">ほかのゲーム・診断を見る</a>
+</div>
+
+<footer>Daily Arcade Studio</footer>
+</div>
+
+<script>
+const DATA = {"title": "あなたの「住みつける場所」診断", "lead": "同じ生きものでも、住める土地と住めない土地があります。あなたはどんな場所なら、根を張れる人でしょうか。", "story": "夏の夜、窓を開けて寝る。耳元でプーンという音がする。日本ではふつうのことですよね。でも、その音が存在しない国があります。アイスランドです。世界には3千種をこえる蚊がいると言われています。そのどれも、この島には住みついていないそうです。水たまりはいくらでもあります。池も沼もあります。条件はそろって見えるのに、わかない。理由はふたつあると言われています。ひとつ。冬に凍って、とけて、また凍る。この繰り返しが、蚊の子どもが育つ途中を邪魔する。ずっと寒いほうが、実は暮らしやすいんです。北極圏には蚊がたくさんいます。安定した寒さより、中途半端な不安定さのほうがきつい。逆なんですね。ふたつ。大陸から遠い島だから。飛行機で一匹来ることはあります。でも、来ることと住みつくことは別です。仲間がいない。増える場所もない。そこで終わってしまいます。ただし、虫がいない国ではありません。千種をこえる虫がいて、ユスリカという蚊そっくりの虫が大群で飛びます。刺さないだけです。日本も島ですよね。大陸にいるのに日本にはいない生きものが、けっこういます。海が線を引いているんです。さて、あなたはどんな場所に、住みつけるタイプですか。", "axes": [{"label": "安定した環境がいいか、変化がある環境がいいか", "pos": "S", "neg": "V"}, {"label": "人の輪の中にいたいか、ひとりで平気か", "pos": "G", "neg": "A"}, {"label": "先に備えるか、起きてから動くか", "pos": "P", "neg": "N"}, {"label": "あるものを数えるか、ないものに気づくか", "pos": "H", "neg": "M"}], "questions": [{"text": "毎日のリズムが同じだと、気持ちが落ち着く。", "axis": 0, "sign": 1}, {"text": "予定がころころ変わる日のほうが、楽しい。", "axis": 0, "sign": -1}, {"text": "きつくても、先が読める状況のほうがましだと思う。", "axis": 0, "sign": 1}, {"text": "知らない土地でも、仲間がいればやっていける。", "axis": 1, "sign": 1}, {"text": "ひとりきりの時間が長くても、あまり平気だ。", "axis": 1, "sign": -1}, {"text": "近くに同じ趣味の人がいると、続けられる。", "axis": 1, "sign": 1}, {"text": "夏になる前に、虫よけや網戸をたしかめる。", "axis": 2, "sign": 1}, {"text": "困ったことは、起きてから考えればいいと思う。", "axis": 2, "sign": -1}, {"text": "旅行先では、なにがあるかをまず見にいく。", "axis": 3, "sign": 1}, {"text": "「ここには、あれがないな」と気づくほうだ。", "axis": 3, "sign": -1}], "results": {"SGPH": {"name": "日本の夏じたく型", "body": "変わらない毎日が好きで、まわりに人がいて、先に手を打つタイプです。あるものをきちんと数えて、足りないぶんを買いそろえます。日本の夏じたくに、いちばん近い形かもしれません。蚊取り線香も網戸も、たぶん5月には用意ずみですよね。備えが効くぶん、想定の外が来たときだけ少し戸惑うかもしれません。", "image_prompt": "photorealistic scene of a Japanese house veranda in early summer, a mosquito coil smoking in a ceramic holder, a repaired screen door, green garden beyond, warm afternoon light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/SGPH.jpg"}, "SGPM": {"name": "北欧の冬支度型", "body": "安定を好み、仲間と動き、先に備えます。そして「ここには、あれがないな」と気づくほうです。足りないものを見つけて、みんなで先に埋めておく人。長い冬を越す町の準備係のようなタイプです。ないものばかり数えると疲れるので、ある日を楽しむ時間も残してください。", "image_prompt": "photorealistic scene of a Nordic village in late autumn, stacked firewood along a red wooden house wall, snow shovels leaning by the door, low grey daylight over bare birch trees, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/SGPM.jpg"}, "SGNH": {"name": "商店街の夕方型", "body": "落ち着いた毎日と、人の輪が好きです。備えるより、その場でどうにかします。目の前にあるものを見て、ちゃんと楽しめる人です。だれかが忘れ物をしても、あなたのまわりならなんとかなります。ときどきだけ、先の予定を書き出しておくと、もっと楽になります。", "image_prompt": "photorealistic scene of a small Japanese shopping street in the evening, warm lantern light, people chatting outside a vegetable shop, steam from a food stall, wet pavement reflections, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/SGNH.jpg"}, "SGNM": {"name": "アイルランドの長話型", "body": "静かな日常と、まわりの人が好き。細かい準備はしません。そして「今日はあの人がいないな」と、すぐ気づきます。いないものに目がいくぶん、人のことをよく見ているタイプです。気づいたことは、口に出してみるといいかもしれません。", "image_prompt": "photorealistic scene of an Irish countryside pub interior, a turf fire burning, worn wooden stools, a fiddle resting on a bench, soft lamp light through rain-streaked windows, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/SGNM.jpg"}, "SAPH": {"name": "灯台守型", "body": "変わらない環境で、ひとりで、先まで備える人です。あるものを数えて、きちんと点検します。海のそばの灯台を守る人に、雰囲気が近いかもしれません。準備がひとりで完結するのは強みですが、たまには人に見せてみてください。", "image_prompt": "photorealistic scene of a lone white lighthouse on a rocky headland at dusk, calm sea, a small keeper's cottage with one lit window, clear cold sky, wide shot, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/SAPH.jpg"}, "SAPM": {"name": "アイスランド型", "body": "安定した環境を好み、ひとりでも平気で、先に備えます。そして、ないものによく気づきます。動画に出てきたアイスランドに、いちばん近いタイプです。蚊がいない。網戸も売り場もいらない。ないことが、その国の景色になっていましたよね。あなたも「ない」を、ちゃんと価値にできる人かもしれません。", "image_prompt": "photorealistic scene of an Icelandic summer landscape at midnight sun, green moss over black volcanic rock, a still pond reflecting orange sky, a single small house in the distance, no people, wide shot, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/SAPM.jpg"}, "SANH": {"name": "本棚のある部屋型", "body": "落ち着いた毎日を、ひとりで過ごすのが好き。先の備えはあまりしません。そのかわり、身のまわりにあるものをよく見ています。同じ部屋で同じ本を読み返すような、静かな時間が合うタイプです。たまに窓の外へ出ると、ある物が増えます。", "image_prompt": "photorealistic scene of a quiet study room with floor-to-ceiling bookshelves, an armchair by a window, afternoon light across a wooden floor, a cup of tea on a side table, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/SANH.jpg"}, "SANM": {"name": "冬の湖のほとり型", "body": "静かで変わらない場所が好き。ひとりで平気。備えはあまりしません。そして、いないもの、なくなったものに気づきます。人より先に、季節が変わったことに気づくタイプかもしれません。その気づきは、だれかに話すと役に立ちます。", "image_prompt": "photorealistic scene of a frozen lake shore in winter, thin cracked ice over dark water, bare reeds at the edge, distant snow-covered hills under pale grey light, no people, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/SANM.jpg"}, "VGPH": {"name": "祭りの実行委員型", "body": "変化のある毎日が好きで、人と動き、先に備えます。あるものを数えて、足りないぶんを手配する人。イベントの前日にいちばん頼りになるタイプです。予定が変わってもへこたれませんが、たまには休む予定も入れてください。", "image_prompt": "photorealistic scene of people setting up a summer festival street in Japan, stringing paper lanterns between poles, stacked crates and folding tables, late afternoon sun, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/VGPH.jpg"}, "VGPM": {"name": "オランダの水辺型", "body": "変化を楽しみ、仲間と動き、先に手を打ちます。そして「ここが足りない」と気づくのが早い。海より低い土地で水と付き合ってきた国のような、備えの発想を持つタイプです。足りないところばかり見えるときは、できた部分も数えてみてください。", "image_prompt": "photorealistic scene of a Dutch polder landscape with a canal, a pumping station and a low dike, flat green fields under a wide cloudy sky, bicycles on a path, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/VGPM.jpg"}, "VGNH": {"name": "屋台の夜市型", "body": "変わる毎日と、人の多さが好き。備えはせず、その場でどうにかします。目の前にあるものを、めいっぱい楽しむタイプです。台湾の夜市のような場所が、たぶん合います。持ち物を少しだけ増やしておくと、困る回数が減ります。", "image_prompt": "photorealistic scene of a busy night market in Taiwan, food stalls with steam and hanging light bulbs, crowds moving between stands, warm colorful lighting, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/VGNH.jpg"}, "VGNM": {"name": "旅の途中の宿型", "body": "変化が好きで、人といるのが好き。準備はしません。そして、その土地に「ないもの」にすぐ気づきます。旅先で「ここには自販機がないんだ」と最初に言うタイプです。その視点は、旅の話をおもしろくします。", "image_prompt": "photorealistic scene of a shared guesthouse common room, backpacks against the wall, travelers sitting around a low table with mugs, evening light through an open door, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/VGNM.jpg"}, "VAPH": {"name": "単独登山型", "body": "変化のある環境を、ひとりで進みます。装備はきちんとそろえます。あるものを数えて、持てるだけ持っていくタイプ。山にひとりで入る人の準備に近いかもしれません。だれかに行き先を伝えておくと、もっと安心です。", "image_prompt": "photorealistic scene of a solo hiker's gear laid out on a wooden floor before a trip, boots, rolled tent, rope and a packed backpack, morning light through a window, no people, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/VAPH.jpg"}, "VAPM": {"name": "渡り鳥型", "body": "環境が変わっても平気。ひとりで動けて、先の見通しを立てます。そして、季節や場所の「なくなったもの」に敏感です。遠くの島まで渡っていく鳥のように、自分で移れるタイプです。ただ、住みつくには仲間もいる、という話もありましたよね。", "image_prompt": "photorealistic scene of migratory birds flying over a cold northern coastline at dawn, dark cliffs and grey sea below, scattered clouds, wide shot, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/VAPM.jpg"}, "VANH": {"name": "路地歩き型", "body": "変化が好きで、ひとりが気楽。計画は立てません。そして、目に入ったものをちゃんと見つけます。知らない街の路地を、あてもなく歩くのが合うタイプです。たまに地図を見ると、もっと遠くまで行けます。", "image_prompt": "photorealistic scene of a narrow old town alley with stone walls, laundry hanging above, a cat on a step, late afternoon sunlight cutting across the passage, no people, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/VANH.jpg"}, "VANM": {"name": "流氷の海型", "body": "変化のある場所で、ひとりで動き、備えは最小限。そして、ないものに気づきます。凍ってとけてを繰り返す海のような、動きの多い環境が合うタイプです。動画では、その不安定さが蚊を寄せつけませんでした。あなたには、それがちょうどいいのかもしれません。", "image_prompt": "photorealistic scene of drift ice floating on a dark northern sea, broken white floes under a pale winter sky, distant snowy shoreline, no people, wide shot, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/VANM.jpg"}}};
+const SCALE = ["とてもそう","ややそう","どちらとも","あまり違う","全く違う"];
+
+const qsEl = document.getElementById('qs');
+const ans = new Array(DATA.questions.length).fill(null);
+
+DATA.questions.forEach((q, i) => {
+  const d = document.createElement('div');
+  d.className = 'q';
+  d.innerHTML = `<p class="qt">Q${i+1}. ${q.text}</p>`;
+  const box = document.createElement('div');
+  box.className = 'opts';
+  SCALE.forEach((label, k) => {
+    const b = document.createElement('button');
+    b.className = 'opt'; b.textContent = label;
+    b.onclick = () => {
+      ans[i] = 2 - k;                    // +2(とてもそう) 〜 -2(全く違う)
+      [...box.children].forEach(c => c.classList.remove('on'));
+      b.classList.add('on');
+      update();
+    };
+    box.appendChild(b);
+  });
+  d.appendChild(box);
+  qsEl.appendChild(d);
+});
+
+function update() {
+  const done = ans.filter(a => a !== null).length;
+  document.getElementById('pnum').textContent = done;
+  document.getElementById('pbar').style.width = (done / ans.length * 100) + '%';
+  document.getElementById('submit').disabled = done < ans.length;
+}
+
+document.getElementById('submit').onclick = () => {
+  // 軸ごとにスコアを合計する。q.axis は 0..3、q.sign は +1/-1
+  const score = [0, 0, 0, 0];
+  const max = [0, 0, 0, 0];
+  DATA.questions.forEach((q, i) => {
+    score[q.axis] += ans[i] * q.sign;
+    max[q.axis] += 2;
+  });
+  // 各軸を2値にして 16 タイプのキーを作る
+  const key = score.map((s, i) => s >= 0 ? DATA.axes[i].pos : DATA.axes[i].neg).join('');
+  const r = DATA.results[key] || DATA.results[Object.keys(DATA.results)[0]];
+
+  document.getElementById('rimg').src = r.image;
+  document.getElementById('rimg').alt = r.name;
+  document.getElementById('rtype').textContent = key;
+  document.getElementById('rname').textContent = r.name;
+  document.getElementById('rbody').textContent = r.body;
+
+  const ax = document.getElementById('axes');
+  ax.innerHTML = '';
+  DATA.axes.forEach((a, i) => {
+    const pct = Math.round((score[i] + max[i]) / (max[i] * 2) * 100);
+    const d = document.createElement('div');
+    d.className = 'ax';
+    d.innerHTML = `${a.label}<div class="axbar"><i style="left:0;width:${pct}%"></i></div>`;
+    ax.appendChild(d);
+  });
+
+  const txt = encodeURIComponent(`${DATA.title}\n私は「${r.name}」でした。\n`);
+  document.getElementById('tw').href =
+    `https://twitter.com/intent/tweet?text=${txt}&url=${encodeURIComponent(location.href)}`;
+
+  document.getElementById('quiz').style.display = 'none';
+  document.getElementById('result').classList.add('on');
+  scrollTo(0, 0);
+};
+
+document.getElementById('again').onclick = () => {
+  location.reload();
+};
+</script>
+</body>
+</html>
