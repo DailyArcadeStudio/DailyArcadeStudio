@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>あなたがルイ16世だったら</title>
+<meta property="og:title" content="あなたがルイ16世だったら">
+<meta property="og:description" content="1789年、あなたはフランスの王です。前の年の夏、雹が畑をつぶしました。冬は川が凍り、粉が挽けませんでした。パンの値段が上がり続けています。パリで働く人は、ふだんから稼ぎの半分をパンに使っていました。その値段が、倍になろうとしています。これから、決める場面が8回あります。兵を出すか、引くか。ひとりで決めるか、人に任せるか。ひとつずつ、選んでください。">
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;background:#0b0e14;color:#e6edf3;
+       font-family:-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;
+       line-height:1.75;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+  .wrap{max-width:600px;margin:0 auto;padding:22px 18px 60px}
+  h1{font-size:clamp(21px,5.6vw,29px);margin:6px 0 8px;line-height:1.4}
+  .lead{color:#8b949e;font-size:14.5px;margin:0 0 20px}
+  .prog{position:sticky;top:0;background:#0b0e14;padding:10px 0 12px;z-index:5}
+  .bar{height:4px;background:#1c2333;border-radius:2px;overflow:hidden}
+  .bar i{display:block;height:100%;background:#d4a544;width:0;transition:width .3s}
+  .count{font-size:12.5px;color:#8b949e;margin-top:6px;letter-spacing:.04em}
+  .scene{background:#121722;border:1px solid #222b3d;border-radius:14px;
+          padding:20px 18px;margin:0 0 16px}
+  .year{color:#d4a544;font-size:12.5px;letter-spacing:.1em;margin:0 0 8px}
+  .sit{font-size:16px;margin:0 0 18px;color:#dbe3ec}
+  .opts{display:grid;gap:10px}
+  .opt{border:1px solid #2b3550;background:#161d2b;color:#e6edf3;border-radius:11px;
+        padding:15px 16px;font-size:15.5px;cursor:pointer;text-align:left;
+        font-family:inherit;line-height:1.6;transition:.15s}
+  .opt:hover{border-color:#d4a544}
+  .opt:active{transform:scale(.985)}
+  .log{margin:0 0 20px}
+  .logi{border-left:2px solid #2b3550;padding:2px 0 2px 14px;margin:0 0 10px;
+         font-size:13.5px;color:#7d8796}
+  .logi b{color:#b3bdcc;font-weight:600}
+  #end{display:none} #end.on{display:block}
+  .eimg{width:100%;border-radius:14px;display:block;margin:0 0 18px;background:#121722}
+  .etag{color:#d4a544;font-size:13px;letter-spacing:.09em;margin:0 0 4px}
+  .ename{font-size:clamp(23px,6.4vw,32px);margin:0 0 14px;line-height:1.35}
+  .ebody{font-size:15.5px;color:#c9d1d9;margin:0 0 20px;white-space:pre-wrap}
+  .fact{background:#121722;border-left:3px solid #58a6ff;border-radius:0 10px 10px 0;
+         padding:14px 16px;margin:0 0 20px;font-size:14.5px;color:#c9d1d9}
+  .fact b{color:#58a6ff;display:block;margin-bottom:5px;font-size:12.5px;
+           letter-spacing:.08em}
+  .warn{color:#6e7681;font-size:12.5px;margin:18px 0 0;padding:12px 14px;
+         border:1px dashed #2b3550;border-radius:10px}
+  .share{display:grid;gap:10px;margin:22px 0}
+  .share a,.share button{display:block;text-align:center;padding:14px;border-radius:12px;
+        text-decoration:none;font-weight:700;font-size:15px;border:1px solid #2b3550;
+        background:#161d2b;color:#e6edf3;cursor:pointer;font-family:inherit}
+  .back{display:inline-block;margin-top:6px;color:#8b949e;font-size:14px}
+  footer{margin-top:32px;color:#6e7681;font-size:12.5px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div id="sim">
+  <h1>あなたがルイ16世だったら</h1>
+  <p class="lead">1789年、あなたはフランスの王です。前の年の夏、雹が畑をつぶしました。冬は川が凍り、粉が挽けませんでした。パンの値段が上がり続けています。パリで働く人は、ふだんから稼ぎの半分をパンに使っていました。その値段が、倍になろうとしています。これから、決める場面が8回あります。兵を出すか、引くか。ひとりで決めるか、人に任せるか。ひとつずつ、選んでください。</p>
+  <div class="prog"><div class="bar"><i id="pbar"></i></div>
+    <div class="count"><span id="pnum">1</span> / 8</div></div>
+  <div class="log" id="log"></div>
+  <div class="scene" id="scene"></div>
+</div>
+
+<div id="end">
+  <img class="eimg" id="eimg" alt="">
+  <p class="etag" id="etag"></p>
+  <h1 class="ename" id="ename"></h1>
+  <p class="ebody" id="ebody"></p>
+  <div class="fact" id="fact"></div>
+  <div class="share">
+    <a id="tw" target="_blank" rel="noopener">結果をXに投稿する</a>
+    <button id="again">やり直す</button>
+  </div>
+  <a class="back" href="../">ほかのシミュレータを見る</a>
+  <p class="warn">これはシミュレータです。あなたの選択によっては史実と異なる結末になります。
+  実際に起きたことは上の「史実」の欄をご覧ください。</p>
+</div>
+
+<footer>MosukeStudio</footer>
+</div>
+
+<script>
+const DATA = {"title": "あなたがルイ16世だったら", "lead": "1789年、あなたはフランスの王です。前の年の夏、雹が畑をつぶしました。冬は川が凍り、粉が挽けませんでした。パンの値段が上がり続けています。パリで働く人は、ふだんから稼ぎの半分をパンに使っていました。その値段が、倍になろうとしています。これから、決める場面が8回あります。兵を出すか、引くか。ひとりで決めるか、人に任せるか。ひとつずつ、選んでください。", "axes": [{"label": "力で押さえるか、譲って収めるか", "pos": "押", "neg": "譲"}, {"label": "王が自分で決めるか、議会に任せるか", "pos": "王", "neg": "議"}], "history": "1789年、不作とパン高騰のなかで三部会が開かれ、7月14日にバスチーユが襲われました。10月には女性たちがベルサイユへ行進し、王一家はパリへ移されます。1791年の逃亡失敗のあと王政は倒れ、1793年にルイ16世は処刑されました。", "scenes": [{"year": "1788年 冬・国の金がもう無い", "situation": "国の借金が、限界に来ています。前の戦争と、アメリカへの援助で使いすぎました。大臣は、新しい税がいると言います。ただ、税をかけるには、貴族と聖職者の特権に手をつけなければなりません。彼らは、それを拒んでいます。外では、パンの値段が上がり始めています。", "options": [{"text": "王の命令で、特権を持つ者にも税をかけると決める。反対は押さえ込む", "a": 2, "b": 2}, {"text": "170年ぶりに三部会を開き、身分の代表を集めて話し合わせる", "a": -1, "b": -2}]}, {"year": "1789年 5月・三部会の席順", "situation": "三部会が始まりました。ここで、数え方が問題になります。身分ごとに1票なら、貴族と聖職者が組んで、いつも2対1です。人数で数えるなら、人口の大半を占める第三身分が勝ちます。第三身分は、人数で数えろと言っています。あなたが決めれば、そのとおりになります。", "options": [{"text": "昔からのやり方を守る。身分ごとに1票。第三身分の要求は認めない", "a": 2, "b": 1}, {"text": "人数で数えることを認める。三つの身分を、ひとつの議会にする", "a": -2, "b": -2}]}, {"year": "1789年 6月20日・球戯場", "situation": "第三身分が、勝手に「国民議会」を名乗りました。会議場の扉を閉めさせたところ、彼らは近くの球戯場に移り、憲法を作るまで解散しないと誓いました。大臣は、兵を入れて解散させるべきだと言います。別の大臣は、認めて味方につけるべきだと言います。", "options": [{"text": "兵を近づけ、議会を解散させる。国のかたちを決めるのは王だと示す", "a": 2, "b": 2}, {"text": "国民議会を正式に認める。残りの身分にも、そこへ加われと命じる", "a": -2, "b": -1}]}, {"year": "1789年 7月11日・ネッケルを切るか", "situation": "財務のネッケルは、民のあいだで人気があります。改革をやると信じられているからです。宮廷の多くは、彼を嫌っています。甘すぎる、と。ここで彼を辞めさせれば、宮廷はまとまります。ただしパリでは、王が力で押さえに来た合図だと受け取られるでしょう。パンの値段は、いま最高値に近づいています。", "options": [{"text": "ネッケルを辞めさせ、外国人部隊をパリの周りに集める", "a": 2, "b": 1}, {"text": "ネッケルを残し、集めた部隊をパリから遠ざける", "a": -2, "b": -1}]}, {"year": "1789年 7月14日・バスチーユが落ちた夜", "situation": "パリの群衆が、バスチーユを襲いました。目当ては囚人ではなく、火薬でした。中にいた囚人は7人だけだったと言われています。司令官は殺され、首が槍にのせられました。同じ日、パリのパンの値段はこの時期の最高値をつけたと記録されています。あなたの日記には、その日「何もなし」と書かれていました。", "options": [{"text": "軍を集め、パリを取り返す。反乱を許せば、他の街もまねをする", "a": 2, "b": 1}, {"text": "パリへ出向き、革命の三色の記章を自分の帽子につけて見せる", "a": -2, "b": -1}]}, {"year": "1789年 10月5日・女たちが歩いてくる", "situation": "パリの市場で働く女性たちが、数千人で歩き出しました。目的地はベルサイユ。距離はおよそ20キロ。雨のなかを、大砲まで引いてくると言います。要求は、ひとつです。パンを出せ。宮殿の護衛は、少ししかいません。逃げるなら、今夜がたぶん最後です。", "options": [{"text": "夜のうちに家族と国境近くの街へ動き、忠実な軍のそばで態勢を立て直す", "a": 1, "b": 2}, {"text": "残って群衆に会い、要求を聞く。求められればパリへ移ると答える", "a": -2, "b": -1}]}, {"year": "1791年 6月20日・真夜中の馬車", "situation": "あなたはパリの宮殿で暮らしています。議会は憲法を作り、王の権限を小さくしました。教会の改革にも署名させられ、あなたは信仰の面で苦しんでいます。国境の近くに、味方の軍がいます。家族で変装して抜け出す計画が、できあがりました。馬車は大きく、目立ちます。", "options": [{"text": "夜に脱出する。国を出て、外の軍と戻り、革命をやり直させる", "a": 2, "b": 2}, {"text": "残る。憲法に署名し、憲法の下の王として、この国でやっていくと決める", "a": -2, "b": -2}]}, {"year": "1792年 春・戦争に署名するか", "situation": "議会が、オーストリアへの開戦を求めています。革命を広めたい者が賛成し、宮廷にも、負ければ革命が終わると考えて賛成する者がいます。王妃の実家は、オーストリアです。あなたが署名すれば、戦争が始まります。拒めば、拒否権を使う王として憎まれます。", "options": [{"text": "署名する。戦争の結果しだいで、王の力を取り戻せると考える", "a": 2, "b": -1}, {"text": "拒む。国は食べ物も金も足りない。今は戦えないと議会に伝える", "a": -1, "b": 1}]}], "endings": {"押王": {"tag": "ENDING 1", "name": "パン屋と呼ばれた王", "body": "これが、史実にいちばん近い道です。あなたは力で押さえようとし、そのたびに遅れました。7月14日、バスチーユが落ちます。10月、女性たちが20キロ歩いてきて、一家をパリへ連れていきました。群衆は歌ったと言われています。パン屋と、パン屋のおかみと、パン屋の小僧を連れてきたぞ。王の仕事は民に食べさせることだ、という意味です。1791年の脱出は途中で見つかりました。1792年に王政が終わり、1793年1月、あなたは処刑されます。ベルサイユに戻ることは、二度とありませんでした。", "image_prompt": "Louis XVI and his family escorted by a vast armed Parisian crowd along a muddy road from Versailles to Paris in October 1789, market women with pikes and bread loaves on poles, grey rain clouds, exhausted king in a carriage window, 19th century academic history painting, oil on canvas, cinematic overcast light, no text, no letters, no words, no writing, no signage", "image": "img/押王.jpg"}, "押議": {"tag": "ENDING 2", "name": "議会の後ろの兵", "body": "もし、こうしていたら。あなたは議会を認めながら、力も手放しませんでした。議会に法を作らせ、その外側に軍を置きます。パンの配給だけは、王の名前で配らせました。飢えた人にとって、誰が配るかは大きな問題です。議会は法を作り、あなたは食べ物を配る。二つの権力が、にらみ合ったまま続きます。安定はしません。ただ、王の首は落ちませんでした。歴史は、こういう中途半端な形で止まることもあります。", "image_prompt": "A French king in plain dark coat standing at the back of a crowded revolutionary assembly hall in 1790, deputies debating in tiers, uniformed grenadiers lining the walls behind him, tall windows, tense atmosphere, 19th century academic history painting, oil on canvas, cinematic side light, no text, no letters, no words, no writing, no signage", "image": "img/押議.jpg"}, "譲王": {"tag": "ENDING 3", "name": "自分から差し出した王", "body": "もし、こうしていたら。あなたは、求められる前に差し出しました。1788年の冬、王の命令で貴族と聖職者の特権を切ります。宮廷は怒りますが、パリは喜びました。パンの値段には勝てませんでしたが、人々は行列の理由を王のせいにしませんでした。改革をする王、という顔が残ります。バスチーユは、それでも襲われたかもしれません。ただ、そのあと人々が探した敵は、あなたではなかったでしょう。", "image_prompt": "A French king in simple coat handing a signed decree to kneeling nobles and clergy in a candlelit Versailles council chamber, winter 1788, courtiers looking angry, ordinary people visible through open doors, 19th century academic history painting, oil on canvas, warm candle light, no text, no letters, no words, no writing, no signage", "image": "img/譲王.jpg"}, "譲議": {"tag": "ENDING 4", "name": "帽子に記章をつけた王", "body": "もし、こうしていたら。あなたは、押さえるのをやめました。議会を認め、憲法に署名し、パリへ自分から移ります。バスチーユの三日後、帽子に革命の三色をつけて群衆の前に立ちました。国王は、法の下の王になります。決めるのは議会で、あなたは署名する人です。窮屈だったはずです。それでも、王政は続きました。イギリスと似た形です。革命は、王を殺さずに終わることも、たぶんできました。", "image_prompt": "A French king standing on a balcony of the Paris Hotel de Ville in July 1789, wearing a tricolour cockade on his hat, huge cheering crowd below with pikes and hats raised, summer haze, 19th century academic history painting, oil on canvas, bright cinematic light, no text, no letters, no words, no writing, no signage", "image": "img/譲議.jpg"}}};
+let i = 0;
+const score = [0, 0];
+const picks = [];
+
+const sceneEl = document.getElementById('scene');
+const logEl = document.getElementById('log');
+
+function render() {
+  const s = DATA.scenes[i];
+  document.getElementById('pnum').textContent = i + 1;
+  document.getElementById('pbar').style.width = (i / DATA.scenes.length * 100) + '%';
+  sceneEl.innerHTML = `<p class="year">${s.year}</p><p class="sit">${s.situation}</p>`;
+  const box = document.createElement('div');
+  box.className = 'opts';
+  s.options.forEach(o => {
+    const b = document.createElement('button');
+    b.className = 'opt';
+    b.textContent = o.text;
+    b.onclick = () => choose(o);
+    box.appendChild(b);
+  });
+  sceneEl.appendChild(box);
+}
+
+function choose(o) {
+  score[0] += o.a || 0;
+  score[1] += o.b || 0;
+  picks.push(o.text);
+  const d = document.createElement('div');
+  d.className = 'logi';
+  d.innerHTML = `<b>${DATA.scenes[i].year}</b> ${o.text}`;
+  logEl.appendChild(d);
+  i++;
+  if (i < DATA.scenes.length) { render(); scrollTo(0, 0); }
+  else finish();
+}
+
+function finish() {
+  // 2軸の符号で4象限 → 4つの結末
+  const key = (score[0] >= 0 ? DATA.axes[0].pos : DATA.axes[0].neg)
+            + (score[1] >= 0 ? DATA.axes[1].pos : DATA.axes[1].neg);
+  const e = DATA.endings[key] || DATA.endings[Object.keys(DATA.endings)[0]];
+  document.getElementById('eimg').src = e.image;
+  document.getElementById('eimg').alt = e.name;
+  document.getElementById('etag').textContent = e.tag || 'ENDING';
+  document.getElementById('ename').textContent = e.name;
+  document.getElementById('ebody').textContent = e.body;
+  document.getElementById('fact').innerHTML =
+    `<b>史実では</b>${DATA.history}`;
+  const txt = encodeURIComponent(
+    `${DATA.title}\n私の結末は「${e.name}」でした。\n`);
+  document.getElementById('tw').href =
+    `https://twitter.com/intent/tweet?text=${txt}&url=${encodeURIComponent(location.href)}`;
+  document.getElementById('sim').style.display = 'none';
+  document.getElementById('end').classList.add('on');
+  scrollTo(0, 0);
+}
+
+document.getElementById('again').onclick = () => location.reload();
+render();
+</script>
+</body>
+</html>
