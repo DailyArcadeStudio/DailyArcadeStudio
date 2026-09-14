@@ -1,0 +1,173 @@
+{
+  "title": "あなたが黒死病の時代の港町の長だったら",
+  "lead": "1347年の秋、あなたは地中海の港町を治める長です。町の暮らしは、船が運ぶ商いで回っています。今日、ジェノバの船が12隻、港に入ってきました。甲板には、死んだ人と、死にかけた人。病の正体は、あなたにも、医者にも分かりません。ここから30年、あなたの決めたことが、町の形を変えます。",
+  "axes": [
+    {
+      "label": "人と船を止めるか、通すか",
+      "pos": "止",
+      "neg": "通"
+    },
+    {
+      "label": "上から命じるか、人に任せるか",
+      "pos": "令",
+      "neg": "任"
+    }
+  ],
+  "history": "1347年秋、シチリアの港に着いた船から病が広がり、3年ほどで人口の3分の1が亡くなったと言われます。原因は星や悪い空気とされ、逃げる人、鞭打ちの行列、ユダヤ人を襲う群衆も現れました。賃金は上がり、1377年には港で船を待たせる隔離の仕組みが生まれます。",
+  "scenes": [
+    {
+      "year": "1347年10月 船が着いた",
+      "situation": "ジェノバの船が、港に着きました。甲板には、死んだ人と、死にかけた人ばかりです。船員の何人かは、もう岸に降りて、宿に入っています。商人たちは、積み荷を待っています。港を閉じれば、商いが止まります。開けたままなら、何が広がるか分かりません。",
+      "options": [
+        {
+          "text": "船を沖に留め、港ごと閉じる。降りた船員も宿から出さない",
+          "a": 2,
+          "b": 1
+        },
+        {
+          "text": "荷を検めてから船を追い出す。港は開けたまま、商いは続ける",
+          "a": -2,
+          "b": 0
+        }
+      ]
+    },
+    {
+      "year": "1348年 原因は何か",
+      "situation": "病は町の中に入りました。人々があなたに聞きます。これは、何なのか。学者たちは、1345年3月20日に3つの星が並んだせいだと言います。別の医者は、悪い空気のせいだと言います。どちらも、本当かどうかは分かりません。でも、町は答えを待っています。",
+      "options": [
+        {
+          "text": "学者に理由を書かせ、町に告げる。星のせいだと。人はひとまず落ち着く",
+          "a": 0,
+          "b": 2
+        },
+        {
+          "text": "分からないと正直に言う。医者や修道士に、それぞれのやり方で任せる",
+          "a": 0,
+          "b": -2
+        }
+      ]
+    },
+    {
+      "year": "1348年夏 逃げるか、残るか",
+      "situation": "町では、毎日、人が死んでいきます。お金のある家は、次々と田舎へ逃げています。あなたにも、田舎に屋敷があります。家族を連れて出れば、助かるかもしれません。でも、長が消えた町は、決める人がいなくなります。",
+      "options": [
+        {
+          "text": "家族と田舎へ逃げる。町は代理の者に任せる",
+          "a": -1,
+          "b": -2
+        },
+        {
+          "text": "町に残る。門を閉じ、毎日、自分で指示を出す",
+          "a": 1,
+          "b": 2
+        }
+      ]
+    },
+    {
+      "year": "1348年 墓が足りない",
+      "situation": "墓を掘る人が、足りません。ある男は、5人の子どもを自分の手で埋めました。町では、大きな教会を建て広げる工事の途中です。職人も、お金も、そこに集まっています。工事を止めて、埋葬と病人に回すこともできます。ただ、止めた工事は、もう戻らないかもしれません。",
+      "options": [
+        {
+          "text": "工事を止める。職人と金を埋葬に回し、大きな穴にまとめて埋める",
+          "a": 1,
+          "b": 2
+        },
+        {
+          "text": "工事は続ける。埋葬は、それぞれの家に任せる",
+          "a": -1,
+          "b": -2
+        }
+      ]
+    },
+    {
+      "year": "1349年 鞭打ちの行列",
+      "situation": "自分の体を鞭で打ちながら歩く集団が、町の門に来ました。何百人もいます。神に許してもらうためだと言います。町の人の多くは、彼らを入れて一緒に祈りたがっています。でも、彼らは町から町へ歩いてきました。何を運んでいるかは、分かりません。",
+      "options": [
+        {
+          "text": "門を閉じ、入れない。祈りは町の中で済ませる",
+          "a": 2,
+          "b": 1
+        },
+        {
+          "text": "門を開け、広場で祈らせる。人々の願いに任せる",
+          "a": -2,
+          "b": -1
+        }
+      ]
+    },
+    {
+      "year": "1349年 だれかのせいにする声",
+      "situation": "町に、うわさが広がりました。ユダヤ人の住民が、井戸に毒を入れたのだと。証拠はありません。でも、群衆が集まり始めています。教皇は、ユダヤ人を襲うことを禁じる文書を出しています。あなたには、兵を出す力があります。出せば、群衆と向き合うことになります。",
+      "options": [
+        {
+          "text": "兵を出して住民を守り、教皇の文書を広場で読み上げる",
+          "a": 0,
+          "b": 2
+        },
+        {
+          "text": "兵は出さない。群衆のすることに、口を出さない",
+          "a": 0,
+          "b": -2
+        }
+      ]
+    },
+    {
+      "year": "1351年 働き手の値段",
+      "situation": "病は、いったん引きました。町と畑には、人が3分の1ほど減っています。働き手が足りず、賃金は前の2倍を求められます。地主たちが、あなたに頼みに来ました。賃金を、法律で元に戻してほしい。働く人たちは、その話を聞いて、黙っています。",
+      "options": [
+        {
+          "text": "法律で賃金を元に戻す。高く払った者も、求めた者も罰する",
+          "a": 1,
+          "b": 2
+        },
+        {
+          "text": "上がるままにする。土地を貸し出し、人が来る町にする",
+          "a": -1,
+          "b": -2
+        }
+      ]
+    },
+    {
+      "year": "1377年 また船が来た",
+      "situation": "あれから30年。病は、何度も戻ってきました。今日、また遠くの港から船が来ています。あなたは、ひとつの案を持っています。着いた船を、沖の島で30日待たせる。病が出なければ、入れる。商人たちは、日数がもったいないと言います。でも、あなたは30年前の甲板を、覚えています。",
+      "options": [
+        {
+          "text": "30日、沖で待たせる決まりを作る。商いは遅れても、町を守る",
+          "a": 2,
+          "b": 1
+        },
+        {
+          "text": "前と同じに港を開ける。商いが先。病はもう慣れた",
+          "a": -2,
+          "b": -1
+        }
+      ]
+    }
+  ],
+  "endings": {
+    "止令": {
+      "tag": "ENDING 1",
+      "name": "40日の仕組みを残した町",
+      "body": "これが、実際に起きたことにいちばん近い道です。最初の船は、追い出しても遅かった。病は町に入り、3人に1人が消えました。あなたは工事を止め、賃金を法律で抑えました。働く人の怒りは、のちに大きな反乱になります。それでも、30年後、あなたは船を沖で待たせる決まりを作りました。やがて40日になり、隔離という言葉が生まれます。町は失い、そして、ひとつの仕組みを残しました。",
+      "image_prompt": "A medieval Mediterranean harbor at dawn, merchant galleys anchored far offshore near a small rocky island with a stone lazaretto, an elderly city governor in a dark robe watching from the quay, calm sea and pale morning light, 19th century academic history painting, oil on canvas, muted warm palette, no text, no letters, no words, no writing, no signage"
+    },
+    "止任": {
+      "tag": "ENDING 2",
+      "name": "静かに立ち直った町",
+      "body": "あなたは港を閉じ、門を閉じました。それでも病は入り、多くの人が亡くなりました。でも、あなたは賃金を抑えませんでした。人が減った分、残った人の稼ぎは上がります。土地を借りて、自分の畑を持つ人が増えました。反乱は、この町では起きません。派手な記録は残りませんが、人口が戻るのは、ほかの町より少し早かったかもしれません。",
+      "image_prompt": "A small medieval European town rebuilding after a plague, peasants in simple clothes plowing their own fields outside the walls, a closed city gate with guards, new timber houses under construction, soft spring light over green hills, 19th century academic history painting, oil on canvas, gentle hopeful tones, no text, no letters, no words, no writing, no signage"
+    },
+    "通令": {
+      "tag": "ENDING 3",
+      "name": "商いを守り、人を失った町",
+      "body": "あなたは港を開け続けました。船は来て、荷は降り、病も降りました。町は、ほかの町より早く、半分を失ったかもしれません。あなたは上から命じ続けました。原因は星のせいだと告げ、賃金は法律で抑えました。働く人は、逃げるように町を出ていきます。港は開いたままなのに、船を降ろす人がいません。倉庫は、いっぱいのまま、静かです。",
+      "image_prompt": "A once-busy medieval Mediterranean port now nearly deserted, ships moored at the quay with cargo still stacked, empty market stalls, a stern governor in rich robes standing alone before a crowded notice board that is blank, grey overcast sky, 19th century academic history painting, oil on canvas, somber tones, no text, no letters, no words, no writing, no signage"
+    },
+    "通任": {
+      "tag": "ENDING 4",
+      "name": "任せて、流された町",
+      "body": "あなたは港を開け、鞭打ちの行列を入れ、群衆を止めませんでした。病は速く広がり、町の中で、人が人を襲いました。あなたは田舎の屋敷から、それを聞きます。ただ、賃金も抑えなかったので、生き残った働き手は自由になりました。100年後、この町には自分の畑を持つ人が多くいます。でも、1349年の広場で何があったかは、だれも語りたがりません。",
+      "image_prompt": "A medieval town square at dusk crowded with a procession of hooded flagellants and a restless mob, a wealthy governor's carriage leaving through the gate toward distant countryside villas, smoke rising over rooftops, 19th century academic history painting, oil on canvas, dramatic chiaroscuro, no text, no letters, no words, no writing, no signage"
+    }
+  }
+}
