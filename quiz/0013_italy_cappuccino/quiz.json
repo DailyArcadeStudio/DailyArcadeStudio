@@ -1,0 +1,177 @@
+{
+  "title": "あなたの「コーヒーの時間割」診断",
+  "lead": "同じ一杯でも、飲む時間で意味が変わる。あなたは時間を決める人ですか。それとも、飲みたいときに飲む人ですか。",
+  "story": "イタリアのカフェで、昼ごはんのあとにカプチーノをたのむ。すると、店の人がちょっと驚いた顔をします。目安は、午前11時ごろ。それより後は、みんなエスプレッソにうつると言われています。法律ではありません。自然と、そうなるそうです。理由はふたつあると言われています。ひとつ。カプチーノはミルクたっぷりで、それ自体が軽い朝ごはんだから。食後に飲むのは、ごはんのあとにごはんを食べるようなもの。ふたつ。食後の牛乳は胃にもたれる、という感覚が根づいているから。だから食後は、小さくて濃いエスプレッソ。カウンターに立ったまま、30秒で飲み干します。座らない。話し込まない。コーヒーは休憩というより、食事の句読点なんです。日本にも、似たものがありますよね。食後の緑茶やほうじ茶。飲みもので食事に区切りをつける。役割は、実はそっくりです。さて、あなたの一杯は、どんな時間割で出てきますか。",
+  "axes": [
+    {
+      "label": "時間で飲むものを決めるか、いつでも好きに飲むか",
+      "pos": "T",
+      "neg": "F"
+    },
+    {
+      "label": "ミルク入りが好きか、濃いのをそのまま飲むか",
+      "pos": "M",
+      "neg": "B"
+    },
+    {
+      "label": "さっと済ませるか、ゆっくり居るか",
+      "pos": "Q",
+      "neg": "S"
+    },
+    {
+      "label": "その土地の作法に合わせるか、自分のやり方を通すか",
+      "pos": "L",
+      "neg": "O"
+    }
+  ],
+  "questions": [
+    {
+      "text": "飲みものは、朝はこれ、夜はこれと、だいたい決まっている。",
+      "axis": 0,
+      "sign": 1
+    },
+    {
+      "text": "夜でもカフェラテを飲みたくなったら、ふつうに飲む。",
+      "axis": 0,
+      "sign": -1
+    },
+    {
+      "text": "食後には、いつも同じ飲みものが欲しくなる。",
+      "axis": 0,
+      "sign": 1
+    },
+    {
+      "text": "コーヒーには、ミルクを入れたほうがおいしいと思う。",
+      "axis": 1,
+      "sign": 1
+    },
+    {
+      "text": "小さくて濃い一杯を、そのまま飲むのが好き。",
+      "axis": 1,
+      "sign": -1
+    },
+    {
+      "text": "あまいパンとあたたかいミルクの朝ごはんは、うれしい。",
+      "axis": 1,
+      "sign": 1
+    },
+    {
+      "text": "カフェでは、立ったままでも30秒で飲み干せる。",
+      "axis": 2,
+      "sign": 1
+    },
+    {
+      "text": "席に座って、一杯で1時間くらい過ごしたい。",
+      "axis": 2,
+      "sign": -1
+    },
+    {
+      "text": "旅先では、その土地の人と同じ頼み方をしたい。",
+      "axis": 3,
+      "sign": 1
+    },
+    {
+      "text": "まわりがどうでも、自分の好きなものを頼む。",
+      "axis": 3,
+      "sign": -1
+    }
+  ],
+  "results": {
+    "TMQL": {
+      "name": "イタリアの朝カプチーノ型",
+      "body": "時間で飲むものを決めて、朝はミルクたっぷりの一杯。カウンターでさっと飲んで、その土地のやり方にきちんと合わせます。イタリアの朝に、いちばん近いタイプです。午前11時までがあなたの時間かもしれません。ただ、決まりを守りすぎて、飲みたい一杯をがまんしていませんか。",
+      "image_prompt": "photorealistic scene of a person standing at a marble bar counter in an Italian espresso bar drinking a cappuccino with thick foam, morning sunlight through a tall window, brass fittings, other customers in the background, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/TMQL.jpg"
+    },
+    "TMQO": {
+      "name": "ウィーンの朝メランジェ型",
+      "body": "朝はミルクの入った一杯、と決めています。飲むのは手早い。でも頼み方は、自分の好みを通します。まわりに合わせるより、自分の定番がある人です。お店の人と少し話してみると、新しい定番が見つかるかもしれません。",
+      "image_prompt": "photorealistic scene of a Viennese coffee house interior in the morning, a melange with milk foam on a small silver tray beside a glass of water, marble table, bentwood chair, soft window light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/TMQO.jpg"
+    },
+    "TMSL": {
+      "name": "フランスの朝カフェオレ型",
+      "body": "朝は大きなカップにミルクたっぷり。席に座って、ゆっくり時間をかけます。その土地の習慣には、素直に合わせるタイプです。朝の時間が、いちばん好きなのではないでしょうか。急いでいる日は、少し早起きすると気持ちがいいです。",
+      "image_prompt": "photorealistic scene of a French breakfast table with a large bowl of cafe au lait and a croissant, a person seated by a window in a Paris apartment, morning light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/TMSL.jpg"
+    },
+    "TMSO": {
+      "name": "スウェーデンのフィーカ型",
+      "body": "時間を決めて、ミルクの入った一杯とお菓子。席に座って、たっぷり話します。合わせるより、自分たちのやり方を大事にします。休む時間を、ちゃんと守れる人です。その習慣は、まわりの人にも分けてあげてください。",
+      "image_prompt": "photorealistic scene of a Swedish fika, cinnamon buns and mugs of milky coffee on a wooden table, two friends talking in a cozy room with candles, minimalist Scandinavian interior, soft afternoon light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/TMSO.jpg"
+    },
+    "TBQL": {
+      "name": "イタリアの食後エスプレッソ型",
+      "body": "昼を過ぎたら、小さくて濃い一杯。立ったまま、ひと息で飲み干します。その土地の順番には、きちんと従うタイプです。食事に区切りをつけるのが上手な人です。動画に出てきた、あのカウンターの飲み方そのものです。",
+      "image_prompt": "photorealistic scene of a person standing at a crowded Italian bar counter drinking a tiny espresso quickly after lunch, marble and brass counter, midday light, lively atmosphere, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/TBQL.jpg"
+    },
+    "TBQO": {
+      "name": "トルコの濃い一杯型",
+      "body": "時間は決めているし、飲むのは濃いのをそのまま。さっと飲みますが、頼み方は自分流です。まわりに流されず、好みがはっきりしている人です。たまには、すすめられたものも試してみてください。",
+      "image_prompt": "photorealistic scene of a small copper cup of thick Turkish coffee on a brass tray beside a glass of water, a man's hand reaching for it at a street-side stall in Istanbul, warm daylight, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/TBQO.jpg"
+    },
+    "TBSL": {
+      "name": "日本の食後の緑茶型",
+      "body": "食事の終わりには、いつも決まった一杯。ミルクは入れません。座って、ゆっくり飲みます。その場の作法にも、自然と合わせます。飲みもので食事に区切りをつける、日本らしいタイプです。イタリアのエスプレッソと、役割はそっくりです。",
+      "image_prompt": "photorealistic scene of a Japanese meal finished on a low table, a small ceramic cup of green tea being poured from a teapot, tatami room, soft afternoon light through shoji, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/TBSL.jpg"
+    },
+    "TBSO": {
+      "name": "エチオピアのコーヒー儀式型",
+      "body": "飲む時間は決まっていて、味は濃いまま。そして、とても長く座ります。やり方は、自分たちの流儀を守ります。一杯にいちばん時間をかけるタイプです。忙しい人を誘うときは、短い回も用意してあげてください。",
+      "image_prompt": "photorealistic scene of an Ethiopian coffee ceremony, a woman roasting beans over coals and pouring coffee from a clay jebena into small cups, people seated on low stools, incense smoke, warm indoor light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/TBSO.jpg"
+    },
+    "FMQL": {
+      "name": "アメリカのテイクアウト型",
+      "body": "時間は気にせず、ミルクの入った大きな一杯。持ち歩いて、歩きながら飲みます。お店のやり方には、素直に合わせます。いつでもどこでも飲める、自由なタイプです。たまには座って飲むと、味が変わって感じられます。",
+      "image_prompt": "photorealistic scene of a person walking on a New York sidewalk holding a large paper cup of milky coffee with a lid, morning city street, yellow cabs blurred in the background, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/FMQL.jpg"
+    },
+    "FMQO": {
+      "name": "オーストラリアのフラットホワイト型",
+      "body": "時間は自由。ミルクは好き。飲むのは早いけれど、注文はこだわります。自分の好みを、はっきり伝えられるタイプです。新しい飲み方を見つけるのも得意でしょう。",
+      "image_prompt": "photorealistic scene of a flat white with latte art on a cafe counter in Melbourne, a barista wiping the steam wand, industrial cafe interior with plants, bright daylight, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/FMQO.jpg"
+    },
+    "FMSL": {
+      "name": "日本の喫茶店カフェオレ型",
+      "body": "時間は決めません。ミルクの入った一杯で、席に長く座ります。お店の流儀には、静かに合わせます。夕方のカフェオレも、ぜんぜんふつうだと思っている人です。イタリアなら少し笑われるかもしれませんが、それも楽しみ方です。",
+      "image_prompt": "photorealistic scene of a Japanese kissaten interior, a cup of cafe au lait on a wooden table beside a book, velvet chair, warm lamp light in the late afternoon, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/FMSL.jpg"
+    },
+    "FMSO": {
+      "name": "インドのチャイ型",
+      "body": "時間は関係なし。ミルクと砂糖のたっぷり入った一杯を、何度でも。座って、長く話します。やり方は、自分たちのもの。あたたかくて、にぎやかなタイプです。一日に何杯飲んでいるか、数えたことはありますか。",
+      "image_prompt": "photorealistic scene of a chai vendor pouring milky spiced tea from a height into small glasses at an Indian street stall, customers standing and talking around, warm evening light, steam rising, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/FMSO.jpg"
+    },
+    "FBQL": {
+      "name": "スペインのバル型",
+      "body": "時間は自由だけれど、飲むのは濃い一杯。カウンターでさっと済ませ、その店のやり方に合わせます。軽やかで、身のこなしが早いタイプです。イタリア人と並んでも、うまくやっていけそうです。",
+      "image_prompt": "photorealistic scene of a Spanish bar counter with a small cup of strong coffee, a man standing and drinking quickly, tiled walls and hams hanging, morning light through the doorway, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/FBQL.jpg"
+    },
+    "FBQO": {
+      "name": "北欧のブラック型",
+      "body": "時間は決めず、いつでもブラック。飲むのは早く、頼み方は自分流です。さっぱりとして、迷いのないタイプです。味の好みが、はっきりしています。人に一杯えらんでもらうのも、たまには面白いかもしれません。",
+      "image_prompt": "photorealistic scene of a plain white mug of black filter coffee on a pale wooden table in a Nordic kitchen, a person standing to drink it, snow visible through the window, cool morning light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/FBQO.jpg"
+    },
+    "FBSL": {
+      "name": "台湾のお茶の席型",
+      "body": "時間は決めません。濃いお茶を何煎も、座ってゆっくり。その場の作法には、ちゃんと合わせます。一杯を長く味わうタイプです。急いでいる人には、ちょっとまぶしく見えるかもしれません。",
+      "image_prompt": "photorealistic scene of a Taiwanese tea table with a small clay teapot and tiny cups, hands pouring oolong tea, wooden tea tray, steam rising, soft daylight from a window, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/FBSL.jpg"
+    },
+    "FBSO": {
+      "name": "ウィーンの居すわりカフェ型",
+      "body": "時間は自由。濃い一杯をそのまま。席に何時間でも座って、自分のやり方を通します。カフェを自分の部屋みたいに使えるタイプです。混んでいる日は、まわりの様子も少しだけ見てあげてください。",
+      "image_prompt": "photorealistic scene of a man sitting alone for hours at a marble table in an old Viennese coffee house, a small black coffee and a glass of water in front of him, chandeliers and mirrors, late afternoon light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/FBSO.jpg"
+    }
+  }
+}
