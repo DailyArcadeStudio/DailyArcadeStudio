@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ねじれた配列の最小値｜確認問題</title>
+<meta property="og:title" content="ねじれた配列の最小値｜確認問題">
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;background:#0d1117;color:#e6edf3;
+       font-family:-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;
+       line-height:1.7;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+  .wrap{max-width:620px;margin:0 auto;padding:22px 18px 60px}
+  h1{font-size:clamp(20px,5.4vw,27px);margin:6px 0 6px;line-height:1.4}
+  .lead{color:#8b949e;font-size:14.5px;margin:0 0 22px}
+  .q{background:#161b22;border:1px solid #21262d;border-radius:13px;
+      padding:18px 16px;margin:0 0 14px}
+  .qn{color:#58a6ff;font-size:12.5px;letter-spacing:.1em;margin:0 0 8px}
+  .qt{font-size:16px;font-weight:700;margin:0 0 12px;line-height:1.65}
+  pre{background:#0d1117;border:1px solid #21262d;border-radius:9px;
+       padding:13px 14px;overflow-x:auto;margin:0 0 14px;
+       font-family:"SF Mono",Menlo,monospace;font-size:13px;line-height:1.65;
+       color:#c9d1d9}
+  .opts{display:grid;gap:9px}
+  .opt{border:1px solid #30363d;background:#0d1117;color:#e6edf3;border-radius:10px;
+        padding:14px;font-size:15px;cursor:pointer;text-align:left;
+        font-family:inherit;line-height:1.6;transition:.15s}
+  .opt:hover:not(:disabled){border-color:#58a6ff}
+  .opt:disabled{cursor:default;opacity:.75}
+  .opt.ok{border-color:#3fb950;background:#122117;color:#7ee787;font-weight:700}
+  .opt.ng{border-color:#f85149;background:#21121380;color:#ff9492}
+  .exp{margin:13px 0 0;padding:13px 14px;background:#0d1117;border-left:3px solid #58a6ff;
+        border-radius:0 9px 9px 0;font-size:14.5px;color:#c9d1d9;display:none}
+  .exp.on{display:block}
+  .score{display:none;background:#161b22;border:1px solid #21262d;border-radius:14px;
+          padding:24px 20px;text-align:center;margin:18px 0 0}
+  .score.on{display:block}
+  .snum{font-size:44px;font-weight:800;color:#ffd23b;line-height:1.1}
+  .smsg{font-size:16px;margin:10px 0 0}
+  .share{display:grid;gap:10px;margin:20px 0 0}
+  .share a,.share button{display:block;text-align:center;padding:14px;border-radius:12px;
+        text-decoration:none;font-weight:700;font-size:15px;border:1px solid #30363d;
+        background:#0d1117;color:#e6edf3;cursor:pointer;font-family:inherit}
+  .back{display:inline-block;margin-top:14px;color:#8b949e;font-size:14px}
+  footer{margin-top:30px;color:#6e7681;font-size:12.5px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>ねじれた配列の最小値｜確認問題</h1>
+  <p class="lead">動画で見た二分探索の考え方を、5問で確かめます。ねじれていても半分は正しく並んでいる、そこが鍵でした。</p>
+  <div id="qs"></div>
+  <div class="score" id="score">
+    <div class="snum"><span id="sn">0</span> / 5</div>
+    <p class="smsg" id="sm"></p>
+    <div class="share">
+      <a id="tw" target="_blank" rel="noopener">結果をXに投稿する</a>
+      <button id="again">もう一度</button>
+    </div>
+  </div>
+  <a class="back" href="../">ほかの確認問題を見る</a>
+  <footer>Algo-Gym</footer>
+</div>
+<script>
+const DATA = {"title": "ねじれた配列の最小値｜確認問題", "lead": "動画で見た二分探索の考え方を、5問で確かめます。ねじれていても半分は正しく並んでいる、そこが鍵でした。", "messages": {"perfect": "全問正解です。なぜうしろと比べるのか、説明できる状態になっています。", "good": "いい線です。間違えた問題の解説だけ、もう一度読んでみてください。", "retry": "もう一度、動画のトレース部分を見てみましょう。半分が消えていく流れを追えば分かります。"}, "questions": [{"text": "この問題で返すものはどれでしょう。", "code": "int[] nums = {4, 5, 6, 7, 0, 1, 2};", "options": ["崖の底にあたる最小値ひとつ", "最小値のある位置(index)"], "answer": 0, "explain": "ねじれた配列の中で一番小さい数そのものを返します。例では0が答えでした。位置ではありません。"}, {"text": "素朴解(先頭から全部見る)の時間計算量はどれでしょう。", "code": "int min = nums[0];\nfor (int i = 1; i < nums.length; i++) {\n    if (nums[i] < min) min = nums[i];\n}\nreturn min;", "options": ["O(n)", "O(log n)"], "answer": 0, "explain": "全部の要素を1回ずつ見るのでO(n)です。並んでいるという事実をまったく使っていません。"}, {"text": "mid の求め方として安全なのはどちらでしょう。", "code": "// A: int mid = left + (right - left) / 2;\n// B: int mid = (left + right) / 2;", "options": ["A（引いてから足す）", "B（足してから割る）"], "answer": 0, "explain": "足してから割ると、数が大きいときにあふれることがあります。引いてから足す書き方が安全です。"}, {"text": "nums[mid] > nums[right] のとき、次にどうするのが正しいでしょう。", "code": "if (nums[mid] > nums[right])\n    left = mid + 1;\nelse\n    right = mid;", "options": ["左半分を捨てて left = mid + 1", "右半分を捨てて right = mid - 1"], "answer": 0, "explain": "midがうしろより大きいなら、崖はまだ右側にあります。だから左半分は丸ごと捨てて構いません。"}, {"text": "比べる相手を nums[right] ではなく nums[left] にすると、どうなると言われているでしょう。", "code": "// 比較の相手をどちらにするか\nif (nums[mid] > nums[right]) { ... }", "options": ["ねじれていない配列で答えを間違えやすい", "計算量がO(n)まで悪化する"], "answer": 0, "explain": "先頭と比べると、回していない普通の並びのときに判断を誤ります。うしろと比べるのが安全です。"}]};
+let done = 0, ok = 0;
+const qsEl = document.getElementById('qs');
+
+DATA.questions.forEach((q, i) => {
+  const d = document.createElement('div');
+  d.className = 'q';
+  let h = `<p class="qn">Q${i+1}</p><p class="qt">${q.text}</p>`;
+  if (q.code) h += `<pre>${q.code.replace(/[&<>]/g, c =>
+      ({'&':'&amp;','<':'&lt;','>':'&gt;'})[c])}</pre>`;
+  d.innerHTML = h;
+  const box = document.createElement('div');
+  box.className = 'opts';
+  const exp = document.createElement('div');
+  exp.className = 'exp';
+  exp.textContent = q.explain;
+  q.options.forEach((o, k) => {
+    const b = document.createElement('button');
+    b.className = 'opt';
+    b.textContent = o;
+    b.onclick = () => {
+      [...box.children].forEach(c => c.disabled = true);
+      const hit = (k === q.answer);
+      b.classList.add(hit ? 'ok' : 'ng');
+      if (!hit) box.children[q.answer].classList.add('ok');
+      exp.classList.add('on');
+      done++; if (hit) ok++;
+      if (done === DATA.questions.length) finish();
+    };
+    box.appendChild(b);
+  });
+  d.appendChild(box); d.appendChild(exp);
+  qsEl.appendChild(d);
+});
+
+function finish() {
+  const n = DATA.questions.length;
+  document.getElementById('sn').textContent = ok;
+  const msgs = DATA.messages || {};
+  document.getElementById('sm').textContent =
+    ok === n ? (msgs.perfect || '全問正解です。') :
+    ok >= n * 0.6 ? (msgs.good || 'だいたい掴めています。') :
+    (msgs.retry || 'もう一度動画を見てみてください。');
+  const txt = encodeURIComponent(`${DATA.title}\n${ok}/${n} 正解でした。\n`);
+  document.getElementById('tw').href =
+    `https://twitter.com/intent/tweet?text=${txt}&url=${encodeURIComponent(location.href)}`;
+  document.getElementById('score').classList.add('on');
+  document.getElementById('score').scrollIntoView({behavior:'smooth'});
+}
+document.getElementById('again').onclick = () => location.reload();
+</script>
+</body>
+</html>
