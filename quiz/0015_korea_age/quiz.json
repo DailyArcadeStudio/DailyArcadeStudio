@@ -1,0 +1,177 @@
+{
+  "title": "あなたの「年のとり方」診断",
+  "lead": "誕生日に自分だけ年をとる国。お正月にみんなで年をとる国。あなたはどちらのタイプでしょうか。",
+  "story": "韓国では長いあいだ、ひとりが年齢を3つ持っていたと言われています。数え年、満年齢、そして今年から生まれた年を引くだけの数え方です。数え年では、生まれた日にもう1歳。ゼロ歳がありません。そしてお正月が来ると、全員そろって1つ増えます。誕生日は関係ありません。だから12月31日に生まれた赤ちゃんは、次の日には2歳になります。お正月の朝にはトックックというおもちのスープを食べて、これを食べると1つ年をとる、という言い方をするそうです。数え年は東アジアで広く使われていた数え方で、実は日本も昔は数え年でした。今も七五三や厄年に少し残っていますよね。韓国では2023年6月から、法律や行政の年齢を満年齢に一本化する仕組みが始まりました。でも、会話の中では数え年も残っています。制度は変えられても、話し方の習慣はすぐには変わりません。あなたは誕生日を大事にする国のタイプか、みんなで一緒に祝う国のタイプか。10問で見てみましょう。",
+  "axes": [
+    {
+      "label": "みんなで一緒か、自分ひとりか",
+      "pos": "T",
+      "neg": "M"
+    },
+    {
+      "label": "昔ながらを残すか、新しく決め直すか",
+      "pos": "K",
+      "neg": "S"
+    },
+    {
+      "label": "上下をはっきりさせるか、横並びでいくか",
+      "pos": "J",
+      "neg": "F"
+    },
+    {
+      "label": "きっちり数えるか、だいたいでいくか",
+      "pos": "P",
+      "neg": "O"
+    }
+  ],
+  "questions": [
+    {
+      "text": "お祝いは、みんなで同じ日にやるほうが好きだ。",
+      "axis": 0,
+      "sign": 1
+    },
+    {
+      "text": "自分の誕生日は、自分だけの特別な日にしたい。",
+      "axis": 0,
+      "sign": -1
+    },
+    {
+      "text": "国じゅうが一斉に年をとる日があったら、楽しそうだと思う。",
+      "axis": 0,
+      "sign": 1
+    },
+    {
+      "text": "昔からの数え方は、できれば残しておきたい。",
+      "axis": 1,
+      "sign": 1
+    },
+    {
+      "text": "ややこしい習慣は、思い切って作り直したほうがいい。",
+      "axis": 1,
+      "sign": -1
+    },
+    {
+      "text": "七五三や厄年のような昔の習わしに、ひかれるほうだ。",
+      "axis": 1,
+      "sign": 1
+    },
+    {
+      "text": "相手の年が1つでも上なら、言葉づかいを変える。",
+      "axis": 2,
+      "sign": 1
+    },
+    {
+      "text": "年の差は気にせず、だれとでも同じように話したい。",
+      "axis": 2,
+      "sign": -1
+    },
+    {
+      "text": "書類の数字は、1つのずれも気になるほうだ。",
+      "axis": 3,
+      "sign": 1
+    },
+    {
+      "text": "年齢なんて、だいたい合っていればいいと思う。",
+      "axis": 3,
+      "sign": -1
+    }
+  ],
+  "results": {
+    "TKJP": {
+      "name": "韓国の数え年型",
+      "body": "みんなで一緒に年をとり、昔ながらの数え方を残し、年の上下をはっきりさせ、数字はきっちり。動画に出てきた韓国の数え年そのものです。お正月の朝、国じゅうがそろって1つ年をとる。その感覚がしっくりくるタイプでしょう。ただ、年齢が3つあった時代は、さすがに少し混乱したかもしれません。",
+      "image_prompt": "photorealistic scene of a Korean family gathered around a low table on New Year morning, bowls of rice cake soup steaming, warm home interior, soft morning light through paper doors, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/TKJP.jpg"
+    },
+    "TKJO": {
+      "name": "韓国のお正月の食卓型",
+      "body": "みんなで一緒、昔ながら、年の上下も大事。でも数字はだいたいでいい。トックックをおかわりしたら2つ年をとる、なんて冗談を笑って言えるタイプです。細かい計算より、その場の温かさを取ります。書類の数字を聞かれると、少し迷うかもしれません。",
+      "image_prompt": "photorealistic close up of hands lifting a bowl of Korean rice cake soup at a family table, steam rising, side dishes around, warm indoor light, shallow depth of field, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/TKJO.jpg"
+    },
+    "TKFP": {
+      "name": "日本の七五三型",
+      "body": "みんなで一緒に、昔ながらの習わしを守る。でも上下はゆるやかで、数字はきっちり。日本の七五三や厄年は、今も数え年で数えることがあると言われています。古い数え方を、きちんとした形で残しているタイプです。韓国とは、同じ数え方を使っていた仲間ですね。",
+      "image_prompt": "photorealistic scene of a small child in traditional Japanese kimono standing on shrine stone steps with family, autumn trees, soft afternoon light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/TKFP.jpg"
+    },
+    "TKFO": {
+      "name": "ベトナムのテト型",
+      "body": "みんなで一緒、昔ながら、上下はゆるく、数字はだいたい。ベトナムのテトも、国じゅうがそろって新しい年を迎えるお祝いだと言われています。細かいことは気にせず、みんなで区切りを祝う。そういう時間を大切にするタイプです。",
+      "image_prompt": "photorealistic scene of a Vietnamese family courtyard during Lunar New Year, blooming apricot blossom branches in a vase, red decorations, people gathered outdoors, warm daylight, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/TKFO.jpg"
+    },
+    "TSJP": {
+      "name": "2023年の韓国型",
+      "body": "みんなで一緒がいいけれど、ややこしい習慣は作り直したい。上下ははっきり、数字はきっちり。韓国では2023年6月から、年齢を満年齢に一本化する仕組みが始まりました。その日、書類の上でみんなが1歳か2歳、若くなったそうです。整える力のあるタイプです。",
+      "image_prompt": "photorealistic interior of a quiet modern Korean government office, empty desks with neat stacks of documents, large window with soft daylight, clean minimal space, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/TSJP.jpg"
+    },
+    "TSJO": {
+      "name": "中国の春節型",
+      "body": "みんなで一緒、でも古いやり方にはこだわらない。年の上下は大事にして、数字はだいたい。中国の春節は、家族が集まって一斉に新しい年を迎える行事です。形は変わっても、集まる日は残る。そういうバランスのタイプでしょう。",
+      "image_prompt": "photorealistic scene of a large Chinese family reunion dinner during Spring Festival, round table full of dishes, red lanterns glowing overhead, warm evening light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/TSJO.jpg"
+    },
+    "TSFP": {
+      "name": "シンガポールの制度型",
+      "body": "みんなで同じ仕組みを使い、古い決まりは思い切って直す。上下はゆるく、数字はきっちり。シンガポールは、いくつもの文化が混ざりながら、制度をすっきり整えてきた国だと言われています。全員に同じ物差しを、が口ぐせかもしれません。",
+      "image_prompt": "photorealistic view of a modern Singapore street with clean walkways, glass office towers and tropical trees, people crossing at a junction, bright daylight, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/TSFP.jpg"
+    },
+    "TSFO": {
+      "name": "ブラジルのお祭り型",
+      "body": "みんなで一緒、古い決まりにはこだわらない。上下も気にせず、数字もだいたい。ブラジルのお祭りは、だれでも輪に入れる雰囲気があると言われています。年齢を聞かれても、笑って流してしまうタイプでしょう。",
+      "image_prompt": "photorealistic scene of a lively Brazilian street celebration, people of many ages dancing together, colorful costumes, bright afternoon sun, confetti in the air, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/TSFO.jpg"
+    },
+    "MKJP": {
+      "name": "日本の誕生日型",
+      "body": "年をとるのは自分ひとりの日。昔ながらのやり方は残し、年の上下ははっきり、数字はきっちり。日本では誕生日に自分だけ1つ年をとります。先輩と後輩の区別もあります。動画で韓国とくらべられていた、あの形に近いタイプです。",
+      "image_prompt": "photorealistic scene of a small birthday cake with lit candles on a Japanese family dining table, one person seated smiling, evening room light, cozy interior, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/MKJP.jpg"
+    },
+    "MKJO": {
+      "name": "台湾の数え年型",
+      "body": "年をとるのは自分の日。でも昔ながらの習わしは残し、年上は立てる。数字はだいたいでいい。台湾でも数え年の考え方が今も残っていると言われています。古いものと新しいものを、ゆるく両方持っているタイプです。",
+      "image_prompt": "photorealistic scene of a Taiwanese temple courtyard with incense smoke, elderly and young people walking together, red lanterns above, soft daylight, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/MKJO.jpg"
+    },
+    "MKFP": {
+      "name": "ドイツの記録型",
+      "body": "自分の日に自分だけ年をとる。古い習わしは残しつつ、上下はゆるく、数字はきっちり。ドイツでは誕生日を前祝いすると縁起が悪い、という言い伝えがあるそうです。決まりは守る。でも人に上下はつけない。そんなタイプです。",
+      "image_prompt": "photorealistic scene of a German half-timbered town square with a calendar-like clock tower, cobblestones, people walking, clear morning light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/MKFP.jpg"
+    },
+    "MKFO": {
+      "name": "アイルランドの語り部型",
+      "body": "誕生日は自分の日。昔話や習わしは好きだけれど、上下も数字もこだわらない。アイルランドには古い物語を語り継ぐ文化があると言われています。年齢より、その人がどんな話を持っているかを見るタイプでしょう。",
+      "image_prompt": "photorealistic scene of a cozy Irish pub interior, people of different ages listening to a storyteller, fireplace glowing, wooden beams, warm evening light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/MKFO.jpg"
+    },
+    "MSJP": {
+      "name": "スイスの時計型",
+      "body": "年をとるのは自分の日。古い決まりは必要なら作り直す。上下ははっきり、数字はきっちり。スイスは時計づくりで知られ、ずれを嫌う国だと言われています。1歳のずれも、1秒のずれも気になるタイプでしょう。",
+      "image_prompt": "photorealistic close up of a precision mechanical watch movement on a workbench with tools, watchmaker hands in background, focused lamp light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/MSJP.jpg"
+    },
+    "MSJO": {
+      "name": "アメリカの自分流型",
+      "body": "自分の日に自分で祝う。古い決まりにはこだわらない。相手の立場は意識するけれど、数字はだいたい。アメリカでは年齢より、その人が何をしてきたかで見られることが多いと言われています。自分のペースで進むタイプです。",
+      "image_prompt": "photorealistic scene of friends celebrating a birthday in an American backyard, balloons tied to a fence, grill smoking, golden hour sunlight, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/MSJO.jpg"
+    },
+    "MSFP": {
+      "name": "スウェーデンの番号型",
+      "body": "自分の日は自分の日。古い決まりは新しくしていい。上下はつくらず、数字はきっちり。北欧では一人ひとりに番号があって、手続きがすっきり進むと言われています。人は横並び、記録は正確に。そういうタイプです。",
+      "image_prompt": "photorealistic scene of a bright Scandinavian office interior with light wood desks, a person working alone by a large window, snow outside, soft daylight, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/MSFP.jpg"
+    },
+    "MSFO": {
+      "name": "アイスランドの気まぐれ型",
+      "body": "自分の日、古い決まりにこだわらず、上下もなく、数字もだいたい。アイスランドは人が少なく、みんな名前で呼び合うと言われています。年齢を数え直す制度があっても、たぶんあまり気にしないタイプでしょう。",
+      "image_prompt": "photorealistic wide landscape of Icelandic countryside with a lone small house, mossy lava fields, low sun breaking through clouds, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/MSFO.jpg"
+    }
+  }
+}
