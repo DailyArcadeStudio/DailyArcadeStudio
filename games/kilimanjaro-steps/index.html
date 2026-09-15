@@ -1,0 +1,1317 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>キリマンジャロの一歩</title>
+<style>
+  html,body{margin:0;padding:0;overflow:hidden;background:#07080f;font-family:'Hiragino Kaku Gothic ProN','Helvetica Neue',Arial,sans-serif;}
+  #ui{position:fixed;top:16px;left:0;right:0;text-align:center;color:#fff;z-index:10;pointer-events:none;}
+  #score{font-size:clamp(24px,5.6vw,34px);font-weight:800;text-shadow:0 2px 8px #000;}
+  #msg{font-size:clamp(13px,3.4vw,19px);margin-top:6px;opacity:.9;text-shadow:0 2px 6px #000;}
+  #alt{font-size:clamp(11px,2.9vw,15px);margin-top:2px;opacity:.68;letter-spacing:.08em;text-shadow:0 2px 6px #000;}
+
+  #title{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:rgba(5,6,13,.74);z-index:20;color:#fff;transition:opacity .4s;padding:16px;box-sizing:border-box;}
+  #title h1{font-size:clamp(28px,8.4vw,58px);margin:0 0 8px;letter-spacing:2px;text-align:center;
+    text-shadow:0 4px 18px #ff9d3b;}
+  #title p{font-size:clamp(12px,3.3vw,19px);opacity:.85;margin:4px 0;text-align:center;line-height:1.6;}
+  #title .btn{margin-top:26px;padding:14px 44px;font-size:clamp(18px,4.6vw,22px);font-weight:700;color:#fff;
+    background:linear-gradient(180deg,#ff9d3b,#c25a12);border:none;border-radius:12px;cursor:pointer;
+    box-shadow:0 6px 24px rgba(255,157,59,.45);font-family:inherit;}
+  #title .btn:hover{transform:scale(1.05);}
+  .hidden{opacity:0;pointer-events:none;}
+
+  #back{position:fixed;top:14px;left:14px;z-index:30;text-decoration:none;
+    background:rgba(12,16,26,.72);color:#fff;font:600 clamp(12px,3vw,15px)/1 inherit;
+    padding:0 14px;height:44px;display:flex;align-items:center;border-radius:12px;}
+  #back:hover{background:rgba(30,38,56,.9);}
+  #mute{position:fixed;top:14px;right:14px;z-index:30;border:none;cursor:pointer;
+    background:rgba(12,16,26,.72);color:#fff;font-size:20px;line-height:1;
+    width:44px;height:44px;border-radius:12px;}
+  #mute:hover{background:rgba(30,38,56,.9);}
+
+  /* show the hint that matches the device */
+  .tc{display:none;}
+  @media (pointer:coarse){ .kb{display:none;} .tc{display:block;} }
+  @media (pointer:coarse){ #title .btn{padding:18px 52px;} }
+
+  /* --- the stride meter, bottom-centre where a thumb is already looking --- */
+  #meterWrap{position:fixed;left:50%;transform:translateX(-50%);opacity:0;
+    bottom:clamp(18px,6vh,54px);z-index:11;pointer-events:none;
+    width:min(86vw,520px);text-align:center;transition:opacity .25s;}
+  #meterLabel{color:#fff;opacity:.72;font-size:clamp(11px,2.9vw,14px);
+    letter-spacing:.3em;margin-bottom:6px;text-shadow:0 2px 6px #000;}
+  #meter{position:relative;height:clamp(18px,4.6vw,26px);border-radius:6px;
+    background:rgba(14,18,32,.88);border:1px solid rgba(150,170,210,.35);
+    box-shadow:0 4px 18px rgba(0,0,0,.55);overflow:hidden;}
+  #meterFill{position:absolute;left:0;top:0;bottom:0;width:0%;
+    background:linear-gradient(90deg,rgba(63,134,173,.25),rgba(63,134,173,.7));}
+  /* the safe window, projected from the next ledge onto the bar */
+  #meterGood{position:absolute;top:0;bottom:0;left:0%;width:0%;
+    background:rgba(75,255,160,.55);box-shadow:0 0 12px rgba(75,255,160,.7) inset;}
+  /* the sweeping marker — this is what the player is timing */
+  #meterMark{position:absolute;top:-3px;bottom:-3px;left:0%;width:4px;
+    margin-left:-2px;background:#ffe9b0;border-radius:2px;
+    box-shadow:0 0 10px #ffe9b0,0 0 20px rgba(255,233,176,.6);}
+  #meterWrap.blind #meterMark{opacity:0;}   /* ブリザード hides it */
+
+  /* --- event banner: slams into the middle of the screen --- */
+  #banner{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    z-index:15;pointer-events:none;opacity:0;}
+  #banner .b{font-size:clamp(24px,7vw,64px);font-weight:900;letter-spacing:.06em;color:#fff;
+    padding:10px 4vw;max-width:94vw;text-align:center;transform:scale(2.4);opacity:0;
+    text-shadow:0 0 26px currentColor, 0 6px 20px #000;
+    border-top:5px solid currentColor;border-bottom:5px solid currentColor;}
+  #banner.go .b{animation:slam .62s cubic-bezier(.12,.85,.2,1) forwards;}
+  @keyframes slam{
+    0%  {transform:scale(2.4) rotate(-4deg);opacity:0;}
+    22% {transform:scale(1)   rotate(0deg); opacity:1;}
+    70% {transform:scale(1)   rotate(0deg); opacity:1;}
+    100%{transform:scale(1.12);opacity:0;}
+  }
+
+  /* --- full-screen colour flashes --- */
+  #flash{position:fixed;inset:0;z-index:14;pointer-events:none;opacity:0;background:#fff;}
+  #vignette{position:fixed;inset:0;z-index:13;pointer-events:none;opacity:0;
+    background:radial-gradient(ellipse at center,rgba(0,0,0,0) 32%,rgba(120,0,10,.85) 100%);}
+
+  /* --- K.O. screen --- */
+  #ko{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    z-index:22;pointer-events:none;opacity:0;color:#fff;transition:opacity .3s;}
+  #ko.on{opacity:1;}
+  #ko .koText{font-size:clamp(84px,24vw,180px);font-weight:900;letter-spacing:10px;color:#fff;
+    text-shadow:0 0 40px #ff9d3b,0 0 90px #e0521c,0 10px 30px #000;
+    transform:scale(3);opacity:0;}
+  #ko.on .koText{animation:koSlam .8s cubic-bezier(.1,.9,.2,1) forwards;}
+  @keyframes koSlam{
+    0%  {transform:scale(3) rotate(-8deg);opacity:0;}
+    30% {transform:scale(1) rotate(0deg);opacity:1;}
+    36% {transform:scale(1.06);}
+    100%{transform:scale(1);opacity:1;}
+  }
+  #ko .finalLabel{font-size:clamp(14px,3.8vw,22px);letter-spacing:4px;opacity:0;margin-top:6px;text-shadow:0 2px 8px #000;}
+  #ko .finalScore{font-size:clamp(44px,13vw,80px);font-weight:800;opacity:0;color:#ffd23b;
+    text-shadow:0 0 24px rgba(255,210,59,.5),0 4px 20px #000;}
+  #ko.on .finalLabel{animation:fadeUp .5s .75s forwards;}
+  #ko.on .finalScore{animation:fadeUp .5s .9s forwards;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+
+  /* --- help (?) --- */
+  #helpBtn{position:fixed;top:14px;right:66px;z-index:30;border:none;cursor:pointer;
+    background:rgba(12,16,26,.72);color:#fff;font:700 20px/1 'Helvetica Neue',Arial,sans-serif;
+    width:44px;height:44px;border-radius:12px;}
+  #helpBtn:hover{background:rgba(30,38,56,.9);}
+  #help{position:fixed;inset:0;z-index:40;display:none;align-items:center;
+    justify-content:center;background:rgba(4,6,12,.86);padding:16px;}
+  #help.on{display:flex;}
+  #help .box{background:#121826;border:1px solid #2b3550;border-radius:18px;
+    max-width:560px;width:100%;max-height:86vh;overflow:auto;padding:24px 24px 20px;
+    color:#e6edf3;font-family:inherit;box-sizing:border-box;}
+  #help h2{margin:0 0 4px;font-size:clamp(18px,5vw,25px);}
+  #help .sub{color:#8b949e;font-size:clamp(11px,3vw,14px);margin:0 0 16px;}
+  #help h3{font-size:clamp(12px,3.4vw,15px);color:#ff9d3b;margin:16px 0 6px;letter-spacing:.04em;}
+  #help ul{margin:0;padding-left:20px;}
+  #help li{font-size:clamp(12px,3.3vw,15px);line-height:1.7;margin:3px 0;}
+  #help b{color:#ff9d3b;font-weight:700;}
+  #help .close{margin-top:20px;width:100%;padding:12px;border:none;border-radius:10px;
+    background:#2b3550;color:#fff;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;}
+  #help .close:hover{background:#3a4668;}
+</style>
+</head>
+<body>
+<div id="ui"><div id="score"></div><div id="msg"></div><div id="alt"></div></div>
+<!-- the stride meter: the one thing the player actually reads -->
+<div id="meterWrap"><div id="meterLabel">歩幅</div><div id="meter">
+  <div id="meterFill"></div><div id="meterGood"></div><div id="meterMark"></div>
+</div></div>
+<button id="helpBtn" title="遊び方">?</button>
+<div id="help"><div class="box">
+  <h2>キリマンジャロの一歩</h2>
+  <p class="sub">薄い空気が、歩幅を削っていく。ブラウザで無料。</p>
+    <h3>歩幅メーター</h3>
+    <ul>
+      <li>足もとのバーを、光点が<b>左右に往復</b>します</li>
+      <li>押した瞬間の位置が、そのまま<b>次の一歩の長さ</b></li>
+      <li>操作はこれだけ。<b>ボタンはひとつ</b></li>
+    </ul>
+    <h3>足場</h3>
+    <ul>
+      <li>次の岩の<b>緑の帯</b>に届けば成功</li>
+      <li>短すぎれば<b>谷に落ちる</b>。長すぎれば<b>踏み外す</b></li>
+      <li>帯は登るほど<b>狭くなる</b></li>
+    </ul>
+    <h3>薄い空気</h3>
+    <ul>
+      <li>高度が上がるほど、光点は<b>速く</b>なります</li>
+      <li>メーターの<b>右端も縮み</b>、大股が出せなくなる</li>
+      <li>これが「歩幅が削られる」ということ</li>
+    </ul>
+    <h3>山の気まぐれ</h3>
+    <ul>
+      <li><b>ブリザード</b>: 光点の位置が見えなくなる</li>
+      <li><b>高山病</b>: 光点が逆走しはじめる</li>
+      <li><b>落石</b>: 足場そのものが揺れて動く</li>
+      <li><b>クレバス</b>: 次の一歩だけ、異様に遠い</li>
+      <li><b>日の出</b>: 一度だけ帯が広がるボーナス</li>
+    </ul>
+  <button class="close">わかった</button>
+</div></div>
+<a id="back" href="../../" title="ゲーム一覧にもどる">‹ ゲーム一覧</a>
+<button id="mute" title="音のオン・オフ">🔊</button>
+<div id="vignette"></div>
+<div id="flash"></div>
+<div id="banner"><div class="b"></div></div>
+<div id="ko">
+  <div class="koText">K.O.</div>
+  <div class="finalLabel">最終スコア</div>
+  <div class="finalScore">0</div>
+</div>
+<div id="title">
+  <h1>キリマンジャロの一歩</h1>
+  <p>薄い空気が、歩幅を削っていく。</p>
+  <p class="kb">スペース / ↑ / クリック : 一歩ふみだす</p>
+  <p class="tc">画面をタップ : 一歩ふみだす</p>
+  <button class="btn" id="startBtn">スタート</button>
+</div>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+// ---------- url flags (declared first: sound and camera both read them) ----------
+const QS = new URLSearchParams(location.search);
+const AUTO = QS.get('auto')==='1';
+const SHOWCASE_Q = QS.get('showcase');
+// Recording must produce clean footage, so every automated mode is muted.
+const REC = QS.get('rec')==='1';   // 録音モード: 音を鳴らして拾う
+const SILENT = (AUTO || !!SHOWCASE_Q || QS.get('mute')==='1') && !REC;
+// 録画・showcase では「?」と「ゲーム一覧」を出さない（動画の邪魔になる）
+const NOCHROME = AUTO || !!SHOWCASE_Q || QS.get('nochrome')==='1';
+
+// ---------- renderer / scene ----------
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.shadowMap.enabled = true;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const SKY = new THREE.Color(0x11121f);
+scene.background = SKY.clone();
+scene.fog = new THREE.Fog(0x11121f, 26, 90);
+
+const camera = new THREE.PerspectiveCamera(52, innerWidth/innerHeight, .1, 300);
+
+// Portrait and landscape both have to work. A phone held upright is far
+// narrower than 16:9, and with a fixed FOV the ledge ahead and the stride
+// meter both fall outside the frame — so widen the vertical FOV as the
+// screen gets taller.
+const BASE_FOV = 52;
+function fitCamera(){
+  const aspect = innerWidth / innerHeight;
+  camera.aspect = aspect;
+  if(typeof SHOWCASE !== 'undefined' && SHOWCASE){
+    camera.fov = aspect < 1 ? 62 : 46;
+  } else {
+    // keep the horizontal field roughly constant across aspect ratios
+    const ref = 16/9;
+    camera.fov = aspect >= ref ? BASE_FOV
+      : Math.min(96, THREE.MathUtils.radToDeg(
+          2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(BASE_FOV)/2) * (ref/aspect))));
+  }
+  camera.__base = camera.fov;    // 日の出 / クレバス が一時的にここから広げる
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+}
+addEventListener('resize', fitCamera);
+addEventListener('orientationchange', ()=>setTimeout(fitCamera, 120));
+
+// ---------- lights ----------
+const hemi = new THREE.HemisphereLight(0x8fa6ff, 0x2a2118, 1.4);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xffd8a8, 2.2);
+sun.position.set(7, 14, 6); sun.castShadow = true;
+sun.shadow.camera.left=-18; sun.shadow.camera.right=18;
+sun.shadow.camera.top=18; sun.shadow.camera.bottom=-18;
+scene.add(sun);
+
+// ---------- materials shared by the game and the showcase ----------
+const rockMat   = new THREE.MeshStandardMaterial({color:0x4a4456, roughness:.95});
+const rockTopMat= new THREE.MeshStandardMaterial({color:0x6b6480, roughness:.9});
+const snowMat   = new THREE.MeshStandardMaterial({color:0xe9eef8, roughness:.75});
+const bandMat   = new THREE.MeshBasicMaterial({color:0x4bffa0, transparent:true, opacity:.55});
+const iceMat    = new THREE.MeshStandardMaterial({color:0x7fd8ff, roughness:.2,
+                    metalness:.1, transparent:true, opacity:.8});
+const boulderMat= new THREE.MeshStandardMaterial({color:0x3a3340, roughness:1});
+
+// ---------- backdrop: the mountain silhouette and far peaks ----------
+// Purely decorative. Sits far behind the ledges and scrolls down as the
+// player climbs, so the sense of altitude comes from the world, not the HUD.
+const backdrop = new THREE.Group();
+scene.add(backdrop);
+(function buildBackdrop(){
+  const farMat = new THREE.MeshBasicMaterial({color:0x1b1d31});
+  const midMat = new THREE.MeshBasicMaterial({color:0x262842});
+  for(let i=0;i<14;i++){
+    const h = 14 + Math.random()*22;
+    const cone = new THREE.Mesh(new THREE.ConeGeometry(8+Math.random()*9, h, 4),
+                                Math.random()<.5 ? farMat : midMat);
+    cone.position.set((Math.random()-.5)*130, h/2 - 22 + Math.random()*30, -46 - Math.random()*40);
+    cone.rotation.y = Math.random()*Math.PI;
+    backdrop.add(cone);
+  }
+})();
+
+// The summit marker: a distant cone with a snow cap, the thing being climbed.
+const summit = new THREE.Group();
+(function(){
+  const body = new THREE.Mesh(new THREE.ConeGeometry(26, 40, 5), new THREE.MeshBasicMaterial({color:0x2c2f4e}));
+  body.position.y = 20; summit.add(body);
+  const cap = new THREE.Mesh(new THREE.ConeGeometry(9.5, 13, 5), new THREE.MeshBasicMaterial({color:0xdfe8fb}));
+  cap.position.y = 33.5; summit.add(cap);
+  summit.position.set(6, 0, -110);
+  scene.add(summit);
+})();
+
+// falling snow — always on, thickens during the blizzard event
+const SNOWN = 420;
+const snowGeo = new THREE.BufferGeometry();
+const snowPos = new Float32Array(SNOWN*3);
+for(let i=0;i<SNOWN;i++){
+  snowPos[i*3]   = (Math.random()-.5)*60;
+  snowPos[i*3+1] = Math.random()*40 - 10;
+  snowPos[i*3+2] = (Math.random()-.5)*50 - 6;
+}
+snowGeo.setAttribute('position', new THREE.BufferAttribute(snowPos,3));
+const snowPointMat = new THREE.PointsMaterial({color:0xffffff, size:.14,
+  transparent:true, opacity:.35, depthWrite:false});
+const snowfall = new THREE.Points(snowGeo, snowPointMat);
+scene.add(snowfall);
+
+// ---------- the climber (primitive build, swappable with a glb) ----------
+function buildClimber(){
+  const g = new THREE.Group();
+  const coat = new THREE.MeshStandardMaterial({color:0xff9d3b, roughness:.65});
+  const dark = new THREE.MeshStandardMaterial({color:0x2a2436, roughness:.8});
+  const skin = new THREE.MeshStandardMaterial({color:0x7a4a2c, roughness:.65});
+  const glass= new THREE.MeshStandardMaterial({color:0x101828, roughness:.15, metalness:.7});
+
+  const torso = new THREE.Mesh(new THREE.CapsuleGeometry(.30, .46, 6, 14), coat);
+  torso.position.y = .95; g.add(torso);
+  const pack = new THREE.Mesh(new THREE.BoxGeometry(.42,.52,.26), dark);
+  pack.position.set(0,.98,-.32); g.add(pack);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(.26,22,16), skin);
+  head.position.y = 1.52; g.add(head);
+  const hat = new THREE.Mesh(new THREE.SphereGeometry(.28,22,16,0,Math.PI*2,0,Math.PI*.55), coat);
+  hat.position.y = 1.56; g.add(hat);
+  const goggles = new THREE.Mesh(new THREE.BoxGeometry(.46,.13,.12), glass);
+  goggles.position.set(0,1.53,.20); g.add(goggles);
+
+  const mkLimb=(x,y,len,mat)=>{
+    // the pivot sits at the hip/shoulder so rotation swings the limb, not slides it
+    const pivot = new THREE.Group(); pivot.position.set(x,y,0);
+    const m = new THREE.Mesh(new THREE.CapsuleGeometry(.085,len,6,10), mat);
+    m.position.y = -len/2 - .085; pivot.add(m);
+    g.add(pivot); return pivot;
+  };
+  const armL=mkLimb(.34,1.14,.34,coat), armR=mkLimb(-.34,1.14,.34,coat);
+  const legL=mkLimb(.15,.62,.40,dark),  legR=mkLimb(-.15,.62,.40,dark);
+
+  // trekking pole, held in the right hand — reads as "climber" instantly
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(.03,.03,1.1,8),
+                new THREE.MeshStandardMaterial({color:0xb8c2d8, metalness:.6, roughness:.35}));
+  pole.position.set(0,-.52,.06); armR.add(pole);
+
+  g.traverse(o=>{ if(o.isMesh) o.castShadow=true; });
+  return {group:g, armL, armR, legL, legR, head};
+}
+const climber = buildClimber();
+scene.add(climber.group);
+// hero light follows the climber so it never sinks into the fog
+const heroLight = new THREE.PointLight(0xffe0bb, 26, 22);
+scene.add(heroLight);
+
+// ---------- ledges: the things you step onto ----------
+// Each ledge is one rock with a green landing band on top. The band is the
+// whole game: reach it and you live, fall short or overshoot and you do not.
+const ledges = [];
+function buildLedge(){
+  const g = new THREE.Group();
+  const rock = new THREE.Mesh(new THREE.BoxGeometry(1,1,1), rockMat);
+  g.add(rock);
+  const top = new THREE.Mesh(new THREE.BoxGeometry(1,1,1), rockTopMat);
+  g.add(top);
+  const snow = new THREE.Mesh(new THREE.BoxGeometry(1,1,1), snowMat);
+  g.add(snow);
+  const band = new THREE.Mesh(new THREE.PlaneGeometry(1,1), bandMat);
+  band.rotation.x = -Math.PI/2;
+  g.add(band);
+  g.traverse(o=>{ if(o.isMesh) o.castShadow=true, o.receiveShadow=true; });
+  scene.add(g);
+  return {group:g, rock, top, snow, band, z:0, y:0, depth:2, safeLo:0, safeHi:0, shakeAmp:0, shakePh:0};
+}
+// Lay a ledge out: `z` is its near edge, `depth` how deep the rock is.
+function placeLedge(L, z, y, depth, safeLo, safeHi){
+  L.z = z; L.y = y; L.depth = depth; L.safeLo = safeLo; L.safeHi = safeHi;
+  const w = 6.2;
+  L.rock.scale.set(w, 7, depth);
+  L.rock.position.set(0, y - 3.5, z - depth/2);
+  L.top.scale.set(w+.24, .34, depth+.2);
+  L.top.position.set(0, y - .17, z - depth/2);
+  L.snow.scale.set(w*.92, .16, depth*.55);
+  L.snow.position.set(0, y + .06, z - depth*.72);
+  // The safe band, drawn flat on the rock's surface. It is measured back from
+  // the near edge, so in world space it spans z-safeHi .. z-safeLo.
+  L.band.scale.set(w*.9, Math.max(.05, safeHi - safeLo), 1);
+  L.band.position.set(0, y + .035, z - (safeLo + safeHi)/2);
+  L.group.position.set(0,0,0);
+}
+
+// ---------- rockfall boulders (decor for the 落石 event) ----------
+const boulders = [];
+for(let i=0;i<7;i++){
+  const b = new THREE.Mesh(new THREE.DodecahedronGeometry(.55), boulderMat);
+  b.castShadow = true; b.visible = false; scene.add(b);
+  boulders.push({mesh:b, vy:0, vz:0, life:0});
+}
+
+// ---------- the stride meter ----------
+// The meter is a DOM bar, not world geometry. The camera looks down the -Z
+// axis, so a quad whose length runs along Z is always seen edge-on — there is
+// no orientation that is both Z-aligned and face-on. A screen-space bar is
+// readable at every aspect ratio and costs nothing to draw.
+//
+// To keep the "marker points at the landing spot" link, the ledge ahead also
+// carries its own green band in the world (see buildLedge), so the player
+// reads the same information in both places.
+const meterWrapEl = document.getElementById('meterWrap');
+const meterEl = document.getElementById('meter');
+const meterGoodEl = document.getElementById('meterGood');
+const meterMarkEl = document.getElementById('meterMark');
+const meterFillEl = document.getElementById('meterFill');
+
+// ---------- game state ----------
+let running=false, dead=false, t=0, score=0;
+let timeScale=1;                 // slow-motion multiplier
+let deadAt=0;
+let shake=0;
+let camDist=8.0, camDistTarget=8.0;
+let camLift=0;                   // death zoom raises the camera a touch
+let stepIndex=0;                 // how many ledges cleared
+let altitude=1800;               // metres, drives the difficulty curve
+
+// --- the stride meter's live state ---
+// `mark` sweeps 0..1 back and forth; on input it freezes and becomes the
+// length of the next stride, mapped onto [MIN_REACH, maxReach].
+let mark=0, markDir=1, markSpeed=.75;
+let maxReach=7.0;                // shrinks with altitude: "thin air"
+const MIN_REACH=1.6;
+let phase='aim';                 // 'aim' | 'step' | 'land'
+let stepT=0, stepFrom=new THREE.Vector3(), stepTo=new THREE.Vector3(), stepPeak=0;
+let stepGood=false;              // did the committed stride land in the band?
+let comboGood=0;                 // consecutive clean landings
+
+// --- event state ---
+let blindT=0;                    // ブリザード: the marker is hidden
+let reverseT=0;                  // 高山病: the marker jitters/reverses
+let rockfallT=0;                 // 落石: ledges sway, boulders tumble
+let sunriseT=0;                  // 日の出: the band is generous for a while
+let crevasseNext=false;          // クレバス: the next gap is huge
+let nextEventAt=7;
+let eventQueue=[];
+
+const scoreEl = document.getElementById('score');
+const msgEl = document.getElementById('msg');
+const altEl = document.getElementById('alt');
+const titleEl = document.getElementById('title');
+const bannerEl = document.getElementById('banner');
+const bannerText = bannerEl.querySelector('.b');
+const flashEl = document.getElementById('flash');
+const vignetteEl = document.getElementById('vignette');
+const koEl = document.getElementById('ko');
+const koScoreEl = koEl.querySelector('.finalScore');
+
+// ---------- presentation helpers ----------
+function banner(text, color){
+  bannerText.textContent = text;
+  bannerText.style.color = color;
+  bannerEl.classList.remove('go');
+  void bannerEl.offsetWidth;      // restart the CSS animation
+  bannerEl.style.opacity = 1;
+  bannerEl.classList.add('go');
+}
+function flash(color, strength, ms){
+  flashEl.style.background = color;
+  flashEl.style.transition = 'none';
+  flashEl.style.opacity = strength;
+  requestAnimationFrame(()=>{
+    flashEl.style.transition = `opacity ${ms}ms ease-out`;
+    flashEl.style.opacity = 0;
+  });
+}
+
+// ---------- ledge generation ----------
+// Difficulty lives entirely in three numbers: the gap to the next ledge,
+// the width of its safe band, and how fast the marker sweeps.
+function gapFor(i){
+  // grows slowly, but never past what the shrinking maxReach can deliver
+  return Math.min(maxReach*.80, 2.6 + Math.min(3.0, i*.085) + Math.random()*.7);
+}
+function bandFor(i){
+  // Narrows fast at first, then keeps creeping in forever. There is no floor:
+  // a run must always end eventually, or a steady player never gets a score.
+  const base = Math.max(.34, 2.10 - i*.055 - Math.max(0, i-26)*.006);
+  return sunriseT>0 ? base*2.0 : base;
+}
+// Push one new ledge onto the far end of the chain. `recycle` is the ledge the
+// player just walked off, handed back so a run allocates nothing per step.
+function pushLedge(recycle){
+  const last = ledges[ledges.length-1];
+  const i = stepIndex + ledges.length;
+  let gap = gapFor(i);
+  if(crevasseNext){ gap = Math.min(maxReach*.97, gap*1.9 + 1.4); crevasseNext=false; }
+  const band = bandFor(i);
+  const depth = band + 1.9;
+  const z = last.z - gap;                         // near edge of the new rock
+  const y = last.y + .55 + Math.random()*.55;     // always climbing
+  // safe window measured back from the near edge
+  const safeLo = Math.max(.18, (depth - band)*.45);
+  const target = recycle || buildLedge();
+  if(recycle) scene.add(recycle.group);           // it was removed when left behind
+  placeLedge(target, z, y, depth, safeLo, safeLo + band);
+  ledges.push(target);
+  return target;
+}
+
+function resetLedges(){
+  for(const L of ledges) scene.remove(L.group);
+  ledges.length = 0;
+  const first = buildLedge();
+  placeLedge(first, 0, 0, 3.2, .9, 2.4);
+  ledges.push(first);
+  for(let i=0;i<7;i++) pushLedge();
+}
+
+// The ledge the player is standing on is always ledges[0] after a landing.
+function currentLedge(){ return ledges[0]; }
+function nextLedge(){ return ledges[1]; }
+
+// ---------- events ----------
+// Each one changes a different thing: what you can see, which way the
+// marker moves, whether the ground holds still, how far the gap is, and
+// one that helps. The footage stays varied because no two look alike.
+const EVENTS = {
+  blizzard(){
+    banner('ブリザード', '#8fd8ff');
+    blindT = 7.0;
+    snowPointMat.opacity = .95; snowPointMat.size = .3;
+    scene.fog.near = 8; scene.fog.far = 34;
+    shake = Math.max(shake,.16);
+    return 7.0;
+  },
+  altitude(){
+    banner('高山病', '#c58bff');
+    reverseT = 7.5;
+    flash('#8b4bff', .30, 520);
+    return 7.5;
+  },
+  rockfall(){
+    banner('落石', '#ff6a3b');
+    rockfallT = 7.0;
+    // throw a handful of boulders down past the player
+    const base = climber.group.position;
+    for(const b of boulders){
+      b.mesh.visible = true;
+      b.mesh.position.set(base.x + (Math.random()-.5)*9, base.y + 9 + Math.random()*7,
+                          base.z - 3 - Math.random()*14);
+      b.vy = -1 - Math.random()*2; b.vz = 4 + Math.random()*5;
+      b.life = 3.6 + Math.random()*2.4;
+    }
+    shake = Math.max(shake,.42);
+    return 7.0;
+  },
+  crevasse(){
+    banner('クレバス', '#7fd8ff');
+    crevasseNext = true;
+    // re-lay the ledge the player is about to aim at, so the gap is visible now
+    relayoutFrom(1, true);
+    flash('#bfefff', .26, 420);
+    return 3.6;
+  },
+  sunrise(){
+    banner('日の出', '#ffd23b');
+    sunriseT = 7.0;
+    flash('#ffd7a0', .42, 900);
+    relayoutFrom(1, false);          // widen the upcoming bands immediately
+    return 7.0;
+  },
+};
+const EVENT_NAMES = Object.keys(EVENTS);
+
+// Rebuild the ledges ahead of index `from` under the current rules. Used by
+// クレバス (one huge gap) and 日の出 (suddenly generous bands).
+function relayoutFrom(from, crevasse){
+  const keep = ledges.slice(0, from);
+  const rest = ledges.slice(from);
+  ledges.length = 0;
+  for(const L of keep) ledges.push(L);
+  crevasseNext = !!crevasse;
+  for(const L of rest){
+    const last = ledges[ledges.length-1];
+    const i = stepIndex + ledges.length;
+    let gap = gapFor(i);
+    if(crevasseNext){ gap = Math.min(maxReach*.97, gap*1.9 + 1.4); crevasseNext=false; }
+    const band = bandFor(i);
+    const depth = band + 1.9;
+    const safeLo = Math.max(.18, (depth - band)*.45);
+    placeLedge(L, last.z - gap, last.y + .55 + Math.random()*.55, depth, safeLo, safeLo + band);
+    ledges.push(L);
+  }
+}
+
+// recording/debug hook: fire a named event on cue (used by the capture script)
+// returns false if the run is already over, so a capture script can wait
+// for the next run instead of firing an event onto the K.O. screen
+window.__ev = name => {
+  if(!running || dead || !EVENTS[name]) return false;
+  const busy = EVENTS[name]();
+  if(!SILENT) SND.event(); nextEventAt = t + busy + 5; return true;
+};
+window.__alive = () => running && !dead;
+window.__kill = () => { if(running && !dead){ dead=true; gameOver(); } };
+window.__recStop = () => SND.recStop();
+window.__snd = () => ({enabled: SND.enabled, silent: SILENT});
+window.__events = EVENT_NAMES.slice();
+window.__probe = () => ({t:+t.toFixed(2), mark:+mark.toFixed(3), reach:+maxReach.toFixed(2),
+  phase, step:stepIndex, alt:Math.round(altitude), next:+nextEventAt.toFixed(2)});
+
+function refillEventQueue(){
+  eventQueue = EVENT_NAMES.slice();
+  for(let i=eventQueue.length-1;i>0;i--){        // shuffle so the order varies per run
+    const j = Math.floor(Math.random()*(i+1));
+    [eventQueue[i],eventQueue[j]]=[eventQueue[j],eventQueue[i]];
+  }
+}
+function triggerEvent(){
+  if(!eventQueue.length) refillEventQueue();
+  const name = eventQueue.pop();
+  const busy = EVENTS[name]();
+  if(!SILENT) SND.event();
+  nextEventAt = t + busy + 5 + Math.random()*4;  // breathing room between events
+}
+
+// ---------- reset ----------
+function reset(){
+  resetLedges();
+  stepIndex = 0; altitude = 1800;
+  maxReach = 7.0; markSpeed = .75; mark = 0; markDir = 1;
+  phase='aim'; stepT=0; stepGood=false; comboGood=0;
+  t=0; score=0; dead=false; timeScale=1; shake=0;
+  camDist=8.0; camDistTarget=8.0; camLift=0;
+  blindT=0; reverseT=0; rockfallT=0; sunriseT=0; crevasseNext=false;
+  for(const b of boulders){ b.mesh.visible=false; b.life=0; }
+  snowPointMat.opacity=.35; snowPointMat.size=.14;
+  scene.fog.near=26; scene.fog.far=90;
+  scene.background.copy(SKY); scene.fog.color.copy(SKY);
+  hemi.intensity=1.4; sun.intensity=2.2; sun.color.setHex(0xffd8a8);
+  nextEventAt = 7;
+  refillEventQueue();
+  const L0 = currentLedge();
+  climber.group.position.set(0, L0.y, L0.z - 1.2);
+  climber.group.rotation.set(0,0,0);
+  climber.group.scale.set(1,1,1);
+  camera.position.set(0, L0.y + 4.4, L0.z + 8.0);
+  scoreEl.textContent = '0';
+  msgEl.textContent='';
+  altEl.textContent = '標高 1800 m';
+  koEl.classList.remove('on');
+  vignetteEl.style.transition='opacity .3s'; vignetteEl.style.opacity=0;
+  meterWrapEl.style.opacity = 1;                    // gameOver() fades it out
+  meterWrapEl.classList.remove('blind');
+  layoutMeter();
+}
+
+const startBtn = document.getElementById('startBtn');
+
+// ---------- sound: everything synthesised, no audio files ----------
+// Keeps the single-HTML rule (nothing to download) and lets the music
+// react to play: the bass line speeds up with the game, events drop a
+// stinger, and the whole thing ducks out on a game over.
+const SND = (() => {
+  let ctx = null, master = null, musicGain = null, on = true, started = false;
+  let step = 0, timer = null, tempo = 0.25;
+
+  // A pentatonic scale never sounds wrong against itself, which matters
+  // when the tempo drifts with the player's speed.
+  // minor pentatonic, driving — a chase that never lets up
+  const SCALE = [0, 3, 5, 7, 10];
+  const ROOT = 196;
+  const BASS = 'square', LEAD = 'sawtooth';
+  const hz = (deg, oct = 0) =>
+    ROOT * Math.pow(2, oct + Math.floor(deg / SCALE.length)) *
+    Math.pow(2, SCALE[((deg % SCALE.length) + SCALE.length) % SCALE.length] / 12);
+
+  function ensure() {
+    if (ctx) return ctx;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    ctx = new AC();
+    master = ctx.createGain();
+    master.gain.value = 0.32;
+    master.connect(ctx.destination);
+    musicGain = ctx.createGain();
+    musicGain.gain.value = 1;
+    musicGain.connect(master);
+    return ctx;
+  }
+
+
+  // ---- 録音用の分岐（?rec=1）----
+  // Playwright の録画には音声が入らないので、ゲーム自身に master バスを
+  // 録らせる。鳴っているものそのものなので映像と必ず同期する。
+  let recDest = null, recorder = null, recChunks = [];
+  function recStart() {
+    if (!ctx || recorder) return;
+    recDest = ctx.createMediaStreamDestination();
+    master.connect(recDest);
+    recorder = new MediaRecorder(recDest.stream, {mimeType: 'audio/webm'});
+    recorder.ondataavailable = e => { if (e.data.size) recChunks.push(e.data); };
+    recorder.start();
+  }
+  function recStop() {
+    return new Promise(res => {
+      if (!recorder) return res(null);
+      recorder.onstop = async () => {
+        const blob = new Blob(recChunks, {type: 'audio/webm'});
+        const buf = await blob.arrayBuffer();
+        res(Array.from(new Uint8Array(buf)));
+      };
+      recorder.stop();
+    });
+  }
+
+  function blip(freq, dur, type = 'square', vol = 0.25, dest = null, slideTo = null) {
+    if (!ctx || !on) return;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, ctx.currentTime);
+    if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, ctx.currentTime + dur);
+    // a short attack stops every note from clicking
+    g.gain.setValueAtTime(0, ctx.currentTime);
+    g.gain.linearRampToValueAtTime(vol, ctx.currentTime + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
+    o.connect(g); g.connect(dest || master);
+    o.start(); o.stop(ctx.currentTime + dur + 0.02);
+  }
+
+  function noise(dur, vol = 0.2, hp = 800) {
+    if (!ctx || !on) return;
+    const n = Math.floor(ctx.sampleRate * dur);
+    const buf = ctx.createBuffer(1, n, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    const f = ctx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = hp;
+    const g = ctx.createGain(); g.gain.value = vol;
+    src.connect(f); f.connect(g); g.connect(master);
+    src.start();
+  }
+
+  // --- the loop: a walking bass plus an offbeat blip ---
+  function tick() {
+    if (!ctx || !on) return;
+    const bar = step % 16;
+    // straight driving pulse: bass on every beat, lead stabs offbeat
+    if (bar % 2 === 0) blip(hz(bar % 8 === 0 ? 0 : 1, -1), tempo * 1.1, BASS, 0.30, musicGain);
+    if (bar % 8 === 5) blip(hz(4, 0), tempo * 0.6, LEAD, 0.09, musicGain);
+    if (bar % 4 === 2) noise(0.04, 0.05, 5000);
+    step++;
+    timer = setTimeout(tick, tempo * 1000);
+  }
+
+  return {
+    // must be called from a user gesture — browsers block audio otherwise
+    start() {
+      if (!ensure() || started) return;
+      if (ctx.state === 'suspended') ctx.resume();
+      started = true; step = 0; tick();
+    },
+    stop() { if (timer) { clearTimeout(timer); timer = null; } started = false; },
+    /** speed the music up with the game; 1 = starting pace */
+    setPace(mult) { tempo = Math.max(0.11, 0.25 / Math.max(0.2, mult)); },
+    duck(sec = 1.6) {                                      // for game over
+      if (!ctx) return;
+      musicGain.gain.cancelScheduledValues(ctx.currentTime);
+      musicGain.gain.setValueAtTime(musicGain.gain.value, ctx.currentTime);
+      musicGain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + sec);
+    },
+    unduck() {
+      if (!ctx) return;
+      musicGain.gain.cancelScheduledValues(ctx.currentTime);
+      musicGain.gain.setValueAtTime(0.0001, ctx.currentTime);
+      musicGain.gain.exponentialRampToValueAtTime(1, ctx.currentTime + 0.4);
+    },
+    // --- one-shots ---
+    move()  { ensure(); blip(hz(3, 1), 0.07, LEAD, 0.12); },
+    jump()  { ensure(); blip(hz(0, 0), 0.16, LEAD, 0.18, null, hz(4, 1)); },
+    land()  { ensure(); noise(0.06, 0.10, 500); },
+    place() { ensure(); blip(hz(2, 0), 0.10, BASS, 0.22, null, hz(4, 1)); },
+    event() { ensure(); [0, 90, 180].forEach((ms, i) =>
+                setTimeout(() => blip(hz(2 + i, 0), 0.18, 'sawtooth', 0.20), ms)); },
+    hit()   { ensure(); noise(0.35, 0.30, 200);
+              blip(180, 0.5, 'sawtooth', 0.28, null, 40); },
+    over()  { ensure(); [0, 140, 280, 460].forEach((ms, i) =>
+                setTimeout(() => blip(hz(-i, -1), 0.42, 'triangle', 0.26), ms)); },
+    recStart() { ensure(); recStart(); },
+    recStop() { return recStop(); },
+    toggle() { on = !on; if (!on) { this.stop(); } else { this.start(); } return on; },
+    get enabled() { return on; },
+  };
+})();
+
+// --- one place for every action, so touch and keyboard stay in step ---
+function startRun(){
+  titleEl.classList.add('hidden'); reset(); running=true;
+  if(!SILENT){ SND.unduck(); SND.start(); if(REC) SND.recStart(); }
+}
+
+// THE one input of the game: freeze the sweeping marker and commit the stride.
+function commitStep(){
+  if(!running || dead || phase!=='aim') return;
+  if(!SILENT) SND.place();               // blip on every input
+
+  const reach = MIN_REACH + mark*(maxReach - MIN_REACH);
+  const from = currentLedge(), to = nextLedge();
+  // the stride is measured from where the climber stands, forward in -Z
+  const landZ = climber.group.position.z - reach;
+  // depth into the next rock, measured back from its near edge
+  const into = to.z - landZ;
+  stepGood = into >= to.safeLo && into <= to.safeHi;
+
+  stepFrom.copy(climber.group.position);
+  // A miss still animates: short falls into the gap, long slips off the back.
+  if(into < 0){                                // never reached the rock at all
+    stepTo.set(0, to.y - 9, landZ);
+  } else if(into < to.safeLo){                 // clipped the lip, slides off
+    stepTo.set(0, to.y - 8, to.z - into*.6);
+  } else if(into > to.depth){                  // straight over the top
+    stepTo.set(0, to.y - 8, to.z - to.depth - .6);
+  } else if(!stepGood){                        // on the rock, but past the band
+    stepTo.set(0, to.y - 7.5, to.z - into);
+  } else {
+    stepTo.set(0, to.y, to.z - into);
+  }
+  stepPeak = Math.max(1.0, reach*.30);
+  stepT = 0; phase = 'step';
+}
+
+const muteBtn = document.getElementById('mute');
+function toggleMute(){ muteBtn.textContent = SND.toggle() ? '🔊' : '🔇'; }
+muteBtn.addEventListener('click', toggleMute);
+muteBtn.addEventListener('touchend', e=>{ e.preventDefault(); toggleMute(); },
+                         {passive:false});
+if(SILENT) muteBtn.style.display='none';   // automated modes have no audio
+addEventListener('keydown', e=>{ if(e.code==='KeyM') toggleMute(); });
+
+startBtn.addEventListener('click', startRun);
+// a touch on the button must start too — click alone is unreliable on touch
+startBtn.addEventListener('touchend', e=>{ e.preventDefault(); startRun(); },
+                          {passive:false});
+
+addEventListener('keydown', e=>{
+  if(e.repeat) return;                   // holding the key must not spam steps
+  if(!running){
+    if(e.code==='Space'||e.code==='Enter'||e.code==='ArrowUp'){
+      // after a game over, the same key retries once the K.O. has been read
+      if(dead && Date.now()-deadAt < 1200) return;
+      startRun();
+    }
+    return;
+  }
+  if(e.code==='Space'||e.code==='ArrowUp'||e.code==='KeyW'||e.code==='Enter'){
+    e.preventDefault(); commitStep();
+  }
+});
+
+// Mouse click on the canvas does the same thing as the key.
+// A touch also emits a synthetic mousedown ~300ms later; without this guard a
+// retry tap would restart the run AND immediately commit a stride, killing the
+// player on the spot. touchend stamps the clock and we ignore mice for a moment.
+let lastTouchAt = 0;
+renderer.domElement.addEventListener('mousedown', ()=>{
+  if(Date.now() - lastTouchAt < 700) return;      // synthetic: the touch path handled it
+  if(running && !dead) commitStep();
+});
+
+// --- touch: a tap anywhere commits the stride ---
+// Most viewers arrive from a phone, so the game has to be playable
+// without a keyboard. One tap = one step; there is nothing else to do.
+(function(){
+  let sx=0, sy=0, st=0;
+  const canvas = renderer.domElement;
+
+  canvas.addEventListener('touchstart', e=>{
+    const p = e.changedTouches[0];
+    sx=p.clientX; sy=p.clientY; st=Date.now();
+    lastTouchAt = st;
+  }, {passive:true});
+
+  canvas.addEventListener('touchend', e=>{
+    lastTouchAt = Date.now();      // suppress the synthetic mousedown that follows
+    if(dead){
+      // give the K.O. animation time to read, then a tap retries
+      if(!AUTO && Date.now()-deadAt > 1200) startRun();
+      return;
+    }
+    if(!running){ startRun(); return; }
+    const p = e.changedTouches[0];
+    const dx = p.clientX-sx, dy = p.clientY-sy;
+    // ignore an accidental drag; a genuine tap steps
+    if(Math.hypot(dx,dy) < 40 && Date.now()-st < 600) commitStep();
+  }, {passive:true});
+
+  // The title overlay sits above the canvas, so a tap anywhere on it never
+  // reaches the canvas handler. Start from the overlay itself.
+  titleEl.addEventListener('touchend', e=>{
+    if(!running){ e.preventDefault(); startRun(); }
+  }, {passive:false});
+
+  // stop the browser treating game taps as scroll / double-tap zoom
+  canvas.addEventListener('touchmove', e=>e.preventDefault(), {passive:false});
+})();
+
+// autoplay mode for recording: ?auto=1
+// recording holds the K.O. longer than play does: ?hold=9000
+const RETRY_MS = Math.max(1200, parseInt(QS.get('hold')||'4200', 10));
+// ?noev=1 records a calm run with no events, for narration beds
+const NOEV = QS.get('noev')==='1';
+if(AUTO){ setTimeout(startRun, 1200); }   // startRun 経由にする（音/録音も始まる）
+
+// The autopilot plays the actual game: it works out which marker value would
+// land in the middle of the band and taps when the sweep passes through it.
+// It does not cheat past blindness — it only needs the geometry, not the HUD.
+function autoPilot(dt){
+  if(phase!=='aim') return;
+  const to = nextLedge();
+  if(!to) return;
+  // the marker value that lands dead centre of the safe band
+  const wantZ = to.z - (to.safeLo + to.safeHi)/2;
+  const wantReach = climber.group.position.z - wantZ;
+  const wantMark = (wantReach - MIN_REACH) / (maxReach - MIN_REACH);
+  if(wantMark < 0 || wantMark > 1) return;       // unreachable: let it ride
+  // fire when the sweep is about to cross the target, allowing for one frame
+  // of travel plus a little human-ish slop so it is not frame-perfect
+  const lead = markSpeed * dt * 1.1;
+  const slop = 0.012;
+  if(Math.abs(mark - wantMark) <= lead + slop) commitStep();
+}
+
+// ---------- showcase mode ----------
+// Puts one object on a turntable against an empty stage so the video can
+// talk about it while the real thing is on screen. Uses the game's own
+// meshes, so what the narration describes is exactly what ships.
+const SHOWCASE = QS.get('showcase');
+const showcase = {group:null, pivot:null, spin:.55, label:''};
+// every valid ?showcase= name — the recording tool reads this, it cannot guess
+window.__subjects = ['climber','ledge','meter','boulder','crevasse','summit'];
+
+function buildShowcase(name){
+  const g = new THREE.Group();
+  let label = '', spin = .55;
+  if(name==='climber'){
+    const c = buildClimber();
+    c.group.scale.set(1.5,1.5,1.5);
+    // a mid-stride pose so the limbs read as arms and legs, not blobs
+    c.armL.rotation.x = .9; c.armR.rotation.x = -.6;
+    c.legL.rotation.x = -.8; c.legR.rotation.x = .55;
+    g.add(c.group); label = '登る人'; spin = .5;
+  } else if(name==='ledge'){
+    // A trimmed-down ledge: the real one has a 7-unit rock body that would
+    // dwarf the thing worth showing, which is the green band on its surface.
+    const w = 4.4, depth = 3.0, band = 1.35, safeLo = .75;
+    const rock = new THREE.Mesh(new THREE.BoxGeometry(w, 1.5, depth), rockMat);
+    rock.position.y = -.85;
+    const top = new THREE.Mesh(new THREE.BoxGeometry(w+.2, .3, depth+.18), rockTopMat);
+    top.position.y = -.05;
+    const snow = new THREE.Mesh(new THREE.BoxGeometry(w*.92, .16, depth*.5), snowMat);
+    snow.position.set(0, .14, -depth*.24);
+    const bd = new THREE.Mesh(new THREE.PlaneGeometry(w*.9, band),
+                 new THREE.MeshBasicMaterial({color:0x4bffa0, transparent:true, opacity:.8}));
+    bd.rotation.x = -Math.PI/2;
+    bd.position.set(0, .12, depth/2 - (safeLo + safeLo + band)/2);
+    g.add(rock, top, snow, bd); label = '足場と安全帯'; spin = .45;
+  } else if(name==='meter'){
+    // the stride meter, rebuilt standalone and stood upright so it faces the lens
+    const m = new THREE.Group();
+    const trk = new THREE.Mesh(new THREE.BoxGeometry(6.0,.34,.5),
+      new THREE.MeshStandardMaterial({color:0x1b2236, roughness:.7}));
+    const good = new THREE.Mesh(new THREE.BoxGeometry(1.5,.30,.56),
+      new THREE.MeshStandardMaterial({color:0x4bffa0, emissive:0x0d5a33, roughness:.5}));
+    good.position.set(1.1,.02,.02);
+    const mk = new THREE.Mesh(new THREE.BoxGeometry(.22,.72,.62),
+      new THREE.MeshStandardMaterial({color:0xffe9b0, emissive:0x554016, roughness:.4}));
+    mk.position.set(-.4,.2,.04);
+    m.add(trk, good, mk);
+    g.add(m); label = '歩幅メーター'; spin = .6;
+  } else if(name==='boulder'){
+    const b = new THREE.Mesh(new THREE.DodecahedronGeometry(.55), boulderMat);
+    b.scale.set(2.4,2.4,2.4); g.add(b); label = '落石'; spin = .9;
+  } else if(name==='crevasse'){
+    // two ledges with a yawning gap between them, and blue ice in the hole
+    const a = new THREE.Mesh(new THREE.BoxGeometry(3.0,2.0,2.4), rockMat);
+    a.position.set(-2.6,-1.0,0);
+    const b = new THREE.Mesh(new THREE.BoxGeometry(3.0,2.0,2.4), rockMat);
+    b.position.set(2.6,-.6,0);
+    const sa = new THREE.Mesh(new THREE.BoxGeometry(3.0,.22,2.4), snowMat);
+    sa.position.set(-2.6,.11,0);
+    const sb = new THREE.Mesh(new THREE.BoxGeometry(3.0,.22,2.4), snowMat);
+    sb.position.set(2.6,.51,0);
+    const ice = new THREE.Mesh(new THREE.BoxGeometry(2.2,2.6,2.0), iceMat);
+    ice.position.set(0,-1.6,0);
+    g.add(a,b,sa,sb,ice); label = 'クレバス'; spin = .4;
+  } else if(name==='summit'){
+    const body = new THREE.Mesh(new THREE.ConeGeometry(2.4, 3.6, 5),
+      new THREE.MeshStandardMaterial({color:0x3a3e64, roughness:.9}));
+    body.position.y = 1.8;
+    const cap = new THREE.Mesh(new THREE.ConeGeometry(.9, 1.2, 5), snowMat);
+    cap.position.y = 3.0;
+    g.add(body, cap); label = '山頂'; spin = .45;
+  }
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  scene.add(g);
+
+  // Centre the subject on the origin and pull the camera back to fit it,
+  // so every object is framed the same way regardless of its size.
+  const box = new THREE.Box3().setFromObject(g);
+  const size = box.getSize(new THREE.Vector3());
+  const mid = box.getCenter(new THREE.Vector3());
+  g.position.sub(mid);                       // sit centred at the origin
+  // Fit on both axes: a wide subject is limited by the horizontal field, a tall
+  // one by the vertical. Taking the larger of the two distances frames either
+  // without cropping, and the object spins, so allow for its diagonal too.
+  const fov = THREE.MathUtils.degToRad(camera.fov);
+  const spinR = Math.hypot(size.x, size.z) * 0.5;        // widest it gets while turning
+  const distV = (size.y*0.5) / Math.tan(fov/2);
+  const distH = spinR / Math.tan(fov/2) / camera.aspect;
+  const dist = Math.max(distV, distH) * 1.30 + 0.6;      // 1.30 = breathing room
+  // look slightly down, so a subject whose detail is on its top face still reads
+  camera.position.set(0, size.y*0.30 + dist*0.18, dist);
+
+  // Slide the subject sideways so a text panel can own the other half.
+  // The offset lives on a parent so the turntable still spins in place —
+  // rotating an offset group would make it orbit instead.
+  const bias = parseFloat(QS.get('sx') || '0');
+  const pivot = new THREE.Group();
+  pivot.position.x = -bias * spinR * 1.15;
+  scene.add(pivot);
+  pivot.add(g);
+  showcase.group = g; showcase.pivot = pivot;
+  showcase.spin = spin; showcase.label = label;
+}
+
+fitCamera();          // SHOWCASE is known by here
+if(SHOWCASE){
+  titleEl.classList.add('hidden');
+  buildShowcase(SHOWCASE);
+  scoreEl.textContent = '';
+  msgEl.textContent = QS.get('nolabel')==='1' ? '' : showcase.label;
+  msgEl.style.fontSize = 'clamp(18px,5vw,30px)';
+  msgEl.style.letterSpacing = '6px';
+  altEl.textContent = '';
+  // a plain dark stage: nothing on screen but the subject
+  climber.group.visible = false;             // the playable climber is separate
+  meterWrapEl.style.display = 'none';
+  snowfall.visible = false;
+  summit.visible = false;
+  backdrop.visible = false;
+  for(const b of boulders) b.mesh.visible = false;
+  scene.fog = null;
+  scene.background = new THREE.Color(0x0b0d16);
+  heroLight.position.set(2.8, 3.4, 4.4);
+  heroLight.intensity = 130;
+  hemi.intensity = 3.2;
+  sun.intensity = 4.0; sun.position.set(2.5, 6, 6);
+  // a second light from the other side so the far face is not pure black
+  const fill = new THREE.PointLight(0x88aaff, 45, 26);
+  fill.position.set(-4.5, 2.4, 3.6); scene.add(fill);
+}
+// let the capture script drive the turntable and swap subjects
+window.__showcase = name => {
+  if(showcase.pivot) scene.remove(showcase.pivot);   // pivot owns the group
+  buildShowcase(name);
+  msgEl.textContent = showcase.label;
+};
+
+// ---------- meter presentation ----------
+// The bar spans exactly the ground the stride could cover, hovering above it,
+// so the marker literally points at where the foot will land and the green
+// zone sits over the safe band of the rock ahead.
+//
+// Each part is an upright quad rotated to face the camera. The quads are
+// positioned along Z but scaled along their local X, so a helper places one
+// from a world-space z range.
+function layoutMeter(){
+  const to = nextLedge();
+  if(!to) return;
+  const span = maxReach - MIN_REACH;                 // what the bar represents
+  const pz = climber.group.position.z;
+  // Map a world reach onto 0..100% of the bar. The left end is the shortest
+  // stride the climber can take, the right end the longest thin air allows.
+  const pct = reach => ((reach - MIN_REACH)/span)*100;
+  // the safe window, expressed as reaches rather than world z
+  const loReach = pz - (to.z - to.safeLo);           // shortest stride that lands
+  const hiReach = pz - (to.z - to.safeHi);           // longest stride that lands
+  const a = Math.max(0, Math.min(100, pct(loReach)));
+  const bpc = Math.max(0, Math.min(100, pct(hiReach)));
+  meterGoodEl.style.left  = Math.min(a,bpc) + '%';
+  meterGoodEl.style.width = Math.abs(bpc-a) + '%';
+  meterFillEl.style.width = (mark*100) + '%';
+  meterMarkEl.style.left  = (mark*100) + '%';
+}
+
+// ---------- loop ----------
+const clock = new THREE.Clock();
+function tick(){
+  requestAnimationFrame(tick);
+  const raw = Math.min(clock.getDelta(), .05);
+  const dt = raw * timeScale;
+
+  if(SHOWCASE){
+    if(showcase.group) showcase.group.rotation.y += raw*showcase.spin;
+    camera.lookAt(0, 0, 0);        // subject is offset, camera stays on axis
+    renderer.render(scene, camera);
+    return;
+  }
+
+  if(running && !dead){
+    t += dt;
+    score += dt*6;                                  // a slow trickle for surviving
+    scoreEl.textContent = Math.floor(score);
+    if(!SILENT) SND.setPace(1 + stepIndex*0.035);
+
+    // --- events ---
+    if(t > nextEventAt && !NOEV) triggerEvent();
+
+    // ブリザード: hide the marker and choke the fog, then clear
+    if(blindT>0){
+      blindT -= dt;
+      const k = Math.min(1, blindT/1.0);            // ease back out at the end
+      snowPointMat.opacity = .35 + .6*k;
+      snowPointMat.size = .14 + .16*k;
+      scene.fog.near = 26 - 18*k; scene.fog.far = 90 - 56*k;
+      // the marker flickers, mostly gone — you must step on memory and rhythm
+      meterWrapEl.classList.toggle('blind', Math.sin(t*9) <= .55);
+      if(blindT<=0){
+        snowPointMat.opacity=.35; snowPointMat.size=.14;
+        scene.fog.near=26; scene.fog.far=90; meterWrapEl.classList.remove('blind');
+      }
+    }
+    // 高山病: the marker stops being trustworthy — it stutters and doubles back
+    if(reverseT>0){
+      reverseT -= dt;
+      if(Math.random() < dt*2.2) markDir *= -1;     // random direction flips
+      if(reverseT<=0) hemi.color.setHex(0x8fa6ff);
+      else hemi.color.setHex(0xb07fff);
+    }
+    // 落石: the ledges sway and boulders tumble past
+    if(rockfallT>0){
+      rockfallT -= dt;
+      for(let i=0;i<ledges.length;i++){
+        const L = ledges[i];
+        L.group.position.x = Math.sin(t*4.4 + i*1.3)*.5*Math.min(1,rockfallT);
+      }
+      shake = Math.max(shake, .10*Math.min(1,rockfallT));
+      if(rockfallT<=0) for(const L of ledges) L.group.position.x = 0;
+    }
+    // 日の出: warm light and a wide band, then back to the cold
+    if(sunriseT>0){
+      sunriseT -= dt;
+      const k = Math.min(1, sunriseT/1.2);
+      sun.color.setHex(0xffd8a8).lerp(new THREE.Color(0xffb14d), k);
+      sun.intensity = 2.2 + 1.6*k;
+      scene.background.copy(SKY).lerp(new THREE.Color(0x3a2440), k*.8);
+      scene.fog.color.copy(scene.background);
+      if(sunriseT<=0){
+        sun.color.setHex(0xffd8a8); sun.intensity=2.2;
+        scene.background.copy(SKY); scene.fog.color.copy(SKY);
+      }
+    }
+    // boulders keep flying regardless, until their life runs out
+    for(const b of boulders){
+      if(b.life>0){
+        b.life -= dt;
+        b.vy -= 13*dt;
+        b.mesh.position.y += b.vy*dt;
+        b.mesh.position.z += b.vz*dt;
+        b.mesh.rotation.x += dt*5; b.mesh.rotation.z += dt*3.4;
+        if(b.life<=0) b.mesh.visible=false;
+      }
+    }
+
+    // --- the sweeping marker: the whole game lives here ---
+    if(phase==='aim'){
+      mark += markDir*markSpeed*dt;
+      if(mark>1){ mark=1; markDir=-1; }
+      if(mark<0){ mark=0; markDir=1;  }
+      if(AUTO) autoPilot(dt);
+    }
+
+    // --- the stride itself ---
+    if(phase==='step'){
+      stepT += dt*2.3;
+      const k = Math.min(1, stepT);
+      climber.group.position.lerpVectors(stepFrom, stepTo, k);
+      // a parabola on top of the lerp gives the hop its arc
+      climber.group.position.y += Math.sin(k*Math.PI)*stepPeak;
+      // arms and legs held out through the air
+      climber.armL.rotation.x = 1.1; climber.armR.rotation.x = -1.1;
+      climber.legL.rotation.x = -.9; climber.legR.rotation.x = .7;
+      if(k>=1){
+        if(stepGood){
+          phase='land'; stepT=0;
+          if(!SILENT) SND.land();
+          stepIndex++;
+          comboGood++;
+          // scoring: each clean step pays, and a streak pays more
+          score += 100 + Math.min(150, comboGood*15);
+          scoreEl.textContent = Math.floor(score);
+          altitude += 55 + Math.floor(Math.random()*25);
+          altEl.textContent = '標高 ' + altitude + ' m';
+          // --- thin air: every step shortens the stride and quickens the sweep ---
+          // thin air: the stride shortens to a floor, but the sweep never stops
+          // quickening — that is what finally ends a run
+          maxReach = Math.max(3.4, 7.0 - stepIndex*.085);
+          markSpeed = .75 + stepIndex*.045;
+          // The rock we just left is now behind us: drop it from the front so
+          // ledges[0] is the one underfoot again, then grow one more ahead.
+          // pushLedge recycles that same object once the chain is at capacity,
+          // so nothing is allocated per step.
+          const gone = ledges.shift();
+          scene.remove(gone.group);
+          pushLedge(gone);
+        } else {
+          dead = true; gameOver();
+        }
+      }
+    }
+    if(phase==='land'){
+      stepT += dt*4;
+      if(stepT>=1){ phase='aim'; mark=0; markDir=1; }
+    }
+
+    // idle sway while aiming — breathing hard in thin air
+    if(phase==='aim' || phase==='land'){
+      const br = Math.sin(t*2.6 + stepIndex);
+      climber.group.position.y = currentLedge().y + Math.abs(br)*.035;
+      climber.armL.rotation.x = br*.16 - .1;
+      climber.armR.rotation.x = -br*.16 - .1;
+      climber.legL.rotation.x = 0; climber.legR.rotation.x = 0;
+      climber.group.rotation.y = Math.sin(t*1.7)*.05;
+    }
+
+    layoutMeter();
+    // the band on the rock pulses so it reads even at a distance
+    bandMat.opacity = .42 + Math.sin(t*5)*.14;
+
+    // hero light rides with the climber
+    heroLight.position.set(climber.group.position.x, climber.group.position.y+3.2,
+                           climber.group.position.z + 3);
+    // parallax: the backdrop and summit sink as the player climbs
+    backdrop.position.y = -climber.group.position.y*.35;
+    backdrop.position.z = climber.group.position.z*.55;
+    summit.position.y = -climber.group.position.y*.55 - 6;
+    summit.position.z = climber.group.position.z - 110;
+    // keep the snow volume around the player
+    snowfall.position.set(0, climber.group.position.y, climber.group.position.z);
+    const sp = snowGeo.attributes.position;
+    for(let i=0;i<SNOWN;i++){
+      let y = sp.array[i*3+1] - (blindT>0 ? 11 : 4)*dt;
+      let x = sp.array[i*3] + (blindT>0 ? 6 : 1.2)*dt;
+      if(y < -14){ y = 26; x = (Math.random()-.5)*60; }
+      if(x > 30) x -= 60;
+      sp.array[i*3] = x; sp.array[i*3+1] = y;
+    }
+    sp.needsUpdate = true;
+  }
+
+  // --- death sequence: slow-mo unwinds, camera pushes in, the climber tumbles ---
+  if(dead){
+    timeScale += (0 - timeScale)*Math.min(1, raw*1.1);   // ease down to a near-freeze
+    climber.group.position.y -= raw*7*Math.max(.15,timeScale);
+    climber.group.rotation.z += raw*2.6;
+    climber.group.rotation.x -= raw*1.4;
+  }
+
+  // --- camera (runs even while dead, so the zoom and shake still play) ---
+  camDist += (camDistTarget - camDist)*Math.min(1, raw*2.4);
+  const focus = currentLedge() ? currentLedge() : {y:0, z:0};
+  // frame the player and the ledge they are aiming at, not just the player
+  const aimZ = nextLedge() ? nextLedge().z : climber.group.position.z - 4;
+  const midZ = (climber.group.position.z + aimZ)/2;
+  camera.position.z += (midZ + camDist - camera.position.z)*Math.min(1, raw*3.4);
+  const wantY = climber.group.position.y + 4.4 + camLift - (8.0-camDist)*.30;
+  camera.position.y += (wantY - camera.position.y)*Math.min(1, raw*3.4);
+  camera.position.x += (0 - camera.position.x)*Math.min(1, raw*4);
+  if(shake>0){
+    shake = Math.max(0, shake - raw*.9);
+    camera.position.x += (Math.random()-.5)*shake;
+    camera.position.y += (Math.random()-.5)*shake;
+  }
+  camera.lookAt(0, climber.group.position.y + .6, midZ - 1.2);
+
+  renderer.render(scene, camera);
+}
+
+function gameOver(){
+  running=false; deadAt=Date.now();
+  if(!SILENT){ SND.hit(); SND.duck(1.6); setTimeout(()=>SND.over(), 700); }
+  // hit feedback: red flash, red vignette, hard shake, camera punches in
+  flash('#ff2b3a', .8, 500);
+  vignetteEl.style.transition='opacity .5s'; vignetteEl.style.opacity=1;
+  shake = .9;
+  camDistTarget = 4.2; camLift = -1.2;
+  const finalScore = Math.floor(score);
+  koScoreEl.textContent = finalScore;
+  scoreEl.textContent = '';      // the K.O. panel owns the number now
+  msgEl.textContent = '';
+  altEl.textContent = '';
+  meterWrapEl.style.opacity = 0;
+  setTimeout(()=>{ koEl.classList.add('on'); }, 620);   // K.O. lands after the slow-mo
+  if(AUTO){ setTimeout(()=>{ reset(); running=true;
+                             if(!SILENT) SND.unduck(); }, RETRY_MS); }
+  else setTimeout(()=>{
+    msgEl.textContent = matchMedia('(pointer:coarse)').matches
+      ? 'タップでもう一度' : 'スペースでもう一度';
+  }, 1600);
+}
+tick();
+
+// --- help (?) : ルールを見せる。録画中は出さない ---
+(function(){
+  const btn = document.getElementById('helpBtn');
+  const panel = document.getElementById('help');
+  if(!btn || !panel) return;
+  if(NOCHROME){                      // 録画・showcase では画面から消す
+    btn.style.display = 'none';
+    const back = document.getElementById('back');
+    if(back) back.style.display = 'none';
+    return;
+  }
+  const open = () => { panel.classList.add('on'); };
+  const close = () => { panel.classList.remove('on'); };
+  btn.addEventListener('click', open);
+  btn.addEventListener('touchend', e => { e.preventDefault(); open(); }, {passive:false});
+  panel.addEventListener('click', e => { if(e.target === panel) close(); });
+  panel.querySelector('.close').addEventListener('click', close);
+  panel.querySelector('.close').addEventListener('touchend',
+    e => { e.preventDefault(); close(); }, {passive:false});
+  addEventListener('keydown', e => {
+    if(e.code === 'Escape') close();
+    else if(e.key === '?' || (e.code === 'Slash' && e.shiftKey)) open();
+  });
+})();
+</script>
+</body>
+</html>

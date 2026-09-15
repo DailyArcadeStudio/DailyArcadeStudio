@@ -1,0 +1,227 @@
+{
+  "id": "0017_kilimanjaro_steps",
+  "title": "空気が薄いと、歩幅は縮む",
+  "video_title": "登るほど、一歩が小さくなる山があります",
+  "lang": "ja",
+  "voice": "ja_reimu",
+  "scenes": [
+    {
+      "kind": "hook",
+      "clip": "crevasse",
+      "narration": "このゲーム、登るほど一歩が短くなります。"
+    },
+    {
+      "kind": "image",
+      "prompt": "a weathered Tanzanian mountain porter in his fifties resting on a rocky trail high on Kilimanjaro, heavy canvas duffel beside him, breathing hard, thin cold air, early morning light, photorealistic, cinematic, shallow depth of field, highly detailed",
+      "narration": "キリマンジャロで、荷物を運ぶ仕事をしている人がいます。名前はジョセフさん。この山を、もう何百回も登っています。"
+    },
+    {
+      "kind": "image",
+      "prompt": "high altitude volcanic ridge on Kilimanjaro above the clouds, loose scree and rock steps, a lone porter walking with very short careful strides, pale blue morning sky, cold thin atmosphere, cinematic wide shot, photorealistic, highly detailed",
+      "narration": "ジョセフさんには、困っていることがあります。標高が上がると、空気が薄くなる。そうなんです。体は動くのに、一歩が伸びないんです。"
+    },
+    {
+      "kind": "image",
+      "prompt": "close-up of worn hiking boots on cracked volcanic rock at the edge of a wide gap, loose gravel, harsh high-altitude sunlight, deep shadow in the gap below, photorealistic, cinematic, highly detailed",
+      "narration": "でも、岩の間の隙間は狭くなりません。むしろ広がります。だから毎回、届く歩幅を測ってから足を出します。ここが面白いところです。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "climber",
+      "kicker": "登る人",
+      "title": "ジョセフ",
+      "bullets": [
+        "**標高1800メートル**から登り始める",
+        "操作はひとつだけ。**タップで一歩**",
+        "登るほど、歩幅は**縮む一方**"
+      ],
+      "narration": "これがジョセフさんです。標高1800メートルから登り始めます。操作はひとつだけ。タップで一歩、進みます。ただし歩幅は、縮む一方です。伸びることはありません。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "meter",
+      "kicker": "唯一の操作",
+      "title": "歩幅メーター",
+      "bullets": [
+        "左右に**往復する目盛り**を止める",
+        "止めた位置が、そのまま**一歩の長さ**",
+        "最大7メートルから、**3.4メートルまで縮む**"
+      ],
+      "narration": "遊ぶのは、このメーターです。目盛りが左右に往復しています。タップで止めると、止めた位置がそのまま一歩の長さになります。最初は最大7メートル。それが3.4メートルまで縮みます。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "ledge",
+      "kicker": "着地点",
+      "title": "足場と安全帯",
+      "bullets": [
+        "緑の帯の中に足を置けば成功",
+        "帯は**一歩ごとに細くなる**",
+        "手前すぎても、行きすぎても落ちる"
+      ],
+      "narration": "足を置く場所が、この緑の帯です。ここに着地すれば成功。帯は一歩ごとに細くなっていきます。手前すぎたら落ちる。行きすぎても落ちる。とても素直な作りです。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "crevasse",
+      "kicker": "最大の敵",
+      "title": "クレバス",
+      "bullets": [
+        "次の隙間だけが、**いきなり2倍近く**開く",
+        "縮んだ歩幅で、**ぎりぎり届く距離**",
+        "メーターを端まで振らないと届かない"
+      ],
+      "narration": "そして、これがクレバスです。次の隙間だけが、いきなり2倍近く開きます。届く距離ではあります。ただし、メーターを端まで振り切った時だけです。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "boulder",
+      "kicker": "邪魔をするもの",
+      "title": "落石",
+      "bullets": [
+        "上から岩が転がり落ちてくる",
+        "当たりはしない。**足場が揺れる**",
+        "揺れている間も、メーターは止まらない"
+      ],
+      "narration": "落石も来ます。正直に言うと、これは当たりません。揺れるだけです。でも足場が揺れている間も、メーターは動き続けます。それが地味に効きます。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "summit",
+      "kicker": "目指す先",
+      "title": "山頂",
+      "bullets": [
+        "ゴールはありません",
+        "登れば登るほど**歩幅は縮む**",
+        "メーターの往復は**速くなる一方**"
+      ],
+      "narration": "山頂は見えています。でも、このゲームにゴールはありません。登るほど歩幅は縮み、メーターは速くなります。つまり、いつか必ず終わります。"
+    },
+    {
+      "kind": "events",
+      "clip": "events",
+      "kicker": "山の機嫌",
+      "title": "山は静かにしていない",
+      "bullets": [
+        "**ブリザード** — 目盛りが7秒間見えなくなる",
+        "**高山病** — 目盛りが逆に動き出す",
+        "**日の出** — 帯が2倍に広がる、唯一の味方"
+      ],
+      "narration": "山は静かにしていません。ブリザードが来ると、目盛りが7秒間見えなくなります。高山病になると、目盛りが逆に動き出します。もちろん失敗します。ただ、ひとつだけ味方がいます。日の出です。緑の帯が2倍に広がります。"
+    },
+    {
+      "kind": "death",
+      "clip": "death",
+      "kicker": "一歩の終わり",
+      "title": "落ち方が三種類あります",
+      "bullets": [
+        "届かない。岩の手前で落ちる",
+        "縁をかすめる。滑り落ちる",
+        "行きすぎる。岩の向こうへ消える"
+      ],
+      "narration": "落ち方は三種類あります。届かずに手前で落ちる。縁をかすめて滑る。行きすぎて向こうへ消える。ジョセフさんは、この山を何百回も登りました。あなたは、たぶん20歩くらいです。"
+    },
+    {
+      "kind": "outro",
+      "title": "概要欄のリンクから遊べます",
+      "subtitle": "チャンネル登録もお願いします",
+      "narration": "ブラウザで、今すぐ無料で遊べます。概要欄のリンクからどうぞ。チャンネル登録もお願いします。毎日、新しいゲームを出しています。"
+    }
+  ],
+  "slug": "kilimanjaro-steps",
+  "channel": "Daily Arcade Studio",
+  "events": [
+    "blizzard",
+    "altitude",
+    "rockfall",
+    "crevasse",
+    "sunrise"
+  ],
+  "short": [
+    {
+      "mark": "crevasse",
+      "lead": -0.5,
+      "dur": 9.0,
+      "headline": "隙間だけが広がる"
+    },
+    {
+      "mark": "altitude",
+      "lead": -0.3,
+      "dur": 7.0,
+      "headline": "目盛りが逆に動く"
+    },
+    {
+      "mark": "blizzard",
+      "lead": -0.5,
+      "dur": 8.0,
+      "headline": "7秒間、何も見えない"
+    },
+    {
+      "mark": "sunrise",
+      "lead": -0.5,
+      "dur": 7.0,
+      "headline": "唯一の味方"
+    },
+    {
+      "mark": "death",
+      "lead": -2.0,
+      "dur": 9.0,
+      "headline": "歩幅は縮む一方"
+    }
+  ],
+  "thumb": {
+    "hook": "一歩が縮む山",
+    "sub": "タップひとつ。ブラウザで無料。",
+    "frame_mark": "crevasse",
+    "frame_lead": 1.0
+  },
+  "short_v2": {
+    "cuts": [
+      {
+        "kind": "clip",
+        "mark": "crevasse",
+        "lead": -0.5,
+        "dur": 4.5,
+        "headline": "今日のゲーム",
+        "narration": "今日のゲームです。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "climber",
+        "dur": 5.0,
+        "headline": "Kilimanjaro Steps",
+        "narration": "キリマンジャロで、荷物を運ぶ人です。ひたすら登ります。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "meter",
+        "dur": 5.5,
+        "headline": "歩幅メーター",
+        "narration": "往復する目盛りを、タップで止めます。止めた位置が一歩の長さです。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "ledge",
+        "dur": 5.0,
+        "headline": "緑の帯",
+        "narration": "緑の帯に着地すれば成功。帯は一歩ごとに細くなります。"
+      },
+      {
+        "kind": "clip",
+        "mark": "death",
+        "lead": -2.0,
+        "dur": 5.5,
+        "headline": "",
+        "narration": "そして歩幅は、縮む一方です。"
+      },
+      {
+        "kind": "clip",
+        "mark": "run2",
+        "lead": 1.0,
+        "dur": 4.5,
+        "cta": "概要欄のリンクから遊べます",
+        "narration": "ブラウザで無料で遊べます。リンクは概要欄です。"
+      }
+    ]
+  }
+}
