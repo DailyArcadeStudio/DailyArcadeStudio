@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>あなたの「罰と立ち直り」診断</title>
+<meta property="og:title" content="あなたの「罰と立ち直り」診断">
+<meta property="og:description" content="きびしくするか、戻る準備をさせるか。あなたの考え方は、どの国のタイプに近いでしょうか。">
+<meta property="og:type" content="website">
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;background:#0d1117;color:#e6edf3;
+       font-family:-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;
+       line-height:1.7;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+  .wrap{max-width:560px;margin:0 auto;padding:24px 18px 60px}
+  h1{font-size:clamp(22px,6vw,30px);margin:8px 0 6px;line-height:1.4}
+  .lead{color:#8b949e;font-size:15px;margin:0 0 22px}
+  .story{background:#161b22;border-left:3px solid #ffd23b;border-radius:0 10px 10px 0;
+          padding:14px 16px;margin:0 0 26px;font-size:14.5px;color:#c9d1d9}
+  .prog{position:sticky;top:0;background:#0d1117;padding:10px 0 12px;z-index:5}
+  .bar{height:5px;background:#21262d;border-radius:3px;overflow:hidden}
+  .bar i{display:block;height:100%;background:#ffd23b;width:0;transition:width .25s}
+  .count{font-size:13px;color:#8b949e;margin-top:6px}
+  .q{margin:0 0 30px}
+  .qt{font-size:17px;font-weight:700;margin:0 0 14px}
+  .opts{display:grid;gap:8px}
+  .opt{border:1px solid #30363d;background:#161b22;color:#e6edf3;border-radius:10px;
+        padding:13px 14px;font-size:15px;cursor:pointer;text-align:left;
+        font-family:inherit;transition:.15s}
+  .opt:active{transform:scale(.985)}
+  .opt.on{border-color:#ffd23b;background:#1c2128;color:#ffd23b;font-weight:700}
+  .go{width:100%;padding:16px;border:none;border-radius:12px;background:#ffd23b;
+       color:#0d1117;font-size:17px;font-weight:700;cursor:pointer;font-family:inherit;
+       margin-top:8px}
+  .go:disabled{background:#21262d;color:#6e7681;cursor:default}
+  #result{display:none}
+  #result.on{display:block}
+  .rimg{width:100%;border-radius:14px;display:block;margin:0 0 18px;background:#161b22}
+  .rtype{color:#ffd23b;font-size:14px;letter-spacing:.08em;margin:0 0 4px}
+  .rname{font-size:clamp(24px,7vw,34px);margin:0 0 14px;line-height:1.35}
+  .rbody{font-size:15.5px;color:#c9d1d9;margin:0 0 18px}
+  .axes{display:grid;gap:10px;margin:0 0 24px}
+  .ax{font-size:13px;color:#8b949e}
+  .axbar{height:6px;background:#21262d;border-radius:3px;margin-top:5px;position:relative}
+  .axbar i{position:absolute;top:0;height:100%;background:#58a6ff;border-radius:3px}
+  .share{display:grid;gap:10px;margin:24px 0}
+  .share a,.share button{display:block;text-align:center;padding:14px;border-radius:12px;
+        text-decoration:none;font-weight:700;font-size:15px;border:1px solid #30363d;
+        background:#161b22;color:#e6edf3;cursor:pointer;font-family:inherit}
+  .back{display:inline-block;margin-top:8px;color:#8b949e;font-size:14px}
+  footer{margin-top:34px;color:#6e7681;font-size:12.5px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div id="quiz">
+  <h1>あなたの「罰と立ち直り」診断</h1>
+  <p class="lead">きびしくするか、戻る準備をさせるか。あなたの考え方は、どの国のタイプに近いでしょうか。</p>
+  <div class="story">刑務所と聞くと、鉄格子と灰色の壁を思い浮かべますよね。ノルウェーは、少しちがいます。部屋には机とベッドがあり、台所のある施設もあります。材料を受け取って、自分で料理をする。洗濯も自分でやる。考え方が、はっきりしているからです。罰は、自由を奪うことだけ。外に出られない、それが刑罰のすべて。食事や寝る場所までつらくする必要はない、という線引きをしています。もうひとつ、ほとんどの人はいつか出てきます。だったら、どんな状態で出てきてほしいか。そこから逆算して中を作ります。だから作業場も教室もあります。刑期の上限は、ふつう21年と言われています。島がまるごとひとつの刑務所になっている場所もあって、塀のかわりに海があります。出たあとにまた戻ってくる割合は、およそ2割前後と言われていて、低いほうです。そのかわり、ひとりあたりの費用は高いとされ、全部税金です。国内でも甘すぎるという声はあります。答えが出ている話では、ありません。あなたはどちらに近いでしょうか。10問で見てみましょう。</div>
+  <div class="prog"><div class="bar"><i id="pbar"></i></div>
+    <div class="count"><span id="pnum">0</span> / 10 問</div></div>
+  <div id="qs"></div>
+  <button class="go" id="submit" disabled>結果を見る</button>
+</div>
+
+<div id="result">
+  <img class="rimg" id="rimg" alt="">
+  <p class="rtype" id="rtype"></p>
+  <h1 class="rname" id="rname"></h1>
+  <p class="rbody" id="rbody"></p>
+  <div class="axes" id="axes"></div>
+  <div class="share">
+    <a id="tw" target="_blank" rel="noopener">結果をXに投稿する</a>
+    <button id="again">もう一度やる</button>
+  </div>
+  <a class="back" href="../../">ほかのゲーム・診断を見る</a>
+</div>
+
+<footer>Daily Arcade Studio</footer>
+</div>
+
+<script>
+const DATA = {"title": "あなたの「罰と立ち直り」診断", "lead": "きびしくするか、戻る準備をさせるか。あなたの考え方は、どの国のタイプに近いでしょうか。", "story": "刑務所と聞くと、鉄格子と灰色の壁を思い浮かべますよね。ノルウェーは、少しちがいます。部屋には机とベッドがあり、台所のある施設もあります。材料を受け取って、自分で料理をする。洗濯も自分でやる。考え方が、はっきりしているからです。罰は、自由を奪うことだけ。外に出られない、それが刑罰のすべて。食事や寝る場所までつらくする必要はない、という線引きをしています。もうひとつ、ほとんどの人はいつか出てきます。だったら、どんな状態で出てきてほしいか。そこから逆算して中を作ります。だから作業場も教室もあります。刑期の上限は、ふつう21年と言われています。島がまるごとひとつの刑務所になっている場所もあって、塀のかわりに海があります。出たあとにまた戻ってくる割合は、およそ2割前後と言われていて、低いほうです。そのかわり、ひとりあたりの費用は高いとされ、全部税金です。国内でも甘すぎるという声はあります。答えが出ている話では、ありません。あなたはどちらに近いでしょうか。10問で見てみましょう。", "axes": [{"label": "きびしくするか、立ち直りを助けるか", "pos": "R", "neg": "P"}, {"label": "きっちり決めるか、その人に合わせるか", "pos": "K", "neg": "J"}, {"label": "信じて任せるか、見張って守るか", "pos": "T", "neg": "M"}, {"label": "お金をかけるか、安くおさえるか", "pos": "H", "neg": "S"}], "questions": [{"text": "悪いことをした人には、つらい思いをしてもらうべきだと思う。", "axis": 0, "sign": -1}, {"text": "大事なのは、その人がやり直せるかどうかだと思う。", "axis": 0, "sign": 1}, {"text": "罰は、自由を奪うだけで十分だと思う。", "axis": 0, "sign": 1}, {"text": "決まりは、だれにでも同じように当てはめたい。", "axis": 1, "sign": 1}, {"text": "事情を聞いて、ひとりずつ扱いを変えるほうがいい。", "axis": 1, "sign": -1}, {"text": "毎日の時間割がきっちり決まっているほうが、落ち着く。", "axis": 1, "sign": 1}, {"text": "塀がなくても、人はそう簡単に逃げないと思う。", "axis": 2, "sign": 1}, {"text": "見張る人がいないと、きっとだれかが好き勝手をする。", "axis": 2, "sign": -1}, {"text": "あとで困らないなら、今お金をかけてもかまわない。", "axis": 3, "sign": 1}, {"text": "税金を使うなら、まず安くすませるほうを選びたい。", "axis": 3, "sign": -1}], "results": {"RKTH": {"name": "ノルウェー型", "name_en": "Norway", "body": "立ち直りを大事にして、決まりはきちんと作り、人を信じて任せ、お金もかける。動画に出てきたノルウェーそのものです。罰は自由を奪うことだけ、あとは出てきたあとから逆算する。塀のかわりに海がある島の刑務所も、この考え方から生まれています。ただ、費用は高いほうだと言われていて、国内でも議論はあるそうです。", "image_prompt": "photorealistic view of a small Nordic island with wooden houses, a wooden dock, pine trees and a calm fjord under a grey northern sky, no fences, soft overcast light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/RKTH.jpg"}, "RKTS": {"name": "フィンランド型", "name_en": "Finland", "body": "立ち直りを大事にして、決まりもきちんと作り、人を信じる。でも、お金は使いすぎたくない。少ない予算で、静かにやりくりするタイプです。北欧の中でも、地味に工夫を重ねてきた国が近いでしょう。派手なことはしませんが、続けることはできます。", "image_prompt": "photorealistic quiet Finnish lakeside scene with a plain wooden building among birch trees, calm water, pale summer light, simple and modest, no people, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/RKTS.jpg"}, "RKMH": {"name": "ドイツ型", "name_en": "Germany", "body": "立ち直りを目指しつつ、決まりはきっちり、管理もきっちり、お金もかける。仕組みで解決するタイプです。書類と手順がそろっていて、抜けがない。まじめで頼りになりますが、たまに手続きが多すぎると言われるかもしれません。", "image_prompt": "photorealistic orderly modern institutional courtyard in Germany, clean brick walls, neat rows of windows, trimmed hedges, overcast daylight, no people, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/RKMH.jpg"}, "RKMS": {"name": "日本型", "name_en": "Japan", "body": "立ち直りは大事にするけれど、規律もきっちり、管理もしっかり、お金はおさえる。動画に出てきた日本の刑務所に近い形です。決まった時間に決まったことをして、作業がある。方向はノルウェーと違いますが、どちらも出たあとを見ている、という点は同じです。", "image_prompt": "photorealistic tidy Japanese workshop room with rows of identical wooden desks and neatly arranged tools, clean floor, plain walls, morning light through high windows, no people, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/RKMS.jpg"}, "RJTH": {"name": "オランダ型", "name_en": "Netherlands", "body": "立ち直りを大事にして、ひとりずつ事情に合わせて、信じて任せて、お金もかける。とても柔らかいタイプです。使われなくなった刑務所を別の用途に変えた国が近いでしょう。ただ、その分だけ、線引きがあいまいだと言われることもありそうです。", "image_prompt": "photorealistic bright Dutch brick building by a canal with large windows and bicycles parked outside, reflections on the water, soft daylight, no people, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/RJTH.jpg"}, "RJTS": {"name": "ポルトガル型", "name_en": "Portugal", "body": "人に合わせて、信じて任せる。でも、お金は限られている。だから、人と人のつながりでなんとかするタイプです。罰よりも支援を選んだ国が近いでしょう。手づくり感はありますが、あたたかさがあります。", "image_prompt": "photorealistic sunlit Portuguese courtyard with worn stone walls, potted plants, laundry lines and wooden chairs, warm afternoon light, no people, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/RJTS.jpg"}, "RJMH": {"name": "カナダ型", "name_en": "Canada", "body": "立ち直りを目指して、ひとりずつ丁寧に見る。でも、管理はしっかり、お金もかける。広い国で、いろいろな人を相手にしてきたタイプです。話し合いの場を作るのが得意でしょう。そのかわり、時間はかかります。", "image_prompt": "photorealistic wide Canadian landscape with a low modern building at the edge of a pine forest, distant mountains, cool clear daylight, no people, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/RJMH.jpg"}, "RJMS": {"name": "コスタリカ型", "name_en": "Costa Rica", "body": "立ち直りを大事にして、その人に合わせるけれど、見張りは必要だと思う。そしてお金はない。理想はあるのに、予算が足りない。そういう悩みを抱えるタイプです。軍を持たない国が近いでしょう。工夫でしのぐ毎日になりそうです。", "image_prompt": "photorealistic simple concrete building surrounded by lush green tropical vegetation, humid air, bright overcast sky, worn paint, no people, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/RJMS.jpg"}, "PKTH": {"name": "シンガポール型", "name_en": "Singapore", "body": "罰はきびしく、決まりはきっちり、でも人は信じるし、お金もかける。ルールさえ守れば、あとは自由。そういう考え方の国が近いでしょう。街はきれいで、仕組みもよく動きます。ただ、線を越えたときは、容赦がありません。", "image_prompt": "photorealistic spotless modern city plaza with glass towers, manicured trees and clean pavement, tropical daylight, no people, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/PKTH.jpg"}, "PKTS": {"name": "スイス型", "name_en": "Switzerland", "body": "罰ははっきりさせて、決まりはきっちり。でも人は信じるし、むだ遣いはしない。自分たちのことは自分たちで決める、というタイプです。地域ごとに細かくルールが違う国が近いでしょう。きちょうめんで、現実的です。", "image_prompt": "photorealistic neat Swiss alpine village with wooden chalets, tidy stone walls and green slopes, snowy peaks behind, crisp clear light, no people, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/PKTS.jpg"}, "PKMH": {"name": "アメリカ型", "name_en": "United States", "body": "罰はきびしく、決まりもきっちり、見張りもしっかり、お金もかける。とにかく数と規模で対応するタイプです。大きな施設をたくさん持つ国が近いでしょう。強い仕組みですが、そのぶん費用は大きくなります。", "image_prompt": "photorealistic vast concrete facility complex with high fences and floodlight towers in a dry open landscape, harsh afternoon sun, no people, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/PKMH.jpg"}, "PKMS": {"name": "ロシア型", "name_en": "Russia", "body": "罰はきびしく、決まりはきっちり、見張りもきびしい。でも、お金はかけない。広い土地に、そっけない建物。そういうイメージの国が近いでしょう。きびしさが、そのまま形になっているタイプです。", "image_prompt": "photorealistic bleak wide snowy plain with a long grey concrete building and a distant watchtower, cold overcast winter light, no people, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/PKMS.jpg"}, "PJTH": {"name": "オーストラリア型", "name_en": "Australia", "body": "罰ははっきりさせたいけれど、人には合わせるし、信じるし、お金もかける。おおらかで、現実的なタイプです。遠い島に人を送っていた歴史を持つ国が近いでしょう。厳しさと気楽さが、同時にあります。", "image_prompt": "photorealistic wide Australian outback landscape with red earth, scattered eucalyptus trees and a low corrugated iron building, bright harsh sunlight, no people, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/PJTH.jpg"}, "PJTS": {"name": "イタリア型", "name_en": "Italy", "body": "罰はきびしくと言いつつ、相手の事情は聞くし、けっきょく信じてしまう。そしてお金はかけない。理屈より、その場のやりとりで決まるタイプです。話せばなんとかなる、という空気の国が近いでしょう。", "image_prompt": "photorealistic old Italian stone building with weathered shutters and a narrow alley, laundry hanging above, warm late afternoon light, no people, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/PJTS.jpg"}, "PJMH": {"name": "フランス型", "name_en": "France", "body": "罰ははっきりさせたい。でも、その人の事情も見る。管理はしっかり、お金もかける。議論が好きで、結論はなかなか出ないタイプです。大きな刑務所を壊した歴史を持つ国が近いでしょう。理屈にはこだわります。", "image_prompt": "photorealistic grand old French stone building with tall windows and iron railings along a wide boulevard, soft grey daylight, no people, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/PJMH.jpg"}, "PJMS": {"name": "ブラジル型", "name_en": "Brazil", "body": "罰はきびしくしたいし、見張りも必要。でも、相手によって扱いは変わるし、お金はない。理想と現実の差がいちばん大きいタイプです。人があふれる施設を抱える国が近いでしょう。現場でなんとかする毎日になりそうです。", "image_prompt": "photorealistic dense hillside neighborhood of stacked concrete houses under a hazy tropical sky, tangled power lines, strong sunlight, no people, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/PJMS.jpg"}}};
+const SCALE = ["とてもそう","ややそう","どちらとも","あまり違う","全く違う"];
+
+const qsEl = document.getElementById('qs');
+const ans = new Array(DATA.questions.length).fill(null);
+
+DATA.questions.forEach((q, i) => {
+  const d = document.createElement('div');
+  d.className = 'q';
+  d.innerHTML = `<p class="qt">Q${i+1}. ${q.text}</p>`;
+  const box = document.createElement('div');
+  box.className = 'opts';
+  SCALE.forEach((label, k) => {
+    const b = document.createElement('button');
+    b.className = 'opt'; b.textContent = label;
+    b.onclick = () => {
+      ans[i] = 2 - k;                    // +2(とてもそう) 〜 -2(全く違う)
+      [...box.children].forEach(c => c.classList.remove('on'));
+      b.classList.add('on');
+      update();
+    };
+    box.appendChild(b);
+  });
+  d.appendChild(box);
+  qsEl.appendChild(d);
+});
+
+function update() {
+  const done = ans.filter(a => a !== null).length;
+  document.getElementById('pnum').textContent = done;
+  document.getElementById('pbar').style.width = (done / ans.length * 100) + '%';
+  document.getElementById('submit').disabled = done < ans.length;
+}
+
+document.getElementById('submit').onclick = () => {
+  // 軸ごとにスコアを合計する。q.axis は 0..3、q.sign は +1/-1
+  const score = [0, 0, 0, 0];
+  const max = [0, 0, 0, 0];
+  DATA.questions.forEach((q, i) => {
+    score[q.axis] += ans[i] * q.sign;
+    max[q.axis] += 2;
+  });
+  // 各軸を2値にして 16 タイプのキーを作る
+  const key = score.map((s, i) => s >= 0 ? DATA.axes[i].pos : DATA.axes[i].neg).join('');
+  const r = DATA.results[key] || DATA.results[Object.keys(DATA.results)[0]];
+
+  document.getElementById('rimg').src = r.image;
+  document.getElementById('rimg').alt = r.name;
+  document.getElementById('rtype').textContent = key;
+  document.getElementById('rname').textContent = r.name;
+  document.getElementById('rbody').textContent = r.body;
+
+  const ax = document.getElementById('axes');
+  ax.innerHTML = '';
+  DATA.axes.forEach((a, i) => {
+    const pct = Math.round((score[i] + max[i]) / (max[i] * 2) * 100);
+    const d = document.createElement('div');
+    d.className = 'ax';
+    d.innerHTML = `${a.label}<div class="axbar"><i style="left:0;width:${pct}%"></i></div>`;
+    ax.appendChild(d);
+  });
+
+  const txt = encodeURIComponent(`${DATA.title}\n私は「${r.name}」でした。\n`);
+  document.getElementById('tw').href =
+    `https://twitter.com/intent/tweet?text=${txt}&url=${encodeURIComponent(location.href)}`;
+
+  document.getElementById('quiz').style.display = 'none';
+  document.getElementById('result').classList.add('on');
+  scrollTo(0, 0);
+};
+
+document.getElementById('again').onclick = () => {
+  location.reload();
+};
+</script>
+</body>
+</html>
