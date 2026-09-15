@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>あなたがイギリスの責任者だったら</title>
+<meta property="og:title" content="あなたがイギリスの責任者だったら">
+<meta property="og:description" content="1780年代。あなたはイギリスで、中国との貿易をあずかる立場です。国民は毎日、お茶を飲みます。年に1万トンを超える量を、中国から買っています。お茶にかけた税は、国の大事な収入です。ところが、こちらから売れるものがありません。毛織物も時計も、あまり買ってもらえない。だから銀で払います。銀だけが、片道で出ていきます。これから、決める場面が8回あります。押すか、待つか。自分たちだけでやるか、相手と話すか。ひとつずつ、選んでください。">
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;background:#0b0e14;color:#e6edf3;
+       font-family:-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;
+       line-height:1.75;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+  .wrap{max-width:600px;margin:0 auto;padding:22px 18px 60px}
+  h1{font-size:clamp(21px,5.6vw,29px);margin:6px 0 8px;line-height:1.4}
+  .lead{color:#8b949e;font-size:14.5px;margin:0 0 20px}
+  .prog{position:sticky;top:0;background:#0b0e14;padding:10px 0 12px;z-index:5}
+  .bar{height:4px;background:#1c2333;border-radius:2px;overflow:hidden}
+  .bar i{display:block;height:100%;background:#d4a544;width:0;transition:width .3s}
+  .count{font-size:12.5px;color:#8b949e;margin-top:6px;letter-spacing:.04em}
+  .scene{background:#121722;border:1px solid #222b3d;border-radius:14px;
+          padding:20px 18px;margin:0 0 16px}
+  .year{color:#d4a544;font-size:12.5px;letter-spacing:.1em;margin:0 0 8px}
+  .sit{font-size:16px;margin:0 0 18px;color:#dbe3ec}
+  .opts{display:grid;gap:10px}
+  .opt{border:1px solid #2b3550;background:#161d2b;color:#e6edf3;border-radius:11px;
+        padding:15px 16px;font-size:15.5px;cursor:pointer;text-align:left;
+        font-family:inherit;line-height:1.6;transition:.15s}
+  .opt:hover{border-color:#d4a544}
+  .opt:active{transform:scale(.985)}
+  .log{margin:0 0 20px}
+  .logi{border-left:2px solid #2b3550;padding:2px 0 2px 14px;margin:0 0 10px;
+         font-size:13.5px;color:#7d8796}
+  .logi b{color:#b3bdcc;font-weight:600}
+  #end{display:none} #end.on{display:block}
+  .eimg{width:100%;border-radius:14px;display:block;margin:0 0 18px;background:#121722}
+  .etag{color:#d4a544;font-size:13px;letter-spacing:.09em;margin:0 0 4px}
+  .ename{font-size:clamp(23px,6.4vw,32px);margin:0 0 14px;line-height:1.35}
+  .ebody{font-size:15.5px;color:#c9d1d9;margin:0 0 20px;white-space:pre-wrap}
+  .fact{background:#121722;border-left:3px solid #58a6ff;border-radius:0 10px 10px 0;
+         padding:14px 16px;margin:0 0 20px;font-size:14.5px;color:#c9d1d9}
+  .fact b{color:#58a6ff;display:block;margin-bottom:5px;font-size:12.5px;
+           letter-spacing:.08em}
+  .warn{color:#6e7681;font-size:12.5px;margin:18px 0 0;padding:12px 14px;
+         border:1px dashed #2b3550;border-radius:10px}
+  .share{display:grid;gap:10px;margin:22px 0}
+  .share a,.share button{display:block;text-align:center;padding:14px;border-radius:12px;
+        text-decoration:none;font-weight:700;font-size:15px;border:1px solid #2b3550;
+        background:#161d2b;color:#e6edf3;cursor:pointer;font-family:inherit}
+  .back{display:inline-block;margin-top:6px;color:#8b949e;font-size:14px}
+  footer{margin-top:32px;color:#6e7681;font-size:12.5px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div id="sim">
+  <h1>あなたがイギリスの責任者だったら</h1>
+  <p class="lead">1780年代。あなたはイギリスで、中国との貿易をあずかる立場です。国民は毎日、お茶を飲みます。年に1万トンを超える量を、中国から買っています。お茶にかけた税は、国の大事な収入です。ところが、こちらから売れるものがありません。毛織物も時計も、あまり買ってもらえない。だから銀で払います。銀だけが、片道で出ていきます。これから、決める場面が8回あります。押すか、待つか。自分たちだけでやるか、相手と話すか。ひとつずつ、選んでください。</p>
+  <div class="prog"><div class="bar"><i id="pbar"></i></div>
+    <div class="count"><span id="pnum">1</span> / 8</div></div>
+  <div class="log" id="log"></div>
+  <div class="scene" id="scene"></div>
+</div>
+
+<div id="end">
+  <img class="eimg" id="eimg" alt="">
+  <p class="etag" id="etag"></p>
+  <h1 class="ename" id="ename"></h1>
+  <p class="ebody" id="ebody"></p>
+  <div class="fact" id="fact"></div>
+  <div class="share">
+    <a id="tw" target="_blank" rel="noopener">結果をXに投稿する</a>
+    <button id="again">やり直す</button>
+  </div>
+  <a class="back" href="../">ほかのシミュレータを見る</a>
+  <p class="warn">これはシミュレータです。あなたの選択によっては史実と異なる結末になります。
+  実際に起きたことは上の「史実」の欄をご覧ください。</p>
+</div>
+
+<footer>MosukeStudio</footer>
+</div>
+
+<script>
+const DATA = {"title": "あなたがイギリスの責任者だったら", "lead": "1780年代。あなたはイギリスで、中国との貿易をあずかる立場です。国民は毎日、お茶を飲みます。年に1万トンを超える量を、中国から買っています。お茶にかけた税は、国の大事な収入です。ところが、こちらから売れるものがありません。毛織物も時計も、あまり買ってもらえない。だから銀で払います。銀だけが、片道で出ていきます。これから、決める場面が8回あります。押すか、待つか。自分たちだけでやるか、相手と話すか。ひとつずつ、選んでください。", "axes": [{"label": "力で押すか、待って手を打つか", "pos": "押", "neg": "待"}, {"label": "自分たちの都合で動くか、相手と話し合うか", "pos": "独", "neg": "協"}], "history": "イギリスは茶の代金の銀を取り戻すため、インドのアヘンを中国へ売りました。1839年、林則徐が2万箱以上を処分。政府が商人に補償を約束したことで国の損失となり、1840年に議会は9票差で出兵を決め、1842年の南京条約で香港割譲と5港開港が決まりました。", "scenes": [{"year": "1784年・お茶の税を下げる", "situation": "お茶には、とても重い税がかかっています。そのせいで密輸が広がり、国に入るはずのお金が入りません。税を大きく下げれば、密輸は減り、正規の取引が増えるはずです。ただし、正規の取引が増えるということは、中国から買う量が増えるということです。買えば買うほど、銀が出ていきます。国内では、お茶は安いほうがいいという声が強い。", "options": [{"text": "税を大きく下げる。安くして国民に行き渡らせ、取引の量で儲ける", "a": 2, "b": 0}, {"text": "下げない。買う量が増えれば銀がもっと出ていく。まず銀の出口をふさぐのが先だ", "a": -2, "b": 0}]}, {"year": "1793年・マカートニー使節を送る", "situation": "広州、今のカントンの1港だけでしか取引できません。相手も公行という決まった商人組合だけ。外国人は区画から出られず、冬には退去させられます。そこで使節を送ることにしました。望遠鏡、時計、大きな地球儀を積んでいきます。問題は、皇帝の前での作法です。三跪九叩頭という礼をするよう求められています。片ひざだけにしてほしい、と言えば、こちらの体面は保てます。", "options": [{"text": "作法は相手に合わせる。頭を下げてでも、港を増やす約束を取りにいく", "a": -1, "b": -2}, {"text": "対等の国として扱われたい。礼は片ひざまで。体面を曲げてまで頼まない", "a": 1, "b": 2}]}, {"year": "1793年 秋・断られたあと", "situation": "交渉は失敗しました。乾隆帝は、うちには全部そろっている、という趣旨の返事をしたと伝わります。港は増えません。銀は出ていき続けます。ここで、インドを見ます。イギリスはベンガルを押さえていて、そこではケシが育ちます。アヘンにして中国の沿岸で売れば、銀が戻ってくる。ただし中国では、アヘンの輸入は禁じられています。", "options": [{"text": "インドでアヘンを作らせる。売った銀でお茶を買う。三角の形を組む", "a": 2, "b": 2}, {"text": "アヘンには手を出さない。インドで綿花を増やし、売れる品を作るところから始める", "a": -2, "b": -1}]}, {"year": "1800年代 初め・運び方を決める", "situation": "アヘンは禁じられています。自分たちの船で港まで運べば、責任は会社にかかります。そこで考えます。会社の船は沖まで運び、そこから先は地元の小舟に渡す。書類の上では、誰も運んでいないことになります。役人にお金が渡ることもあるでしょう。もうひとつの道は、正面から交渉することです。禁令を解いて、税をかけて合法にできないか、と持ちかける。", "options": [{"text": "沖で受け渡す形にする。書類に残さなければ、こちらの手は汚れない", "a": 1, "b": 2}, {"text": "隠さずに交渉する。禁令を解いて税をかける形にできないか、正面から持ちかける", "a": -1, "b": -2}]}, {"year": "1830年代 前半・量が数十倍になる", "situation": "18世紀の終わりごろ、年に1千箱ほどでした。1箱はおよそ60キロ前後です。それが年に3万箱を超える規模になったとされます。中国では銀が出ていき、銀が高くなりました。人々が使うのは銅銭ですが、税は銀で計算されます。同じ税を払うのに、たくさんの銅銭がいる。負担が重くなっています。清の朝廷の中でも、厳しく取り締まるべきだという声が強まっている、と報告が届きました。", "options": [{"text": "今が稼ぎどきだ。量をさらに増やす。取り締まりは、いつもどおり長続きしない", "a": 2, "b": 1}, {"text": "自分から量を減らす。相手が本気で怒る前に、代わりの商品を探す時間を作る", "a": -2, "b": -1}]}, {"year": "1834年・会社の独占が終わる", "situation": "東インド会社の中国貿易の独占が終わりました。これからは、たくさんの商人が自由に入ってきます。会社は長いあいだ、相手を怒らせないよう加減していました。その重しが、なくなります。同時に本国は、商務監督という役人を広州に置きました。この人が、国の代表として相手の役人に会おうとしています。今までは商人同士の話でした。ここから、国と国の話になります。", "options": [{"text": "監督は国の代表として振る舞わせる。商人の下座に座るような真似はさせない", "a": 2, "b": 2}, {"text": "今までどおり、公行を通す形を守らせる。呼び方や席順で角を立てない", "a": -1, "b": -2}]}, {"year": "1839年 春・林則徐が来た", "situation": "広州に林則徐という役人が来ました。この人は、はっきりしています。港を封鎖し、外国商人を区画に閉じ込め、アヘンを全部出せと要求しました。食料も水も止まっています。動かない。ここであなたは、イギリスの役人として間に入るかどうかを決めます。商人から預かって渡し、政府が補償すると約束する形にすれば、商人は助かります。ただし、損をしたのは政府になります。", "options": [{"text": "政府が預かって引き渡し、補償を約束する。これで国の損失として本国に請求できる", "a": 2, "b": 2}, {"text": "間に入らない。密輸をした商人の損は商人のものだ。国が背負う話ではない", "a": -2, "b": -1}]}, {"year": "1840年 春・議会で採決する", "situation": "2万箱以上が、海に流されました。溝に海水と石灰と塩を入れて分解したと伝わります。作業は3週間ほど続きました。請求書が、本国に回ってきます。議会は選ぶことになりました。大金を自分で払うか、艦隊を送って相手に払わせるか。反対する議員もいます。これは正義のない戦争だ、と言った人もいました。こちらには蒸気で動く鉄の船があり、浅い川もさかのぼれます。", "options": [{"text": "艦隊を送る。沿岸を押さえ、長江をさかのぼって大運河を止め、条約を結ばせる", "a": 2, "b": 1}, {"text": "補償は国内で処理する。使節を送り直し、アヘンをやめる代わりに港を開くよう交渉する", "a": -2, "b": -2}]}], "endings": {"押独": {"tag": "ENDING 1", "name": "紅茶のための戦争", "body": "これが、史実にいちばん近い道です。あなたは押し続け、相手の都合を考えませんでした。インドでアヘンを作らせ、沖で小舟に渡し、量は数十倍になりました。1839年、林則徐が2万箱以上を処分します。あなたが間に入って補償を約束したことで、密輸業者の損は国の損になりました。1840年、議会は出兵を決めます。賛成と反対の差は9票だったと伝わります。艦隊は北京を攻めませんでした。代わりに長江をさかのぼり、鎮江で大運河を止めます。都に届く米が止まり、清は交渉に応じました。1842年、南京条約。香港が渡り、5つの港が開きました。ただし条約に、アヘンという言葉は出てきません。", "image_prompt": "British iron paddle steam warships anchored in the Yangtze off Nanking in August 1842, Qing officials in silk robes boarding a warship for negotiations, British officers in red and blue uniforms waiting on deck, wooden junks and low riverbank city walls behind, hazy summer river light, 19th century academic history painting, oil on canvas, cinematic composition, no text, no letters, no words, no writing, no signage", "image": "img/押独.jpg"}, "押協": {"tag": "ENDING 2", "name": "税をかけた薬", "body": "もし、こうしていたら。あなたは強く押しましたが、隠さずに話しました。沖での受け渡しをやめ、禁令を解いて税をかける形を正面から求めます。清の朝廷の中にも、禁じても止まらないなら税をかけて管理すべきだ、という意見は実際にありました。もしその案が通っていたら、アヘンは合法の商品になり、清は税収を得たかもしれません。銀の流出も、少しは緩んだでしょう。ただし、吸う人が減ったわけではありません。戦争は避けられても、中身は麻薬のままでした。合法にすることと、解決することは、別のことです。", "image_prompt": "British and Qing officials seated together at a long table inside a Canton trading hall in the 1830s, ledgers and scales for weighing goods between them, merchants of both sides standing behind, tall shuttered windows letting in afternoon light, formal but uneasy atmosphere, 19th century academic history painting, oil on canvas, warm interior light, no text, no letters, no words, no writing, no signage", "image": "img/押協.jpg"}, "待独": {"tag": "ENDING 3", "name": "自分の畑で育てたお茶", "body": "もし、こうしていたら。あなたは無理をせず、しかし自分たちだけで手を打ちました。アヘンには手を出さず、インドで作れるものを探します。実際、イギリスは1830年代からインドのアッサムで茶の栽培を始め、19世紀の後半にはインド産の茶が中国産を追い抜いていきました。もっと早くそこに力を注いでいたら、買う相手が1つしかないという弱みは、自分で消せたはずです。銀は出ていかず、戦争の理由も消えます。時間はかかります。派手さもありません。ただ、これがいちばん根っこの解決でした。", "image_prompt": "Early British tea plantation being cleared on a hillside in Assam in the 1830s, rows of young tea bushes on terraced slopes, a British planter on horseback overseeing local workers carrying baskets, jungle and misty hills behind, morning haze, 19th century academic history painting, oil on canvas, soft green light, no text, no letters, no words, no writing, no signage", "image": "img/待独.jpg"}, "待協": {"tag": "ENDING 4", "name": "頭を下げた使節", "body": "もし、こうしていたら。あなたは急がず、相手に合わせました。1793年、作法をめぐって粘らず、求められた礼をして皇帝に会います。それで港が増えたかどうかは、わかりません。ただ、話し合いの糸は切れませんでした。相手は貿易を恩恵として扱っていましたが、恩恵なら、増やしてもらう余地はあります。何十年かけて、港がひとつずつ増えていく。アヘンは要りません。そのぶん、イギリスが手に入れる速さは遅くなります。速さを捨てて、関係を選んだ道です。どちらが得だったかは、簡単には言えません。", "image_prompt": "A British envoy performing the full ceremonial kowtow before the Qianlong Emperor seated on a raised dais inside a grand audience tent, Qing court officials in silk robes lining both sides, British gift clocks and telescopes displayed on tables, incense smoke, 1793, 19th century academic history painting, oil on canvas, rich ceremonial light, no text, no letters, no words, no writing, no signage", "image": "img/待協.jpg"}}};
+let i = 0;
+const score = [0, 0];
+const picks = [];
+
+const sceneEl = document.getElementById('scene');
+const logEl = document.getElementById('log');
+
+function render() {
+  const s = DATA.scenes[i];
+  document.getElementById('pnum').textContent = i + 1;
+  document.getElementById('pbar').style.width = (i / DATA.scenes.length * 100) + '%';
+  sceneEl.innerHTML = `<p class="year">${s.year}</p><p class="sit">${s.situation}</p>`;
+  const box = document.createElement('div');
+  box.className = 'opts';
+  s.options.forEach(o => {
+    const b = document.createElement('button');
+    b.className = 'opt';
+    b.textContent = o.text;
+    b.onclick = () => choose(o);
+    box.appendChild(b);
+  });
+  sceneEl.appendChild(box);
+}
+
+function choose(o) {
+  score[0] += o.a || 0;
+  score[1] += o.b || 0;
+  picks.push(o.text);
+  const d = document.createElement('div');
+  d.className = 'logi';
+  d.innerHTML = `<b>${DATA.scenes[i].year}</b> ${o.text}`;
+  logEl.appendChild(d);
+  i++;
+  if (i < DATA.scenes.length) { render(); scrollTo(0, 0); }
+  else finish();
+}
+
+function finish() {
+  // 2軸の符号で4象限 → 4つの結末
+  const key = (score[0] >= 0 ? DATA.axes[0].pos : DATA.axes[0].neg)
+            + (score[1] >= 0 ? DATA.axes[1].pos : DATA.axes[1].neg);
+  const e = DATA.endings[key] || DATA.endings[Object.keys(DATA.endings)[0]];
+  document.getElementById('eimg').src = e.image;
+  document.getElementById('eimg').alt = e.name;
+  document.getElementById('etag').textContent = e.tag || 'ENDING';
+  document.getElementById('ename').textContent = e.name;
+  document.getElementById('ebody').textContent = e.body;
+  document.getElementById('fact').innerHTML =
+    `<b>史実では</b>${DATA.history}`;
+  const txt = encodeURIComponent(
+    `${DATA.title}\n私の結末は「${e.name}」でした。\n`);
+  document.getElementById('tw').href =
+    `https://twitter.com/intent/tweet?text=${txt}&url=${encodeURIComponent(location.href)}`;
+  document.getElementById('sim').style.display = 'none';
+  document.getElementById('end').classList.add('on');
+  scrollTo(0, 0);
+}
+
+document.getElementById('again').onclick = () => location.reload();
+render();
+</script>
+</body>
+</html>
