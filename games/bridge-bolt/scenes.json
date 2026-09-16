@@ -1,0 +1,224 @@
+{
+  "id": "0018_bridge_bolt",
+  "title": "通行止めにしてもらえない橋",
+  "lang": "ja",
+  "voice": "am_adam",
+  "scenes": [
+    {
+      "kind": "hook",
+      "clip": "rush",
+      "narration": "橋を直しているのに、車を止めてもらえない人がいます。"
+    },
+    {
+      "kind": "image",
+      "prompt": "an old steel truss bridge over a wide river at dusk, one lane coned off for repair, cars still driving across in the open lane, a lone maintenance worker in a hard hat kneeling on the deck, cinematic wide shot, photorealistic, moody blue hour light, highly detailed",
+      "narration": "川にかかる、古い鉄の橋があります。ボルトがゆるんできました。直さないといけません。そうなんです。でも、この橋は通行止めにできません。"
+    },
+    {
+      "kind": "image",
+      "prompt": "close-up of a bridge maintenance worker in an orange vest tightening a large rusty steel bolt with a heavy wrench, sparks of rust dust, a blurred car passing right behind him on the deck, dramatic low angle, photorealistic, cinematic lighting, highly detailed",
+      "narration": "近くに、代わりの橋がないからです。止めたら、村が半分こっちに来られません。だから工事は、車を通したまま進めます。作業員のサトウさんは、後ろを車が渡っている上でボルトを締めます。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "worker",
+      "kicker": "作業する人",
+      "title": "ボルト職人",
+      "bullets": [
+        "できることは **ボルトを締めること、ひとつだけ**",
+        "締めた桁の **いちばん先に立つ**",
+        "後ろは見ません。見ている暇がない"
+      ],
+      "narration": "これがサトウさんです。できることは、ひとつだけ。ボルトを締めることです。締めた桁のいちばん先に立って、そこから前へ進んでいきます。後ろは見ません。見ている暇がないんです。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "gauge",
+      "kicker": "ゆいいつの操作",
+      "title": "ゲージ",
+      "bullets": [
+        "針が **左右に往復** する。押すのはタイミングだけ",
+        "オレンジの帯に入れば成功",
+        "真ん中の白い芯は **かんぺき**。ゆるみが戻る"
+      ],
+      "narration": "操作はこれだけです。針が左右に往復します。オレンジの帯に入った瞬間に押す。それだけです。ここが面白いところです。帯の真ん中の、白い芯。ここに当てると、かんぺき。ゆるみが少し戻ります。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "bolt",
+      "kicker": "締めるもの",
+      "title": "ボルト",
+      "bullets": [
+        "1本締めると **橋が1本ぶん前へ伸びる**",
+        "締めるたび **針が速く、帯が細く** なる",
+        "外すと **ゆるみが一気に増える**"
+      ],
+      "narration": "帯に当てると、ボルトが1本締まります。橋が1本ぶん、前へ伸びます。ただし、締めるたびに針は速くなります。帯は細くなります。上手くなるほど、難しくなる。外すと、ゆるみが一気に増えます。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "span",
+      "kicker": "足元",
+      "title": "橋げた",
+      "bullets": [
+        "締まった桁は **かたい。車が乗っても平気**",
+        "未締めの桁は **ぐにゃぐにゃ**",
+        "ゆるみが100パーセントで **崩落**"
+      ],
+      "narration": "桁は2種類あります。締まった桁は、かたい。車が乗っても大丈夫です。まだ締めていない桁は、ぐにゃぐにゃです。そしてゆるみは、何もしなくても勝手に増えます。100パーセントで、橋が落ちます。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "car",
+      "kicker": "渡ってくるもの",
+      "title": "車",
+      "bullets": [
+        "後ろから来て **あなたを追い抜いていく**",
+        "締まった桁の上は、たわむだけで通れる",
+        "未締めの桁に乗ると **桁ごと川へ落ちる**"
+      ],
+      "narration": "車は後ろから来て、あなたを追い抜いていきます。締まった桁の上なら、少したわむだけで渡れます。まだ締めていない桁に乗ったら、どうなるか。桁ごと、川へ落ちます。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "truck",
+      "kicker": "いちばん重いもの",
+      "title": "大型トラック",
+      "bullets": [
+        "5台に1台くらいの割合で来る",
+        "**桁を車の2倍たわませる**",
+        "遅いので、長く乗っている"
+      ],
+      "narration": "ときどき、トラックが来ます。5台に1台くらいです。これが重い。桁を車の2倍たわませます。しかも遅い。つまり、長く乗っているということです。"
+    },
+    {
+      "kind": "events",
+      "clip": "events",
+      "kicker": "橋の上の出来事",
+      "title": "静かなままでは終わらない",
+      "bullets": [
+        "**ラッシュアワー** — 車が殺到し、ゆるみも速くなる",
+        "**よこ風** — 帯そのものが左右に流れる",
+        "**川霧** — 手元しか見えなくなる",
+        "**二本締め** — 1回で2本。帯は細くなる",
+        "**レンチ凍結** — 針が止まる。ゆるみは止まらない"
+      ],
+      "narration": "橋の上は、静かなままでは終わりません。ラッシュアワーが来ます。車が殺到して、ゆるみまで速くなります。よこ風が吹くと、狙う帯そのものが左右に流れます。川霧が出れば、手元しか見えません。二本締めは、1回で2本締まるかわりに帯が細くなります。そして、レンチ凍結。針が止まります。狙いやすい。でも、ゆるみは止まってくれません。"
+    },
+    {
+      "kind": "death",
+      "clip": "death",
+      "kicker": "終わりかた",
+      "title": "橋は、ゆっくり落ちる",
+      "bullets": [
+        "時間が **止まるのではなく、ゆるむ**",
+        "カメラが手元へ寄っていく",
+        "そして、何本締めたかが出る"
+      ],
+      "narration": "終わりはいつも同じです。時間が、止まるのではなくゆるみます。カメラが手元へ寄っていきます。そして、何本締めたかが出ます。サトウさんは、この橋を3年やっています。あなたは、たぶん40秒です。"
+    },
+    {
+      "kind": "outro",
+      "title": "概要欄のリンクから遊べます",
+      "subtitle": "チャンネル登録もお願いします",
+      "narration": "今すぐ遊べます。概要欄のリンクからどうぞ。チャンネル登録もお願いします。明日も新しいゲームを出します。"
+    }
+  ],
+  "slug": "bridge-bolt",
+  "video_title": "橋を直しているのに、車を止めてもらえない",
+  "channel": "Daily Arcade Studio",
+  "events": [
+    "rush",
+    "wind",
+    "fog",
+    "double",
+    "freeze"
+  ],
+  "short": [
+    {
+      "mark": "rush",
+      "lead": -0.3,
+      "dur": 9.0,
+      "headline": "工事中でも車は通る"
+    },
+    {
+      "mark": "wind",
+      "lead": -0.5,
+      "dur": 7.0,
+      "headline": "狙う場所が逃げる"
+    },
+    {
+      "mark": "double",
+      "lead": -0.5,
+      "dur": 7.0,
+      "headline": "1回で2本。帯は細い"
+    },
+    {
+      "mark": "freeze",
+      "lead": -0.5,
+      "dur": 7.0,
+      "headline": "針は止まる。ゆるみは止まらない"
+    },
+    {
+      "mark": "death",
+      "lead": -2.0,
+      "dur": 9.0,
+      "headline": "あなたは40秒"
+    }
+  ],
+  "thumb": {
+    "hook": "橋、直しながら渡らせる",
+    "sub": "操作はタイミングだけ。ブラウザで無料。",
+    "frame_mark": "rush",
+    "frame_lead": 1.0
+  },
+  "short_v2": {
+    "cuts": [
+      {
+        "kind": "clip",
+        "mark": "rush",
+        "lead": -0.3,
+        "dur": 4.5,
+        "headline": "今日のゲーム",
+        "narration": "今日のゲームです。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "worker",
+        "dur": 5.0,
+        "headline": "BRIDGE BOLT",
+        "narration": "あなたは、車を通したまま橋を直す作業員です。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "gauge",
+        "dur": 5.0,
+        "headline": "帯で押す",
+        "narration": "針が往復します。オレンジの帯で押せば、ボルトが1本締まります。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "car",
+        "dur": 5.0,
+        "headline": "後ろから来る",
+        "narration": "車は後ろから来ます。締めていない桁に乗ると、桁ごと落ちます。"
+      },
+      {
+        "kind": "clip",
+        "mark": "death",
+        "lead": -2.0,
+        "dur": 6.0,
+        "headline": "",
+        "narration": "そして針は、どんどん速くなります。"
+      },
+      {
+        "kind": "clip",
+        "mark": "run2",
+        "lead": 1.0,
+        "dur": 4.5,
+        "cta": "概要欄のリンクから遊べます",
+        "narration": "ブラウザで無料で遊べます。リンクは概要欄です。"
+      }
+    ]
+  }
+}

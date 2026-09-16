@@ -8,7 +8,7 @@ SDXL は文字を正しく描けないので、**絵だけ**を生成させ、
 quiz.json の results[key] に image_prompt があり、そこから1枚ずつ作る。
 16タイプで SDXL 約40分。
 """
-import json
+import json, os
 import subprocess
 import sys
 from pathlib import Path
@@ -59,9 +59,14 @@ def main(quiz_json, out_dir):
     raw = out / "_raw"
     raw.mkdir(exist_ok=True)
 
-    # SDXL に渡す用の一時 problem.json（既存の gen_images.py を使い回す）
-    scenes = [{"kind": "image", "prompt": r["image_prompt"]}
-              for r in q["results"].values()]
+    # 16パターン全部に専用画像を作ると SDXL 16枚＝約40分かかり、
+    # 動画本編(8枚18分)より重くなって毎晩の生成を足止めしていた。
+    # 利用者が見るのは自分の結果1枚だけなので、代表4枚を作って
+    # 順に割り当てる（結果名は overlay で1件ずつ焼き込むため見分けはつく）。
+    keys = list(q["results"].keys())
+    MAX_IMG = int(os.environ.get("QUIZ_IMAGES", "4"))
+    pick = [keys[i] for i in range(0, len(keys), max(1, len(keys)//MAX_IMG))][:MAX_IMG]
+    scenes = [{"kind": "image", "prompt": q["results"][k]["image_prompt"]} for k in pick]
     tmp = out / "_imgspec.json"
     tmp.write_text(json.dumps({"title": q["title"], "scenes": scenes},
                               ensure_ascii=False))
@@ -72,6 +77,10 @@ def main(quiz_json, out_dir):
 
     # 生成された 00.png, 01.png ... を results の順に割り当てて文字を重ねる
     pngs = sorted((raw / "imgs").glob("*.png"))
+    if not pngs:
+        print("画像が無いので中止"); return
+    # 生成枚数が結果数より少ないので、順に使い回す
+    pngs = [pngs[i % len(pngs)] for i in range(len(q["results"]))]
     for (key, r), p in zip(q["results"].items(), pngs):
         dst = out / "img" / f"{key}.jpg"
         overlay(p, dst, key, r["name"])

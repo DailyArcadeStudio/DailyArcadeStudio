@@ -1,0 +1,1300 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ブリッジ・ボルト</title>
+<style>
+  html,body{margin:0;padding:0;overflow:hidden;background:#07080f;font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',sans-serif;}
+  #ui{position:fixed;top:16px;left:0;right:0;text-align:center;color:#fff;z-index:10;pointer-events:none;}
+  #score{font-size:clamp(24px,5.6vw,34px);font-weight:800;text-shadow:0 2px 8px #000;}
+  #msg{font-size:clamp(13px,3.4vw,19px);margin-top:6px;opacity:.9;text-shadow:0 2px 6px #000;min-height:1.3em;}
+  /* ゆるみ計: 上部中央の細いバー */
+  #slackWrap{margin:8px auto 0;width:min(52vw,280px);height:9px;border-radius:5px;
+    background:rgba(255,255,255,.14);overflow:hidden;box-shadow:0 2px 8px #000;}
+  #slackBar{height:100%;width:0%;background:linear-gradient(90deg,#ffc04a,#ff3b2f);
+    transition:width .12s linear;}
+  #slackLabel{font-size:clamp(10px,2.6vw,13px);letter-spacing:.2em;opacity:.65;margin-top:3px;}
+
+  #title{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:rgba(5,6,13,.74);z-index:20;color:#fff;transition:opacity .4s;padding:0 18px;box-sizing:border-box;}
+  #title h1{font-size:clamp(28px,8vw,56px);margin:0 0 8px;letter-spacing:2px;text-shadow:0 4px 18px #ffa11f;text-align:center;}
+  #title p{font-size:clamp(12px,3.3vw,19px);opacity:.85;margin:4px 0;text-align:center;line-height:1.6;}
+  #title .btn{margin-top:26px;padding:14px 44px;font-size:clamp(18px,4.6vw,22px);font-weight:700;color:#12100a;
+    background:linear-gradient(180deg,#ffc04a,#ef8b0d);border:none;border-radius:12px;cursor:pointer;
+    box-shadow:0 6px 24px rgba(255,161,31,.5);}
+  #title .btn:hover{transform:scale(1.05);}
+  .hidden{opacity:0;pointer-events:none;}
+  #back{position:fixed;top:14px;left:14px;z-index:30;text-decoration:none;
+    background:rgba(12,16,26,.72);color:#fff;font:600 clamp(12px,3.2vw,15px)/1 'Hiragino Sans',sans-serif;
+    padding:0 14px;height:44px;display:flex;align-items:center;border-radius:12px;}
+  #back:hover{background:rgba(30,38,56,.9);}
+  #mute{position:fixed;top:14px;right:14px;z-index:30;border:none;cursor:pointer;
+    background:rgba(12,16,26,.72);color:#fff;font-size:20px;line-height:1;
+    width:44px;height:44px;border-radius:12px;}
+  #mute:hover{background:rgba(30,38,56,.9);}
+  /* 端末に合うヒントだけ出す */
+  .tc{display:none;}
+  @media (pointer:coarse){ .kb{display:none;} .tc{display:block;} }
+  @media (pointer:coarse){ #title .btn{padding:18px 52px;} }
+
+  /* --- イベントバナー: 画面中央に叩きつける --- */
+  #banner{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    z-index:15;pointer-events:none;opacity:0;}
+  #banner .b{font-size:clamp(24px,6.6vw,62px);font-weight:900;letter-spacing:.06em;color:#fff;
+    padding:10px 4vw;max-width:94vw;text-align:center;transform:scale(2.4);opacity:0;
+    text-shadow:0 0 26px currentColor, 0 6px 20px #000;
+    border-top:5px solid currentColor;border-bottom:5px solid currentColor;}
+  #banner.go .b{animation:slam .62s cubic-bezier(.12,.85,.2,1) forwards;}
+  @keyframes slam{
+    0%  {transform:scale(2.4) rotate(-4deg);opacity:0;}
+    22% {transform:scale(1)   rotate(0deg); opacity:1;}
+    70% {transform:scale(1)   rotate(0deg); opacity:1;}
+    100%{transform:scale(1.12);opacity:0;}
+  }
+
+  /* --- 全画面フラッシュ --- */
+  #flash{position:fixed;inset:0;z-index:14;pointer-events:none;opacity:0;background:#fff;}
+  #vignette{position:fixed;inset:0;z-index:13;pointer-events:none;opacity:0;
+    background:radial-gradient(ellipse at center,rgba(0,0,0,0) 32%,rgba(120,0,10,.85) 100%);}
+
+  /* --- K.O. 画面 --- */
+  #ko{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    z-index:22;pointer-events:none;opacity:0;color:#fff;transition:opacity .3s;}
+  #ko.on{opacity:1;}
+  #ko .koText{font-size:clamp(84px,24vw,180px);font-weight:900;letter-spacing:10px;color:#fff;
+    text-shadow:0 0 40px #ff3b2f,0 0 90px #ff3b2f,0 10px 30px #000;
+    transform:scale(3);opacity:0;}
+  #ko.on .koText{animation:koSlam .8s cubic-bezier(.1,.9,.2,1) forwards;}
+  @keyframes koSlam{
+    0%  {transform:scale(3) rotate(-8deg);opacity:0;}
+    30% {transform:scale(1) rotate(0deg);opacity:1;}
+    36% {transform:scale(1.06);}
+    100%{transform:scale(1);opacity:1;}
+  }
+  #ko .finalLabel{font-size:clamp(13px,3.4vw,19px);letter-spacing:4px;opacity:0;margin-top:6px;text-shadow:0 2px 8px #000;}
+  #ko .finalScore{font-size:clamp(44px,12vw,78px);font-weight:800;opacity:0;text-shadow:0 4px 20px #000;}
+  #ko.on .finalLabel{animation:fadeUp .5s .75s forwards;}
+  #ko.on .finalScore{animation:fadeUp .5s .9s forwards;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+
+  /* --- ルール説明 (?) --- */
+  #helpBtn{position:fixed;top:14px;right:66px;z-index:30;border:none;cursor:pointer;
+    background:rgba(12,16,26,.72);color:#fff;font:700 20px/1 'Hiragino Sans',sans-serif;
+    width:44px;height:44px;border-radius:12px;}
+  #helpBtn:hover{background:rgba(30,38,56,.9);}
+  #help{position:fixed;inset:0;z-index:40;display:none;align-items:center;
+    justify-content:center;background:rgba(4,6,12,.84);padding:20px;}
+  #help.on{display:flex;}
+  #help .box{background:#121828;border:1px solid #2b3550;border-radius:18px;
+    max-width:560px;width:100%;max-height:86vh;overflow:auto;padding:24px 24px 20px;
+    color:#e6edf3;font-family:'Hiragino Sans',sans-serif;}
+  #help h2{margin:0 0 4px;font-size:clamp(19px,5vw,26px);}
+  #help .sub{color:#8b949e;font-size:clamp(12px,3.2vw,14px);margin:0 0 16px;}
+  #help h3{font-size:clamp(13px,3.4vw,15px);color:#ffa11f;margin:16px 0 6px;letter-spacing:.04em;}
+  #help ul{margin:0;padding-left:20px;}
+  #help li{font-size:clamp(13px,3.4vw,15px);line-height:1.7;margin:3px 0;}
+  #help b{color:#ffa11f;font-weight:700;}
+  #help .close{margin-top:20px;width:100%;padding:12px;border:none;border-radius:10px;
+    background:#2b3550;color:#fff;font-size:16px;font-weight:700;cursor:pointer;}
+  #help .close:hover{background:#3a4668;}
+</style>
+</head>
+<body>
+<div id="ui">
+  <div id="score">0</div>
+  <div id="slackWrap"><div id="slackBar"></div></div>
+  <div id="slackLabel">ゆるみ</div>
+  <div id="msg"></div>
+</div>
+<button id="helpBtn" title="遊びかた">?</button>
+<div id="help"><div class="box">
+  <h2>ブリッジ・ボルト</h2>
+  <p class="sub">渡り終える前に、橋を締める。ブラウザで無料。</p>
+    <h3>ボルトを締める</h3>
+    <ul>
+      <li>画面の下で、<b>針が左右に往復</b>しています</li>
+      <li><b>オレンジの帯の中で止める</b>と、ボルトが1本締まります</li>
+      <li>帯の<b>ど真ん中</b>なら「かんぺき」。ゆるみが戻ります</li>
+      <li>外すと<b>ゆるみが増えます</b>。増えきると橋は落ちます</li>
+    </ul>
+    <h3>渡ってくる車</h3>
+    <ul>
+      <li>後ろから、休みなく<b>車が渡ってきます</b></li>
+      <li>締めた桁の上なら、車は何も知らずに通り過ぎます</li>
+      <li><b>締めていない桁</b>に乗ると、車ごと沈みます</li>
+    </ul>
+    <h3>ゆるみ計</h3>
+    <ul>
+      <li>上の赤いバーが<b>ゆるみ</b>。時間で勝手に増えます</li>
+      <li>手を止めれば、それだけで落ちます</li>
+    </ul>
+    <h3>針の速さ</h3>
+    <ul>
+      <li>橋が伸びるほど<b>針は速く</b>なります</li>
+      <li>帯も<b>少しずつ細く</b>なります</li>
+    </ul>
+  <button class="close">わかった</button>
+</div></div>
+<a id="back" href="../../" title="ゲーム一覧にもどる">‹ ゲーム一覧</a>
+<button id="mute" title="音の オン / オフ">🔊</button>
+<div id="vignette"></div>
+<div id="flash"></div>
+<div id="banner"><div class="b"></div></div>
+<div id="ko">
+  <div class="koText">K.O.</div>
+  <div class="finalLabel">さいしゅうスコア</div>
+  <div class="finalScore">0</div>
+</div>
+<div id="title">
+  <h1>ブリッジ・ボルト</h1>
+  <p>車は、もう渡りはじめている。</p>
+  <p>針がオレンジの帯に来たら、止める。</p>
+  <p class="kb">スペース / ↑ / クリック : ボルトを締める</p>
+  <p class="tc">画面をタップ : ボルトを締める</p>
+  <button class="btn" id="startBtn">スタート</button>
+</div>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+// ---------- url flags (declared first: sound and camera both read them) ----------
+const QS = new URLSearchParams(location.search);
+const AUTO = QS.get('auto')==='1';
+const SHOWCASE_Q = QS.get('showcase');
+// Recording must produce clean footage, so every automated mode is muted.
+const REC = QS.get('rec')==='1';   // 録音モード: 音を鳴らして拾う
+const SILENT = (AUTO || !!SHOWCASE_Q || QS.get('mute')==='1') && !REC;
+// 録画・showcase では「?」と「ゲーム一覧」を出さない（動画の邪魔になる）
+const NOCHROME = AUTO || !!SHOWCASE_Q || QS.get('nochrome')==='1';
+
+// ---------- renderer / scene ----------
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.shadowMap.enabled = true;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const SKY = new THREE.Color(0x0d1020);
+scene.background = SKY.clone();
+scene.fog = new THREE.Fog(0x0d1020, 30, 96);
+
+const camera = new THREE.PerspectiveCamera(58, innerWidth/innerHeight, .1, 400);
+
+// 縦持ちの電話は 16:9 よりずっと細い。FOV を固定すると橋も針も画面から
+// はみ出るので、画面が縦長になるほど垂直 FOV を広げる。
+const BASE_FOV = 58;
+function fitCamera(){
+  const aspect = innerWidth / innerHeight;
+  camera.aspect = aspect;
+  if(typeof SHOWCASE !== 'undefined' && SHOWCASE){
+    camera.fov = aspect < 1 ? 62 : 46;
+  } else {
+    const ref = 16/9;   // 横方向に写る幅をだいたい一定に保つ
+    camera.fov = aspect >= ref ? BASE_FOV
+      : Math.min(96, THREE.MathUtils.radToDeg(
+          2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(BASE_FOV)/2) * (ref/aspect))));
+  }
+  camera.__base = camera.fov;    // rush イベントがここへ戻す
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+}
+addEventListener('resize', fitCamera);
+addEventListener('orientationchange', ()=>setTimeout(fitCamera, 120));
+
+// ---------- lights ----------
+const hemi = new THREE.HemisphereLight(0x7f90ff, 0x201a14, 1.35);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xffd9a8, 2.2);
+sun.position.set(10, 18, 8); sun.castShadow = true;
+sun.shadow.camera.left=-24; sun.shadow.camera.right=24;
+sun.shadow.camera.top=24; sun.shadow.camera.bottom=-24;
+scene.add(sun);
+// ---------- 世界 ----------
+// 橋は -Z 方向へ伸びる。作業員は最前のセグメントの上に立ち、
+// 車は +Z（後ろ）から来て -Z へ抜けていく。
+const SEG_LEN = 8;        // セグメント 1 本の長さ
+const DECK_W  = 6.4;
+const NSEG    = 20;       // 同時に存在させるセグメント数（使い回す）
+
+const deckTightMat = new THREE.MeshStandardMaterial({color:0x515a76, roughness:.85});
+const deckLooseMat = new THREE.MeshStandardMaterial({color:0x6a3a2a, roughness:.95});
+const trussHotMat  = new THREE.MeshStandardMaterial({color:0xef8b0d, roughness:.45, metalness:.4});
+const trussDimMat  = new THREE.MeshStandardMaterial({color:0x4b3a24, roughness:.9});
+const boltMat      = new THREE.MeshStandardMaterial({color:0xffc04a, metalness:.95, roughness:.18,
+                                                     emissive:0x3a2200});
+const pierMat      = new THREE.MeshStandardMaterial({color:0x2a3048, roughness:.9});
+
+// 下の川面
+const water = new THREE.Mesh(new THREE.PlaneGeometry(320, 1400),
+  new THREE.MeshStandardMaterial({color:0x08182e, roughness:.2, metalness:.7}));
+water.rotation.x = -Math.PI/2; water.position.set(0, -16, -420);
+scene.add(water);
+
+// 遠くの山影（視差）
+const hills = [];
+for(let i=0;i<10;i++){
+  const h = new THREE.Mesh(new THREE.ConeGeometry(24+Math.random()*18, 18+Math.random()*20, 4),
+    new THREE.MeshStandardMaterial({color:0x151a30, roughness:1}));
+  h.position.set((Math.random()-.5)*200, -8, -150 - i*60);
+  h.rotation.y = Math.random()*3;
+  scene.add(h); hills.push(h);
+}
+// 月
+const moon = new THREE.Mesh(new THREE.CircleGeometry(6, 40),
+  new THREE.MeshBasicMaterial({color:0xffeccb}));
+moon.position.set(26, 30, -300); scene.add(moon);
+
+// ---------- 橋のセグメント ----------
+// 1 セグメント = 桁 + 左右のトラス + ボルト 1 本。
+// tight=true なら締まっている（灰色の桁 + オレンジのトラス + 光るボルト）。
+function buildSegment(){
+  const g = new THREE.Group();
+  const deck = new THREE.Mesh(new THREE.BoxGeometry(DECK_W, .5, SEG_LEN-.25), deckLooseMat);
+  deck.position.y = -.25; deck.receiveShadow = true; deck.castShadow = true;
+  g.add(deck);
+  // 左右のトラス（三角の骨組み）。締まり具合で色が変わる
+  const truss = [];
+  for(const s of [1,-1]){
+    const post = new THREE.Mesh(new THREE.BoxGeometry(.3, 2.6, .3), trussDimMat);
+    post.position.set(s*DECK_W/2, 1.3, -SEG_LEN/2+.5); g.add(post); truss.push(post);
+    const diag = new THREE.Mesh(new THREE.BoxGeometry(.24, SEG_LEN*1.08, .24), trussDimMat);
+    diag.position.set(s*DECK_W/2, 1.3, 0);
+    diag.rotation.x = Math.PI/2 - Math.atan2(2.6, SEG_LEN)*1.0;
+    g.add(diag); truss.push(diag);
+    const rail = new THREE.Mesh(new THREE.BoxGeometry(.18, .18, SEG_LEN), trussDimMat);
+    rail.position.set(s*DECK_W/2, 2.5, 0); g.add(rail); truss.push(rail);
+  }
+  // 中央のボルト（締まると光る）
+  const bolt = new THREE.Mesh(new THREE.CylinderGeometry(.34,.34,.3,6), boltMat);
+  bolt.rotation.x = Math.PI/2; bolt.position.set(0, .05, -SEG_LEN/2+.6);
+  bolt.visible = false; g.add(bolt);
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  scene.add(g);
+  return {group:g, deck, truss, bolt, tight:false, sag:0, sagV:0, z:0};
+}
+const segs = [];
+for(let i=0;i<NSEG;i++) segs.push(buildSegment());
+
+// 橋脚（セグメント 3 本おき）
+const piers = [];
+for(let i=0;i<8;i++){
+  const p = new THREE.Mesh(new THREE.BoxGeometry(2.2, 26, 2.2), pierMat);
+  p.position.set(0, -13.5, 0); scene.add(p); piers.push(p);
+}
+
+function setSegTight(s, tight){
+  s.tight = tight;
+  s.deck.material = tight ? deckTightMat : deckLooseMat;
+  for(const m of s.truss) m.material = tight ? trussHotMat : trussDimMat;
+  s.bolt.visible = tight;
+}
+
+// ---------- 作業員（プリミティブのみ） ----------
+function buildWorker(){
+  const g = new THREE.Group();
+  const cloth = new THREE.MeshStandardMaterial({color:0x2b6cd8, roughness:.8});
+  const vest  = new THREE.MeshStandardMaterial({color:0xffc04a, roughness:.55, emissive:0x241800});
+  const skin  = new THREE.MeshStandardMaterial({color:0xe8c19e, roughness:.7});
+  const hat   = new THREE.MeshStandardMaterial({color:0xef8b0d, roughness:.4, metalness:.2});
+  const steel = new THREE.MeshStandardMaterial({color:0xb9bfcc, metalness:.9, roughness:.25});
+
+  const torso = new THREE.Mesh(new THREE.CapsuleGeometry(.34,.5,6,14), cloth);
+  torso.position.y = 1.16; g.add(torso);
+  const jacket = new THREE.Mesh(new THREE.CylinderGeometry(.4,.42,.52,14), vest);
+  jacket.position.y = 1.16; g.add(jacket);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(.26,20,16), skin);
+  head.position.y = 1.78; g.add(head);
+  const helm = new THREE.Mesh(new THREE.SphereGeometry(.3,20,16,0,Math.PI*2,0,Math.PI/2), hat);
+  helm.position.y = 1.82; g.add(helm);
+  const brim = new THREE.Mesh(new THREE.CylinderGeometry(.34,.34,.05,18), hat);
+  brim.position.y = 1.82; g.add(brim);
+  // 脚
+  for(const s of [1,-1]){
+    const leg = new THREE.Mesh(new THREE.CapsuleGeometry(.12,.5,6,10), cloth);
+    leg.position.set(s*.16,.4,0); g.add(leg);
+  }
+  // 腕。右腕はレンチを振るのでピボットに乗せる
+  const armPivot = new THREE.Group();
+  armPivot.position.set(.42, 1.36, 0); g.add(armPivot);
+  const arm = new THREE.Mesh(new THREE.CapsuleGeometry(.1,.42,6,10), cloth);
+  arm.position.y = -.26; armPivot.add(arm);
+  const wrench = new THREE.Mesh(new THREE.BoxGeometry(.11,.62,.11), steel);
+  wrench.position.y = -.72; armPivot.add(wrench);
+  const jaw = new THREE.Mesh(new THREE.TorusGeometry(.14,.05,8,14,Math.PI*1.5), steel);
+  jaw.position.y = -1.0; jaw.rotation.z = .4; armPivot.add(jaw);
+  const armL = new THREE.Mesh(new THREE.CapsuleGeometry(.1,.42,6,10), cloth);
+  armL.position.set(-.42,1.1,0); g.add(armL);
+
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  return {group:g, armPivot, wrench, head, helm};
+}
+const worker = buildWorker();
+scene.add(worker.group);
+// 作業灯（作業員についてくる）
+const heroLight = new THREE.PointLight(0xffe0b0, 28, 22);
+scene.add(heroLight);
+
+// ---------- 車 ----------
+// 車は後ろから来て橋を渡る。締まっていない桁の上では沈む。
+function buildCar(kind){
+  const g = new THREE.Group();
+  const hue = kind==='truck' ? 0xd8dce6 : [0xe5473a,0x3ad0c8,0xf0e24a,0xa06bff][Math.floor(Math.random()*4)];
+  const bodyMat = new THREE.MeshStandardMaterial({color:hue, roughness:.4, metalness:.3});
+  const glassMat= new THREE.MeshStandardMaterial({color:0x101828, roughness:.15, metalness:.6});
+  const len = kind==='truck' ? 4.6 : 2.6;
+  const hgt = kind==='truck' ? 1.5 : .78;
+  const body = new THREE.Mesh(new THREE.BoxGeometry(1.7, hgt, len), bodyMat);
+  body.position.y = hgt/2 + .34; g.add(body);
+  const cab = new THREE.Mesh(new THREE.BoxGeometry(1.5, .6, len*.42), glassMat);
+  cab.position.set(0, hgt + .5, kind==='truck' ? len*.26 : -len*.02); g.add(cab);
+  // ヘッドライト（後ろ向きに走るので -Z 側）
+  for(const s of [1,-1]){
+    const lamp = new THREE.Mesh(new THREE.SphereGeometry(.13,10,8),
+      new THREE.MeshBasicMaterial({color:0xfff3c0}));
+    lamp.position.set(s*.6, .62, -len/2-.02); g.add(lamp);
+    const tail = new THREE.Mesh(new THREE.SphereGeometry(.1,8,6),
+      new THREE.MeshBasicMaterial({color:0xff2b2b}));
+    tail.position.set(s*.6, .62, len/2+.02); g.add(tail);
+  }
+  // 車輪
+  const wheelMat = new THREE.MeshStandardMaterial({color:0x14161f, roughness:.9});
+  for(const s of [1,-1]) for(const zz of [-len/2+.7, len/2-.7]){
+    const w = new THREE.Mesh(new THREE.CylinderGeometry(.34,.34,.24,12), wheelMat);
+    w.rotation.z = Math.PI/2; w.position.set(s*.88, .34, zz); g.add(w);
+  }
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  return {group:g, kind, len};
+}
+const cars = [];
+
+// ---------- ゲージ（3D の HUD として画面下に置く） ----------
+// DOM ではなく 3D で描くと、カメラのシェイクやスローモーションに
+// ゲージも乗るので、画面全体が一つの絵として揺れる。
+const gauge = new THREE.Group();
+const GW = 9.0, GH = .78;            // ゲージの幅・高さ（ワールド単位）
+const gaugeBack = new THREE.Mesh(new THREE.PlaneGeometry(GW, GH),
+  new THREE.MeshBasicMaterial({color:0x10141f, transparent:true, opacity:.88}));
+gauge.add(gaugeBack);
+const gaugeEdge = new THREE.Mesh(new THREE.PlaneGeometry(GW+.16, GH+.16),
+  new THREE.MeshBasicMaterial({color:0x2a3450, transparent:true, opacity:.9}));
+gaugeEdge.position.z = -.01; gauge.add(gaugeEdge);
+// 当たり帯（オレンジ）とその芯（白）
+const bandMesh = new THREE.Mesh(new THREE.PlaneGeometry(1, GH*.86),
+  new THREE.MeshBasicMaterial({color:0xef8b0d, transparent:true, opacity:.85}));
+bandMesh.position.z = .01; gauge.add(bandMesh);
+const coreMesh = new THREE.Mesh(new THREE.PlaneGeometry(1, GH*.86),
+  new THREE.MeshBasicMaterial({color:0xfff0c0, transparent:true, opacity:.95}));
+coreMesh.position.z = .02; gauge.add(coreMesh);
+// 針
+// three.js は不透明メッシュを透明メッシュより先に描くので、針だけ不透明だと
+// renderOrder を無視して下地に塗りつぶされる。針も transparent にして、
+// 同じソート対象に入れておく。
+const needle = new THREE.Mesh(new THREE.PlaneGeometry(.1, GH*1.25),
+  new THREE.MeshBasicMaterial({color:0xffffff, transparent:true, opacity:1}));
+needle.position.z = .03; gauge.add(needle);
+// ゲージは操作そのものなので、橋げたに隠れては困る。深度テストを切って
+// 最後に描き、常に手前に出す。
+gauge.traverse(o=>{
+  if(o.isMesh){ o.material.depthTest = false; o.material.depthWrite = false; }
+});
+// 深度テストを切ると重なり順は描画順で決まるので、明示的に並べる。
+// 枠 → 下地 → 帯 → 芯 → 針 の順で、針がいちばん手前。
+gaugeEdge.renderOrder = 996;
+gaugeBack.renderOrder = 997;
+bandMesh.renderOrder = 998;
+coreMesh.renderOrder = 999;
+needle.renderOrder   = 1000;
+
+// ゲージはカメラの子にする。カメラの揺れ・寄りをそのまま受け継ぐので
+// 画面全体が一つの絵として揺れ、lookAt と取り合いにならない。
+camera.add(gauge);
+scene.add(camera);        // カメラを子に持たせるため、シーンに入れておく
+
+// ---------- ゲーム状態 ----------
+let running=false, dead=false, t=0, score=0;
+let timeScale=1;            // スローモーション
+let deadAt=0;               // 死んだ時刻（タップ再挑戦のガード）
+let shake=0;
+let camDist=11, camDistTarget=11;
+let slack=0;                // ゆるみ 0..1。1 で崩落
+let builtZ=0;               // 締めた最前線の z（作業員の位置）
+let boltsDone=0;            // 締めたボルト数（= 進んだセグメント数）
+let needlePos=0;            // -1..1 の針位置
+let needleDir=1;
+let needleSpeed=0.85;       // 往復の速さ（1 = 1 往復/秒相当）
+let bandCenter=0, bandHalf=.30;   // 当たり帯の中心と半幅（-1..1 の座標系）
+let swingAnim=0;            // レンチを振るアニメーションの残り時間
+let comboPerfect=0;         // 連続「かんぺき」
+let nextEventAt=9;
+let eventQueue=[];
+// イベントで変わるパラメータ
+let fogEvent=0, rushTimer=0, windTimer=0, doubleTimer=0, freezeTimer=0;
+let bandDrift=0;            // >0 のとき帯そのものが動く（強風）
+
+const scoreEl = document.getElementById('score');
+const msgEl = document.getElementById('msg');
+const slackBarEl = document.getElementById('slackBar');
+const titleEl = document.getElementById('title');
+const bannerEl = document.getElementById('banner');
+const bannerText = bannerEl.querySelector('.b');
+const flashEl = document.getElementById('flash');
+const vignetteEl = document.getElementById('vignette');
+const koEl = document.getElementById('ko');
+const koScoreEl = koEl.querySelector('.finalScore');
+
+// ---------- 演出ヘルパ ----------
+function banner(text, color){
+  bannerText.textContent = text;
+  bannerText.style.color = color;
+  bannerEl.classList.remove('go');
+  void bannerEl.offsetWidth;      // CSS アニメーションを再生し直す
+  bannerEl.style.opacity = 1;
+  bannerEl.classList.add('go');
+}
+function flash(color, strength, ms){
+  flashEl.style.background = color;
+  flashEl.style.transition = 'none';
+  flashEl.style.opacity = strength;
+  requestAnimationFrame(()=>{
+    flashEl.style.transition = `opacity ${ms}ms ease-out`;
+    flashEl.style.opacity = 0;
+  });
+}
+// 火花（締めた瞬間に散る短命なパーティクル）
+const sparks = [];
+const sparkGeo = new THREE.SphereGeometry(.07, 6, 5);
+const sparkMat = new THREE.MeshBasicMaterial({color:0xffd98a});
+function burstSparks(x, y, z, n, color){
+  for(let i=0;i<n;i++){
+    const m = new THREE.Mesh(sparkGeo, color ? new THREE.MeshBasicMaterial({color}) : sparkMat);
+    m.position.set(x, y, z);
+    scene.add(m);
+    sparks.push({mesh:m, life:.45+Math.random()*.3,
+      v:new THREE.Vector3((Math.random()-.5)*5, Math.random()*4.5+1, (Math.random()-.5)*5)});
+  }
+}
+
+// ---------- イベント ----------
+// それぞれ「指の動き」への効き方を変えてある:
+// rush=車が殺到 / wind=帯が動く / fog=見えにくい / double=1回で2本 / freeze=針が止まる
+const EVENTS = {
+  rush(){
+    banner('ラッシュアワー', '#ff6b3d');
+    rushTimer = 7;
+    shake = Math.max(shake, .3);
+    flash('#ff8a3d', .28, 380);
+    return 7.5;
+  },
+  wind(){
+    banner('よこ風', '#6be0ff');
+    // 帯そのものが左右に流れるので、狙う場所が固定できない
+    windTimer = 8; bandDrift = 1;
+    return 8.5;
+  },
+  fog(){
+    banner('川霧', '#b9c6e8');
+    fogEvent = 7;
+    return 7.5;
+  },
+  double(){
+    banner('二本締め', '#ffd23b');
+    // 帯は狭いが、当てれば 1 回で 2 セグメント締まる
+    doubleTimer = 8;
+    flash('#ffe08a', .3, 320);
+    return 8.5;
+  },
+  freeze(){
+    banner('レンチ凍結', '#8fb4ff');
+    // 針が一瞬止まる。狙いやすいが、止まっている間もゆるみは進む
+    freezeTimer = 4.5;
+    return 6;
+  },
+};
+const EVENT_NAMES = Object.keys(EVENTS);
+
+// recording/debug hook: fire a named event on cue (used by the capture script)
+// returns false if the run is already over, so a capture script can wait
+// for the next run instead of firing an event onto the K.O. screen
+window.__ev = name => {
+  if(!running || dead || !EVENTS[name]) return false;
+  const busy = EVENTS[name]();
+  if(!SILENT) SND.event(); nextEventAt = t + busy + 5; return true;
+};
+window.__alive = () => running && !dead;
+window.__kill = () => { if(running && !dead){ collapse(); } };
+window.__recStop = () => SND.recStop();
+window.__snd = () => ({enabled: SND.enabled, silent: SILENT});
+window.__events = EVENT_NAMES.slice();
+window.__probe = () => ({t:+t.toFixed(2), slack:+slack.toFixed(3), bolts:boltsDone,
+  needle:+needlePos.toFixed(3), band:+bandCenter.toFixed(3), half:+bandHalf.toFixed(3), cars:cars.length,
+  next:+nextEventAt.toFixed(2)});
+
+function refillEventQueue(){
+  eventQueue = EVENT_NAMES.slice();
+  for(let i=eventQueue.length-1;i>0;i--){        // 順番が毎回変わるようにシャッフル
+    const j = Math.floor(Math.random()*(i+1));
+    [eventQueue[i],eventQueue[j]]=[eventQueue[j],eventQueue[i]];
+  }
+}
+function triggerEvent(){
+  if(!eventQueue.length) refillEventQueue();
+  const name = eventQueue.pop();
+  const busy = EVENTS[name]();
+  if(!SILENT) SND.event();
+  nextEventAt = t + busy + 5 + Math.random()*4;  // イベントの間に息継ぎを入れる
+}
+
+// ---------- ボルトを締める（唯一の操作） ----------
+function bolt(){
+  if(!running || dead) return;
+  if(!SILENT) SND.move();
+  swingAnim = .26;                          // レンチを振る
+  const off = Math.abs(needlePos - bandCenter);
+  const inBand = off <= bandHalf;
+  const perfect = off <= bandHalf * .34;    // 帯のど真ん中
+  const frontSeg = segs.find(s => !s.tight && s.z <= builtZ);
+
+  if(inBand){
+    const n = doubleTimer > 0 ? 2 : 1;      // 二本締め中は 1 回で 2 本
+    for(let i=0;i<n;i++) advanceFront();
+    boltsDone += n;
+    score += (perfect ? 140 : 80) * n;
+    if(perfect){
+      comboPerfect++;
+      slack = Math.max(0, slack - .09);     // ど真ん中はゆるみを戻す
+      score += Math.min(comboPerfect, 8) * 30;
+      burstSparks(0, .4, builtZ, 16, 0xfff0c0);
+      if(!SILENT) SND.perfect();
+      msgEl.textContent = comboPerfect > 1 ? `かんぺき ×${comboPerfect}` : 'かんぺき';
+    } else {
+      comboPerfect = 0;
+      slack = Math.max(0, slack - .03);
+      burstSparks(0, .4, builtZ, 9);
+      if(!SILENT) SND.place();
+      msgEl.textContent = '締めた';
+    }
+    shake = Math.max(shake, perfect ? .16 : .09);
+  } else {
+    // 外した: ゆるみが増え、締めかけの桁が軋む
+    comboPerfect = 0;
+    slack = Math.min(1, slack + .10);
+    if(frontSeg){ frontSeg.sagV -= 2.2; }
+    shake = Math.max(shake, .26);
+    flash('#ff3b2f', .2, 240);
+    if(!SILENT) SND.miss();
+    msgEl.textContent = 'すべった';
+    if(slack >= 1){ collapse(); return; }
+  }
+  // 次のボルトへ: 針は速く、帯は少し細く
+  needleSpeed = 0.85 + boltsDone*0.022;
+  bandHalf = Math.max(.12, .30 - boltsDone*0.0028);
+  if(doubleTimer > 0) bandHalf *= .62;       // 二本締めは見返りのぶん厳しい
+  // 帯を打ち直す（毎回ちがう場所へ）
+  bandCenter = (Math.random()*2-1) * (1 - bandHalf - .06);
+  setTimeout(()=>{ if(msgEl.textContent) msgEl.textContent=''; }, 700);
+}
+
+// 最前のセグメントを締め、橋を 1 本ぶん前へ伸ばす
+function advanceFront(){
+  // 作業員の足元のセグメントを締める
+  let front = null;
+  for(const s of segs) if(!s.tight && (front===null || s.z > front.z)) front = s;
+  if(front) setSegTight(front, true);
+  builtZ -= SEG_LEN;                        // 作業員が 1 本ぶん前へ出る
+}
+
+// ---------- 崩落 ----------
+function collapse(){
+  if(dead) return;
+  dead = true;
+  gameOver();
+}
+// ---------- リセット ----------
+function reset(){
+  for(const c of cars) scene.remove(c.group);
+  cars.length = 0;
+  for(const s of sparks) scene.remove(s.mesh);
+  sparks.length = 0;
+
+  builtZ = 0; boltsDone = 0;
+  // セグメントを並べ直す。作業員より奥（-Z）は未締め、手前（+Z）は締め済み。
+  for(let i=0;i<NSEG;i++){
+    const s = segs[i];
+    s.z = (6 - i) * SEG_LEN;              // 6 本ぶんは後ろに敷いておく
+    s.sag = 0; s.sagV = 0;
+    s.group.position.set(0, 0, s.z);
+    setSegTight(s, s.z > builtZ);          // 後ろは渡れる状態にしておく
+  }
+  t=0; score=0; dead=false; slack=0;
+  timeScale=1; shake=0; camDist=11; camDistTarget=11;
+  needlePos=0; needleDir=1; needleSpeed=0.85;
+  bandHalf=.30; bandCenter=0; swingAnim=0; comboPerfect=0;
+  fogEvent=0; rushTimer=0; windTimer=0; doubleTimer=0; freezeTimer=0; bandDrift=0;
+  scene.fog.near = 30; scene.fog.far = 96;
+  nextEventAt = 9;
+  refillEventQueue();
+  worker.group.position.set(0, 0, builtZ);
+  worker.group.rotation.set(0,0,0);
+  worker.armPivot.rotation.x = 0;
+  msgEl.textContent='';
+  slackBarEl.style.width = '0%';
+  koEl.classList.remove('on');
+  vignetteEl.style.transition='opacity .3s'; vignetteEl.style.opacity=0;
+  camera.position.set(0, 6, builtZ + 11);
+}
+
+const startBtn = document.getElementById('startBtn');
+
+// ---------- sound: everything synthesised, no audio files ----------
+// Keeps the single-HTML rule (nothing to download) and lets the music
+// react to play: the bass line speeds up with the game, events drop a
+// stinger, and the whole thing ducks out on a game over.
+const SND = (() => {
+  let ctx = null, master = null, musicGain = null, on = true, started = false;
+  let step = 0, timer = null, tempo = 0.25;
+
+  // A pentatonic scale never sounds wrong against itself, which matters
+  // when the tempo drifts with the player's speed.
+  // minor pentatonic, driving — a chase that never lets up
+  const SCALE = [0, 3, 5, 7, 10];
+  const ROOT = 196;
+  const BASS = 'square', LEAD = 'sawtooth';
+  const hz = (deg, oct = 0) =>
+    ROOT * Math.pow(2, oct + Math.floor(deg / SCALE.length)) *
+    Math.pow(2, SCALE[((deg % SCALE.length) + SCALE.length) % SCALE.length] / 12);
+
+  function ensure() {
+    if (ctx) return ctx;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    ctx = new AC();
+    master = ctx.createGain();
+    master.gain.value = 0.32;
+    master.connect(ctx.destination);
+    musicGain = ctx.createGain();
+    musicGain.gain.value = 1;
+    musicGain.connect(master);
+    return ctx;
+  }
+
+
+  // ---- 録音用の分岐（?rec=1）----
+  // Playwright の録画には音声が入らないので、ゲーム自身に master バスを
+  // 録らせる。鳴っているものそのものなので映像と必ず同期する。
+  let recDest = null, recorder = null, recChunks = [];
+  function recStart() {
+    if (!ctx || recorder) return;
+    recDest = ctx.createMediaStreamDestination();
+    master.connect(recDest);
+    recorder = new MediaRecorder(recDest.stream, {mimeType: 'audio/webm'});
+    recorder.ondataavailable = e => { if (e.data.size) recChunks.push(e.data); };
+    recorder.start();
+  }
+  function recStop() {
+    return new Promise(res => {
+      if (!recorder) return res(null);
+      recorder.onstop = async () => {
+        const blob = new Blob(recChunks, {type: 'audio/webm'});
+        const buf = await blob.arrayBuffer();
+        res(Array.from(new Uint8Array(buf)));
+      };
+      recorder.stop();
+    });
+  }
+
+  function blip(freq, dur, type = 'square', vol = 0.25, dest = null, slideTo = null) {
+    if (!ctx || !on) return;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, ctx.currentTime);
+    if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, ctx.currentTime + dur);
+    // a short attack stops every note from clicking
+    g.gain.setValueAtTime(0, ctx.currentTime);
+    g.gain.linearRampToValueAtTime(vol, ctx.currentTime + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
+    o.connect(g); g.connect(dest || master);
+    o.start(); o.stop(ctx.currentTime + dur + 0.02);
+  }
+
+  function noise(dur, vol = 0.2, hp = 800) {
+    if (!ctx || !on) return;
+    const n = Math.floor(ctx.sampleRate * dur);
+    const buf = ctx.createBuffer(1, n, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    const f = ctx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = hp;
+    const g = ctx.createGain(); g.gain.value = vol;
+    src.connect(f); f.connect(g); g.connect(master);
+    src.start();
+  }
+
+  // --- the loop: a walking bass plus an offbeat blip ---
+  function tick() {
+    if (!ctx || !on) return;
+    const bar = step % 16;
+    // straight driving pulse: bass on every beat, lead stabs offbeat
+    if (bar % 2 === 0) blip(hz(bar % 8 === 0 ? 0 : 1, -1), tempo * 1.1, BASS, 0.30, musicGain);
+    if (bar % 8 === 5) blip(hz(4, 0), tempo * 0.6, LEAD, 0.09, musicGain);
+    if (bar % 4 === 2) noise(0.04, 0.05, 5000);
+    step++;
+    timer = setTimeout(tick, tempo * 1000);
+  }
+
+  return {
+    // must be called from a user gesture — browsers block audio otherwise
+    start() {
+      if (!ensure() || started) return;
+      if (ctx.state === 'suspended') ctx.resume();
+      started = true; step = 0; tick();
+    },
+    stop() { if (timer) { clearTimeout(timer); timer = null; } started = false; },
+    /** speed the music up with the game; 1 = starting pace */
+    setPace(mult) { tempo = Math.max(0.11, 0.25 / Math.max(0.2, mult)); },
+    duck(sec = 1.6) {                                      // for game over
+      if (!ctx) return;
+      musicGain.gain.cancelScheduledValues(ctx.currentTime);
+      musicGain.gain.setValueAtTime(musicGain.gain.value, ctx.currentTime);
+      musicGain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + sec);
+    },
+    unduck() {
+      if (!ctx) return;
+      musicGain.gain.cancelScheduledValues(ctx.currentTime);
+      musicGain.gain.setValueAtTime(0.0001, ctx.currentTime);
+      musicGain.gain.exponentialRampToValueAtTime(1, ctx.currentTime + 0.4);
+    },
+    // --- one-shots ---
+    // レンチを振る乾いた音。入力のたびに必ず鳴る
+    move()  { ensure(); noise(0.05, 0.10, 2600); },
+    // 命中: 金属を締めた短い上昇音
+    place() { ensure(); blip(hz(2, 0), 0.10, BASS, 0.22, null, hz(4, 1)); },
+    // かんぺき: 明るい 2 音のチャイム。命中とはっきり聞き分けられる
+    perfect(){ ensure(); blip(hz(4, 1), 0.10, 'triangle', 0.22);
+               setTimeout(()=>blip(hz(2, 2), 0.20, 'triangle', 0.20), 85); },
+    // 空振り: 低く滑り落ちる音
+    miss()  { ensure(); blip(150, 0.22, 'sawtooth', 0.22, null, 62);
+              noise(0.10, 0.12, 300); },
+    event() { ensure(); [0, 90, 180].forEach((ms, i) =>
+                setTimeout(() => blip(hz(2 + i, 0), 0.18, 'sawtooth', 0.20), ms)); },
+    hit()   { ensure(); noise(0.35, 0.30, 200);
+              blip(180, 0.5, 'sawtooth', 0.28, null, 40); },
+    over()  { ensure(); [0, 140, 280, 460].forEach((ms, i) =>
+                setTimeout(() => blip(hz(-i, -1), 0.42, 'triangle', 0.26), ms)); },
+    recStart() { ensure(); recStart(); },
+    recStop() { return recStop(); },
+    toggle() { on = !on; if (!on) { this.stop(); } else { this.start(); } return on; },
+    get enabled() { return on; },
+  };
+})();
+
+// --- one place for every action, so touch and keyboard stay in step ---
+function startRun(){
+  titleEl.classList.add('hidden'); reset(); running=true;
+  if(!SILENT){ SND.unduck(); SND.start(); if(REC) SND.recStart(); }
+}
+
+const muteBtn = document.getElementById('mute');
+function toggleMute(){ muteBtn.textContent = SND.toggle() ? '🔊' : '🔇'; }
+muteBtn.addEventListener('click', toggleMute);
+muteBtn.addEventListener('touchend', e=>{ e.preventDefault(); toggleMute(); },
+                         {passive:false});
+if(SILENT) muteBtn.style.display='none';   // automated modes have no audio
+addEventListener('keydown', e=>{ if(e.code==='KeyM') toggleMute(); });
+
+startBtn.addEventListener('click', startRun);
+// a touch on the button must start too — click alone is unreliable on touch
+startBtn.addEventListener('touchend', e=>{ e.preventDefault(); startRun(); },
+                          {passive:false});
+
+addEventListener('keydown', e=>{
+  if(e.repeat) return;                       // 押しっぱなしで連打させない
+  if(!running){
+    if(e.code==='Space'||e.code==='Enter'){
+      // K.O. のあとは少し間を置いてから再開できるようにする
+      if(!dead || Date.now()-deadAt > 1200) startRun();
+    }
+    return;
+  }
+  if(e.code==='Space'||e.code==='ArrowUp'||e.code==='KeyW'||e.code==='Enter') bolt();
+});
+// クリックでも締められる（PC でマウスだけの人向け）
+renderer.domElement.addEventListener('mousedown', ()=>{ if(running && !dead) bolt(); });
+
+// --- touch: 画面のどこをタップしてもボルトを締める ---
+// 視聴者のほとんどは電話から来る。操作は 1 種類だけなので、
+// キャンバス全面をボタンとして扱う。
+(function(){
+  let st=0, moved=false, sx=0, sy=0;
+  const canvas = renderer.domElement;
+
+  canvas.addEventListener('touchstart', e=>{
+    const p = e.changedTouches[0];
+    sx=p.clientX; sy=p.clientY; st=Date.now(); moved=false;
+  }, {passive:true});
+
+  canvas.addEventListener('touchmove', e=>{
+    const p = e.changedTouches[0];
+    // 大きく動いたらスクロール意図とみなして無視する
+    if(Math.hypot(p.clientX-sx, p.clientY-sy) > 34) moved = true;
+  }, {passive:true});
+
+  canvas.addEventListener('touchend', e=>{
+    if(dead){
+      // K.O. の演出を読む時間を置いてから、タップで再挑戦
+      if(!AUTO && Date.now()-deadAt > 1500) startRun();
+      return;
+    }
+    if(!running){ startRun(); return; }
+    if(!moved && Date.now()-st < 400) bolt();
+  }, {passive:true});
+
+  // タイトルはキャンバスの上に乗っているので、こちらでも start を受ける
+  titleEl.addEventListener('touchend', e=>{
+    if(!running){ e.preventDefault(); startRun(); }
+  }, {passive:false});
+
+  // ゲーム中のタップでページがスクロール・ズームしないようにする
+  canvas.addEventListener('touchmove', e=>e.preventDefault(), {passive:false});
+})();
+
+// autoplay mode for recording: ?auto=1
+// recording holds the K.O. longer than play does: ?hold=9000
+const RETRY_MS = Math.max(1200, parseInt(QS.get('hold')||'4200', 10));
+// ?noev=1 records a calm run with no events, for narration beds
+const NOEV = QS.get('noev')==='1';
+if(AUTO){ setTimeout(startRun, 1200); }   // startRun 経由にする（音/録音も始まる）
+
+// ---------- autopilot ----------
+// 針が帯の中心を通過する直前に押す。人間と同じく反応の遅れを持たせて
+// あるので、たまに外して「かんぺき」が途切れ、絵として単調にならない。
+let autoCooldown = 0;
+function autoPilot(dt){
+  autoCooldown -= dt;
+  if(autoCooldown > 0) return;
+  const off = needlePos - bandCenter;
+  // 凍結中は針が止まっている。帯の中にいるならそのまま押す
+  if(freezeTimer > 0){
+    if(Math.abs(off) <= bandHalf){ bolt(); autoCooldown = 0.3; }
+    return;
+  }
+  // 針は 1 フレームで bandHalf を飛び越えることがある。「いま中心に
+  // 近いか」ではなく「次のフレームで中心から遠ざかるか」で判断すると、
+  // 速い針でも山の頂点、つまり中心のすぐそばで押せる。
+  const v = needleSpeed * 2 * needleDir;          // 1 秒あたりの移動量（符号つき）
+  const next = needlePos + v*dt;
+  const willOvershoot = Math.abs(next - bandCenter) > Math.abs(off);
+  if(Math.abs(off) <= bandHalf && willOvershoot){
+    // わざと少しだけ雑に押す。毎回「かんぺき」だと絵が単調になる
+    if(Math.random() < 0.82) bolt();
+    else { needlePos += v*dt*1.4; bolt(); }      // ときどき通り過ぎてから押す
+    autoCooldown = 0.12;
+  }
+}
+// ---------- showcase mode (?showcase=worker|bolt|span|car|truck|gauge) ----------
+// 被写体を 1 つだけ、空のステージのターンテーブルに載せる。
+// ゲーム本体と同じメッシュを使うので、ナレーションが指すものと
+// 実際に出荷されるものが必ず一致する。
+const SHOWCASE = QS.get('showcase');
+const showcase = {group:null, pivot:null, spin:.55, label:'', flat:false};
+// 録画ツールが名前で参照するので、識別子は英語のまま置く
+window.__subjects = ['worker','bolt','span','car','truck','gauge'];
+
+function buildShowcase(name){
+  const g = new THREE.Group();
+  // pad = カメラの引き具合。1 に近いほど画面いっぱいに寄る。
+  // 横長で平たい被写体は幅で収めると細い線になるので、個別に詰める。
+  let label = '', spin = .55, flat = false, pad = 1.75;
+  if(name==='worker'){
+    const w = buildWorker();
+    w.group.scale.set(1.5,1.5,1.5);
+    // レンチを構えた姿勢にして、腕と工具が形として読めるようにする
+    w.armPivot.rotation.x = -0.9;
+    g.add(w.group); label = 'ボルト職人'; spin = .5;
+  } else if(name==='bolt'){
+    const m = new THREE.Mesh(new THREE.CylinderGeometry(.34,.34,.3,6), boltMat);
+    m.scale.set(3.4,3.4,3.4); m.rotation.x = Math.PI/2;
+    g.add(m);
+    // 座金を足して、ただの六角柱に見えないようにする
+    const washer = new THREE.Mesh(new THREE.TorusGeometry(1.5,.22,10,24),
+      new THREE.MeshStandardMaterial({color:0x8d939f, metalness:.9, roughness:.3}));
+    g.add(washer);
+    label = 'ボルト'; spin = 1.1;
+  } else if(name==='span'){
+    // 締まった桁 1 本まるごと
+    const s = buildSegment();
+    setSegTight(s, true);
+    s.group.scale.set(.85,.85,.85);
+    g.add(s.group); label = '橋げた'; spin = .45;
+  } else if(name==='car'){
+    const c = buildCar('car');
+    c.group.scale.set(1.5,1.5,1.5);
+    g.add(c.group); label = '渡ってくる車'; spin = .6;
+  } else if(name==='truck'){
+    const c = buildCar('truck');
+    c.group.scale.set(1.1,1.1,1.1);
+    g.add(c.group); label = '大型トラック'; spin = .5;
+  } else if(name==='gauge'){
+    // ゲージは平面なので、回さず少しだけ傾けて見せる
+    const back = new THREE.Mesh(new THREE.PlaneGeometry(GW, GH),
+      new THREE.MeshBasicMaterial({color:0x10141f}));
+    const edge = new THREE.Mesh(new THREE.PlaneGeometry(GW+.16, GH+.16),
+      new THREE.MeshBasicMaterial({color:0x2a3450}));
+    edge.position.z = -.01;
+    const band = new THREE.Mesh(new THREE.PlaneGeometry(GW*.22, GH*.86),
+      new THREE.MeshBasicMaterial({color:0xef8b0d}));
+    band.position.z = .01;
+    const core = new THREE.Mesh(new THREE.PlaneGeometry(GW*.075, GH*.86),
+      new THREE.MeshBasicMaterial({color:0xfff0c0}));
+    core.position.z = .02;
+    const nd = new THREE.Mesh(new THREE.PlaneGeometry(.12, GH*1.25),
+      new THREE.MeshBasicMaterial({color:0xffffff}));
+    nd.position.set(GW*.055, 0, .03);
+    g.add(edge, back, band, core, nd);
+    // ゲージは横に長く、縦がほとんどない。バウンディングボックスの
+    // 収め方が幅基準になるので、そのままだと細い線にしか見えない。
+    // 少し斜めに倒して高さを持たせ、画面を使いきるようにする。
+    // ゲージは横に長く縦がほとんどない。少し傾けて厚みを見せ、
+    // カメラも通常より寄せて画面を使いきる。
+    g.rotation.x = -0.34;
+    label = 'ゲージ'; spin = .0; flat = true; pad = 1.06;
+  }
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  scene.add(g);
+
+  // 被写体を原点に揃え、バウンディングボックスに合わせてカメラを引く。
+  // 大きさに関係なく、どの被写体も同じ大きさで画面に入る。
+  const box = new THREE.Box3().setFromObject(g);
+  const size = box.getSize(new THREE.Vector3());
+  const mid = box.getCenter(new THREE.Vector3());
+  g.position.sub(mid);
+  const reach = Math.max(size.x, size.y) * 0.5;
+  const fov = THREE.MathUtils.degToRad(camera.fov);
+  const dist = (reach / Math.tan(fov/2)) * pad + 1.0;    // pad = 余白
+  camera.position.set(0, size.y*0.10, dist);
+
+  // 片側にテキストを置けるように被写体を横へ寄せる。
+  // ずらしは親に持たせる（ずらした本人を回すと公転してしまう）。
+  const bias = parseFloat(QS.get('sx') || '0');
+  const pivot = new THREE.Group();
+  pivot.position.x = -bias * reach * 1.15;
+  scene.add(pivot);
+  pivot.add(g);
+  showcase.group = g; showcase.pivot = pivot;
+  showcase.spin = spin; showcase.label = label; showcase.flat = flat;
+}
+
+fitCamera();          // ここまでで SHOWCASE は確定している
+if(SHOWCASE){
+  titleEl.classList.add('hidden');
+  buildShowcase(SHOWCASE);
+  scoreEl.textContent = '';
+  document.getElementById('slackWrap').style.display = 'none';
+  document.getElementById('slackLabel').style.display = 'none';
+  msgEl.textContent = QS.get('nolabel')==='1' ? '' : showcase.label;
+  msgEl.style.fontSize = 'clamp(18px,5vw,30px)';
+  msgEl.style.letterSpacing = '6px';
+  // 何もない暗いステージ: 被写体だけを残す
+  worker.group.visible = false;         // 遊べる作業員は別オブジェクト
+  water.visible = false; moon.visible = false;
+  gauge.visible = false;
+  for(const s of segs) s.group.visible = false;
+  for(const p of piers) p.visible = false;
+  for(const h of hills) h.visible = false;
+  scene.fog = null;
+  scene.background = new THREE.Color(0x0b0d16);
+  heroLight.position.set(2.6, 3.2, 4.2);
+  heroLight.intensity = 140;
+  hemi.intensity = 3.2;
+  sun.intensity = 4.0; sun.position.set(2.5, 6, 6);
+  // 反対側からの補助光。裏面が真っ黒にならないように
+  const fill = new THREE.PointLight(0x88aaff, 45, 26);
+  fill.position.set(-4.5, 2.4, 3.6); scene.add(fill);
+}
+// 録画スクリプトが被写体を差し替えられるようにする
+window.__showcase = name => {
+  if(showcase.pivot) scene.remove(showcase.pivot);   // pivot がグループを持っている
+  buildShowcase(name);
+  msgEl.textContent = showcase.label;
+};
+
+// ---------- 車の生成 ----------
+let nextCarAt = 1.6;
+function spawnCar(){
+  const kind = Math.random() < .22 ? 'truck' : 'car';
+  const c = buildCar(kind);
+  // 作業員の後ろ（+Z）から現れ、-Z へ走って追い抜いていく。
+  // カメラの後ろから入ってくるよう、画面外の少し先に出す。
+  c.group.position.set((Math.random()<.5 ? -1.5 : 1.5),
+                       0, worker.group.position.z + 26 + Math.random()*10);
+  c.speed = (kind==='truck' ? 13 : 17) + Math.random()*5;
+  c.dead = false;
+  c.fallV = 0;
+  scene.add(c.group);
+  cars.push(c);
+}
+
+// ---------- メインループ ----------
+const clock = new THREE.Clock();
+function tick(){
+  requestAnimationFrame(tick);
+  const raw = Math.min(clock.getDelta(), .05);
+  const dt = raw * timeScale;
+
+  if(SHOWCASE){
+    if(showcase.group){
+      if(showcase.flat) showcase.group.rotation.z += raw*showcase.spin;
+      else showcase.group.rotation.y += raw*showcase.spin;
+    }
+    camera.lookAt(0, 0, 0);        // 被写体はずれていても、カメラは軸上
+    renderer.render(scene, camera);
+    return;
+  }
+
+  if(running && !dead){
+    t += dt;
+    score += dt * 22;                       // 生きているだけで少し増える
+    scoreEl.textContent = Math.floor(score);
+    if(!SILENT) SND.setPace(1 + boltsDone*0.02);
+    if(AUTO) autoPilot(dt);
+
+    // --- ゆるみ: 時間で勝手に進む。手を止めれば落ちる ---
+    const slackRate = 0.040 + boltsDone*0.0011 + (rushTimer>0 ? 0.035 : 0);
+    slack = Math.min(1, slack + slackRate*dt);
+    slackBarEl.style.width = (slack*100).toFixed(1) + '%';
+    if(slack >= 1){ collapse(); }
+
+    // --- 針 ---
+    if(freezeTimer > 0){
+      freezeTimer -= dt;                    // 凍結中は針が止まる
+    } else {
+      needlePos += needleDir * needleSpeed * 2 * dt;
+      if(needlePos > 1){ needlePos = 1; needleDir = -1; }
+      if(needlePos < -1){ needlePos = -1; needleDir = 1; }
+    }
+    // 強風: 帯そのものが左右に流れる
+    if(windTimer > 0){
+      windTimer -= dt;
+      bandCenter = Math.sin(t*1.5) * (1 - bandHalf - .06) * .8;
+      if(windTimer <= 0) bandDrift = 0;
+    }
+    if(doubleTimer > 0) doubleTimer -= dt;
+    if(rushTimer > 0){
+      rushTimer -= dt;
+      camera.fov += (camera.__base*1.08 - camera.fov)*Math.min(1, dt*3);
+      camera.updateProjectionMatrix();
+    } else if(camera.fov > camera.__base + 0.05){
+      camera.fov += (camera.__base - camera.fov)*Math.min(1, dt*3);
+      camera.updateProjectionMatrix();
+    }
+    // 川霧: 視界が詰まる
+    if(fogEvent > 0){
+      fogEvent -= dt;
+      const k = Math.min(1, fogEvent/1.2);          // 終わりぎわに晴れる
+      scene.fog.near = 30 - 24*k;
+      scene.fog.far  = 96 - 66*k;
+      if(fogEvent <= 0){ scene.fog.near = 30; scene.fog.far = 96; }
+    }
+
+    // --- ゲージの見た目を更新 ---
+    const half = Math.max(.05, bandHalf);
+    bandMesh.scale.x = half * GW;            // -1..1 をゲージ幅へ写す
+    bandMesh.position.x = bandCenter * GW/2;
+    coreMesh.scale.x = half * .68 * GW;
+    coreMesh.position.x = bandCenter * GW/2;
+    needle.position.x = needlePos * GW/2;
+    // 帯の中にいるあいだは針を光らせる（外しても分かるように）
+    const inBandNow = Math.abs(needlePos - bandCenter) <= half;
+    needle.material.color.setHex(inBandNow ? 0xffe9a8 : 0xffffff);
+
+    // --- 作業員: 締めた最前線に立つ ---
+    worker.group.position.z += (builtZ - worker.group.position.z)*Math.min(1, dt*7);
+    worker.group.position.y = Math.sin(t*3)*0.03;
+    if(swingAnim > 0){
+      swingAnim -= raw;
+      // 振り下ろし: 上げてから一気に落とす
+      const k = Math.max(0, swingAnim/.26);
+      worker.armPivot.rotation.x = -1.5 * k * k;
+    } else {
+      worker.armPivot.rotation.x += (-0.25 - worker.armPivot.rotation.x)*Math.min(1, dt*6);
+    }
+    heroLight.position.set(0, 4.2, worker.group.position.z + 2.4);
+
+    // --- セグメント: 未締めの桁はたわむ ---
+    for(const s of segs){
+      // 作業員より十分後ろへ行ったものを、先頭へ回して使い回す
+      if(s.z > worker.group.position.z + SEG_LEN*5){
+        const minZ = Math.min(...segs.map(x=>x.z));
+        s.z = minZ - SEG_LEN;
+        s.sag = 0; s.sagV = 0;
+        setSegTight(s, false);
+      }
+      // ばねで元に戻る。未締めだと戻りが弱い
+      const stiff = s.tight ? 42 : 9;
+      const damp  = s.tight ? 7 : 3.4;
+      s.sagV += (-s.sag*stiff)*dt - s.sagV*damp*dt;
+      s.sag += s.sagV*dt;
+      s.group.position.set(0, s.sag, s.z);
+      // 未締めの桁はゆるみに応じて少し傾く
+      s.group.rotation.z = s.tight ? 0 : Math.sin(s.z*.3 + t*1.4)*.02*(1+slack);
+    }
+    // 橋脚をセグメントに合わせて置き直す
+    {
+      const spacing = SEG_LEN*3;
+      const base = Math.ceil((worker.group.position.z + 40) / spacing) * spacing;
+      for(let i=0;i<piers.length;i++) piers[i].position.z = base - i*spacing;
+    }
+
+    // --- 車 ---
+    if(t > nextCarAt){
+      spawnCar();
+      // ラッシュアワー中は車間が詰まる
+      nextCarAt = t + (rushTimer>0 ? .35+Math.random()*.4 : 1.1+Math.random()*1.3);
+    }
+    for(let i=cars.length-1;i>=0;i--){
+      const c = cars[i];
+      c.group.position.z -= c.speed*dt;
+      // 乗っている桁を探す
+      let under = null;
+      for(const s of segs){
+        if(Math.abs(s.z - c.group.position.z) < SEG_LEN/2){ under = s; break; }
+      }
+      if(c.fallV > 0 || (under && !under.tight)){
+        // 未締めの桁に乗ったら、桁ごと沈む
+        if(under && !under.tight) under.sagV -= 26*dt;
+        c.fallV += 20*dt;
+        c.group.position.y -= c.fallV*dt;
+        c.group.rotation.x += dt*1.4;
+        if(c.group.position.y > -3 && c.fallV < 1.2 && !SILENT && Math.random()<.04) SND.miss();
+      } else if(under){
+        // 締まった桁の上では、桁のたわみに合わせて上下する
+        c.group.position.y += (under.sag - c.group.position.y)*Math.min(1, dt*10);
+        under.sagV -= (c.kind==='truck' ? 3.4 : 1.6)*dt;
+      }
+      // 画面外に出たら片付ける
+      if(c.group.position.z < worker.group.position.z - 120 || c.group.position.y < -30){
+        scene.remove(c.group); cars.splice(i,1);
+      }
+    }
+
+    // --- 火花 ---
+    for(let i=sparks.length-1;i>=0;i--){
+      const s = sparks[i];
+      s.life -= raw;
+      s.v.y -= 14*raw;
+      s.mesh.position.addScaledVector(s.v, raw);
+      s.mesh.scale.setScalar(Math.max(.01, s.life*2));
+      if(s.life <= 0){ scene.remove(s.mesh); sparks.splice(i,1); }
+    }
+
+    // --- イベント ---
+    if(t > nextEventAt && !NOEV) triggerEvent();
+
+    // 月と山の視差
+    moon.position.z = worker.group.position.z - 300;
+    for(const h of hills){
+      if(h.position.z > worker.group.position.z + 80) h.position.z -= 600;
+    }
+    water.position.z = worker.group.position.z - 420;
+  }
+
+  // --- 崩落の演出: スローモーションがほどけ、作業員が落ちていく ---
+  if(dead){
+    timeScale += (0 - timeScale)*Math.min(1, raw*1.1);
+    worker.group.position.y -= raw*7*(1-timeScale*.7);
+    worker.group.rotation.x += raw*2.4;
+    worker.group.rotation.z += raw*1.3;
+    // 足元の桁も一緒に落とす
+    for(const s of segs){
+      if(!s.tight){ s.sagV -= 30*raw; s.sag += s.sagV*raw; s.group.position.y = s.sag; }
+    }
+    // 火花は死後も落ち続ける（時間が止まっても絵が動く）
+    for(let i=sparks.length-1;i>=0;i--){
+      const s = sparks[i];
+      s.life -= raw; s.v.y -= 14*raw;
+      s.mesh.position.addScaledVector(s.v, raw*.4);
+      if(s.life <= 0){ scene.remove(s.mesh); sparks.splice(i,1); }
+    }
+  }
+
+  // --- カメラ（死んでいる間も動かして、寄りと揺れを見せる） ---
+  camDist += (camDistTarget - camDist)*Math.min(1, raw*2.4);
+  const wz = worker.group.position.z;
+  camera.position.z += ((wz + camDist) - camera.position.z)*Math.min(1, raw*5);
+  camera.position.y += ((5.6 - (11-camDist)*.28) - camera.position.y)*Math.min(1, raw*4);
+  camera.position.x += ((-2.2) - camera.position.x)*Math.min(1, raw*3);
+  if(shake>0){
+    shake = Math.max(0, shake - raw*.9);
+    camera.position.x += (Math.random()-.5)*shake;
+    camera.position.y += (Math.random()-.5)*shake;
+  }
+  camera.lookAt(0, 1.2, wz - 7);
+
+  // ゲージはカメラの子なので、位置はカメラのローカル座標で決める。
+  // -Z が正面。画面の下端から少し上に、幅いっぱいに収まるよう置く。
+  {
+    const d = 10;                                   // カメラ前方への距離
+    const vh = 2*Math.tan(THREE.MathUtils.degToRad(camera.fov)/2)*d;  // その距離での視野の高さ
+    const vw = vh * camera.aspect;
+    // 画面幅の 86%（縦持ちでは狭いので、そのぶん小さくなる）に収める
+    const s = Math.min(vh*0.30/GH, (vw*0.86)/GW);
+    gauge.scale.setScalar(s);
+    gauge.position.set(0, -vh*0.5 + GH*s*1.6, -d);
+    gauge.visible = running || dead;
+  }
+
+  renderer.render(scene, camera);
+}
+
+function gameOver(){
+  running=false; deadAt=Date.now();
+  if(!SILENT){ SND.hit(); SND.duck(1.6); setTimeout(()=>SND.over(), 700); }
+  // 当たり: 赤いフラッシュ、赤いビネット、強い揺れ、カメラが寄る
+  flash('#ff2b3a', .8, 500);
+  vignetteEl.style.transition='opacity .5s'; vignetteEl.style.opacity=1;
+  shake = 1.0;
+  camDistTarget = 5.2;
+  slackBarEl.style.width = '100%';
+  const finalScore = Math.floor(score);
+  koScoreEl.textContent = finalScore;
+  msgEl.textContent = '';
+  setTimeout(()=>{ koEl.classList.add('on'); }, 620);   // スローモーションの後に K.O.
+  if(AUTO){ setTimeout(()=>{ reset(); running=true;
+                             if(!SILENT) SND.unduck(); }, RETRY_MS); }
+  else setTimeout(()=>{
+    msgEl.textContent = matchMedia('(pointer:coarse)').matches
+      ? 'タップでもう一度' : 'スペースでもう一度';
+  }, 1800);
+}
+tick();
+
+// --- ルール説明 (?) : 録画中は出さない ---
+(function(){
+  const btn = document.getElementById('helpBtn');
+  const panel = document.getElementById('help');
+  if(!btn || !panel) return;
+  if(NOCHROME){                      // 録画・showcase では画面から消す
+    btn.style.display = 'none';
+    const back = document.getElementById('back');
+    if(back) back.style.display = 'none';
+    return;
+  }
+  const open = () => { panel.classList.add('on'); };
+  const close = () => { panel.classList.remove('on'); };
+  btn.addEventListener('click', open);
+  btn.addEventListener('touchend', e => { e.preventDefault(); open(); }, {passive:false});
+  panel.addEventListener('click', e => { if(e.target === panel) close(); });
+  panel.querySelector('.close').addEventListener('click', close);
+  panel.querySelector('.close').addEventListener('touchend',
+    e => { e.preventDefault(); close(); }, {passive:false});
+  addEventListener('keydown', e => {
+    if(e.code === 'Escape') close();
+    else if(e.key === '?' || (e.code === 'Slash' && e.shiftKey)) open();
+  });
+})();
+</script>
+</body>
+</html>
