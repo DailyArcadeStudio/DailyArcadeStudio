@@ -1,0 +1,1324 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ドミノ・チェイン</title>
+<style>
+  html,body{margin:0;padding:0;overflow:hidden;background:#080a14;font-family:'Helvetica Neue',Arial,'Hiragino Kaku Gothic ProN','Yu Gothic',sans-serif;}
+  #ui{position:fixed;top:16px;left:0;right:0;text-align:center;color:#fff;z-index:10;pointer-events:none;}
+  #score{font-size:clamp(24px,5.6vw,34px);font-weight:800;text-shadow:0 2px 8px #000;}
+  #msg{font-size:clamp(14px,3.6vw,20px);margin-top:6px;opacity:.9;text-shadow:0 2px 6px #000;}
+  #title{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:rgba(5,6,14,.74);z-index:20;color:#fff;transition:opacity .4s;padding:0 16px;box-sizing:border-box;}
+  #title h1{font-size:clamp(30px,9vw,60px);margin:0 0 8px;letter-spacing:2px;text-align:center;
+    text-shadow:0 4px 18px #ff8a2b;}
+  #title p{font-size:clamp(13px,3.4vw,19px);opacity:.88;margin:4px 0;text-align:center;line-height:1.6;}
+  #title .btn{margin-top:26px;padding:14px 44px;font-size:clamp(18px,5vw,22px);font-weight:700;color:#fff;
+    background:linear-gradient(180deg,#ff8a2b,#b8501a);border:none;border-radius:12px;cursor:pointer;
+    box-shadow:0 6px 24px rgba(255,138,43,.45);}
+  #title .btn:hover{transform:scale(1.05);}
+  .hidden{opacity:0;pointer-events:none;}
+  #back{position:fixed;top:14px;left:14px;z-index:30;text-decoration:none;
+    background:rgba(12,16,26,.72);color:#fff;
+    font:600 clamp(12px,3.2vw,15px)/1 'Helvetica Neue',Arial,'Hiragino Kaku Gothic ProN','Yu Gothic',sans-serif;
+    padding:0 14px;height:44px;display:flex;align-items:center;border-radius:12px;}
+  #back:hover{background:rgba(30,38,56,.9);}
+  #mute{position:fixed;top:14px;right:14px;z-index:30;border:none;cursor:pointer;
+    background:rgba(12,16,26,.72);color:#fff;font-size:20px;line-height:1;
+    width:44px;height:44px;border-radius:12px;}
+  #mute:hover{background:rgba(30,38,56,.9);}
+  /* show the hint that matches the device */
+  .tc{display:none;}
+  @media (pointer:coarse){ .kb{display:none;} .tc{display:block;} }
+  /* a finger-sized START button on touch devices */
+  @media (pointer:coarse){ #title .btn{padding:18px 52px;} }
+
+  /* --- event banner: slams into the middle of the screen --- */
+  #banner{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    z-index:15;pointer-events:none;opacity:0;}
+  #banner .b{font-size:clamp(26px,7.4vw,66px);font-weight:900;letter-spacing:.06em;color:#fff;
+    padding:10px 4vw;max-width:94vw;text-align:center;transform:scale(2.4);opacity:0;
+    text-shadow:0 0 26px currentColor, 0 6px 20px #000;
+    border-top:5px solid currentColor;border-bottom:5px solid currentColor;}
+  #banner.go .b{animation:slam .62s cubic-bezier(.12,.85,.2,1) forwards;}
+  @keyframes slam{
+    0%  {transform:scale(2.4) rotate(-4deg);opacity:0;}
+    22% {transform:scale(1)   rotate(0deg); opacity:1;}
+    70% {transform:scale(1)   rotate(0deg); opacity:1;}
+    100%{transform:scale(1.12);opacity:0;}
+  }
+
+  /* --- full-screen colour flashes --- */
+  #flash{position:fixed;inset:0;z-index:14;pointer-events:none;opacity:0;background:#fff;}
+  #vignette{position:fixed;inset:0;z-index:13;pointer-events:none;opacity:0;
+    background:radial-gradient(ellipse at center,rgba(0,0,0,0) 32%,rgba(120,0,10,.85) 100%);}
+
+  /* --- K.O. screen --- */
+  #ko{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    z-index:22;pointer-events:none;opacity:0;color:#fff;transition:opacity .3s;}
+  #ko.on{opacity:1;}
+  #ko .koText{font-size:clamp(84px,24vw,180px);font-weight:900;letter-spacing:10px;color:#fff;
+    text-shadow:0 0 40px #ff8a2b,0 0 90px #ff5a1a,0 10px 30px #000;
+    transform:scale(3);opacity:0;}
+  #ko.on .koText{animation:koSlam .8s cubic-bezier(.1,.9,.2,1) forwards;}
+  @keyframes koSlam{
+    0%  {transform:scale(3) rotate(-8deg);opacity:0;}
+    30% {transform:scale(1) rotate(0deg);opacity:1;}
+    36% {transform:scale(1.06);}
+    100%{transform:scale(1);opacity:1;}
+  }
+  #ko .finalLabel{font-size:clamp(14px,3.8vw,22px);letter-spacing:4px;opacity:0;margin-top:6px;
+    text-shadow:0 2px 8px #000;}
+  #ko .finalScore{font-size:clamp(46px,13vw,80px);font-weight:800;opacity:0;text-shadow:0 4px 20px #000;}
+  #ko.on .finalLabel{animation:fadeUp .5s .75s forwards;}
+  #ko.on .finalScore{animation:fadeUp .5s .9s forwards;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+
+  /* --- help (?) --- */
+  #helpBtn{position:fixed;top:14px;right:66px;z-index:30;border:none;cursor:pointer;
+    background:rgba(12,16,26,.72);color:#fff;font:700 20px/1 'Helvetica Neue',Arial,sans-serif;
+    width:44px;height:44px;border-radius:12px;}
+  #helpBtn:hover{background:rgba(30,38,56,.9);}
+  #help{position:fixed;inset:0;z-index:40;display:none;align-items:center;
+    justify-content:center;background:rgba(4,6,12,.82);padding:20px;}
+  #help.on{display:flex;}
+  #help .box{background:#141019;border:1px solid #3a2b44;border-radius:18px;
+    max-width:560px;width:100%;max-height:86vh;overflow:auto;padding:24px 24px 20px;
+    color:#e9e2ea;font-family:'Helvetica Neue',Arial,'Hiragino Kaku Gothic ProN','Yu Gothic',sans-serif;}
+  #help h2{margin:0 0 4px;font-size:clamp(20px,5.4vw,26px);}
+  #help .sub{color:#9b8fa4;font-size:clamp(12px,3.2vw,14px);margin:0 0 18px;}
+  #help h3{font-size:clamp(13px,3.6vw,15px);color:#ff8a2b;margin:18px 0 6px;letter-spacing:.04em;}
+  #help ul{margin:0;padding-left:20px;}
+  #help li{font-size:clamp(13px,3.6vw,15px);line-height:1.7;margin:3px 0;}
+  #help b{color:#ff8a2b;font-weight:700;}
+  #help .close{margin-top:20px;width:100%;padding:12px;border:none;border-radius:10px;
+    background:#3a2b44;color:#fff;font-size:16px;font-weight:700;cursor:pointer;}
+  #help .close:hover{background:#4e3a5c;}
+</style>
+</head>
+<body>
+<div id="ui"><div id="score">0</div><div id="msg"></div></div>
+<button id="helpBtn" title="あそびかた">?</button>
+<div id="help"><div class="box">
+  <h2>ドミノ・チェイン</h2>
+  <p class="sub">倒れてくる。その先に、置く。</p>
+    <h3>やること</h3>
+    <ul><li>ドミノが<b>左から順に倒れて</b>きます</li>
+        <li>倒れてくる先に、あなたが<b>次の一枚を置く</b></li>
+        <li>いちばん右の<b>スイッチ</b>まで届けば、そこで一区切り。次の区画へ</li></ul>
+    <h3>置きかた（指を横にすべらせる）</h3>
+    <ul><li>画面を<b>横になぞると</b>、次に置く場所が前後します</li>
+        <li>指をはなすと、そこに<b>置きます</b></li>
+        <li>間隔が<b>ドミノの高さより広いと届きません</b>。そこで連鎖は止まります</li>
+        <li>逆に、<b>広くとるほど高得点</b>。ぎりぎりを狙うほど儲かります</li></ul>
+    <h3>床のようす</h3>
+    <ul><li><b>ひび（灰色）</b>：置くと、そのドミノは沈んで倒れません</li>
+        <li><b>油(青)</b>：置いたドミノが<b>すべって</b>少しずれます</li>
+        <li>置ける場所は、緑のガイドが教えてくれます</li></ul>
+    <h3>じゃま</h3>
+    <ul><li><b>すきま風</b>：ドミノが手前でよろけます</li>
+        <li><b>床のゆれ</b>／<b>暗転</b>／<b>ネコ</b>／<b>早倒し</b>：それぞれ別の嫌がらせです</li></ul>
+  <button class="close">とじる</button>
+</div></div>
+<a id="back" href="../../" title="ゲーム一覧にもどる">‹ ゲーム一覧</a>
+<button id="mute" title="音の オン / オフ">🔊</button>
+<div id="vignette"></div>
+<div id="flash"></div>
+<div id="banner"><div class="b"></div></div>
+<div id="ko">
+  <div class="koText">K.O.</div>
+  <div class="finalLabel">最終スコア</div>
+  <div class="finalScore">0</div>
+</div>
+<div id="title">
+  <h1>ドミノ・チェイン</h1>
+  <p>倒れてくる先に、次の一枚を置け。</p>
+  <p class="kb">← → : 間隔を決める &nbsp;&nbsp; スペース : 置く</p>
+  <p class="tc">画面を<b>横になぞって</b>間隔を決め<br>指をはなすと、そこに置く</p>
+  <button class="btn" id="startBtn">スタート</button>
+</div>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+// ---------- url flags (declared first: sound and camera both read them) ----------
+const QS = new URLSearchParams(location.search);
+const AUTO = QS.get('auto')==='1';
+const SHOWCASE_Q = QS.get('showcase');
+// Recording must produce clean footage, so every automated mode is muted.
+const REC = QS.get('rec')==='1';   // 録音モード: 音を鳴らして拾う
+const SILENT = (AUTO || !!SHOWCASE_Q || QS.get('mute')==='1') && !REC;
+// 録画・showcase では「?」と「ゲーム一覧」を出さない（動画の邪魔になる）
+const NOCHROME = AUTO || !!SHOWCASE_Q || QS.get('nochrome')==='1';
+
+// ---------- renderer / scene ----------
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.shadowMap.enabled = true;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const SKY = new THREE.Color(0x0b0d18);
+scene.background = SKY.clone();
+scene.fog = new THREE.Fog(0x0b0d18, 26, 64);
+
+const camera = new THREE.PerspectiveCamera(46, innerWidth/innerHeight, .1, 140);
+
+// ---------- the world: one long table, dominoes run left to right ----------
+const DOM_H = 1.6;             // domino height — this IS the reach rule
+const DOM_W = 1.05;            // width (across the table)
+const DOM_T = 0.26;            // thickness (along the run)
+const MIN_GAP = 0.55;          // closest you may place
+const MAX_GAP = DOM_H * 1.25;  // the slider can overshoot: that is the trap
+const REACH   = DOM_H * 0.94;  // a falling domino topples the next only within this
+const RUN_X0  = -13;           // where a section starts
+const SWITCH_X = 13;           // where the switch waits
+
+// ---------- lights ----------
+const hemi = new THREE.HemisphereLight(0x88a0ff, 0x241a12, 1.25);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xffe2bb, 2.2);
+sun.position.set(-6, 14, 8); sun.castShadow = true;
+sun.shadow.camera.left=-20; sun.shadow.camera.right=20;
+sun.shadow.camera.top=14; sun.shadow.camera.bottom=-14;
+sun.shadow.mapSize.set(1024,1024);
+scene.add(sun);
+// warm key light that rides along with the head of the chain
+const heroLight = new THREE.PointLight(0xffc27a, 55, 26);
+heroLight.position.set(0, 6, 4);
+scene.add(heroLight);
+
+// ---------- table ----------
+const tableMat = new THREE.MeshStandardMaterial({color:0x2a2436, roughness:.92});
+const table = new THREE.Mesh(new THREE.BoxGeometry(34, .6, 9), tableMat);
+table.position.set(0, -.3, 0); table.receiveShadow = true;
+scene.add(table);
+// a lit guide stripe down the middle of the table so the run reads clearly
+const stripe = new THREE.Mesh(new THREE.PlaneGeometry(34, .06),
+  new THREE.MeshBasicMaterial({color:0xff8a2b, transparent:true, opacity:.28}));
+stripe.rotation.x = -Math.PI/2; stripe.position.set(0, .011, 0);
+scene.add(stripe);
+// dim skirting behind, for depth
+const backWall = new THREE.Mesh(new THREE.BoxGeometry(40, 10, .5),
+  new THREE.MeshStandardMaterial({color:0x151327, roughness:1}));
+backWall.position.set(0, 4.7, -7.5); scene.add(backWall);
+
+// ---------- domino builder (primitives only) ----------
+const DOM_FACE = 0xf2ece2;      // ivory tile
+const domGeo = new THREE.BoxGeometry(DOM_T, DOM_H, DOM_W);
+const pipGeo = new THREE.SphereGeometry(.075, 10, 8);
+function buildDomino(tint){
+  const g = new THREE.Group();
+  const mat = new THREE.MeshStandardMaterial({color:tint||DOM_FACE, roughness:.5, metalness:.05});
+  const body = new THREE.Mesh(domGeo, mat);
+  body.position.y = DOM_H/2; body.castShadow = true; body.receiveShadow = true;
+  g.add(body);
+  // the dividing line and two pips, so a tumbling tile reads as a domino
+  const line = new THREE.Mesh(new THREE.BoxGeometry(DOM_T*1.04, .05, DOM_W*.78),
+    new THREE.MeshStandardMaterial({color:0x2a2029, roughness:.7}));
+  line.position.y = DOM_H/2; g.add(line);
+  const pipMat = new THREE.MeshStandardMaterial({color:0x2a2029, roughness:.7});
+  for(const s of [1,-1]) for(const o of [-.2,.2]){
+    const p = new THREE.Mesh(pipGeo, pipMat);
+    p.position.set(DOM_T*.52*1, DOM_H/2 + s*DOM_H*.24, o);
+    g.add(p);
+  }
+  g.userData.body = body; g.userData.mat = mat;
+  return g;
+}
+
+// ---------- the switch at the far end ----------
+function buildSwitch(){
+  const g = new THREE.Group();
+  const base = new THREE.Mesh(new THREE.BoxGeometry(.9, .5, 1.7),
+    new THREE.MeshStandardMaterial({color:0x2c3348, roughness:.6, metalness:.3}));
+  base.position.y = .25; g.add(base);
+  const lever = new THREE.Mesh(new THREE.CapsuleGeometry(.14, 1.25, 6, 12),
+    new THREE.MeshStandardMaterial({color:0xff3b4a, roughness:.35, metalness:.2}));
+  lever.position.y = 1.15; g.add(lever);
+  const knob = new THREE.Mesh(new THREE.SphereGeometry(.28, 18, 14),
+    new THREE.MeshStandardMaterial({color:0xff5a1a, emissive:0x3a1000, roughness:.3}));
+  knob.position.y = 1.95; g.add(knob);
+  // the bulb it is wired to — lights up green when the chain arrives
+  const bulb = new THREE.Mesh(new THREE.SphereGeometry(.52, 20, 16),
+    new THREE.MeshStandardMaterial({color:0x334155, emissive:0x000000, roughness:.25}));
+  bulb.position.set(0, 3.3, 0); g.add(bulb);
+  const stalk = new THREE.Mesh(new THREE.CylinderGeometry(.09,.09,1.1,10),
+    new THREE.MeshStandardMaterial({color:0x2c3348, roughness:.7}));
+  stalk.position.set(0, 2.55, 0); g.add(stalk);
+  g.traverse(o=>{ if(o.isMesh) o.castShadow=true; });
+  g.userData.lever = lever; g.userData.knob = knob; g.userData.bulb = bulb;
+  return g;
+}
+const sw = buildSwitch();
+sw.position.set(SWITCH_X, 0, 0);
+scene.add(sw);
+const swLight = new THREE.PointLight(0x55ff9a, 0, 16);
+swLight.position.set(SWITCH_X, 3.3, 0);
+scene.add(swLight);
+
+// ---------- floor patches: the two honest hazards ----------
+// A patch sits on the table and changes what happens when you place on it.
+const patches = [];
+const crackMat = new THREE.MeshStandardMaterial({color:0x6d6472, roughness:1});
+const oilMat   = new THREE.MeshStandardMaterial({color:0x2f6bd8, roughness:.18, metalness:.5,
+                                                 transparent:true, opacity:.85});
+function buildPatch(kind, x){
+  // flat, slightly proud of the table so it never z-fights
+  // A crack must be narrower than REACH (1.50) or it could not be hopped
+  // at all; 1.1 leaves a real margin rather than a frame-perfect squeeze.
+  const w = kind==='crack' ? 1.1 : 1.9;
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w, .06, 2.4),
+                           kind==='crack' ? crackMat.clone() : oilMat.clone());
+  m.position.set(x, .03, 0);
+  if(kind==='crack'){
+    // a jagged look from two thin crossing slabs
+    const a = new THREE.Mesh(new THREE.BoxGeometry(w*.9, .09, .18), crackMat);
+    a.rotation.y = .5; a.position.y = .02; m.add(a);
+    const b = new THREE.Mesh(new THREE.BoxGeometry(w*.7, .09, .16), crackMat);
+    b.rotation.y = -.7; b.position.set(.15,.02,.35); m.add(b);
+  }
+  m.receiveShadow = true;
+  scene.add(m);
+  const p = {mesh:m, kind, x, half:w/2};
+  patches.push(p);
+  return p;
+}
+function clearPatches(){ for(const p of patches) scene.remove(p.mesh); patches.length=0; }
+function patchAt(x){
+  for(const p of patches) if(Math.abs(p.x - x) < p.half) return p;
+  return null;
+}
+
+// ---------- ghost: where the next domino will land ----------
+const ghost = buildDomino(0x55f0a0);
+ghost.traverse(o=>{ if(o.isMesh){ o.castShadow=false;
+  o.material = o.material.clone();
+  o.material.transparent = true; o.material.opacity = .42; } });
+scene.add(ghost);
+// a bar on the table showing the gap being dialled in — green while reachable, red past it
+const gapBar = new THREE.Mesh(new THREE.PlaneGeometry(1, .22),
+  new THREE.MeshBasicMaterial({color:0x55f0a0, transparent:true, opacity:.75}));
+gapBar.rotation.x = -Math.PI/2; gapBar.position.y = .05;
+scene.add(gapBar);
+
+// ---------- cat (event prop) ----------
+function buildCat(){
+  const g = new THREE.Group();
+  const fur = new THREE.MeshStandardMaterial({color:0x3a3340, roughness:.85});
+  const body = new THREE.Mesh(new THREE.CapsuleGeometry(.5, .9, 6, 14), fur);
+  body.rotation.z = Math.PI/2; body.position.y = .72; g.add(body);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(.42, 18, 14), fur);
+  head.position.set(.82, 1.02, 0); g.add(head);
+  for(const s of [1,-1]){   // ears
+    const e = new THREE.Mesh(new THREE.ConeGeometry(.16, .34, 4), fur);
+    e.position.set(.78, 1.42, s*.2); g.add(e);
+    const eye = new THREE.Mesh(new THREE.SphereGeometry(.09,10,8),
+      new THREE.MeshBasicMaterial({color:0xffe14a}));
+    eye.position.set(1.14, 1.06, s*.17); g.add(eye);
+  }
+  const tail = new THREE.Mesh(new THREE.CapsuleGeometry(.1, 1.0, 5, 10), fur);
+  tail.position.set(-.95, 1.1, 0); tail.rotation.z = -.7; g.add(tail);
+  for(const sx of [.55,-.5]) for(const sz of [.3,-.3]){
+    const l = new THREE.Mesh(new THREE.CapsuleGeometry(.13, .4, 5, 10), fur);
+    l.position.set(sx, .32, sz); g.add(l);
+  }
+  g.traverse(o=>{ if(o.isMesh) o.castShadow=true; });
+  g.userData.tail = tail;
+  return g;
+}
+const cat = buildCat();
+cat.visible = false;
+scene.add(cat);
+
+// ---------- wind streaks (event prop) ----------
+const gusts = [];
+const gustMat = new THREE.MeshBasicMaterial({color:0xaee6ff, transparent:true, opacity:0});
+for(let i=0;i<34;i++){
+  const m = new THREE.Mesh(new THREE.BoxGeometry(2.4,.05,.05), gustMat);
+  m.position.set((Math.random()-.5)*32, .3+Math.random()*4.5, (Math.random()-.5)*7);
+  scene.add(m); gusts.push(m);
+}
+
+// ---------- game state ----------
+let running=false, dead=false, t=0, score=0;
+let timeScale=1;                  // slow-motion multiplier
+let deadAt=0;                     // when the run ended (touch retry gate)
+let shake=0;                      // camera shake amount
+let camZoom=1, camZoomTarget=1;   // death push-in
+let blackout=0;                   // >0 while the lights are out
+let quake=0;                      // >0 while the table is shaking
+let windT=0;                      // >0 while a gust is blowing
+let catT=0;                       // >0 while the cat is on the table
+let fallMul=1;                    // toppling speed multiplier (RUSH event)
+let nextEventAt=9;
+let eventQueue=[];
+let section=1;                    // how many switches have been thrown
+let gap=DOM_H*0.72;               // the value the finger is dialling
+let dominoes=[];                  // the placed run, left to right
+let headX=RUN_X0;                 // x of the last placed domino
+let chainIdx=0;                   // which domino the fall has reached
+let chainT=0;                     // progress of the current topple, 0..1
+let chasing=false;                // is the fall currently propagating
+let armed=false;                  // has the first domino been pushed
+let placed=0;                     // dominoes used this section
+let switchOn=false, switchT=0;
+let sectionPause=0;               // >0 while celebrating a completed section
+
+const scoreEl = document.getElementById('score');
+const msgEl = document.getElementById('msg');
+const titleEl = document.getElementById('title');
+const bannerEl = document.getElementById('banner');
+const bannerText = bannerEl.querySelector('.b');
+const flashEl = document.getElementById('flash');
+const vignetteEl = document.getElementById('vignette');
+const koEl = document.getElementById('ko');
+const koScoreEl = koEl.querySelector('.finalScore');
+
+// ---------- presentation helpers ----------
+function banner(text, color){
+  bannerText.textContent = text;
+  bannerText.style.color = color;
+  bannerEl.classList.remove('go');
+  void bannerEl.offsetWidth;      // restart the CSS animation
+  bannerEl.style.opacity = 1;
+  bannerEl.classList.add('go');
+}
+function flash(color, strength, ms){
+  flashEl.style.background = color;
+  flashEl.style.transition = 'none';
+  flashEl.style.opacity = strength;
+  requestAnimationFrame(()=>{
+    flashEl.style.transition = `opacity ${ms}ms ease-out`;
+    flashEl.style.opacity = 0;
+  });
+}
+
+// ---------- domino run management ----------
+function clearRun(){
+  for(const d of dominoes) scene.remove(d.group);
+  dominoes.length = 0;
+}
+// Add one domino at x. `sunk` tiles sit in a crack and refuse to topple.
+function addDomino(x, sunk){
+  const g = buildDomino(sunk ? 0x7a7280 : DOM_FACE);
+  g.position.set(x, sunk ? -.34 : 0, 0);
+  scene.add(g);
+  const d = {group:g, x, angle:0, fallen:false, sunk:!!sunk, wobble:0};
+  dominoes.push(d);
+  return d;
+}
+
+// Start a fresh section: one seed domino at the left, a new hazard layout.
+function newSection(){
+  clearRun(); clearPatches();
+  headX = RUN_X0; chainIdx = 0; chainT = 0; chasing = false; armed = false;
+  placed = 0; switchOn = false; switchT = 0;
+  gap = DOM_H*0.72;
+  // Hazards get denser with each section, but never wall off the table.
+  // Every patch must be clearable in one hop, so they are kept far enough
+  // apart that a tile can always land on clean table between them. Two
+  // overlapping cracks would span more than REACH and make the section
+  // unwinnable however well it is played — so reject any spot too close
+  // to one already placed instead of letting them merge.
+  const n = Math.min(5, 1 + Math.floor(section/2));
+  const SEP = REACH + 1.3;            // clean landing room between neighbours
+  for(let i=0;i<n;i++){
+    for(let tries=0; tries<40; tries++){
+      const x = RUN_X0 + 4.5 + Math.random()*(SWITCH_X - RUN_X0 - 7);
+      if(patches.some(p => Math.abs(p.x - x) < SEP)) continue;
+      buildPatch(Math.random()<.55 ? 'crack' : 'oil', x);
+      break;
+    }
+  }
+  addDomino(RUN_X0, false);          // the seed: already standing, waiting
+  sw.userData.lever.rotation.z = 0;
+  sw.userData.bulb.material.emissive.setHex(0x000000);
+  sw.userData.bulb.material.color.setHex(0x334155);
+  swLight.intensity = 0;
+}
+
+// The one action: commit the ghost to the table.
+// Returns nothing; failure is discovered later, when the fall fails to reach.
+function placeDomino(){
+  if(!running || dead || sectionPause>0) return;
+  let x = headX + gap;
+  if(x > SWITCH_X - .5) x = SWITCH_X - .5;      // never place past the switch
+  const p = patchAt(x);
+  let sunk = false;
+  if(p && p.kind==='crack') sunk = true;         // it settles into the crack and dies there
+  if(p && p.kind==='oil'){
+    // oil: the tile slides a little. Which way is luck, so leave margin.
+    x += (Math.random()<.5 ? -1 : 1) * (0.18 + Math.random()*0.30);
+  }
+  addDomino(x, sunk);
+  headX = x; placed++;
+  // Gap scoring: the whole game is here. Wider gaps pay more, but the
+  // reach rule punishes greed, so this is a risk dial, not a grind.
+  const paid = Math.round(10 + Math.pow(Math.max(0, gap - MIN_GAP) / (REACH - MIN_GAP), 2) * 90);
+  score += paid;
+  if(!SILENT) SND.place();
+  // The first placement arms the run: the seed tips and the wave starts.
+  if(!armed){ armed = true; chasing = true; chainIdx = 0; chainT = 0; if(!SILENT) SND.push(); }
+}
+
+// Nudge the gap dial. dir is -1 / +1 for keys; touch passes a fine delta.
+function nudgeGap(delta, quiet){
+  if(!running || dead) return;
+  const before = gap;
+  gap = THREE.MathUtils.clamp(gap + delta, MIN_GAP, MAX_GAP);
+  if(!quiet && !SILENT && Math.abs(gap-before) > 0.001) SND.move();
+}
+
+// ---------- events ----------
+const EVENTS = {
+  wind(){
+    banner('すきま風', '#aee6ff');
+    windT = 4.2;
+    shake = Math.max(shake, .12);
+    return 4.5;
+  },
+  quake(){
+    banner('床のゆれ', '#ffd23b');
+    quake = 3.6;
+    flash('#ffd23b', .22, 380);
+    return 4;
+  },
+  blackout(){
+    banner('暗転', '#9b6bff');
+    blackout = 2.6;
+    return 3.5;
+  },
+  cat(){
+    banner('ネコ', '#ff8a2b');
+    catT = 5.0;
+    cat.visible = true;
+    // walks in from the right end of the table, across the run
+    cat.position.set(SWITCH_X + 3, 0, 2.6);
+    return 5.5;
+  },
+  rush(){
+    banner('早倒し', '#ff3b4a');
+    fallMul = 2.6;
+    flash('#ff3b4a', .28, 380);
+    shake = Math.max(shake, .2);
+    return 5;
+  },
+};
+const EVENT_NAMES = Object.keys(EVENTS);
+window.__events = EVENT_NAMES.slice();
+
+// recording/debug hook: fire a named event on cue (used by the capture script)
+// returns false if the run is already over, so a capture script can wait
+// for the next run instead of firing an event onto the K.O. screen
+window.__ev = name => {
+  if(!running || dead || !EVENTS[name]) return false;
+  const busy = EVENTS[name]();
+  if(!SILENT) SND.event(); nextEventAt = t + busy + 5; return true;
+};
+window.__alive = () => running && !dead;
+window.__kill = () => { if(running && !dead){ dead=true; gameOver('手動'); } };
+window.__recStop = () => SND.recStop();
+window.__snd = () => ({enabled: SND.enabled, silent: SILENT});
+window.__probe = () => ({t:+t.toFixed(2), gap:+gap.toFixed(2), head:+headX.toFixed(2),
+  n:dominoes.length, idx:chainIdx, chasing, section, next:+nextEventAt.toFixed(2)});
+
+function refillEventQueue(){
+  eventQueue = EVENT_NAMES.slice();
+  for(let i=eventQueue.length-1;i>0;i--){        // shuffle so the order varies per run
+    const j = Math.floor(Math.random()*(i+1));
+    [eventQueue[i],eventQueue[j]]=[eventQueue[j],eventQueue[i]];
+  }
+}
+function triggerEvent(){
+  if(!eventQueue.length) refillEventQueue();
+  const name = eventQueue.pop();
+  const busy = EVENTS[name]();
+  if(!SILENT) SND.event();
+  nextEventAt = t + busy + 5 + Math.random()*4;  // breathing room between events
+}
+
+// ---------- reset ----------
+function reset(){
+  section = 1;
+  t=0; score=0; dead=false;
+  timeScale=1; shake=0; camZoom=1; camZoomTarget=1;
+  blackout=0; quake=0; windT=0; catT=0; fallMul=1; sectionPause=0;
+  cat.visible=false; gustMat.opacity=0;
+  hemi.intensity=1.25; sun.intensity=2.2; heroLight.intensity=55;
+  scene.background.copy(SKY); scene.fog.color.copy(SKY);
+  nextEventAt = 9;
+  refillEventQueue();
+  newSection();
+  msgEl.textContent='';
+  koEl.classList.remove('on');
+  vignetteEl.style.transition='opacity .3s'; vignetteEl.style.opacity=0;
+}
+
+const startBtn = document.getElementById('startBtn');
+
+// ---------- sound: everything synthesised, no audio files ----------
+// Keeps the single-HTML rule (nothing to download) and lets the music
+// react to play: the bass line speeds up with the game, events drop a
+// stinger, and the whole thing ducks out on a game over.
+const SND = (() => {
+  let ctx = null, master = null, musicGain = null, on = true, started = false;
+  let step = 0, timer = null, tempo = 0.25;
+
+  // A pentatonic scale never sounds wrong against itself, which matters
+  // when the tempo drifts with the player's speed.
+  // minor pentatonic, driving — a chase that never lets up
+  const SCALE = [0, 3, 5, 7, 10];
+  const ROOT = 196;
+  const BASS = 'square', LEAD = 'sawtooth';
+  const hz = (deg, oct = 0) =>
+    ROOT * Math.pow(2, oct + Math.floor(deg / SCALE.length)) *
+    Math.pow(2, SCALE[((deg % SCALE.length) + SCALE.length) % SCALE.length] / 12);
+
+  function ensure() {
+    if (ctx) return ctx;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    ctx = new AC();
+    master = ctx.createGain();
+    master.gain.value = 0.32;
+    master.connect(ctx.destination);
+    musicGain = ctx.createGain();
+    musicGain.gain.value = 1;
+    musicGain.connect(master);
+    return ctx;
+  }
+
+
+  // ---- 録音用の分岐（?rec=1）----
+  // Playwright の録画には音声が入らないので、ゲーム自身に master バスを
+  // 録らせる。鳴っているものそのものなので映像と必ず同期する。
+  let recDest = null, recorder = null, recChunks = [];
+  function recStart() {
+    if (!ctx || recorder) return;
+    recDest = ctx.createMediaStreamDestination();
+    master.connect(recDest);
+    recorder = new MediaRecorder(recDest.stream, {mimeType: 'audio/webm'});
+    recorder.ondataavailable = e => { if (e.data.size) recChunks.push(e.data); };
+    recorder.start();
+  }
+  function recStop() {
+    return new Promise(res => {
+      if (!recorder) return res(null);
+      recorder.onstop = async () => {
+        const blob = new Blob(recChunks, {type: 'audio/webm'});
+        const buf = await blob.arrayBuffer();
+        res(Array.from(new Uint8Array(buf)));
+      };
+      recorder.stop();
+    });
+  }
+
+  function blip(freq, dur, type = 'square', vol = 0.25, dest = null, slideTo = null) {
+    if (!ctx || !on) return;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, ctx.currentTime);
+    if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, ctx.currentTime + dur);
+    // a short attack stops every note from clicking
+    g.gain.setValueAtTime(0, ctx.currentTime);
+    g.gain.linearRampToValueAtTime(vol, ctx.currentTime + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
+    o.connect(g); g.connect(dest || master);
+    o.start(); o.stop(ctx.currentTime + dur + 0.02);
+  }
+
+  function noise(dur, vol = 0.2, hp = 800) {
+    if (!ctx || !on) return;
+    const n = Math.floor(ctx.sampleRate * dur);
+    const buf = ctx.createBuffer(1, n, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    const f = ctx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = hp;
+    const g = ctx.createGain(); g.gain.value = vol;
+    src.connect(f); f.connect(g); g.connect(master);
+    src.start();
+  }
+
+  // --- the loop: a walking bass plus an offbeat blip ---
+  function tick() {
+    if (!ctx || !on) return;
+    const bar = step % 16;
+    // straight driving pulse: bass on every beat, lead stabs offbeat
+    if (bar % 2 === 0) blip(hz(bar % 8 === 0 ? 0 : 1, -1), tempo * 1.1, BASS, 0.30, musicGain);
+    if (bar % 8 === 5) blip(hz(4, 0), tempo * 0.6, LEAD, 0.09, musicGain);
+    if (bar % 4 === 2) noise(0.04, 0.05, 5000);
+    step++;
+    timer = setTimeout(tick, tempo * 1000);
+  }
+
+  return {
+    // must be called from a user gesture — browsers block audio otherwise
+    start() {
+      if (!ensure() || started) return;
+      if (ctx.state === 'suspended') ctx.resume();
+      started = true; step = 0; tick();
+    },
+    stop() { if (timer) { clearTimeout(timer); timer = null; } started = false; },
+    /** speed the music up with the game; 1 = starting pace */
+    setPace(mult) { tempo = Math.max(0.11, 0.25 / Math.max(0.2, mult)); },
+    duck(sec = 1.6) {                                      // for game over
+      if (!ctx) return;
+      musicGain.gain.cancelScheduledValues(ctx.currentTime);
+      musicGain.gain.setValueAtTime(musicGain.gain.value, ctx.currentTime);
+      musicGain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + sec);
+    },
+    unduck() {
+      if (!ctx) return;
+      musicGain.gain.cancelScheduledValues(ctx.currentTime);
+      musicGain.gain.setValueAtTime(0.0001, ctx.currentTime);
+      musicGain.gain.exponentialRampToValueAtTime(1, ctx.currentTime + 0.4);
+    },
+    // --- one-shots ---
+    // dialling the gap: a tiny tick, quiet enough to repeat
+    move()  { ensure(); blip(hz(3, 1), 0.04, LEAD, 0.07); },
+    // committing a domino: a short woody knock
+    place() { ensure(); blip(hz(2, 0), 0.10, BASS, 0.22, null, hz(4, 1)); },
+    // the seed being pushed: one low thud
+    push()  { ensure(); noise(0.08, 0.16, 300); blip(110, 0.18, 'triangle', 0.20); },
+    // every tile toppling — must stay tiny, it fires many times a second
+    click() { ensure(); noise(0.035, 0.085, 2600); },
+    // the switch being thrown: a clean rising two-note chime
+    win()   { ensure(); [0, 110].forEach((ms, i) =>
+                setTimeout(() => blip(hz(2 + i * 3, 1), 0.30, 'triangle', 0.24), ms)); },
+    event() { ensure(); [0, 90, 180].forEach((ms, i) =>
+                setTimeout(() => blip(hz(2 + i, 0), 0.18, 'sawtooth', 0.20), ms)); },
+    hit()   { ensure(); noise(0.35, 0.30, 200);
+              blip(180, 0.5, 'sawtooth', 0.28, null, 40); },
+    over()  { ensure(); [0, 140, 280, 460].forEach((ms, i) =>
+                setTimeout(() => blip(hz(-i, -1), 0.42, 'triangle', 0.26), ms)); },
+    recStart() { ensure(); recStart(); },
+    recStop() { return recStop(); },
+    toggle() { on = !on; if (!on) { this.stop(); } else { this.start(); } return on; },
+    get enabled() { return on; },
+  };
+})();
+
+// --- one place for every action, so touch and keyboard stay in step ---
+function startRun(){
+  titleEl.classList.add('hidden'); reset(); running=true;
+  if(!SILENT){ SND.unduck(); SND.start(); if(REC) SND.recStart(); }
+}
+
+const muteBtn = document.getElementById('mute');
+function toggleMute(){ muteBtn.textContent = SND.toggle() ? '🔊' : '🔇'; }
+muteBtn.addEventListener('click', toggleMute);
+muteBtn.addEventListener('touchend', e=>{ e.preventDefault(); toggleMute(); },
+                         {passive:false});
+if(SILENT) muteBtn.style.display='none';   // automated modes have no audio
+addEventListener('keydown', e=>{ if(e.code==='KeyM') toggleMute(); });
+
+startBtn.addEventListener('click', startRun);
+// a touch on the button must start too — click alone is unreliable on touch
+startBtn.addEventListener('touchend', e=>{ e.preventDefault(); startRun(); },
+                          {passive:false});
+
+addEventListener('keydown', e=>{
+  if(!running){
+    if(e.code==='Space'||e.code==='Enter') startRun();
+    return;
+  }
+  if(dead) return;
+  // keyboard drives exactly the same two actions the finger does
+  if(e.code==='ArrowLeft' ||e.code==='KeyA') nudgeGap(-0.07);
+  if(e.code==='ArrowRight'||e.code==='KeyD') nudgeGap(+0.07);
+  if(e.code==='Space'||e.code==='ArrowUp'||e.code==='KeyW'||e.code==='Enter'){
+    e.preventDefault(); placeDomino();
+  }
+});
+
+// --- touch: drag horizontally to dial the gap, lift to place ---
+// The finger motion IS the power meter: a long drag right means a long
+// reach and a big payout, a short one is safe. Lifting commits it.
+(function(){
+  let sx=0, sy=0, st=0, startGap=0, dragging=false;
+  const canvas = renderer.domElement;
+  // how many world units of gap one screen-width of drag is worth
+  const perPx = () => (MAX_GAP - MIN_GAP) / Math.max(180, innerWidth*0.55);
+
+  canvas.addEventListener('touchstart', e=>{
+    const p = e.changedTouches[0];
+    sx=p.clientX; sy=p.clientY; st=Date.now(); startGap=gap; dragging=running && !dead;
+  }, {passive:true});
+
+  canvas.addEventListener('touchmove', e=>{
+    if(!dragging) return;
+    const p = e.changedTouches[0];
+    // absolute, not incremental: the gap tracks the finger so it feels physical
+    const want = startGap + (p.clientX - sx) * perPx();
+    nudgeGap(want - gap, true);
+  }, {passive:true});
+
+  canvas.addEventListener('touchend', e=>{
+    if(dead){
+      // give the K.O. animation time to read, then a tap retries
+      if(!AUTO && Date.now()-deadAt > 1500) startRun();
+      return;
+    }
+    if(!running){ startRun(); return; }
+    dragging = false;
+    placeDomino();          // lifting the finger is the commit, drag or tap
+  }, {passive:true});
+
+  // mouse plays the same way, through the same functions
+  let mdown=false;
+  canvas.addEventListener('mousedown', e=>{
+    if(!running || dead) return;
+    mdown=true; sx=e.clientX; startGap=gap;
+  });
+  canvas.addEventListener('mousemove', e=>{
+    if(!mdown) return;
+    nudgeGap(startGap + (e.clientX - sx)*perPx() - gap, true);
+  });
+  addEventListener('mouseup', ()=>{
+    if(!mdown) return;
+    mdown=false; placeDomino();
+  });
+
+  // The title overlay sits above the canvas, so a tap anywhere on it never
+  // reaches the canvas handler. Start from the overlay itself.
+  titleEl.addEventListener('touchend', e=>{
+    if(!running){ e.preventDefault(); startRun(); }
+  }, {passive:false});
+
+  // stop the browser treating game drags as scroll / double-tap zoom
+  canvas.addEventListener('touchmove', e=>e.preventDefault(), {passive:false});
+})();
+
+// autoplay mode for recording: ?auto=1
+// recording holds the K.O. longer than play does: ?hold=9000
+const RETRY_MS = Math.max(1200, parseInt(QS.get('hold')||'4200', 10));
+// ?noev=1 records a calm run with no events, for narration beds
+const NOEV = QS.get('noev')==='1';
+if(AUTO){ setTimeout(startRun, 1200); }   // startRun 経由にする（音/録音も始まる）
+
+// ---------- autopilot ----------
+// Plays it the way a competent player would: pick the widest gap that
+// still lands clear of a crack, then place a little ahead of the wave.
+let autoCool = 0;
+function autoPilot(dt){
+  autoCool -= dt;
+  if(autoCool > 0 || sectionPause > 0) return;
+  // never run ahead of the switch
+  if(headX >= SWITCH_X - .6) return;
+  // Keep a buffer of standing dominoes ahead of the toppling wave, so the
+  // chain is never caught short while the autopilot is between placements.
+  const waveX = chasing && dominoes[chainIdx] ? dominoes[chainIdx].x : RUN_X0;
+  if(armed && headX - waveX > DOM_H*4.5) { autoCool = .12; return; }
+
+  // Score every legal gap and take the best. Shrinking from the reach
+  // limit is not enough on its own: when a crack sits just ahead, EVERY
+  // gap can land inside it, and a pure shrink bottoms out and places into
+  // the crack anyway. So sweep the whole range and prefer, in order:
+  // a safe landing, then the widest such gap (widest = most points).
+  const hi = windT>0 || quake>0 ? REACH*0.72 : REACH*0.94;  // both shove the tile after it lands
+  let want = MIN_GAP, best = -Infinity;
+  for(let i=0;i<=24;i++){
+    const g = MIN_GAP + (hi - MIN_GAP) * (i/24);
+    const x = headX + g;
+    if(x > SWITCH_X - .5) break;
+    const p = patchAt(x);
+    // A crack is an instant dead end. Oil slides the tile up to .48 either
+    // way, so it is only safe if that slide still leaves it within reach.
+    let v;
+    if(p && p.kind==='crack') v = -1000;
+    else if(p && p.kind==='oil') v = (g + .48 <= REACH*0.95) ? g*0.55 : -500;
+    else v = g;
+    // Look one move ahead: landing just short of a crack is a trap, because
+    // the NEXT hop then has to start from there and may not clear it. Only
+    // credit a spot from which some following gap still reaches clean table.
+    if(v > -500){
+      const nx = headX + g;
+      let escapable = false;
+      for(let j=0;j<=12;j++){
+        const ng = MIN_GAP + (REACH*0.94 - MIN_GAP)*(j/12);
+        if(nx + ng > SWITCH_X - .5){ escapable = true; break; }   // switch is in range
+        const np = patchAt(nx + ng);
+        if(!np || np.kind!=='crack'){ escapable = true; break; }
+      }
+      if(!escapable) v -= 800;
+    }
+    if(v > best){ best = v; want = g; }
+  }
+  // Nothing safe in range: take the shortest gap and hope the oil is kind.
+  if(best < 0) want = MIN_GAP;
+  gap = THREE.MathUtils.clamp(want, MIN_GAP, MAX_GAP);
+  placeDomino();
+  autoCool = .16;
+}
+
+// ---------- showcase mode ----------
+// Puts one object on a turntable against an empty stage so the video can
+// talk about it while the real thing is on screen. Uses the game's own
+// meshes, so what the narration describes is exactly what ships.
+window.__subjects = ['domino','switch','crack','oil','cat','wind','chain','ghost','quake'];
+const SHOWCASE = QS.get('showcase');
+const showcase = {group:null, spin:.55, label:''};
+
+// Portrait and landscape both have to work. A phone held upright is far
+// narrower than 16:9, and with a fixed FOV the long table runs off the
+// sides — so widen the vertical FOV as the screen gets taller.
+const BASE_FOV = 46;
+function fitCamera(){
+  const aspect = innerWidth / innerHeight;
+  camera.aspect = aspect;
+  if(typeof SHOWCASE !== 'undefined' && SHOWCASE){
+    camera.fov = aspect < 1 ? 62 : 46;
+  } else {
+    // keep the horizontal field roughly constant across aspect ratios
+    const ref = 16/9;
+    camera.fov = aspect >= ref ? BASE_FOV
+      : Math.min(100, THREE.MathUtils.radToDeg(
+          2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(BASE_FOV)/2) * (ref/aspect))));
+  }
+  // The action is a narrow horizontal band. Widening the FOV alone keeps the
+  // whole table in frame but shrinks the tiles to a sliver on a tall phone,
+  // so pull the camera IN as the screen gets narrower and let the far ends
+  // of the table run off-screen — the head of the chain is what matters.
+  camera.__pull = THREE.MathUtils.clamp(innerWidth/innerHeight / (16/9), 0.46, 1);
+  camera.__base = camera.fov;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+}
+addEventListener('resize', fitCamera);
+addEventListener('orientationchange', ()=>setTimeout(fitCamera, 120));
+
+function buildShowcase(name){
+  const g = new THREE.Group();
+  let label = '', spin = .55;
+  if(name==='domino'){
+    const d = buildDomino(DOM_FACE);
+    d.scale.set(2.2,2.2,2.2); g.add(d);
+    label = 'ドミノ'; spin = .6;
+  } else if(name==='ghost'){
+    const d = buildDomino(0x55f0a0);
+    d.traverse(o=>{ if(o.isMesh){ o.material = o.material.clone();
+      o.material.transparent=true; o.material.opacity=.5; } });
+    d.scale.set(2.2,2.2,2.2); g.add(d);
+    label = '置く場所のめやす'; spin = .6;
+  } else if(name==='switch'){
+    const s = buildSwitch();
+    s.scale.set(1.15,1.15,1.15); g.add(s);
+    label = 'スイッチ'; spin = .5;
+  } else if(name==='crack'){
+    // the patch plus a tile sunk into it, so the effect is legible
+    const p = new THREE.Mesh(new THREE.BoxGeometry(3.0, .12, 4.4), crackMat);
+    const a = new THREE.Mesh(new THREE.BoxGeometry(2.7, .18, .34), crackMat);
+    a.rotation.y = .5; a.position.y = .05;
+    const b = new THREE.Mesh(new THREE.BoxGeometry(2.1, .18, .3), crackMat);
+    b.rotation.y = -.7; b.position.set(.3,.05,.7);
+    g.add(p,a,b);
+    const d = buildDomino(0x7a7280); d.scale.set(1.5,1.5,1.5);
+    d.position.y = -.55; g.add(d);
+    label = 'ひび'; spin = .45;
+  } else if(name==='oil'){
+    const p = new THREE.Mesh(new THREE.BoxGeometry(3.6, .12, 4.4), oilMat.clone());
+    g.add(p);
+    const d = buildDomino(DOM_FACE); d.scale.set(1.5,1.5,1.5);
+    d.position.set(.5, .06, 0); d.rotation.z = -.14; g.add(d);
+    label = '油'; spin = .45;
+  } else if(name==='cat'){
+    const c = buildCat(); c.scale.set(1.5,1.5,1.5); g.add(c);
+    label = 'ネコ'; spin = .5;
+  } else if(name==='wind'){
+    // a fan of streaks, so a still frame still reads as wind
+    const m = new THREE.MeshBasicMaterial({color:0xaee6ff, transparent:true, opacity:.9});
+    for(let i=0;i<16;i++){
+      const s = new THREE.Mesh(new THREE.BoxGeometry(2.4+Math.random()*2.2,.09,.09), m);
+      s.position.set((Math.random()-.5)*1.6, (i-7.5)*.38, (Math.random()-.5)*1.6);
+      g.add(s);
+    }
+    // a tile being blown over by them
+    const d = buildDomino(DOM_FACE); d.scale.set(1.4,1.4,1.4);
+    d.position.set(1.4,-2.4,0); d.rotation.z = -.5; g.add(d);
+    label = 'すきま風'; spin = .8;
+  } else if(name==='quake'){
+    // a short stretch of table with three tiles leaning off true
+    const tb = new THREE.Mesh(new THREE.BoxGeometry(7, .5, 4), tableMat);
+    tb.position.y = -.25; g.add(tb);
+    [-2,0,2].forEach((x,i)=>{
+      const d = buildDomino(DOM_FACE); d.scale.set(1.2,1.2,1.2);
+      d.position.x = x; d.rotation.z = (i-1)*.22 + .1; g.add(d);
+    });
+    label = '床のゆれ'; spin = .45;
+  } else if(name==='chain'){
+    // five tiles mid-topple: the whole game in one object
+    for(let i=0;i<5;i++){
+      const d = buildDomino(DOM_FACE); d.scale.set(1.15,1.15,1.15);
+      d.position.x = -3.2 + i*1.6;
+      d.rotation.z = -Math.max(0, Math.min(1, (3.2-i)/2.6)) * 1.5;
+      g.add(d);
+    }
+    label = '連鎖'; spin = .5;
+  }
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  scene.add(g);
+
+  // Centre the subject on the origin and pull the camera back to fit it,
+  // so every object is framed the same way regardless of its size.
+  const box = new THREE.Box3().setFromObject(g);
+  const size = box.getSize(new THREE.Vector3());
+  const mid = box.getCenter(new THREE.Vector3());
+  g.position.sub(mid);                       // sit centred at the origin
+  const reach = Math.max(size.x, size.y) * 0.5;
+  const fov = THREE.MathUtils.degToRad(camera.fov);
+  const dist = (reach / Math.tan(fov/2)) * 1.75 + 1.0;   // 1.75 = breathing room
+  camera.position.set(0, size.y*0.10, dist);
+
+  // Slide the subject sideways so a text panel can own the other half.
+  // The offset lives on a parent so the turntable still spins in place —
+  // rotating an offset group would make it orbit instead.
+  const bias = parseFloat(QS.get('sx') || '0');
+  const pivot = new THREE.Group();
+  pivot.position.x = -bias * reach * 1.15;
+  scene.add(pivot);
+  pivot.add(g);
+  showcase.group = g; showcase.pivot = pivot;
+  showcase.spin = spin; showcase.label = label;
+}
+
+fitCamera();          // SHOWCASE is known by here
+if(SHOWCASE){
+  titleEl.classList.add('hidden');
+  buildShowcase(SHOWCASE);
+  scoreEl.textContent = '';
+  msgEl.textContent = QS.get('nolabel')==='1' ? '' : showcase.label;
+  msgEl.style.fontSize = 'clamp(18px,5vw,30px)';
+  msgEl.style.letterSpacing = '4px';
+  // a plain dark stage: nothing on screen but the subject
+  table.visible = false; stripe.visible = false; backWall.visible = false;
+  sw.visible = false; ghost.visible = false; gapBar.visible = false;
+  cat.visible = false;
+  for(const m of gusts) m.visible = false;
+  scene.fog = null;
+  scene.background = new THREE.Color(0x0b0d16);
+  heroLight.position.set(2.6, 3.2, 4.2);
+  heroLight.intensity = 150;
+  hemi.intensity = 3.2;
+  sun.intensity = 4.0; sun.position.set(2.5, 6, 6);
+  // a second light from the other side so the far face is not pure black
+  const fill = new THREE.PointLight(0x88aaff, 48, 28);
+  fill.position.set(-4.5, 2.4, 3.6); scene.add(fill);
+}
+// let the capture script drive the turntable and swap subjects
+window.__showcase = name => {
+  if(showcase.pivot) scene.remove(showcase.pivot);   // pivot owns the group
+  buildShowcase(name);
+  msgEl.textContent = showcase.label;
+};
+
+// ---------- section complete ----------
+function finishSection(){
+  switchOn = true; switchT = 0; sectionPause = 1.6;
+  // The payout scales with how few tiles you spent: efficiency is the skill.
+  const bonus = 260 + section*90 + Math.max(0, 26 - placed) * 26;
+  score += bonus;
+  flash('#55ff9a', .40, 460);
+  shake = Math.max(shake, .22);
+  if(!SILENT) SND.win();
+  msgEl.textContent = `第 ${section} 区画 突破！  ボーナス +${bonus}`;
+  sw.userData.bulb.material.color.setHex(0x9dffc8);
+  sw.userData.bulb.material.emissive.setHex(0x2fbf6a);
+  swLight.intensity = 26;
+}
+
+// ---------- loop ----------
+const clock = new THREE.Clock();
+function tick(){
+  requestAnimationFrame(tick);
+  const raw = Math.min(clock.getDelta(), .05);
+  const dt = raw * timeScale;
+
+  if(SHOWCASE){
+    if(showcase.group) showcase.group.rotation.y += raw*showcase.spin;
+    camera.lookAt(0, 0, 0);        // subject is offset, camera stays on axis
+    renderer.render(scene, camera);
+    return;
+  }
+
+  if(running && !dead){
+    t += dt;
+    scoreEl.textContent = Math.floor(score);
+    // the music tightens as the sections get harder
+    if(!SILENT) SND.setPace(1 + section*0.12);
+    if(AUTO) autoPilot(dt);
+
+    // --- events ---
+    if(t > nextEventAt && !NOEV && sectionPause<=0) triggerEvent();
+
+    // --- section celebration, then straight into the next one ---
+    if(sectionPause > 0){
+      sectionPause -= dt;
+      switchT += dt;
+      sw.userData.lever.rotation.z = -Math.min(1, switchT*4) * 0.85;
+      if(sectionPause <= 0){
+        section++;
+        score += 0;
+        newSection();
+        msgEl.textContent = '';
+      }
+    }
+
+    // --- the toppling wave ---
+    // One domino at a time. When a tile reaches flat, we ask whether it can
+    // reach the next one; if not, the chain is dead and so is the run.
+    if(chasing && sectionPause<=0){
+      chainT += dt * 5.2 * fallMul;
+      const d = dominoes[chainIdx];
+      if(d){
+        d.angle = Math.min(1, chainT) * (Math.PI/2);
+        // pivot on the leading bottom edge, so it falls the way a real one does
+        d.group.rotation.z = -d.angle;
+        d.group.position.x = d.x + Math.sin(d.angle)*DOM_T*.5;
+      }
+      if(chainT >= 1){
+        // Rest flat, pivoted about the leading bottom edge. The group origin
+        // is at the tile's base and the body sits DOM_H/2 above it, so a
+        // -90° turn swings that centre out to +DOM_H/2 in x and down to
+        // DOM_T/2 in y — which is exactly where a tile lying on its face is.
+        if(d){ d.fallen = true; d.group.rotation.z = -Math.PI/2;
+               d.group.position.x = d.x + DOM_T*.5;
+               d.group.position.y = 0; }
+        const next = dominoes[chainIdx+1];
+        if(next){
+          const span = next.x - (d ? d.x : RUN_X0);
+          if(next.sunk){
+            // it settled into a crack: the falling tile passes clean over it
+            dead = true; gameOver('ひびに落ちた');
+          } else if(span > REACH){
+            dead = true; gameOver('とどかなかった');
+          } else {
+            chainIdx++; chainT = 0;
+            if(!SILENT) SND.click();
+            score += 4;                      // the chain itself pays a trickle
+          }
+        } else if(headX >= SWITCH_X - .75 && d && d.x + REACH >= SWITCH_X - .55){
+          // the last tile was close enough to strike the switch
+          chasing = false;
+          finishSection();
+        } else {
+          // ran out of dominoes with the switch still out of range
+          chasing = false;
+          if(headX >= SWITCH_X - .75){ dead = true; gameOver('スイッチに届かなかった'); }
+          // otherwise the player simply has not placed the next one yet —
+          // the wave waits at the head, which is the pressure of the game.
+        }
+      }
+      // if the wave has caught up to the head and the head is short of the
+      // switch, the player is on the clock: keep it stalled, not dead.
+      if(chainIdx >= dominoes.length-1 && chainT >= 1 && chasing){ chainT = 1; }
+    }
+
+    // --- the ghost: where the next tile lands ---
+    const gx = Math.min(headX + gap, SWITCH_X - .5);
+    ghost.position.set(gx, 0, 0);
+    const reachable = (gx - headX) <= REACH;
+    const gp = patchAt(gx);
+    // green = safe, amber = a hazard is under it, red = out of reach
+    const gcol = !reachable ? 0xff3b4a : gp ? 0xffd23b : 0x55f0a0;
+    ghost.traverse(o=>{ if(o.isMesh) o.material.color.setHex(gcol); });
+    ghost.visible = sectionPause<=0 && headX < SWITCH_X - .6;
+    gapBar.visible = ghost.visible;
+    gapBar.scale.x = Math.max(.05, gx - headX);
+    gapBar.position.x = (headX + gx)/2;
+    gapBar.material.color.setHex(gcol);
+    // pulse it so the reach limit is felt, not just seen
+    gapBar.material.opacity = .55 + Math.sin(t*9)*.18;
+
+    // --- すきま風 (wind): standing tiles lean, and one may fall early ---
+    if(windT > 0){
+      windT -= dt;
+      gustMat.opacity = Math.min(.6, gustMat.opacity + dt*2.4);
+      for(const m of gusts){
+        m.position.x += (16 + Math.random()*6)*dt;
+        if(m.position.x > 18){ m.position.x = -18;
+          m.position.y = .3 + Math.random()*4.5; m.position.z = (Math.random()-.5)*7; }
+      }
+      // lean every standing tile ahead of the wave
+      for(let i=chainIdx+1;i<dominoes.length;i++){
+        const d = dominoes[i];
+        if(d.fallen || d.sunk) continue;
+        d.wobble = Math.sin(t*7 + i)*0.09;
+      }
+    } else if(gustMat.opacity > 0){
+      gustMat.opacity = Math.max(0, gustMat.opacity - dt*1.4);
+      for(let i=0;i<dominoes.length;i++) dominoes[i].wobble *= .9;
+    }
+
+    // --- 床のゆれ (quake): the whole table rocks, tiles rattle ---
+    if(quake > 0){
+      quake -= dt;
+      const k = Math.min(1, quake);
+      table.rotation.z = Math.sin(t*22)*0.012*k;
+      table.position.y = -.3 + Math.sin(t*31)*0.05*k;
+      shake = Math.max(shake, .10*k);
+      for(let i=chainIdx+1;i<dominoes.length;i++){
+        const d = dominoes[i];
+        if(d.fallen || d.sunk) continue;
+        d.wobble = Math.sin(t*19 + i*1.7)*0.11*k;
+      }
+      if(quake <= 0){ table.rotation.z = 0; table.position.y = -.3;
+                      for(const d of dominoes) d.wobble = 0; }
+    }
+
+    // --- 暗転 (blackout): kill the lights, then bring them back ---
+    if(blackout > 0){
+      blackout -= dt;
+      const k = blackout > .5 ? 0.06 : 1 - blackout/.5;   // fade back in at the end
+      hemi.intensity = 1.25*k; sun.intensity = 2.2*k;
+      heroLight.intensity = 55*Math.max(.18, k);          // keep a sliver of a key light
+      scene.background.setHex(0x000000).lerp(SKY, k);
+      scene.fog.color.copy(scene.background);
+      if(blackout <= 0){
+        hemi.intensity=1.25; sun.intensity=2.2; heroLight.intensity=55;
+        scene.background.copy(SKY); scene.fog.color.copy(SKY);
+      }
+    }
+
+    // --- ネコ (cat): walks the table and knocks a standing tile flat ---
+    if(catT > 0){
+      catT -= dt;
+      cat.position.x -= 5.6*dt;
+      cat.position.z += (0 - cat.position.z)*Math.min(1, dt*1.4);
+      cat.position.y = Math.abs(Math.sin(t*9))*0.13;      // a small padding bounce
+      cat.userData.tail.rotation.z = -.7 + Math.sin(t*6)*.35;
+      // anything standing that the cat walks through goes over
+      for(let i=chainIdx+1;i<dominoes.length;i++){
+        const d = dominoes[i];
+        if(d.fallen || d.sunk || d.catted) continue;
+        if(Math.abs(d.x - cat.position.x) < .9){
+          d.catted = true;                                // a tile the cat flattened
+          if(!SILENT) SND.click();
+        }
+      }
+      if(catT <= 0){ cat.visible = false; }
+    }
+
+    // --- 早倒し (rush) winds down on its own ---
+    if(fallMul > 1){ fallMul = Math.max(1, fallMul - dt*0.5); }
+
+    // --- apply per-tile lean / cat knockdown to the standing tiles ---
+    for(let i=0;i<dominoes.length;i++){
+      const d = dominoes[i];
+      if(d.fallen || d.sunk) continue;
+      if(i === chainIdx && chasing) continue;              // the active faller owns its rotation
+      if(d.catted){
+        // fall the wrong way: forwards is the chain's direction, so a
+        // catted tile topples backwards and cannot pass anything on
+        d.angle = Math.min(Math.PI/2, d.angle + dt*4.2);
+        d.group.rotation.z = d.angle;
+        if(d.angle >= Math.PI/2){
+          d.fallen = true; d.dud = true;
+          // the wave will reach it and find nothing to push
+        }
+      } else {
+        d.group.rotation.z = d.wobble || 0;
+      }
+    }
+    // a tile the cat pushed over backwards breaks the chain when reached
+    if(chasing){
+      const nd = dominoes[chainIdx];
+      if(nd && nd.dud && chainT < .05){ dead = true; gameOver('ネコに倒された'); }
+    }
+
+    // the hero light rides the head of the chain
+    const hx = chasing && dominoes[chainIdx] ? dominoes[chainIdx].x : headX;
+    heroLight.position.x += (hx - heroLight.position.x)*Math.min(1, raw*3);
+
+    // the switch knob breathes so the goal is always legible
+    if(!switchOn){
+      const b = .5 + Math.sin(t*3)*.5;
+      sw.userData.knob.material.emissive.setRGB(.24*b, .06*b, 0);
+    }
+  }
+
+  // --- death sequence: slow-mo unwinds, camera pushes in ---
+  if(dead){
+    timeScale += (0 - timeScale)*Math.min(1, raw*1.1);
+  }
+
+  // --- camera (runs even while dead, so the zoom and shake still play) ---
+  camZoom += (camZoomTarget - camZoom)*Math.min(1, raw*2.2);
+  // Frame the live end of the run: the camera slides along the table with
+  // the head, so the player always sees where the next tile goes.
+  const focusX = THREE.MathUtils.clamp(
+    (chasing && dominoes[chainIdx] ? dominoes[chainIdx].x*.45 : 0) + headX*.55, RUN_X0, SWITCH_X);
+  // On a narrow screen follow the head almost 1:1 and sit closer, so the
+  // tiles stay big; on a wide screen hang back and show more of the table.
+  const pull = camera.__pull || 1;
+  const track = THREE.MathUtils.lerp(0.92, 0.62, pull);
+  camera.position.x += (focusX*track - camera.position.x)*Math.min(1, raw*2.6);
+  // Portrait keeps the camera high but brings it much closer in z, so the
+  // view angle stays steep. Dropping y along with z would flatten the shot
+  // to near edge-on and squash the tiles into an unreadable strip.
+  camera.position.y = 7.4*camZoom*THREE.MathUtils.lerp(1.05, 1, pull);
+  camera.position.z = 15.5*camZoom*THREE.MathUtils.lerp(0.52, 1, pull);
+  if(shake > 0){
+    shake = Math.max(0, shake - raw*.9);
+    camera.position.x += (Math.random()-.5)*shake;
+    camera.position.y += (Math.random()-.5)*shake;
+  }
+  camera.lookAt(focusX*track, 1.1, 0);
+
+  renderer.render(scene, camera);
+}
+
+function gameOver(why){
+  running=false; deadAt=Date.now();
+  if(!SILENT){ SND.hit(); SND.duck(1.6); setTimeout(()=>SND.over(), 700); }
+  // hit feedback: red flash, red vignette, hard shake, camera punches in
+  flash('#ff2b3a', .8, 500);
+  vignetteEl.style.transition='opacity .5s'; vignetteEl.style.opacity=1;
+  shake = .9;
+  camZoomTarget = .48;                 // push right in on the broken link
+  ghost.visible = false; gapBar.visible = false;
+  const finalScore = Math.floor(score);
+  koScoreEl.textContent = finalScore;
+  msgEl.textContent = why ? `連鎖が止まった：${why}` : '';
+  setTimeout(()=>{ koEl.classList.add('on'); }, 620);   // K.O. lands after the slow-mo
+  if(AUTO){ setTimeout(()=>{ reset(); running=true;
+                             if(!SILENT) SND.unduck(); }, RETRY_MS); }
+  else setTimeout(()=>{
+    msgEl.textContent = matchMedia('(pointer:coarse)').matches
+      ? 'タップでもう一度' : 'スペースでもう一度';
+  }, 1800);
+}
+tick();
+
+// --- help (?) : ルールを見せる。録画中は出さない ---
+(function(){
+  const btn = document.getElementById('helpBtn');
+  const panel = document.getElementById('help');
+  if(!btn || !panel) return;
+  if(NOCHROME){                      // 録画・showcase では画面から消す
+    btn.style.display = 'none';
+    const back = document.getElementById('back');
+    if(back) back.style.display = 'none';
+    return;
+  }
+  const open = () => { panel.classList.add('on'); };
+  const close = () => { panel.classList.remove('on'); };
+  btn.addEventListener('click', open);
+  btn.addEventListener('touchend', e => { e.preventDefault(); open(); }, {passive:false});
+  panel.addEventListener('click', e => { if(e.target === panel) close(); });
+  panel.querySelector('.close').addEventListener('click', close);
+  panel.querySelector('.close').addEventListener('touchend',
+    e => { e.preventDefault(); close(); }, {passive:false});
+  addEventListener('keydown', e => {
+    if(e.code === 'Escape') close();
+    else if(e.key === '?' || (e.code === 'Slash' && e.shiftKey)) open();
+  });
+})();
+</script>
+</body>
+</html>

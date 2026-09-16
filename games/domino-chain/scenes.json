@@ -1,0 +1,223 @@
+{
+  "id": "0016_domino_chain",
+  "title": "ドミノ・チェイン",
+  "video_title": "床がゆがんだ会場で、毎年ドミノを並べる人がいます",
+  "lang": "ja",
+  "voice": "jp_female",
+  "scenes": [
+    {
+      "kind": "hook",
+      "clip": "rush",
+      "narration": "このゲームは、傾いた一枚の床から生まれました。"
+    },
+    {
+      "kind": "image",
+      "prompt": "an old community hall in a small Japanese town, worn wooden floor with visible cracks and uneven planks, folding chairs stacked against the wall, late afternoon light through dusty windows, photorealistic, cinematic, warm muted tones",
+      "narration": "商店街の古い集会所に、夏祭りの会場があります。床がとても古いんです。板が反って、ひびが入っています。"
+    },
+    {
+      "kind": "image",
+      "prompt": "a woman kneeling on an old wooden floor, carefully placing a long line of white dominoes, measuring the gap with her fingers, single work lamp beside her, night, photorealistic, cinematic, shallow depth of field, warm lamp light",
+      "narration": "その床でドミノを並べる人がいます。ミドリさん、六十二歳です。夏祭りの出し物を、二十年やっています。"
+    },
+    {
+      "kind": "image",
+      "prompt": "close-up of a wide crack between two warped floorboards, a single white domino tile standing right at its edge, dramatic low angle, dust, photorealistic, cinematic lighting, shallow depth of field",
+      "narration": "床を直してほしい、と何度も頼みました。答えはいつも同じです。予算がない。だから彼女は、ひびをよけて並べます。それが今年も続いています。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "domino",
+      "kicker": "並べるもの",
+      "title": "ドミノ",
+      "bullets": [
+        "置けるのは **一枚ずつ**、前へ前へ",
+        "間隔を **広げるほど点が高い**",
+        "ただし **倒れて届く距離** には限りがある"
+      ],
+      "narration": "並べるのはこのドミノです。一枚ずつ、前へ置いていきます。ここが面白いところです。間隔を広くとるほど、点数が高くなります。でも倒れたドミノが届く距離には、限りがあります。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "ghost",
+      "kicker": "あなたの操作",
+      "title": "置く場所のめやす",
+      "bullets": [
+        "緑なら届く、赤なら **届かない**",
+        "スペースキー、またはスワイプで確定",
+        "欲を出すかどうか、それだけのゲーム"
+      ],
+      "narration": "次に置く場所は、うすい緑で見えています。緑のうちは届きます。赤になったら届きません。見てください、ぎりぎりが一番おいしいんです。でも、ぎりぎりです。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "chain",
+      "kicker": "一番だいじな話",
+      "title": "後ろはもう倒れている",
+      "bullets": [
+        "最初の一枚を置いた瞬間に **倒れ始める**",
+        "倒れる波が **ずっと追いかけてくる**",
+        "考える時間は、波が来るまで"
+      ],
+      "narration": "そしてここからが本題です。最初の一枚を置いた瞬間、うしろのドミノが倒れ始めます。倒れる波は止まりません。あなたを追いかけてきます。つまり、ゆっくり考える時間はありません。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "switch",
+      "kicker": "ゴール",
+      "title": "スイッチ",
+      "bullets": [
+        "テーブルの端で待っている",
+        "波が届けば **区画クリア**",
+        "**使った枚数が少ないほど** ボーナスが増える"
+      ],
+      "narration": "テーブルの反対側に、スイッチがあります。倒れる波がここまで届けばクリアです。そうなんです、使った枚数が少ないほどボーナスが増えます。丁寧に置く人ほど、損をします。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "crack",
+      "kicker": "じゃまするもの 1",
+      "title": "ひび",
+      "bullets": [
+        "落ちたドミノは **沈んで終わり**",
+        "そこで波が止まる",
+        "またいで越えるしかない"
+      ],
+      "narration": "床のひびです。ここに置くとドミノは沈みます。倒れません。波はそこで止まります。またいで越えるしかありません。ミドリさんが毎年やっていることです。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "oil",
+      "kicker": "じゃまするもの 2",
+      "title": "油",
+      "bullets": [
+        "置いた瞬間に **少し滑る**",
+        "どちらへ滑るかは **運**",
+        "だから余白を残して置く"
+      ],
+      "narration": "油のしみです。ここに置くと、ドミノが少し滑ります。どちらへ滑るかは運です。だから油の上では、余白を残して置きます。欲を出すと、届かなくなります。"
+    },
+    {
+      "kind": "events",
+      "clip": "events",
+      "kicker": "会場で起きること",
+      "title": "静かには進みません",
+      "bullets": [
+        "**すきま風** — 立てたドミノが揺れる",
+        "**床のゆれ** — 並び全体が傾く",
+        "**暗転** — 二秒ちょっと、何も見えない",
+        "**早倒し** — 倒れる速さが 2.6 倍",
+        "**ネコ** — 歩いて横切る"
+      ],
+      "narration": "会場は静かではありません。すきま風が吹いて、立てたドミノが揺れます。床がゆれて、並び全体が傾きます。ときどき照明が落ちて、二秒ちょっと何も見えません。倒れる速さが二倍以上になることもあります。そして、ネコが歩いて横切ります。もちろん倒します。"
+    },
+    {
+      "kind": "death",
+      "clip": "death",
+      "kicker": "終わりかた",
+      "title": "だいたい、あと一枚で終わる",
+      "bullets": [
+        "「とどかなかった」で運が終わる",
+        "**時間がゆっくり止まって**、カメラが寄る",
+        "届かなかった一枚が、はっきり見える"
+      ],
+      "narration": "終わりかたはいつも同じです。倒れた波が次の一枚に届かない。それだけです。時間がゆっくり止まって、カメラが寄ります。届かなかった一枚が、はっきり見えます。ミドリさんは二十年、この床で並べ続けています。あなたは、たぶん三区画でやめたくなります。"
+    },
+    {
+      "kind": "outro",
+      "title": "概要欄のリンクから遊べます",
+      "subtitle": "チャンネル登録もお願いします",
+      "narration": "今すぐ遊べます。概要欄のリンクからどうぞ。よかったら、チャンネル登録もお願いします。明日も新しいゲームを出します。"
+    }
+  ],
+  "slug": "domino-chain",
+  "channel": "Daily Arcade Studio",
+  "events": [
+    "wind",
+    "quake",
+    "blackout",
+    "cat",
+    "rush"
+  ],
+  "short": [
+    {
+      "mark": "rush",
+      "lead": -0.3,
+      "dur": 9.0,
+      "headline": "倒れる速さが2.6倍"
+    },
+    {
+      "mark": "cat",
+      "lead": -0.5,
+      "dur": 8.0,
+      "headline": "ネコが横切ります"
+    },
+    {
+      "mark": "blackout",
+      "lead": -0.5,
+      "dur": 7.0,
+      "headline": "2秒、何も見えない"
+    },
+    {
+      "mark": "death",
+      "lead": -2.0,
+      "dur": 9.0,
+      "headline": "あと一枚、届かない"
+    }
+  ],
+  "thumb": {
+    "hook": "欲を出すと届かない",
+    "sub": "広く置くほど高得点。ブラウザで無料。",
+    "frame_mark": "rush",
+    "frame_lead": 1.0
+  },
+  "short_v2": {
+    "cuts": [
+      {
+        "kind": "clip",
+        "mark": "rush",
+        "lead": -0.3,
+        "dur": 4.5,
+        "headline": "今日のゲーム",
+        "narration": "今日のゲームです。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "domino",
+        "dur": 5.0,
+        "headline": "ドミノ・チェイン",
+        "narration": "あなたはドミノを並べる人です。うしろから倒れてきます。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "ghost",
+        "dur": 5.0,
+        "headline": "広いほど高得点",
+        "narration": "間隔を広げるほど点が高い。でも届かないと終わりです。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "crack",
+        "dur": 5.0,
+        "headline": "ひび",
+        "narration": "床のひびに置くと、ドミノは沈みます。またぐしかありません。"
+      },
+      {
+        "kind": "clip",
+        "mark": "death",
+        "lead": -2.0,
+        "dur": 5.5,
+        "headline": "",
+        "narration": "だいたい、あと一枚で届きません。"
+      },
+      {
+        "kind": "clip",
+        "mark": "run2",
+        "lead": 1.0,
+        "dur": 4.5,
+        "cta": "概要欄のリンクから遊べます",
+        "narration": "ブラウザで無料で遊べます。リンクは概要欄です。"
+      }
+    ]
+  }
+}
