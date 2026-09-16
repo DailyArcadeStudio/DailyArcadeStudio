@@ -1,0 +1,230 @@
+{
+  "id": "0019_pendulum_park",
+  "title": "ペンデュラム・パーク",
+  "video_title": "壊していい建物と、壊してはいけない建物が、となり同士で建っている",
+  "lang": "ja",
+  "voice": "ja_female",
+  "scenes": [
+    {
+      "kind": "hook",
+      "clip": "gale",
+      "narration": "このゲームは、ある解体現場から生まれました。"
+    },
+    {
+      "kind": "image",
+      "prompt": "a demolition site in a city block at dusk, a row of half-demolished concrete buildings, one small old house still standing untouched in the middle of the row, orange safety fencing, rubble, realistic photograph, cinematic wide shot, moody golden light, highly detailed",
+      "narration": "ある町の、一区画ぜんぶを建てかえる工事です。並んだ建物を、端から壊していきます。そうなんです。ただ、1軒だけ、売らなかった家があります。"
+    },
+    {
+      "kind": "image",
+      "prompt": "close-up of a heavy rusty steel wrecking ball hanging from a crane cable, swinging over a demolition site, an orange spray-painted X mark on a concrete wall behind it, dust in the air, realistic photograph, dramatic low angle, cinematic lighting, highly detailed",
+      "narration": "だから現場では、壊す建物にオレンジの印をつけます。印のない建物には、人が住んでいます。クレーンの運転手は、モリさんといいます。"
+    },
+    {
+      "kind": "image",
+      "prompt": "a crane operator seen through the dusty glass of a crane cab, hands on control levers, looking down at a demolition site far below, late afternoon light, realistic photograph, cinematic composition, shallow depth of field, highly detailed",
+      "narration": "モリさんはこう言っています。鉄球は狙って当てるものじゃない。振れているのを、放すだけだ。見てください。それが、このゲームの操作そのものです。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "ball",
+      "kicker": "主役",
+      "title": "鉄球",
+      "bullets": [
+        "クレーンから吊られて **ひとりでに左右に振れます**",
+        "あなたの操作は **放すこと、ひとつだけ**",
+        "放した瞬間の **向きと速さ** で飛んでいきます"
+      ],
+      "narration": "これが鉄球です。クレーンに吊られて、ひとりでに左右に振れています。あなたができるのは、放すことだけです。狙いをつけるボタンはありません。放した瞬間の向きと速さで、そのまま飛んでいきます。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "mark",
+      "kicker": "見るところ",
+      "title": "オレンジの×印",
+      "bullets": [
+        "壊していい建物の **屋根の上で回っています**",
+        "**光っている** ので暗くても残ります",
+        "この印だけが、正解の目じるしです"
+      ],
+      "narration": "屋根の上で回っている、オレンジの×。これが目じるしです。ここが親切なところで、この印は自分で光っています。だから現場が暗くなっても、×だけは見えます。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "marked",
+      "kicker": "壊すもの",
+      "title": "印つきビル",
+      "bullets": [
+        "当てると **点が入って、時間が少し戻ります**",
+        "当てるほど **振り子が速くなります**",
+        "1回の投下で当たるのは **最初の1棟だけ**"
+      ],
+      "narration": "印つきのビルに当てると、点が入ります。残り時間も少し戻ります。ただし、当てるたびに振り子が速くなります。上手くなるほど、難しくなる。ここが面白いところです。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "plain",
+      "kicker": "壊してはいけないもの",
+      "title": "印なしビル",
+      "bullets": [
+        "灰色で、屋根に **何も立っていません**",
+        "当てた **その瞬間に終わり**",
+        "印つきの **すぐ隣** に建っていることがあります"
+      ],
+      "narration": "灰色のビルには、印がありません。人が住んでいます。当てた瞬間、そこで終わりです。しかも、印つきのすぐ隣に建っていることがあります。迷ったら、放さない。鉄球は勝手に戻ってきます。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "crane",
+      "kicker": "動かせないもの",
+      "title": "クレーン",
+      "bullets": [
+        "支点は **その場から動きません**",
+        "届く範囲は **振れ幅ぶんだけ**",
+        "端の建物は、振り切ったところを待つしかない"
+      ],
+      "narration": "クレーンは動きません。支点はずっと同じ場所です。だから届く範囲は、振り子が振れる幅ぶんだけです。列の端にある建物は、振り切ったところを待つしかありません。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "debris",
+      "kicker": "壊したあと",
+      "title": "がれき",
+      "bullets": [
+        "当たると **建物が砕けて飛び散ります**",
+        "色で分かります。**茶色は正解、灰色は失敗**",
+        "画面が揺れて、1回だけ光ります"
+      ],
+      "narration": "当たると、建物が砕けて飛び散ります。色を見てください。茶色いがれきなら、正解です。灰色が飛んだら、それは壊してはいけないほうでした。もう遅いんですけどね。"
+    },
+    {
+      "kind": "events",
+      "clip": "events",
+      "kicker": "そのうえで",
+      "title": "現場は静かにしていません",
+      "bullets": [
+        "**強風注意報** — 飛んでいる鉄球が横に流されます",
+        "**濃霧** — 印が見えにくくなります",
+        "**巻き上げ加速** — 振り子が一気に速くなります",
+        "**低重力テスト** — 落ちが遅くなって遠くまで飛びます",
+        "**現場停電** — 照明が消えて、×だけが残ります"
+      ],
+      "narration": "現場は静かにしていません。強風。飛んでいる鉄球が、横に流されます。放す位置を読みかえないといけません。濃霧。印が見えにくくなります。巻き上げ加速。振り子が急に速くなります。低重力テスト。落ちが遅くなって、思ったより遠くまで飛びます。そして停電。照明が全部消えて、オレンジの×だけが宙に浮きます。あれ、けっこうきれいです。"
+    },
+    {
+      "kind": "death",
+      "clip": "death",
+      "kicker": "終わりかた",
+      "title": "終わるのは、たいてい一瞬の迷い",
+      "bullets": [
+        "時間が **すうっと止まります**",
+        "カメラが **落ちた鉄球に寄ります**",
+        "理由が出ます。時間切れか、印のないビルか"
+      ],
+      "narration": "終わりかたは静かです。時間がすうっと止まって、カメラが鉄球に寄ります。そして理由が出ます。時間切れか、印のないビルを壊したか。モリさんは、この判断を何年も外していません。あなたは、たぶん3区画ももちません。"
+    },
+    {
+      "kind": "outro",
+      "title": "概要欄のリンクから遊べます",
+      "subtitle": "チャンネル登録で、毎日1本",
+      "narration": "ブラウザで、いますぐ無料で遊べます。概要欄のリンクからどうぞ。チャンネル登録もお願いします。明日も1本出します。"
+    }
+  ],
+  "slug": "pendulum-park",
+  "channel": "Daily Arcade Studio",
+  "events": [
+    "gale",
+    "fogbank",
+    "fastswing",
+    "lowg",
+    "scaffold",
+    "blackout"
+  ],
+  "short": [
+    {
+      "mark": "gale",
+      "lead": -0.3,
+      "dur": 8.0,
+      "headline": "鉄球が横に流される"
+    },
+    {
+      "mark": "blackout",
+      "lead": -0.5,
+      "dur": 8.0,
+      "headline": "×印だけが残る"
+    },
+    {
+      "mark": "fastswing",
+      "lead": -0.5,
+      "dur": 7.0,
+      "headline": "急に速くなる"
+    },
+    {
+      "mark": "fogbank",
+      "lead": -0.5,
+      "dur": 7.0,
+      "headline": "印が見えない"
+    },
+    {
+      "mark": "death",
+      "lead": -2.0,
+      "dur": 9.0,
+      "headline": "灰色を壊したら終わり"
+    }
+  ],
+  "thumb": {
+    "hook": "灰色は壊すな",
+    "sub": "印のついたビルだけを鉄球で落とす。ブラウザで無料。",
+    "frame_mark": "gale",
+    "frame_lead": 1.0
+  },
+  "short_v2": {
+    "cuts": [
+      {
+        "kind": "clip",
+        "mark": "gale",
+        "lead": -0.3,
+        "dur": 4.5,
+        "headline": "今日のゲーム",
+        "narration": "今日のゲームです。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "ball",
+        "dur": 5.0,
+        "headline": "ペンデュラム・パーク",
+        "narration": "あなたは、解体現場で鉄球をあやつるクレーンの運転手です。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "mark",
+        "dur": 5.0,
+        "headline": "×は壊す",
+        "narration": "オレンジの×が立っている建物だけ、壊していいです。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "plain",
+        "dur": 5.5,
+        "headline": "灰色は住人",
+        "narration": "灰色の建物には人が住んでいます。当てたら、その場で終わりです。"
+      },
+      {
+        "kind": "clip",
+        "mark": "death",
+        "lead": -2.0,
+        "dur": 5.0,
+        "headline": "",
+        "narration": "しかも、すぐ隣に建っています。"
+      },
+      {
+        "kind": "clip",
+        "mark": "run2",
+        "lead": 1.0,
+        "dur": 4.5,
+        "cta": "概要欄のリンクから遊べます",
+        "narration": "ブラウザで無料で遊べます。リンクは概要欄です。"
+      }
+    ]
+  }
+}

@@ -1,0 +1,1252 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ペンデュラム・パーク</title>
+<style>
+  html,body{margin:0;padding:0;overflow:hidden;background:#0a0c14;font-family:'Hiragino Kaku Gothic ProN','Helvetica Neue',Arial,sans-serif;}
+  #ui{position:fixed;top:16px;left:0;right:0;text-align:center;color:#fff;z-index:10;pointer-events:none;}
+  #score{font-size:clamp(26px,6vw,34px);font-weight:800;text-shadow:0 2px 8px #000;}
+  #msg{font-size:clamp(14px,3.8vw,20px);margin-top:6px;opacity:.9;text-shadow:0 2px 6px #000;}
+  #title{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:rgba(6,7,16,.74);z-index:20;color:#fff;transition:opacity .4s;padding:0 16px;box-sizing:border-box;}
+  #title h1{font-size:clamp(30px,9vw,60px);margin:0 0 8px;letter-spacing:2px;text-align:center;
+    text-shadow:0 4px 18px #ff9d2e;}
+  #title p{font-size:clamp(13px,3.4vw,19px);opacity:.88;margin:4px 0;text-align:center;line-height:1.6;}
+  #title .btn{margin-top:26px;padding:14px 44px;font-size:clamp(18px,5vw,22px);font-weight:700;color:#1a1204;
+    background:linear-gradient(180deg,#ffbe4d,#e0821a);border:none;border-radius:12px;cursor:pointer;
+    box-shadow:0 6px 24px rgba(255,158,46,.5);}
+  #title .btn:hover{transform:scale(1.05);}
+  .hidden{opacity:0;pointer-events:none;}
+  #back{position:fixed;top:14px;left:14px;z-index:30;text-decoration:none;
+    background:rgba(12,16,26,.72);color:#fff;font:600 clamp(12px,3.4vw,15px)/1 'Hiragino Kaku Gothic ProN',Arial,sans-serif;
+    padding:0 14px;height:44px;display:flex;align-items:center;border-radius:12px;white-space:nowrap;}
+  #back:hover{background:rgba(30,38,56,.9);}
+  #mute{position:fixed;top:14px;right:14px;z-index:30;border:none;cursor:pointer;
+    background:rgba(12,16,26,.72);color:#fff;font-size:20px;line-height:1;
+    width:44px;height:44px;border-radius:12px;}
+  #mute:hover{background:rgba(30,38,56,.9);}
+  /* 端末に合う説明だけを出す */
+  .tc{display:none;}
+  @media (pointer:coarse){ .kb{display:none;} .tc{display:block;} }
+  @media (pointer:coarse){ #title .btn{padding:18px 56px;} }
+
+  /* --- イベントのバナー：画面中央に叩きつける --- */
+  #banner{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    z-index:15;pointer-events:none;opacity:0;}
+  #banner .b{font-size:clamp(24px,7vw,64px);font-weight:900;letter-spacing:.06em;color:#fff;
+    padding:10px 4vw;max-width:94vw;text-align:center;transform:scale(2.4);opacity:0;
+    text-shadow:0 0 26px currentColor, 0 6px 20px #000;
+    border-top:5px solid currentColor;border-bottom:5px solid currentColor;}
+  #banner.go .b{animation:slam .62s cubic-bezier(.12,.85,.2,1) forwards;}
+  @keyframes slam{
+    0%  {transform:scale(2.4) rotate(-4deg);opacity:0;}
+    22% {transform:scale(1)   rotate(0deg); opacity:1;}
+    70% {transform:scale(1)   rotate(0deg); opacity:1;}
+    100%{transform:scale(1.12);opacity:0;}
+  }
+
+  /* --- 全画面フラッシュ --- */
+  #flash{position:fixed;inset:0;z-index:14;pointer-events:none;opacity:0;background:#fff;}
+  #vignette{position:fixed;inset:0;z-index:13;pointer-events:none;opacity:0;
+    background:radial-gradient(ellipse at center,rgba(0,0,0,0) 32%,rgba(120,0,10,.85) 100%);}
+
+  /* --- K.O. 画面 --- */
+  #ko{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    z-index:22;pointer-events:none;opacity:0;color:#fff;transition:opacity .3s;}
+  #ko.on{opacity:1;}
+  #ko .koText{font-size:clamp(88px,24vw,190px);font-weight:900;letter-spacing:10px;color:#fff;
+    text-shadow:0 0 40px #ff5a2e,0 0 90px #ff5a2e,0 10px 30px #000;
+    transform:scale(3);opacity:0;}
+  #ko.on .koText{animation:koSlam .8s cubic-bezier(.1,.9,.2,1) forwards;}
+  @keyframes koSlam{
+    0%  {transform:scale(3) rotate(-8deg);opacity:0;}
+    30% {transform:scale(1) rotate(0deg);opacity:1;}
+    36% {transform:scale(1.06);}
+    100%{transform:scale(1);opacity:1;}
+  }
+  #ko .finalLabel{font-size:clamp(14px,4vw,22px);letter-spacing:4px;opacity:0;margin-top:6px;text-shadow:0 2px 8px #000;}
+  #ko .finalScore{font-size:clamp(46px,13vw,82px);font-weight:800;opacity:0;text-shadow:0 4px 20px #000;}
+  #ko.on .finalLabel{animation:fadeUp .5s .75s forwards;}
+  #ko.on .finalScore{animation:fadeUp .5s .9s forwards;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+
+  /* --- あそびかた（?） --- */
+  #helpBtn{position:fixed;top:14px;right:66px;z-index:30;border:none;cursor:pointer;
+    background:rgba(12,16,26,.72);color:#fff;font:700 20px/1 'Helvetica Neue',Arial,sans-serif;
+    width:44px;height:44px;border-radius:12px;}
+  #helpBtn:hover{background:rgba(30,38,56,.9);}
+  #help{position:fixed;inset:0;z-index:40;display:none;align-items:center;
+    justify-content:center;background:rgba(4,6,12,.84);padding:20px;}
+  #help.on{display:flex;}
+  #help .box{background:#121826;border:1px solid #2b3550;border-radius:18px;
+    max-width:560px;width:100%;max-height:86vh;overflow:auto;padding:26px 24px 22px;
+    color:#e6edf3;font-family:'Hiragino Kaku Gothic ProN',Arial,sans-serif;box-sizing:border-box;}
+  #help h2{margin:0 0 4px;font-size:clamp(20px,5.2vw,26px);}
+  #help .sub{color:#8b949e;font-size:clamp(12px,3.2vw,14px);margin:0 0 18px;}
+  #help h3{font-size:clamp(13px,3.6vw,15px);color:#ffbe4d;margin:18px 0 6px;letter-spacing:.04em;}
+  #help ul{margin:0;padding-left:20px;}
+  #help li{font-size:clamp(13px,3.5vw,15px);line-height:1.7;margin:3px 0;}
+  #help b{color:#ffbe4d;font-weight:700;}
+  #help .close{margin-top:20px;width:100%;padding:12px;border:none;border-radius:10px;
+    background:#2b3550;color:#fff;font-size:16px;font-weight:700;cursor:pointer;}
+  #help .close:hover{background:#3a4668;}
+</style>
+</head>
+<body>
+<div id="ui"><div id="score">0</div><div id="msg"></div></div>
+<button id="helpBtn" title="あそびかた">?</button>
+<div id="help"><div class="box">
+  <h2>ペンデュラム・パーク</h2>
+  <p class="sub">印のついたビルだけを壊す。ブラウザで無料。</p>
+    <h3>鉄球（ペンデュラム）</h3>
+    <ul><li>クレーンから吊られて、<b>ひとりでに左右に振れています</b></li><li>あなたの操作は <b>手を放すこと</b> ひとつだけ</li><li>放した瞬間の振れの向きと速さで、そのまま飛んでいきます</li></ul>
+    <h3>印のついたビル（オレンジ）</h3>
+    <ul><li>てっぺんに <b>オレンジの×印</b> が立っています</li><li>これに当てると得点。当てた数だけ振り子が速くなります</li><li>1回の投下で、当たるのは最初のひとつだけ</li></ul>
+    <h3>印のないビル（灰色）</h3>
+    <ul><li><b>壊してはいけません。</b> 当てた時点で終わりです</li><li>印つきビルのすぐ隣に建っていることがあります</li><li>迷ったら放さない。鉄球は勝手に戻ってきます</li></ul>
+    <h3>制限時間</h3>
+    <ul><li>画面上のゲージが尽きる前に、印つきを全部落とす</li><li>落としきれないと、そこで終了です</li><li>1棟壊すごとに少しだけ時間が戻ります</li></ul>
+    <h3>途中で起きること</h3>
+    <ul><li><b>強風</b>：鉄球が横に流されます</li><li><b>濃霧</b>：ビルの印が見えにくくなります</li><li>ほかにも数種類。どれも一定時間で終わります</li></ul>
+  <button class="close">わかった</button>
+</div></div>
+<a id="back" href="../../" title="ゲーム一覧にもどる">‹ ゲーム一覧</a>
+<button id="mute" title="音のオン／オフ">🔊</button>
+<div id="vignette"></div>
+<div id="flash"></div>
+<div id="banner"><div class="b"></div></div>
+<div id="ko">
+  <div class="koText">K.O.</div>
+  <div class="finalLabel">さいしゅうスコア</div>
+  <div class="finalScore">0</div>
+</div>
+<div id="title">
+  <h1>ペンデュラム・パーク</h1>
+  <p>印のついたビルだけを、鉄球で落とす。</p>
+  <p class="kb">スペース / ↓ / クリック : 鉄球をはなす</p>
+  <p class="tc">画面をタップ : 鉄球をはなす</p>
+  <button class="btn" id="startBtn">スタート</button>
+</div>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+// ---------- url flags（最初に宣言する：音もカメラもこれを読む） ----------
+const QS = new URLSearchParams(location.search);
+const AUTO = QS.get('auto')==='1';
+const SHOWCASE_Q = QS.get('showcase');
+// 録画映像はきれいなほうがいいので、自動モードはすべて無音にする。
+const REC = QS.get('rec')==='1';   // 録音モード: 音を鳴らして拾う
+const SILENT = (AUTO || !!SHOWCASE_Q || QS.get('mute')==='1') && !REC;
+// 録画・showcase では「?」と「ゲーム一覧」を出さない（動画の邪魔になる）
+const NOCHROME = AUTO || !!SHOWCASE_Q || QS.get('nochrome')==='1';
+
+// ---------- renderer / scene ----------
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.shadowMap.enabled = true;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const SKY = new THREE.Color(0x121626);
+scene.background = SKY.clone();
+scene.fog = new THREE.Fog(0x121626, 34, 96);
+
+const camera = new THREE.PerspectiveCamera(50, innerWidth/innerHeight, .1, 300);
+
+// 縦持ちでも横持ちでも成立させる。縦画面は 16:9 よりずっと細いので、
+// FOV を固定するとクレーンとビル列が画面の外に出てしまう。
+// 画面が縦に細くなるほど、垂直 FOV を広げて横の見え方を保つ。
+const BASE_FOV = 50;
+function fitCamera(){
+  const aspect = innerWidth / innerHeight;
+  camera.aspect = aspect;
+  if(typeof SHOWCASE !== 'undefined' && SHOWCASE){
+    camera.fov = aspect < 1 ? 62 : 46;
+  } else {
+    const ref = 16/9;
+    camera.fov = aspect >= ref ? BASE_FOV
+      : Math.min(100, THREE.MathUtils.radToDeg(
+          2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(BASE_FOV)/2) * (ref/aspect))));
+  }
+  camera.__base = camera.fov;    // ズーム系イベントはここへ戻す
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+}
+addEventListener('resize', fitCamera);
+addEventListener('orientationchange', ()=>setTimeout(fitCamera, 120));
+
+// ---------- lights ----------
+const hemi = new THREE.HemisphereLight(0x8899dd, 0x221a12, 1.5);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xffdcae, 2.2);
+sun.position.set(8, 18, 10); sun.castShadow = true;
+sun.shadow.camera.left=-26; sun.shadow.camera.right=26;
+sun.shadow.camera.top=26; sun.shadow.camera.bottom=-26;
+sun.shadow.mapSize.set(1024,1024);
+scene.add(sun);
+
+// ---------- 解体現場 ----------
+const GROUND_Y = 0;
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(220, 120),
+  new THREE.MeshStandardMaterial({color:0x2b2f3e, roughness:.95}));
+ground.rotation.x = -Math.PI/2; ground.position.y = GROUND_Y;
+ground.receiveShadow = true; scene.add(ground);
+
+// 現場を囲う仮囲い（奥行きを出すためだけの飾り）
+const fenceMat = new THREE.MeshStandardMaterial({color:0xd8a33a, roughness:.7});
+const fences = [];
+for(let i=-9;i<=9;i++){
+  const p = new THREE.Mesh(new THREE.BoxGeometry(3.4, 2.2, .25), fenceMat);
+  p.position.set(i*3.6, 1.1, -13); p.castShadow = true;
+  scene.add(p); fences.push(p);
+}
+// 遠景のビル影（視差用。当たり判定はない）
+const skyline = [];
+const skylineMat = new THREE.MeshStandardMaterial({color:0x1b2133, roughness:1});
+for(let i=0;i<26;i++){
+  const h = 8 + Math.random()*22;
+  const b = new THREE.Mesh(new THREE.BoxGeometry(4+Math.random()*4, h, 4), skylineMat);
+  b.position.set(-70 + i*5.6 + Math.random()*2, h/2, -34 - Math.random()*14);
+  scene.add(b); skyline.push(b);
+}
+
+// ---------- クレーン（振り子の支点） ----------
+const PIVOT_Y = 19;            // 支点の高さ
+const CABLE_LEN = 11.0;        // 鉄球までのケーブル長
+const steelMat  = new THREE.MeshStandardMaterial({color:0xf0a12e, roughness:.55, metalness:.3});
+const steelDark = new THREE.MeshStandardMaterial({color:0x6e7385, roughness:.5, metalness:.6});
+
+function buildCrane(){
+  const g = new THREE.Group();
+  // 支柱（トラスに見えるよう細い柱を4本）
+  for(const [dx,dz] of [[-.7,-.7],[.7,-.7],[-.7,.7],[.7,.7]]){
+    const col = new THREE.Mesh(new THREE.BoxGeometry(.3, PIVOT_Y, .3), steelMat);
+    col.position.set(dx, PIVOT_Y/2, dz); g.add(col);
+  }
+  // ブレース（×）
+  for(let y=2;y<PIVOT_Y-1;y+=3.2){
+    const br = new THREE.Mesh(new THREE.BoxGeometry(2.0, .16, .16), steelMat);
+    br.position.set(0, y, .7); br.rotation.z = .6; g.add(br);
+    const br2 = br.clone(); br2.rotation.z = -.6; br2.position.y = y+1.6; g.add(br2);
+  }
+  // ジブ（水平アーム）：支点は先端にある
+  const jib = new THREE.Mesh(new THREE.BoxGeometry(11, .5, .7), steelMat);
+  jib.position.set(-4.4, PIVOT_Y+.5, 0); g.add(jib);
+  const jibTop = new THREE.Mesh(new THREE.BoxGeometry(11, .22, .3), steelDark);
+  jibTop.position.set(-4.4, PIVOT_Y+1.1, 0); g.add(jibTop);
+  // 先端の滑車
+  const pulley = new THREE.Mesh(new THREE.CylinderGeometry(.55,.55,.5,16), steelDark);
+  pulley.rotation.x = Math.PI/2; pulley.position.set(0, PIVOT_Y, 0); g.add(pulley);
+  // 運転席
+  const cab = new THREE.Mesh(new THREE.BoxGeometry(1.8,1.6,1.8),
+    new THREE.MeshStandardMaterial({color:0x2a3147, roughness:.6}));
+  cab.position.set(-9.4, PIVOT_Y-0.6, 0); g.add(cab);
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  return g;
+}
+const crane = buildCrane();
+crane.position.set(0, 0, 0);
+scene.add(crane);
+
+// ---------- 鉄球とケーブル ----------
+function buildBall(){
+  const g = new THREE.Group();
+  const ball = new THREE.Mesh(new THREE.SphereGeometry(1.25, 28, 22),
+    new THREE.MeshStandardMaterial({color:0x8d94a8, metalness:.85, roughness:.3}));
+  g.add(ball);
+  // 鋲：ただの球だと大きさが読めないので表面に目印をつける
+  for(let i=0;i<10;i++){
+    const a = i/10*Math.PI*2, b = (i%3)*.7 - .7;
+    const st = new THREE.Mesh(new THREE.SphereGeometry(.16,10,8), steelDark);
+    st.position.set(Math.cos(a)*1.2*Math.cos(b), Math.sin(b)*1.2, Math.sin(a)*1.2*Math.cos(b));
+    g.add(st);
+  }
+  // 吊り金具
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(.42,.11,8,18), steelMat);
+  ring.position.y = 1.32; g.add(ring);
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  return g;
+}
+const ball = buildBall();
+scene.add(ball);
+
+// ケーブル：支点から鉄球まで伸ばす1本の細い円柱。毎フレーム向きを合わせる。
+const cable = new THREE.Mesh(new THREE.CylinderGeometry(.07,.07,1,8),
+  new THREE.MeshStandardMaterial({color:0x3a4052, roughness:.6, metalness:.4}));
+scene.add(cable);
+
+// 予測線：放したら鉄球がどう飛ぶかの当たりをつける短い破線。
+// （全部見せると簡単すぎるので、根元の数個だけ）
+const aimDots = [];
+const aimMat = new THREE.MeshBasicMaterial({color:0xffbe4d, transparent:true, opacity:.55});
+for(let i=0;i<7;i++){
+  const d = new THREE.Mesh(new THREE.SphereGeometry(.16,8,6), aimMat);
+  d.visible = false; scene.add(d); aimDots.push(d);
+}
+
+// ---------- ビル（壊す対象） ----------
+const buildings = [];              // {group, marked, x, w, h, dead}
+const plainMat  = new THREE.MeshStandardMaterial({color:0x5b6274, roughness:.8});
+const markedMat = new THREE.MeshStandardMaterial({color:0x7a5a34, roughness:.75});
+const winMatOn  = new THREE.MeshBasicMaterial({color:0xffd58a});
+const winMatOff = new THREE.MeshBasicMaterial({color:0x2a3046});
+
+// 印は「屋上に立つオレンジの×」。色だけだと霧やブラックアウトで消えるので形でも分かるようにする。
+function buildMark(){
+  const m = new THREE.Group();
+  const bar = ()=> new THREE.Mesh(new THREE.BoxGeometry(2.2,.34,.34),
+    new THREE.MeshStandardMaterial({color:0xff8a1e, emissive:0xff6a00, emissiveIntensity:.9, roughness:.4}));
+  const a = bar(); a.rotation.z = Math.PI/4;
+  const b = bar(); b.rotation.z = -Math.PI/4;
+  m.add(a,b);
+  return m;
+}
+
+function buildBuilding(w, h, marked){
+  const g = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.BoxGeometry(w, h, w*.9),
+    marked ? markedMat : plainMat);
+  body.position.y = h/2; body.castShadow = true; body.receiveShadow = true;
+  g.add(body);
+  // 窓：ビルらしさが出るだけの飾り
+  const rows = Math.max(1, Math.floor(h/1.8)), cols = Math.max(1, Math.floor(w/1.1));
+  for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
+    if(Math.random()<.35) continue;
+    const win = new THREE.Mesh(new THREE.PlaneGeometry(.5,.7),
+      Math.random()<.45 ? winMatOn : winMatOff);
+    win.position.set(-w/2 + (c+.5)*(w/cols), 1.0 + r*(h-1.4)/rows, w*.45+.02);
+    g.add(win);
+  }
+  // 屋上の縁
+  const cap = new THREE.Mesh(new THREE.BoxGeometry(w*1.08, .3, w*.98),
+    new THREE.MeshStandardMaterial({color: marked?0xa8763c:0x474d5e, roughness:.8}));
+  cap.position.y = h; cap.castShadow = true; g.add(cap);
+  if(marked){
+    const mk = buildMark();
+    mk.position.y = h + 1.5;
+    g.add(mk);
+    g.userData.mark = mk;
+  }
+  return g;
+}
+
+// ---------- 破片（壊れたビルの飛び散り） ----------
+const debris = [];
+const debrisMat = new THREE.MeshStandardMaterial({color:0x6b6152, roughness:.9});
+function spawnDebris(x, y, w, color){
+  for(let i=0;i<14;i++){
+    const s = .3 + Math.random()*.7;
+    const m = new THREE.Mesh(new THREE.BoxGeometry(s,s,s),
+      new THREE.MeshStandardMaterial({color: color, roughness:.9}));
+    m.position.set(x + (Math.random()-.5)*w, y + Math.random()*2.5, (Math.random()-.5)*2);
+    m.castShadow = true;
+    scene.add(m);
+    debris.push({mesh:m, v:new THREE.Vector3((Math.random()-.5)*9, 4+Math.random()*7, (Math.random()-.5)*5),
+                 spin:new THREE.Vector3(Math.random()*6,Math.random()*6,Math.random()*6), life:2.4});
+  }
+}
+
+// ---------- ゲーム状態 ----------
+let running=false, dead=false, t=0, score=0;
+let timeScale=1, deadAt=0, shake=0;
+let camZ=34, camZTarget=34;         // 死ぬとカメラが寄る
+let phase=0;                        // 振り子の位相（rad）
+let swingSpeed=1.15;                // 振れの速さ（当てるほど上がる）
+let swingAmp=1.05;                  // 振れ幅（rad）
+let flying=false;                   // 鉄球が手を離れて飛んでいるか
+const ballPos = new THREE.Vector3();
+const ballVel = new THREE.Vector3();
+let retract=0;                      // >0 の間は鉄球がケーブルへ巻き戻る
+let stage=1;                        // 面（1面ごとにビル列を組み直す）
+let timeLeft=18, timeMax=18;        // 制限時間
+let wind=0;                         // 強風イベントの横加速度
+let fog=0;                          // 濃霧イベントの残り
+let gravityMul=1;                   // 低重力イベント
+let nextEventAt=7;
+let eventQueue=[];
+let markedLeft=0;
+
+const scoreEl = document.getElementById('score');
+const msgEl = document.getElementById('msg');
+const titleEl = document.getElementById('title');
+const bannerEl = document.getElementById('banner');
+const bannerText = bannerEl.querySelector('.b');
+const flashEl = document.getElementById('flash');
+const vignetteEl = document.getElementById('vignette');
+const koEl = document.getElementById('ko');
+const koScoreEl = koEl.querySelector('.finalScore');
+
+// ---------- 演出ヘルパ ----------
+function banner(text, color){
+  bannerText.textContent = text;
+  bannerText.style.color = color;
+  bannerEl.classList.remove('go');
+  void bannerEl.offsetWidth;      // CSS アニメを頭から流し直す
+  bannerEl.style.opacity = 1;
+  bannerEl.classList.add('go');
+}
+function flash(color, strength, ms){
+  flashEl.style.background = color;
+  flashEl.style.transition = 'none';
+  flashEl.style.opacity = strength;
+  requestAnimationFrame(()=>{
+    flashEl.style.transition = `opacity ${ms}ms ease-out`;
+    flashEl.style.opacity = 0;
+  });
+}
+
+// ---------- 面の組み立て ----------
+const ROW_Z = 0;                   // ビル列の奥行き（鉄球と同じ平面に置く）
+function buildStage(){
+  for(const b of buildings) scene.remove(b.group);
+  buildings.length = 0;
+  // 列の幅は振り子の届く範囲（±CABLE_LEN*sin(amp) ≒ ±9.5）に合わせる。
+  // これより広げると、外側のビルに物理的に届かない面ができてしまう。
+  const span = 26;
+  // 面が進むほど区画が増え、1棟あたりの幅と隙間が狭くなる
+  const slots = Math.min(9, 4 + Math.floor(stage/2));
+  const markCount = Math.min(slots-1, 1 + Math.floor(stage/3));
+  const gap = span / slots;
+
+  // 印つきの区画を先に決める。残りの区画は一定確率で「空き地」にして、
+  // 外しても即死しない逃げ場を必ず残す（迷ったら放さない、が成立する）。
+  const idx = [];
+  while(idx.length < markCount){
+    const i = Math.floor(Math.random()*slots);
+    if(!idx.includes(i)) idx.push(i);
+  }
+  for(let i=0;i<slots;i++){
+    const marked = idx.includes(i);
+    if(!marked && Math.random() < .3) continue;      // 空き地
+    const w = gap*0.62;
+    // 鉄球の底は最下点で y=6.75（中心 8.0 − 半径 1.25）。屋上がそこへ届くと
+    // ただ振れているだけでビルを掠めるので、最大 5.6 に抑えて余裕を持たせる。
+    const h = 3.2 + Math.random()*2.4;
+    const x = -span/2 + gap*(i+.5) + (Math.random()-.5)*gap*0.12;
+    const g = buildBuilding(w, h, marked);
+    g.position.set(x, 0, ROW_Z);
+    scene.add(g);
+    buildings.push({group:g, marked, x, w, h, dead:false});
+  }
+  markedLeft = markCount;
+  timeMax = Math.max(9, 19 - stage*0.55);
+  timeLeft = timeMax;
+}
+
+// ---------- 鉄球の状態遷移 ----------
+// つながっている間は支点まわりの単振動。放すと接線方向の速度で放物線を描く。
+function ballAnchorPos(){
+  const a = Math.sin(phase) * swingAmp;      // 鉛直からの角度
+  return new THREE.Vector3(Math.sin(a)*CABLE_LEN, PIVOT_Y - Math.cos(a)*CABLE_LEN, 0);
+}
+function ballAnchorVel(){
+  // 角速度 dθ/dt = cos(phase)*amp*speed、接線方向の速さは L*dθ/dt
+  const a = Math.sin(phase) * swingAmp;
+  const w = Math.cos(phase) * swingAmp * swingSpeed;
+  const v = CABLE_LEN * w;
+  // 接線 = (cos a, sin a)  ※支点から見た位置の垂直方向
+  return new THREE.Vector3(Math.cos(a)*v, Math.sin(a)*v, 0);
+}
+
+const GRAV = 26;
+
+function release(){
+  if(!running || dead || flying || retract>0) return;
+  ballPos.copy(ballAnchorPos());
+  ballVel.copy(ballAnchorVel());
+  flying = true;
+  if(!SILENT) SND.release();
+}
+
+// 鉄球が着弾したときの判定
+function impact(b){
+  if(b.marked){
+    score += 100 + Math.floor(swingSpeed*40);
+    scoreEl.textContent = Math.floor(score);
+    b.dead = true;
+    scene.remove(b.group);
+    spawnDebris(b.x, b.h*.5, b.w, 0xa8763c);
+    markedLeft--;
+    shake = Math.max(shake, .45);
+    flash('#ffbe4d', .32, 260);
+    timeLeft = Math.min(timeMax, timeLeft + 1.6);   // 当てると少し時間が戻る
+    swingSpeed = Math.min(2.6, swingSpeed + .055);  // 当てるほど速くなる
+    if(!SILENT) SND.smash();
+    if(markedLeft<=0){
+      stage++;
+      score += 250;
+      scoreEl.textContent = Math.floor(score);
+      if(!SILENT) SND.clear();
+      msgEl.textContent = stage + ' 区画め';
+      setTimeout(()=>{ if(running && !dead) msgEl.textContent=''; }, 1400);
+      buildStage();
+    }
+  } else {
+    // 印のないビルを壊した：即終了
+    spawnDebris(b.x, b.h*.5, b.w, 0x5b6274);
+    scene.remove(b.group);
+    b.dead = true;
+    dead = true; gameOver('wrong');
+  }
+}
+
+// ---------- イベント ----------
+const EVENTS = {
+  // 横風：飛んでいる鉄球が流される。放す位置を読み替える必要がある。
+  gale(){
+    banner('強風注意報', '#7fd8ff');
+    wind = (Math.random()<.5 ? -1 : 1) * (9 + Math.random()*6);
+    windLeft = 6.5;
+    shake = Math.max(shake, .18);
+    return 7;
+  },
+  // 濃霧：印が見えにくくなる。落ち着いて形で見分ける。
+  fogbank(){
+    banner('濃霧', '#b9c3d8');
+    fog = 6.0;
+    return 6.5;
+  },
+  // 早振り：振り子が一気に速くなる。タイミングが一段むずかしい。
+  fastswing(){
+    banner('巻き上げ加速', '#ff8a1e');
+    swingSpeedBoost = 1.55; boostLeft = 6.0;
+    flash('#ffbe4d', .28, 320);
+    return 6.5;
+  },
+  // 低重力：放したあとの落ちが遅く、球が遠くまで飛ぶ。
+  lowg(){
+    banner('低重力テスト', '#a98bff');
+    gravityMul = .48; lowgLeft = 6.5;
+    return 7;
+  },
+  // 看板落下：画面手前に足場の板が落ちてきて視界を横切る（当たり判定なし、驚かせる演出）
+  scaffold(){
+    banner('足場くずれ', '#ffd23b');
+    for(let i=0;i<7;i++){
+      const s = new THREE.Mesh(new THREE.BoxGeometry(3.2,.3,.8),
+        new THREE.MeshStandardMaterial({color:0xd8a33a, roughness:.7}));
+      s.position.set(-22+Math.random()*44, 22+Math.random()*10, 9+Math.random()*4);
+      scene.add(s);
+      debris.push({mesh:s, v:new THREE.Vector3((Math.random()-.5)*3,0,0),
+                   spin:new THREE.Vector3(Math.random()*3,Math.random()*2,Math.random()*4), life:3.4});
+    }
+    shake = Math.max(shake, .3);
+    return 5;
+  },
+  // 停電：現場の照明が落ちる。印の×だけが自発光で残る。
+  blackout(){
+    banner('現場停電', '#9b6bff');
+    blackoutLeft = 3.4;
+    return 5;
+  },
+};
+let windLeft=0, boostLeft=0, swingSpeedBoost=1, lowgLeft=0, blackoutLeft=0;
+
+const EVENT_NAMES = Object.keys(EVENTS);
+// 録画・デバッグ用フック：名前を指定してイベントを起こす
+// 走行が終わっていたら false を返す（K.O. 画面にイベントを撃たないため）
+window.__ev = name => {
+  if(!running || dead || !EVENTS[name]) return false;
+  const busy = EVENTS[name]();
+  if(!SILENT) SND.event();
+  nextEventAt = t + busy + 5; return true;
+};
+window.__alive = () => running && !dead;
+window.__kill = () => { if(running && !dead){ dead=true; gameOver('timeout'); } };
+window.__recStop = () => SND.recStop();
+window.__snd = () => ({enabled: SND.enabled, silent: SILENT});
+window.__events = EVENT_NAMES.slice();
+window.__probe = () => ({t:+t.toFixed(2), stage, marked:markedLeft,
+  time:+timeLeft.toFixed(2), flying, phase:+phase.toFixed(2), next:+nextEventAt.toFixed(2)});
+
+function refillEventQueue(){
+  eventQueue = EVENT_NAMES.slice();
+  for(let i=eventQueue.length-1;i>0;i--){        // 毎回順番が変わるようシャッフル
+    const j = Math.floor(Math.random()*(i+1));
+    [eventQueue[i],eventQueue[j]]=[eventQueue[j],eventQueue[i]];
+  }
+}
+function triggerEvent(){
+  if(!eventQueue.length) refillEventQueue();
+  const name = eventQueue.pop();
+  const busy = EVENTS[name]();
+  if(!SILENT) SND.event();
+  nextEventAt = t + busy + 5 + Math.random()*4;  // イベントの間に呼吸を置く
+}
+
+// ---------- リセット ----------
+function reset(){
+  for(const d of debris) scene.remove(d.mesh);
+  debris.length = 0;
+  stage = 1;
+  buildStage();
+  t=0; score=0; dead=false;
+  phase=0; swingSpeed=1.15; swingAmp=1.05;
+  flying=false; retract=0;
+  timeScale=1; shake=0; camZ=34; camZTarget=34;
+  wind=0; windLeft=0; fog=0; boostLeft=0; swingSpeedBoost=1;
+  gravityMul=1; lowgLeft=0; blackoutLeft=0;
+  hemi.intensity=1.5; sun.intensity=2.2;
+  scene.background.copy(SKY);
+  scene.fog.near=34; scene.fog.far=96; scene.fog.color.copy(SKY);
+  nextEventAt = 7;
+  refillEventQueue();
+  scoreEl.textContent = '0';
+  msgEl.textContent='';
+  koEl.classList.remove('on');
+  vignetteEl.style.transition='opacity .3s'; vignetteEl.style.opacity=0;
+  camera.fov = camera.__base; camera.updateProjectionMatrix();
+}
+
+const startBtn = document.getElementById('startBtn');
+
+// ---------- 音：すべて合成。音声ファイルは使わない ----------
+// 1ファイル完結のルールを守りつつ、プレイに反応させる：ベースは
+// 振り子の速さに合わせて速くなり、イベントでスティンガーが鳴り、
+// ゲームオーバーで全体がダックする。
+const SND = (() => {
+  let ctx = null, master = null, musicGain = null, on = true, started = false;
+  let step = 0, timer = null, tempo = 0.25;
+
+  // ペンタトニックは自分自身とぶつからないので、テンポが揺れても濁らない。
+  const SCALE = [0, 3, 5, 7, 10];
+  const ROOT = 196;
+  const BASS = 'square', LEAD = 'sawtooth';
+  const hz = (deg, oct = 0) =>
+    ROOT * Math.pow(2, oct + Math.floor(deg / SCALE.length)) *
+    Math.pow(2, SCALE[((deg % SCALE.length) + SCALE.length) % SCALE.length] / 12);
+
+  function ensure() {
+    if (ctx) return ctx;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    ctx = new AC();
+    master = ctx.createGain();
+    master.gain.value = 0.32;
+    master.connect(ctx.destination);
+    musicGain = ctx.createGain();
+    musicGain.gain.value = 1;
+    musicGain.connect(master);
+    return ctx;
+  }
+
+  // ---- 録音用の分岐（?rec=1）----
+  // Playwright の録画には音声が入らないので、ゲーム自身に master バスを
+  // 録らせる。鳴っているものそのものなので映像と必ず同期する。
+  let recDest = null, recorder = null, recChunks = [];
+  function recStart() {
+    if (!ctx || recorder) return;
+    recDest = ctx.createMediaStreamDestination();
+    master.connect(recDest);
+    recorder = new MediaRecorder(recDest.stream, {mimeType: 'audio/webm'});
+    recorder.ondataavailable = e => { if (e.data.size) recChunks.push(e.data); };
+    recorder.start();
+  }
+  function recStop() {
+    return new Promise(res => {
+      if (!recorder) return res(null);
+      recorder.onstop = async () => {
+        const blob = new Blob(recChunks, {type: 'audio/webm'});
+        const buf = await blob.arrayBuffer();
+        res(Array.from(new Uint8Array(buf)));
+      };
+      recorder.stop();
+    });
+  }
+
+  function blip(freq, dur, type = 'square', vol = 0.25, dest = null, slideTo = null) {
+    if (!ctx || !on) return;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, ctx.currentTime);
+    if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, ctx.currentTime + dur);
+    // 短いアタックを入れると音の頭がプチッと鳴らない
+    g.gain.setValueAtTime(0, ctx.currentTime);
+    g.gain.linearRampToValueAtTime(vol, ctx.currentTime + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
+    o.connect(g); g.connect(dest || master);
+    o.start(); o.stop(ctx.currentTime + dur + 0.02);
+  }
+
+  function noise(dur, vol = 0.2, hp = 800) {
+    if (!ctx || !on) return;
+    const n = Math.floor(ctx.sampleRate * dur);
+    const buf = ctx.createBuffer(1, n, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    const f = ctx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = hp;
+    const g = ctx.createGain(); g.gain.value = vol;
+    src.connect(f); f.connect(g); g.connect(master);
+    src.start();
+  }
+
+  // --- ループ：歩くベース＋裏拍のブリップ ---
+  function tick() {
+    if (!ctx || !on) return;
+    const bar = step % 16;
+    if (bar % 2 === 0) blip(hz(bar % 8 === 0 ? 0 : 1, -1), tempo * 1.1, BASS, 0.30, musicGain);
+    if (bar % 8 === 5) blip(hz(4, 0), tempo * 0.6, LEAD, 0.09, musicGain);
+    if (bar % 4 === 2) noise(0.04, 0.05, 5000);
+    step++;
+    timer = setTimeout(tick, tempo * 1000);
+  }
+
+  return {
+    // ユーザー操作の中から呼ぶこと（そうしないとブラウザが音を止める）
+    start() {
+      if (!ensure() || started) return;
+      if (ctx.state === 'suspended') ctx.resume();
+      started = true; step = 0; tick();
+    },
+    stop() { if (timer) { clearTimeout(timer); timer = null; } started = false; },
+    /** 音楽をゲームの速さに合わせる。1 = 開始時 */
+    setPace(mult) { tempo = Math.max(0.11, 0.25 / Math.max(0.2, mult)); },
+    duck(sec = 1.6) {                                      // ゲームオーバー用
+      if (!ctx) return;
+      musicGain.gain.cancelScheduledValues(ctx.currentTime);
+      musicGain.gain.setValueAtTime(musicGain.gain.value, ctx.currentTime);
+      musicGain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + sec);
+    },
+    unduck() {
+      if (!ctx) return;
+      musicGain.gain.cancelScheduledValues(ctx.currentTime);
+      musicGain.gain.setValueAtTime(0.0001, ctx.currentTime);
+      musicGain.gain.exponentialRampToValueAtTime(1, ctx.currentTime + 0.4);
+    },
+    // --- ワンショット：どれも短くて音程がはっきりしたものにする ---
+    // （ナレーションの下に敷くので、ノイズの塊だと何も聞こえない）
+    release() { ensure(); blip(hz(4, 1), 0.10, LEAD, 0.16, null, hz(1, 0)); },   // 手を放す：下降
+    smash()   { ensure(); noise(0.22, 0.26, 260);
+                blip(hz(0, 0), 0.26, 'square', 0.24, null, hz(2, 1)); },          // 命中：衝撃＋上昇
+    clear()   { ensure(); [0, 80, 160, 240].forEach((ms, i) =>
+                  setTimeout(() => blip(hz(i, 0), 0.20, 'triangle', 0.22), ms)); }, // 区画クリア：上昇音階
+    swing()   { ensure(); blip(hz(1, -1), 0.06, BASS, 0.08); },                    // 振り子の折り返し
+    tickLow() { ensure(); blip(hz(0, 0), 0.05, 'triangle', 0.14); },               // 残り時間わずか
+    event()   { ensure(); [0, 90, 180].forEach((ms, i) =>
+                  setTimeout(() => blip(hz(2 + i, 0), 0.18, 'sawtooth', 0.20), ms)); },
+    hit()     { ensure(); noise(0.35, 0.30, 200);
+                blip(180, 0.5, 'sawtooth', 0.28, null, 40); },
+    over()    { ensure(); [0, 140, 280, 460].forEach((ms, i) =>
+                  setTimeout(() => blip(hz(-i, -1), 0.42, 'triangle', 0.26), ms)); },
+    recStart() { ensure(); recStart(); },
+    recStop() { return recStop(); },
+    toggle() { on = !on; if (!on) { this.stop(); } else { this.start(); } return on; },
+    get enabled() { return on; },
+  };
+})();
+
+// --- 操作はすべてこの関数を通す。キーボードとタッチがずれないように ---
+function startRun(){
+  titleEl.classList.add('hidden'); reset(); running=true;
+  if(!SILENT){ SND.unduck(); SND.start(); if(REC) SND.recStart(); }
+}
+
+const muteBtn = document.getElementById('mute');
+function toggleMute(){ muteBtn.textContent = SND.toggle() ? '🔊' : '🔇'; }
+muteBtn.addEventListener('click', toggleMute);
+muteBtn.addEventListener('touchend', e=>{ e.preventDefault(); toggleMute(); },
+                         {passive:false});
+if(SILENT) muteBtn.style.display='none';   // 自動モードは無音
+addEventListener('keydown', e=>{ if(e.code==='KeyM') toggleMute(); });
+
+startBtn.addEventListener('click', startRun);
+// タッチでも開始できるようにする（click だけだとスマホで取りこぼす）
+startBtn.addEventListener('touchend', e=>{ e.preventDefault(); startRun(); },
+                          {passive:false});
+
+addEventListener('keydown', e=>{
+  if(!running){
+    if(e.code==='Space'||e.code==='Enter'){ e.preventDefault(); startRun(); }
+    return;
+  }
+  if(e.code==='Space'||e.code==='ArrowDown'||e.code==='KeyS'||e.code==='Enter'){
+    e.preventDefault(); release();
+  }
+});
+
+// マウスのクリックでも放せる（PC のカジュアル操作）
+renderer.domElement.addEventListener('mousedown', ()=>{
+  if(!running && !dead){ startRun(); return; }
+  if(dead){ if(!AUTO && Date.now()-deadAt > 1500) startRun(); return; }
+  release();
+});
+
+// --- タッチ：タップで放す ---
+// 視聴者の多くはスマホから来るので、キーボードなしで成立させる。
+// 操作は1種類しかないので、画面のどこを触っても「放す」。
+(function(){
+  let st=0, moved=false, sx=0, sy=0;
+  const canvas = renderer.domElement;
+
+  canvas.addEventListener('touchstart', e=>{
+    const p = e.changedTouches[0];
+    sx=p.clientX; sy=p.clientY; st=Date.now(); moved=false;
+  }, {passive:true});
+
+  canvas.addEventListener('touchmove', e=>{
+    const p = e.changedTouches[0];
+    if(Math.abs(p.clientX-sx)>24 || Math.abs(p.clientY-sy)>24) moved=true;
+  }, {passive:true});
+
+  canvas.addEventListener('touchend', e=>{
+    if(dead){
+      // K.O. の演出を読む時間を置いてから、タップで再挑戦
+      if(!AUTO && Date.now()-deadAt > 1500) startRun();
+      return;
+    }
+    if(!running){ startRun(); return; }
+    // 短い接触（＝タップ）だけを操作として拾う
+    if(!moved && Date.now()-st < 400) release();
+    // 下向きのスワイプも「放す」— 直感的に落としたくなる動きなので拾う
+    else if(moved) release();
+  }, {passive:true});
+
+  // タイトルは canvas の上に重なるので、タイトル自身からも開始できるようにする
+  titleEl.addEventListener('touchend', e=>{
+    if(!running){ e.preventDefault(); startRun(); }
+  }, {passive:false});
+
+  // ゲーム中のタップがスクロールやダブルタップズームにならないようにする
+  canvas.addEventListener('touchmove', e=>e.preventDefault(), {passive:false});
+})();
+
+// 自動プレイ（録画用）: ?auto=1
+// 録画では K.O. を長く見せたいので ?hold=9000 のように延ばせる
+const RETRY_MS = Math.max(1200, parseInt(QS.get('hold')||'4200', 10));
+// ?noev=1 でイベントなしの静かな走行（ナレーションの下敷き用）
+const NOEV = QS.get('noev')==='1';
+if(AUTO){ setTimeout(startRun, 1200); }   // startRun 経由にする（音／録音も始まる）
+
+// ---------- 自動操縦 ----------
+// 放したあとの弾道をその場でシミュレートして、印つきビルに当たり、
+// かつ印なしビルに当たらない位相でだけ手を放す。
+function simulateLanding(p0, v0){
+  const p = p0.clone(), v = v0.clone();
+  const dt = 1/90;
+  for(let i=0;i<400;i++){
+    v.x += (wind*(windLeft>0?1:0)) * dt;
+    v.y -= GRAV*gravityMul*dt;
+    p.addScaledVector(v, dt);
+    for(const b of buildings){
+      if(b.dead) continue;
+      if(Math.abs(p.x - b.x) < b.w/2 + 1.1 && p.y < b.h + 1.1) return b;
+    }
+    if(p.y < -2) return null;
+  }
+  return null;
+}
+function autoPilot(){
+  if(flying || retract>0 || !running || dead) return;
+  const hit = simulateLanding(ballAnchorPos(), ballAnchorVel());
+  if(hit && hit.marked) release();
+}
+
+// ---------- showcase モード ----------
+// ?showcase=<subject> で、ゲームを隠してひとつの被写体だけを
+// ターンテーブルに載せる。実際に使っているメッシュなので、
+// ナレーションで説明しているものと画面のものが必ず一致する。
+const SHOWCASE = QS.get('showcase');
+const showcase = {group:null, spin:.55, label:''};
+// 録画ツールが名前で参照するので、識別子は英語のまま（表示名だけ日本語）
+window.__subjects = ['ball','crane','marked','plain','mark','debris',
+                     'gale','fogbank','fastswing','lowg','scaffold','blackout'];
+
+function buildShowcase(name){
+  const g = new THREE.Group();
+  let label = '', spin = .55;
+  if(name==='ball'){
+    const b = buildBall(); b.scale.set(1.5,1.5,1.5); g.add(b);
+    label = '鉄球'; spin = .6;
+  } else if(name==='crane'){
+    const c = buildCrane(); c.scale.set(.42,.42,.42); g.add(c);
+    label = 'クレーン'; spin = .45;
+  } else if(name==='marked'){
+    g.add(buildBuilding(4.4, 7.5, true));
+    label = '印つきビル'; spin = .5;
+  } else if(name==='plain'){
+    g.add(buildBuilding(4.4, 7.5, false));
+    label = '印なしビル'; spin = .5;
+  } else if(name==='mark'){
+    const m = buildMark(); m.scale.set(2.2,2.2,2.2); g.add(m);
+    label = '解体の印'; spin = .9;
+  } else if(name==='debris'){
+    // 破片を空中に凍らせて並べる
+    for(let i=0;i<16;i++){
+      const s = .5 + Math.random()*.9;
+      const m = new THREE.Mesh(new THREE.BoxGeometry(s,s,s), debrisMat);
+      const a = i/16*Math.PI*2, r = 1.4 + Math.random()*1.8;
+      m.position.set(Math.cos(a)*r, (Math.random()-.5)*3.4, Math.sin(a)*r);
+      m.rotation.set(Math.random()*3,Math.random()*3,Math.random()*3);
+      g.add(m);
+    }
+    label = 'がれき'; spin = .7;
+  } else if(name==='gale'){
+    // 風：斜めに流れる細い板の束
+    const mat = new THREE.MeshStandardMaterial({color:0x7fd8ff, emissive:0x2a6a88, roughness:.4});
+    for(let i=0;i<14;i++){
+      const m = new THREE.Mesh(new THREE.BoxGeometry(3.6+Math.random()*2,.14,.14), mat);
+      m.position.set((Math.random()-.5)*2, -2.6+i*.4, (Math.random()-.5)*2);
+      m.rotation.z = -.18; g.add(m);
+    }
+    label = '強風注意報'; spin = .35;
+  } else if(name==='fogbank'){
+    // 霧：半透明の球を重ねた塊
+    for(let i=0;i<12;i++){
+      const m = new THREE.Mesh(new THREE.SphereGeometry(1.1+Math.random()*.9,14,10),
+        new THREE.MeshStandardMaterial({color:0xb9c3d8, transparent:true, opacity:.28, roughness:1}));
+      m.position.set((Math.random()-.5)*4.4,(Math.random()-.5)*2.6,(Math.random()-.5)*4.4);
+      g.add(m);
+    }
+    label = '濃霧'; spin = .3;
+  } else if(name==='fastswing'){
+    // 巻き上げ加速：ケーブルを巻くドラム
+    const drum = new THREE.Mesh(new THREE.CylinderGeometry(1.5,1.5,3.2,20), steelMat);
+    drum.rotation.z = Math.PI/2; g.add(drum);
+    for(let i=0;i<8;i++){
+      const w = new THREE.Mesh(new THREE.TorusGeometry(1.56,.1,8,24), steelDark);
+      w.rotation.y = Math.PI/2; w.position.x = -1.4 + i*.4; g.add(w);
+    }
+    label = '巻き上げ加速'; spin = 1.4;
+  } else if(name==='lowg'){
+    // 低重力：ゆっくり浮く球
+    const m = new THREE.Mesh(new THREE.SphereGeometry(1.5,26,20),
+      new THREE.MeshStandardMaterial({color:0xa98bff, emissive:0x3a2a70, roughness:.4}));
+    g.add(m);
+    for(let i=0;i<5;i++){
+      const r = new THREE.Mesh(new THREE.TorusGeometry(2.2+i*.34,.05,8,36),
+        new THREE.MeshBasicMaterial({color:0xa98bff, transparent:true, opacity:.4-i*.06}));
+      r.rotation.x = Math.PI/2 + i*.14; g.add(r);
+    }
+    label = '低重力テスト'; spin = .55;
+  } else if(name==='scaffold'){
+    // 足場くずれ：崩れかけた板の積み重なり
+    const mat = new THREE.MeshStandardMaterial({color:0xd8a33a, roughness:.7});
+    for(let i=0;i<7;i++){
+      const m = new THREE.Mesh(new THREE.BoxGeometry(4.4,.3,.9), mat);
+      m.position.set((Math.random()-.5)*1.6, -2.2+i*.72, (Math.random()-.5)*1.2);
+      m.rotation.z = (Math.random()-.5)*.5; m.rotation.y = (Math.random()-.5)*.5;
+      g.add(m);
+    }
+    label = '足場くずれ'; spin = .5;
+  } else if(name==='blackout'){
+    // 現場停電：消えた投光器
+    const pole = new THREE.Mesh(new THREE.BoxGeometry(.3,5,.3), steelDark);
+    pole.position.y = -1; g.add(pole);
+    const head = new THREE.Mesh(new THREE.BoxGeometry(2.4,1.4,.9),
+      new THREE.MeshStandardMaterial({color:0x2a3147, roughness:.6}));
+    head.position.y = 2.0; g.add(head);
+    const lens = new THREE.Mesh(new THREE.PlaneGeometry(2.0,1.0),
+      new THREE.MeshBasicMaterial({color:0x3a3050}));
+    lens.position.set(0,2.0,.47); g.add(lens);
+    label = '現場停電'; spin = .5;
+  }
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  scene.add(g);
+
+  // 被写体を原点に揃えて、バウンディングボックスに合わせてカメラを引く。
+  // これで大きさに関係なく全部同じ寄りで写る。
+  const box = new THREE.Box3().setFromObject(g);
+  const size = box.getSize(new THREE.Vector3());
+  const mid = box.getCenter(new THREE.Vector3());
+  g.position.sub(mid);
+  const reach = Math.max(size.x, size.y) * 0.5;
+  const fov = THREE.MathUtils.degToRad(camera.fov);
+  const dist = (reach / Math.tan(fov/2)) * 1.75 + 1.0;   // 1.75 = 余白
+  camera.position.set(0, size.y*0.10, dist);
+
+  // 被写体を横にずらして、反対側にテキストを置けるようにする。
+  // ずらしは親につける（グループ自体をずらすと回転で公転してしまう）。
+  const bias = parseFloat(QS.get('sx') || '0');
+  const pivot = new THREE.Group();
+  pivot.position.x = -bias * reach * 1.15;
+  scene.add(pivot);
+  pivot.add(g);
+  showcase.group = g; showcase.pivot = pivot;
+  showcase.spin = spin; showcase.label = label;
+}
+
+fitCamera();          // ここまでで SHOWCASE は確定している
+if(SHOWCASE){
+  titleEl.classList.add('hidden');
+  buildShowcase(SHOWCASE);
+  scoreEl.textContent = '';
+  msgEl.textContent = QS.get('nolabel')==='1' ? '' : showcase.label;
+  msgEl.style.fontSize = 'clamp(20px,5vw,30px)';
+  msgEl.style.letterSpacing = '4px';
+  // 暗い空舞台：被写体以外は何も出さない
+  ground.visible = false;
+  crane.visible = false; ball.visible = false; cable.visible = false;
+  for(const f of fences) f.visible = false;
+  for(const s of skyline) s.visible = false;
+  for(const b of buildings) b.group.visible = false;
+  for(const d of aimDots) d.visible = false;
+  scene.fog = null;
+  scene.background = new THREE.Color(0x0b0d16);
+  hemi.intensity = 3.2;
+  sun.intensity = 3.8; sun.position.set(2.5, 6, 6);
+  const key = new THREE.PointLight(0xfff0dd, 120, 30);
+  key.position.set(2.6, 3.2, 4.2); scene.add(key);
+  // 反対側からのフィルライト（裏面が真っ黒にならないように）
+  const fill = new THREE.PointLight(0x88aaff, 45, 26);
+  fill.position.set(-4.5, 2.4, 3.6); scene.add(fill);
+}
+// 録画スクリプトから被写体を差し替えられるようにする
+window.__showcase = name => {
+  if(showcase.pivot) scene.remove(showcase.pivot);   // pivot がグループを持っている
+  buildShowcase(name);
+  msgEl.textContent = showcase.label;
+};
+
+// ---------- 残り時間ゲージ（HUD の文字として出す） ----------
+function timeBar(){
+  const n = 14;
+  const k = Math.max(0, Math.min(1, timeLeft/timeMax));
+  const filled = Math.round(k*n);
+  return '残り ' + '▮'.repeat(filled) + '▯'.repeat(n-filled);
+}
+
+// ---------- メインループ ----------
+const clock = new THREE.Clock();
+let lastPhaseSign = 1;
+let lowTickAt = 0;
+
+function tick(){
+  requestAnimationFrame(tick);
+  const raw = Math.min(clock.getDelta(), .05);
+  const dt = raw * timeScale;
+
+  if(SHOWCASE){
+    if(showcase.group) showcase.group.rotation.y += raw*showcase.spin;
+    camera.lookAt(0, 0, 0);        // 被写体はずれていてもカメラは軸上
+    renderer.render(scene, camera);
+    return;
+  }
+
+  if(running && !dead){
+    t += dt;
+
+    // --- イベントの寿命 ---
+    if(windLeft>0){ windLeft -= dt; if(windLeft<=0) wind = 0; }
+    if(boostLeft>0){ boostLeft -= dt; if(boostLeft<=0) swingSpeedBoost = 1; }
+    if(lowgLeft>0){ lowgLeft -= dt; if(lowgLeft<=0) gravityMul = 1; }
+    if(fog>0){
+      fog -= dt;
+      const k = Math.min(1, fog/1.2);             // 終わり際にすっと晴れる
+      scene.fog.near = 34 - 28*k; scene.fog.far = 96 - 62*k;
+      scene.fog.color.copy(SKY).lerp(new THREE.Color(0xb9c3d8), k*.6);
+      scene.background.copy(scene.fog.color);
+      if(fog<=0){ scene.fog.near=34; scene.fog.far=96;
+                  scene.fog.color.copy(SKY); scene.background.copy(SKY); }
+    }
+    if(blackoutLeft>0){
+      blackoutLeft -= dt;
+      const k = blackoutLeft > .5 ? 0 : 1 - blackoutLeft/.5;   // 終わり際に戻る
+      hemi.intensity = 1.5*k + .12; sun.intensity = 2.2*k;
+      scene.background.setHex(0x000000).lerp(SKY, k);
+      if(scene.fog) scene.fog.color.copy(scene.background);
+      if(blackoutLeft<=0){
+        hemi.intensity=1.5; sun.intensity=2.2;
+        scene.background.copy(SKY);
+        if(scene.fog) scene.fog.color.copy(SKY);
+      }
+    }
+
+    // --- 振り子 ---
+    const effSpeed = swingSpeed * swingSpeedBoost;
+    if(!flying && retract<=0){
+      const prev = Math.cos(phase);
+      phase += effSpeed * dt;
+      // 折り返し（角速度がゼロを跨いだ瞬間）にだけ小さく音を置く
+      const now = Math.cos(phase);
+      if(prev*now < 0){
+        if(!SILENT) SND.swing();
+        lastPhaseSign = Math.sign(now);
+      }
+      ballPos.copy(ballAnchorPos());
+    }
+
+    // --- 放たれた鉄球 ---
+    if(flying){
+      ballVel.x += wind*dt;
+      ballVel.y -= GRAV*gravityMul*dt;
+      ballPos.addScaledVector(ballVel, dt);
+      // 当たり判定：ビルの箱に球の半径を足した範囲
+      for(const b of buildings){
+        if(b.dead) continue;
+        if(Math.abs(ballPos.x - b.x) < b.w/2 + 1.1 && ballPos.y < b.h + 1.1){
+          flying = false; retract = 0.9;
+          impact(b);
+          break;
+        }
+      }
+      // 地面か画面外に落ちたら、ケーブルに巻き戻す（外しても終わりではない）
+      if(flying && (ballPos.y < 1.0 || Math.abs(ballPos.x) > 46)){
+        flying = false; retract = 0.9;
+        if(ballPos.y < 1.0){ shake = Math.max(shake, .12); }
+      }
+    }
+
+    // --- 巻き戻し：外した鉄球がケーブルの位置へ戻る ---
+    if(retract>0){
+      retract -= dt;
+      const target = ballAnchorPos();
+      ballPos.lerp(target, Math.min(1, dt*6));
+      phase += effSpeed * dt;        // 振り子は待たずに振れ続ける
+      if(retract<=0) ballPos.copy(ballAnchorPos());
+    }
+
+    // --- 制限時間 ---
+    timeLeft -= dt;
+    if(timeLeft <= 4 && t > lowTickAt){       // 残りわずかは毎秒チクリと鳴る
+      lowTickAt = t + 0.5;
+      if(!SILENT) SND.tickLow();
+    }
+    if(timeLeft <= 0){ dead = true; gameOver('timeout'); }
+
+    // --- スコア：生きているあいだ増える ---
+    score += dt * 6;
+    scoreEl.textContent = Math.floor(score);
+    msgEl.textContent = timeBar();
+    if(!SILENT) SND.setPace(effSpeed/1.15);
+
+    // --- イベント ---
+    if(t > nextEventAt && !NOEV) triggerEvent();
+
+    if(AUTO) autoPilot();
+
+    // --- 予測線：つながっているあいだだけ、接線方向の出だしを見せる ---
+    if(!flying && retract<=0){
+      const p = ballAnchorPos(), v = ballAnchorVel();
+      const sp = p.clone(), sv = v.clone();
+      for(let i=0;i<aimDots.length;i++){
+        for(let k=0;k<5;k++){       // 1点につき 5 ステップ進める
+          sv.y -= GRAV*gravityMul*(1/60);
+          sv.x += wind*(1/60);
+          sp.addScaledVector(sv, 1/60);
+        }
+        aimDots[i].position.copy(sp);
+        aimDots[i].visible = true;
+      }
+    } else {
+      for(const d of aimDots) d.visible = false;
+    }
+
+    // 印の×をゆっくり回して、生きている的だと分かるようにする
+    for(const b of buildings){
+      if(b.dead) continue;
+      const mk = b.group.userData.mark;
+      if(mk){ mk.rotation.y += dt*1.6; mk.position.y = b.h + 1.5 + Math.sin(t*3+b.x)*.12; }
+    }
+  }
+
+  // --- 破片 ---
+  for(let i=debris.length-1;i>=0;i--){
+    const d = debris[i];
+    d.v.y -= 22*raw*timeScale;
+    d.mesh.position.addScaledVector(d.v, raw*timeScale);
+    d.mesh.rotation.x += d.spin.x*raw*timeScale;
+    d.mesh.rotation.y += d.spin.y*raw*timeScale;
+    if(d.mesh.position.y < .3){ d.mesh.position.y = .3; d.v.y *= -.32; d.v.x *= .7; }
+    d.life -= raw;
+    if(d.life<=0){ scene.remove(d.mesh); debris.splice(i,1); }
+  }
+
+  // --- 鉄球とケーブルの見た目を位置に合わせる ---
+  ball.position.copy(ballPos);
+  ball.rotation.z += raw*1.2*timeScale;
+  if(flying){
+    cable.visible = false;
+  } else {
+    cable.visible = true;
+    const top = new THREE.Vector3(0, PIVOT_Y, 0);
+    const mid = top.clone().add(ballPos).multiplyScalar(.5);
+    const len = top.distanceTo(ballPos);
+    cable.position.copy(mid);
+    cable.scale.set(1, Math.max(.01, len), 1);
+    // 円柱の既定の向き（+Y）を、支点→鉄球のベクトルに合わせる
+    cable.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),
+      ballPos.clone().sub(top).normalize());
+  }
+
+  // --- 死亡演出：スローモーション、カメラ寄り、鉄球が落ちる ---
+  if(dead){
+    timeScale += (0 - timeScale)*Math.min(1, raw*1.1);
+    if(!flying){
+      ballVel.y -= GRAV*raw*Math.max(.15,timeScale);
+      ballPos.addScaledVector(ballVel, raw*Math.max(.15,timeScale));
+      if(ballPos.y < 1.3) ballPos.y = 1.3;
+    }
+    for(const d of aimDots) d.visible = false;
+  }
+
+  // --- カメラ（死んでいる間も動かす：寄りと揺れを見せるため） ---
+  camZ += (camZTarget - camZ)*Math.min(1, raw*2.2);
+  const focusX = dead ? ballPos.x*.5 : ballPos.x*.28;
+  camera.position.x += (focusX - camera.position.x)*Math.min(1, raw*3.2);
+  camera.position.y = 12.5 - (34-camZ)*.24;
+  camera.position.z = camZ;
+  if(shake>0){
+    shake = Math.max(0, shake - raw*1.1);
+    camera.position.x += (Math.random()-.5)*shake*2.2;
+    camera.position.y += (Math.random()-.5)*shake*2.2;
+  }
+  camera.lookAt(focusX*.6, 8.5, 0);
+
+  renderer.render(scene, camera);
+}
+
+function gameOver(reason){
+  running=false; deadAt=Date.now();
+  if(!SILENT){ SND.hit(); SND.duck(1.6); setTimeout(()=>SND.over(), 700); }
+  // 被弾の演出：赤フラッシュ、赤いビネット、強い揺れ、カメラが寄る
+  flash('#ff2b3a', .8, 500);
+  vignetteEl.style.transition='opacity .5s'; vignetteEl.style.opacity=1;
+  shake = .9;
+  camZTarget = 19;
+  const finalScore = Math.floor(score);
+  koScoreEl.textContent = finalScore;
+  msgEl.textContent = reason==='timeout' ? '時間切れ' : '印のないビルを壊した';
+  setTimeout(()=>{ koEl.classList.add('on'); }, 620);   // スローモーションの後に K.O. が着地
+  if(AUTO){ setTimeout(()=>{ reset(); running=true;
+                             if(!SILENT) SND.unduck(); }, RETRY_MS); }
+  else setTimeout(()=>{
+    msgEl.textContent = matchMedia('(pointer:coarse)').matches
+      ? 'タップでもう一度' : 'スペースでもう一度';
+  }, 1800);
+}
+tick();
+
+// --- あそびかた（?）：録画中は出さない ---
+(function(){
+  const btn = document.getElementById('helpBtn');
+  const panel = document.getElementById('help');
+  if(!btn || !panel) return;
+  if(NOCHROME){                      // 録画・showcase では画面から消す
+    btn.style.display = 'none';
+    const back = document.getElementById('back');
+    if(back) back.style.display = 'none';
+    return;
+  }
+  const open = () => { panel.classList.add('on'); };
+  const close = () => { panel.classList.remove('on'); };
+  btn.addEventListener('click', open);
+  btn.addEventListener('touchend', e => { e.preventDefault(); open(); }, {passive:false});
+  panel.addEventListener('click', e => { if(e.target === panel) close(); });
+  panel.querySelector('.close').addEventListener('click', close);
+  panel.querySelector('.close').addEventListener('touchend',
+    e => { e.preventDefault(); close(); }, {passive:false});
+  addEventListener('keydown', e => {
+    if(e.code === 'Escape') close();
+    else if(e.key === '?' || (e.code === 'Slash' && e.shiftKey)) open();
+  });
+})();
+</script>
+</body>
+</html>
