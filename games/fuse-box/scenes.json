@@ -1,0 +1,216 @@
+{
+  "id": "0018_fuse_box",
+  "title": "ヒューズ・ボックス",
+  "video_title": "毎晩ブレーカーが落ちる店で、店主は配電盤の前に立ち続けている",
+  "lang": "ja",
+  "voice": "ja_female",
+  "scenes": [
+    {
+      "kind": "hook",
+      "clip": "lightning",
+      "narration": "このゲームは、ある食堂の裏口から生まれました。"
+    },
+    {
+      "kind": "image",
+      "prompt": "a small cramped late-night diner kitchen at night, old refrigerator, two rice cookers, a deep fryer and a freezer all plugged into one wall, warm fluorescent light, steam, realistic photograph, cinematic, highly detailed",
+      "narration": "小さな食堂の話です。厨房に、冷蔵庫と冷凍庫と炊飯器が並んでいます。夜になると、全部が同時に動きます。"
+    },
+    {
+      "kind": "image",
+      "prompt": "a battered old electrical distribution board on a back wall, small row of circuit breaker switches, peeling paint, exposed conduit, a single bare bulb overhead, dust, realistic photograph, moody dramatic lighting, highly detailed",
+      "narration": "配電盤は、建物ができた頃のままです。大家さんに何度も相談しました。返事はいつも同じでした。工事はできません、と。"
+    },
+    {
+      "kind": "image",
+      "prompt": "a tired middle-aged cook standing in a dim back corridor facing an old fuse box, hand raised toward the switches, apron, night, harsh single light source, realistic photograph, cinematic composition, highly detailed",
+      "narration": "だから店主は、こうしています。混みそうな時間になると、配電盤の前に立つ。落ちる前に、どれかを切って逃がす。それだけです。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "breaker",
+      "kicker": "主役",
+      "title": "ブレーカー",
+      "bullets": [
+        "9個が **3かける3** に並んでいます",
+        "電気が **どんどんたまって** いきます",
+        "一つでも落ちたら、**そこで終わり**"
+      ],
+      "narration": "これがブレーカーです。9個が、たてよこ3つずつ並んでいます。電気は勝手にたまります。そして、一つでも落ちたら、その時点で終わりです。1個です。9個ではありません。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "meter",
+      "kicker": "時計",
+      "title": "負荷メーター",
+      "bullets": [
+        "**青、黄色、赤** の順に上がります",
+        "赤は、**もうすぐ落ちる** という意味",
+        "これが唯一の時計です"
+      ],
+      "narration": "ブレーカーの真ん中に、棒が伸びていきます。青から、黄色へ。そして赤。赤は、もうすぐ落ちますという合図です。見てください。これが画面でただ一つの時計です。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "cable",
+      "kicker": "あなたの仕事",
+      "title": "なぞってつなぐ",
+      "bullets": [
+        "指で **2個以上** つなぐと電気が逃げます",
+        "つなげるのは **となり合ったブレーカー** だけ。ナナメも可",
+        "**長くつなぐほど点が伸びる**"
+      ],
+      "narration": "逃がしかたは、なぞるだけです。そうなんです、指で線を引きます。ただし2個以上つながないと、回路になりません。1個だけ触っても、何も起きないんです。そして長くつなぐほど、点が跳ね上がります。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "leak",
+      "kicker": "触ってはいけないもの",
+      "title": "漏電",
+      "bullets": [
+        "青白く **バチバチ** しているブレーカー",
+        "**通した瞬間に終わり**。例外なし",
+        "しかも **場所が移ります**"
+      ],
+      "narration": "ここが面白いところです。ときどき、一つのブレーカーが青白くバチバチします。漏電です。そこを通した瞬間、終わります。赤いブレーカーの真横で光ることもあります。だから、欲張った長い線ほど危ないんです。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "busbar",
+      "kicker": "電気の出どころ",
+      "title": "ブスバー",
+      "bullets": [
+        "盤の下で **光っている棒**",
+        "ここから9個へ配られています",
+        "止められません"
+      ],
+      "narration": "盤の下に、光る棒が一本あります。ブスバーといいます。電気はここから9個へ配られます。もちろん、止めるボタンはありません。"
+    },
+    {
+      "kind": "events",
+      "clip": "events",
+      "kicker": "そのうえで",
+      "title": "盤は静かにしていません",
+      "bullets": [
+        "**過負荷** — 全部が一気に増えます",
+        "**停電** — メーターが見えなくなります",
+        "**逆流** — なぞると、逆に増えます",
+        "**落雷** — 1個がいきなり赤に飛びます"
+      ],
+      "narration": "盤は静かにしていません。過負荷。全部のメーターが一気に伸びます。停電。メーターが消えて、さっきどれが赤かったかを思い出す時間になります。もっとひどいのがあります。逆流です。なぞると、電気が逃げるどころか増えます。そして落雷。1個がいきなり赤まで飛びます。"
+    },
+    {
+      "kind": "death",
+      "clip": "death",
+      "kicker": "終わりかた",
+      "title": "落ちるのは、いつも一つだけ",
+      "bullets": [
+        "落ちた **その1個** に画面が寄ります",
+        "見ていなかった場所で落ちます",
+        "そして最終スコアが出ます"
+      ],
+      "narration": "終わりはあっけないです。画面が、落ちたブレーカーに寄ります。たいてい、見ていなかった場所です。あの店主は、毎晩これを1人でやっています。10年です。あなたは、たぶん1分ももちません。"
+    },
+    {
+      "kind": "outro",
+      "title": "概要欄のリンクから遊べます",
+      "subtitle": "チャンネル登録で、毎日1本",
+      "narration": "ブラウザで、いますぐ無料で遊べます。概要欄のリンクからどうぞ。チャンネル登録もお願いします。明日も1本出します。"
+    }
+  ],
+  "slug": "fuse-box",
+  "channel": "Daily Arcade Studio",
+  "events": [
+    "surge",
+    "blackout",
+    "leakstorm",
+    "reverse",
+    "lightning"
+  ],
+  "short": [
+    {
+      "mark": "lightning",
+      "lead": -0.3,
+      "dur": 8.0,
+      "headline": "1個だけ赤に飛ぶ"
+    },
+    {
+      "mark": "reverse",
+      "lead": -0.5,
+      "dur": 8.0,
+      "headline": "なぞると増える"
+    },
+    {
+      "mark": "blackout",
+      "lead": -0.5,
+      "dur": 7.0,
+      "headline": "メーターが消える"
+    },
+    {
+      "mark": "surge",
+      "lead": -0.5,
+      "dur": 7.0,
+      "headline": "全部が一気に上がる"
+    },
+    {
+      "mark": "death",
+      "lead": -2.0,
+      "dur": 9.0,
+      "headline": "1個落ちたら終わり"
+    }
+  ],
+  "thumb": {
+    "hook": "落ちたら終わり",
+    "sub": "ブレーカー9個。なぞって逃がせ。ブラウザで無料。",
+    "frame_mark": "lightning",
+    "frame_lead": 1.0
+  },
+  "short_v2": {
+    "cuts": [
+      {
+        "kind": "clip",
+        "mark": "lightning",
+        "lead": -0.3,
+        "dur": 4.5,
+        "headline": "今日のゲーム",
+        "narration": "今日のゲームです。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "breaker",
+        "dur": 5.0,
+        "headline": "ヒューズ・ボックス",
+        "narration": "あなたは、落ちそうな配電盤の前に立つ人です。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "meter",
+        "dur": 5.0,
+        "headline": "赤は危険",
+        "narration": "電気がたまると、青から赤に変わります。満タンで落ちます。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "cable",
+        "dur": 5.5,
+        "headline": "なぞる",
+        "narration": "となりどうしを2個以上なぞると、電気が逃げます。"
+      },
+      {
+        "kind": "clip",
+        "mark": "death",
+        "lead": -2.0,
+        "dur": 5.5,
+        "headline": "",
+        "narration": "1個でも落ちたら、終わりです。"
+      },
+      {
+        "kind": "clip",
+        "mark": "run2",
+        "lead": 1.0,
+        "dur": 4.5,
+        "cta": "概要欄のリンクから遊べます",
+        "narration": "ブラウザで無料で遊べます。リンクは概要欄です。"
+      }
+    ]
+  }
+}

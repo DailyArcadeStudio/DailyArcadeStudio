@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ヒューズ・ボックス</title>
+<style>
+  html,body{margin:0;padding:0;overflow:hidden;background:#07090f;font-family:'Hiragino Kaku Gothic ProN','Helvetica Neue',Arial,sans-serif;}
+  #ui{position:fixed;top:16px;left:0;right:0;text-align:center;color:#fff;z-index:10;pointer-events:none;}
+  #score{font-size:clamp(24px,5.6vw,34px);font-weight:800;text-shadow:0 2px 8px #000;}
+  #msg{font-size:clamp(13px,3.3vw,20px);margin-top:6px;opacity:.9;text-shadow:0 2px 6px #000;}
+  #title{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:rgba(5,7,13,.78);z-index:20;color:#fff;transition:opacity .4s;padding:0 18px;box-sizing:border-box;}
+  #title h1{font-size:clamp(28px,8.6vw,58px);margin:0 0 8px;letter-spacing:2px;text-shadow:0 4px 18px #ffb020;text-align:center;}
+  #title p{font-size:clamp(13px,3.4vw,19px);opacity:.88;margin:4px 0;text-align:center;line-height:1.65;}
+  #title .btn{margin-top:24px;padding:14px 44px;font-size:clamp(18px,4.8vw,22px);font-weight:800;color:#180e00;
+    background:linear-gradient(180deg,#ffc83c,#e08a12);border:none;border-radius:12px;cursor:pointer;
+    box-shadow:0 6px 24px rgba(255,176,32,.5);}
+  #title .btn:hover{transform:scale(1.05);}
+  .hidden{opacity:0;pointer-events:none;}
+  #back{position:fixed;top:14px;left:14px;z-index:30;text-decoration:none;
+    background:rgba(12,16,26,.72);color:#fff;font:600 clamp(12px,3.1vw,15px)/1 'Hiragino Kaku Gothic ProN',Arial,sans-serif;
+    padding:0 14px;height:44px;display:flex;align-items:center;border-radius:12px;}
+  #back:hover{background:rgba(30,38,56,.9);}
+  #mute{position:fixed;top:14px;right:14px;z-index:30;border:none;cursor:pointer;
+    background:rgba(12,16,26,.72);color:#fff;font-size:20px;line-height:1;
+    width:44px;height:44px;border-radius:12px;}
+  #mute:hover{background:rgba(30,38,56,.9);}
+  /* show the hint that matches the device */
+  .tc{display:none;}
+  @media (pointer:coarse){ .kb{display:none;} .tc{display:block;} }
+  /* a finger-sized START button on touch devices */
+  @media (pointer:coarse){ #title .btn{padding:18px 52px;} }
+
+  /* --- event banner: slams into the middle of the screen --- */
+  #banner{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    z-index:15;pointer-events:none;opacity:0;}
+  #banner .b{font-size:clamp(26px,7.2vw,64px);font-weight:900;letter-spacing:.06em;color:#fff;
+    padding:10px 4vw;max-width:94vw;text-align:center;transform:scale(2.4);opacity:0;
+    text-shadow:0 0 26px currentColor, 0 6px 20px #000;
+    border-top:5px solid currentColor;border-bottom:5px solid currentColor;}
+  #banner.go .b{animation:slam .62s cubic-bezier(.12,.85,.2,1) forwards;}
+  @keyframes slam{
+    0%  {transform:scale(2.4) rotate(-4deg);opacity:0;}
+    22% {transform:scale(1)   rotate(0deg); opacity:1;}
+    70% {transform:scale(1)   rotate(0deg); opacity:1;}
+    100%{transform:scale(1.12);opacity:0;}
+  }
+
+  /* --- full-screen colour flashes --- */
+  #flash{position:fixed;inset:0;z-index:14;pointer-events:none;opacity:0;background:#fff;}
+  #vignette{position:fixed;inset:0;z-index:13;pointer-events:none;opacity:0;
+    background:radial-gradient(ellipse at center,rgba(0,0,0,0) 32%,rgba(120,0,10,.85) 100%);}
+
+  /* --- K.O. screen --- */
+  #ko{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    z-index:22;pointer-events:none;opacity:0;color:#fff;transition:opacity .3s;}
+  #ko.on{opacity:1;}
+  #ko .koText{font-size:clamp(82px,23vw,178px);font-weight:900;letter-spacing:10px;color:#fff;
+    text-shadow:0 0 40px #ff9b1a,0 0 90px #e0451c,0 10px 30px #000;
+    transform:scale(3);opacity:0;}
+  #ko.on .koText{animation:koSlam .8s cubic-bezier(.1,.9,.2,1) forwards;}
+  @keyframes koSlam{
+    0%  {transform:scale(3) rotate(-8deg);opacity:0;}
+    30% {transform:scale(1) rotate(0deg);opacity:1;}
+    36% {transform:scale(1.06);}
+    100%{transform:scale(1);opacity:1;}
+  }
+  #ko .finalLabel{font-size:clamp(14px,3.8vw,22px);letter-spacing:4px;opacity:0;margin-top:6px;text-shadow:0 2px 8px #000;}
+  #ko .finalScore{font-size:clamp(46px,13vw,80px);font-weight:800;opacity:0;text-shadow:0 4px 20px #000;}
+  #ko.on .finalLabel{animation:fadeUp .5s .75s forwards;}
+  #ko.on .finalScore{animation:fadeUp .5s .9s forwards;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+
+  /* --- help (?) --- */
+  #helpBtn{position:fixed;top:14px;right:66px;z-index:30;border:none;cursor:pointer;
+    background:rgba(12,16,26,.72);color:#fff;font:700 20px/1 'Helvetica Neue',Arial,sans-serif;
+    width:44px;height:44px;border-radius:12px;}
+  #helpBtn:hover{background:rgba(30,38,56,.9);}
+  #help{position:fixed;inset:0;z-index:40;display:none;align-items:center;
+    justify-content:center;background:rgba(4,6,12,.86);padding:18px;}
+  #help.on{display:flex;}
+  #help .box{background:#121826;border:1px solid #303c58;border-radius:18px;
+    max-width:560px;width:100%;max-height:86vh;overflow:auto;padding:24px 22px 20px;
+    color:#e6edf3;font-family:'Hiragino Kaku Gothic ProN',Arial,sans-serif;}
+  #help h2{margin:0 0 4px;font-size:clamp(19px,4.8vw,26px);}
+  #help .sub{color:#8b949e;font-size:clamp(12px,3.1vw,14px);margin:0 0 16px;}
+  #help h3{font-size:clamp(13px,3.3vw,15px);color:#ffc83c;margin:16px 0 6px;letter-spacing:.04em;}
+  #help ul{margin:0;padding-left:20px;}
+  #help li{font-size:clamp(12.5px,3.3vw,15px);line-height:1.7;margin:3px 0;}
+  #help b{color:#ffc83c;font-weight:700;}
+  #help .close{margin-top:18px;width:100%;padding:12px;border:none;border-radius:10px;
+    background:#2b3550;color:#fff;font-size:16px;font-weight:700;cursor:pointer;}
+  #help .close:hover{background:#3a4668;}
+</style>
+</head>
+<body>
+<div id="ui"><div id="score">0</div><div id="msg"></div></div>
+<button id="helpBtn" title="あそびかた">?</button>
+<div id="help"><div class="box">
+  <h2>ヒューズ・ボックス</h2>
+  <p class="sub">配電盤ひとつ。落ちる前に、電気を逃がす。</p>
+    <h3>ブレーカー</h3>
+    <ul><li>9個のブレーカーに、電気がたまっていきます</li>
+        <li>メーターが満タンになると<b>落ちる</b>。一つでも落ちたら終わり</li>
+        <li><b>青 → 黄 → 赤</b> と光るのが、残り時間です</li></ul>
+    <h3>逃がしかた</h3>
+    <ul><li>指で<b>なぞる</b>と、通ったブレーカーの電気が逃げます</li>
+        <li>ただし <b>2個以上つながないと</b> 回路にならず、逃げません</li>
+        <li>つなげるのは<b>となり合ったブレーカー</b>だけ。ナナメも可</li>
+        <li>長くつなぐほど<b>スコアが伸びる</b>。欲張るかは自分次第</li></ul>
+    <h3>漏電（青白いバチバチ）</h3>
+    <ul><li>ときどき一つのブレーカーが<b>漏電</b>します</li>
+        <li>そこを通すと<b>即感電</b>。よけて回路を組んでください</li></ul>
+    <h3>イベント</h3>
+    <ul><li><b>過負荷</b>：全部の電気が一気に増えます</li>
+        <li><b>停電</b>：メーターがしばらく見えません</li>
+        <li><b>漏電多発</b>／<b>逆流</b>／<b>落雷</b>：それぞれ別の嫌がらせです</li></ul>
+  <button class="close">とじる</button>
+</div></div>
+<a id="back" href="../../" title="ゲーム一覧にもどる">‹ ゲーム一覧</a>
+<button id="mute" title="音の オン / オフ">🔊</button>
+<div id="vignette"></div>
+<div id="flash"></div>
+<div id="banner"><div class="b"></div></div>
+<div id="ko">
+  <div class="koText">K.O.</div>
+  <div class="finalLabel">最終スコア</div>
+  <div class="finalScore">0</div>
+</div>
+<div id="title">
+  <h1>ヒューズ・ボックス</h1>
+  <p>落ちる前に、電気を逃がせ。</p>
+  <p class="kb">← ↑ → ↓ : カーソル移動<br>スペースを押しながら動かす : なぞってつなぐ</p>
+  <p class="tc">赤くなったブレーカーを<br>指で <b>なぞってつなぐ</b>（2個以上）</p>
+  <button class="btn" id="startBtn">スタート</button>
+</div>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+// ---------- url flags (declared first: sound and camera both read them) ----------
+const QS = new URLSearchParams(location.search);
+const AUTO = QS.get('auto')==='1';
+const SHOWCASE_Q = QS.get('showcase');
+// Recording must produce clean footage, so every automated mode is muted.
+const REC = QS.get('rec')==='1';   // 録音モード: 音を鳴らして拾う
+const SILENT = (AUTO || !!SHOWCASE_Q || QS.get('mute')==='1') && !REC;
+// 録画・showcase では「?」と「ゲーム一覧」を出さない（動画の邪魔になる）
+const NOCHROME = AUTO || !!SHOWCASE_Q || QS.get('nochrome')==='1';
+
+// ---------- renderer / scene ----------
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.shadowMap.enabled = true;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const SKY = new THREE.Color(0x0b0e18);
+scene.background = SKY.clone();
+
+const camera = new THREE.PerspectiveCamera(50, innerWidth/innerHeight, .1, 140);
+camera.position.set(0, 0, 14);
+
+// ---------- board: a 3x3 wall of breakers ----------
+const COLS = 3, ROWS = 3, N = COLS*ROWS;
+const CELL = 2.5;                                   // world units between cell centres
+const cellX = i => ((i%COLS) - (COLS-1)/2) * CELL;
+const cellY = i => ((ROWS-1)/2 - Math.floor(i/COLS)) * CELL - .15;
+// how far the board reaches, used to fit the camera on any aspect ratio
+const BOARD_W = (COLS-1)*CELL + 3.0;
+const BOARD_H = (ROWS-1)*CELL + 4.9;   // room for the bus bar below AND the HUD above
+
+// Portrait and landscape both have to work. A phone held upright is far
+// narrower than 16:9, so a fixed FOV pushes the board out of frame: widen the
+// vertical FOV as the screen gets taller, then back the camera off far enough
+// that the board fits on BOTH axes (a tall FOV alone still crops the sides).
+const BASE_FOV = 50;
+let camZ = 14, camBaseZ = 14;
+function fitCamera(){
+  const aspect = innerWidth / innerHeight;
+  camera.aspect = aspect;
+  if(typeof SHOWCASE !== 'undefined' && SHOWCASE){
+    camera.fov = aspect < 1 ? 62 : 46;
+  } else {
+    const ref = 16/9;
+    camera.fov = aspect >= ref ? BASE_FOV
+      : Math.min(96, THREE.MathUtils.radToDeg(
+          2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(BASE_FOV)/2) * (ref/aspect))));
+    // distance that fits the board vertically vs horizontally — take the further
+    const half = Math.tan(THREE.MathUtils.degToRad(camera.fov)/2);
+    // a wide screen is short, so the score readout eats a bigger share of the
+    // height — reserve extra vertical room the wider the viewport gets
+    const headroom = 1 + Math.min(.55, Math.max(0, aspect - 1) * .38);
+    const dv = (BOARD_H * headroom / 2) / half;
+    const dh = (BOARD_W/2) / (half * aspect);
+    camBaseZ = Math.max(dv, dh) * 1.04 + 1.2;
+    camZ = camBaseZ;
+  }
+  camera.__base = camera.fov;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+}
+
+// ---------- lights ----------
+const hemi = new THREE.HemisphereLight(0x8fa6ff, 0x1a1408, 1.35);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xfff0d0, 1.9);
+sun.position.set(4, 8, 12); sun.castShadow = true;
+sun.shadow.camera.left=-10; sun.shadow.camera.right=10;
+sun.shadow.camera.top=10; sun.shadow.camera.bottom=-10;
+scene.add(sun);
+const roomLight = new THREE.PointLight(0xffc06a, 60, 36);
+roomLight.position.set(0, 2.2, 9);
+scene.add(roomLight);
+
+// ---------- materials ----------
+const ACCENT = 0xffb020;                       // the game's accent: live-wire amber
+const panelMat = new THREE.MeshStandardMaterial({color:0x1b2231, roughness:.92, metalness:.08});
+const frameMat = new THREE.MeshStandardMaterial({color:0x37415c, roughness:.5,  metalness:.55});
+const caseMat  = new THREE.MeshStandardMaterial({color:0x2a3346, roughness:.68, metalness:.2});
+const leverMat = new THREE.MeshStandardMaterial({color:0xd8dde8, roughness:.35, metalness:.45});
+const railMat  = new THREE.MeshStandardMaterial({color:0x4a5570, roughness:.4,  metalness:.7});
+const busMat   = new THREE.MeshStandardMaterial({color:0xc98a1c, roughness:.35, metalness:.8,
+                                                 emissive:0x3a2200});
+
+// ---------- the cabinet the breakers are bolted into ----------
+const cabinet = new THREE.Group();
+(function buildCabinet(){
+  const back = new THREE.Mesh(new THREE.BoxGeometry(BOARD_W, BOARD_H, .6), panelMat);
+  back.position.set(0, .3, -1.0); back.receiveShadow = true; cabinet.add(back);
+  // frame rails, so it reads as a bolted metal box rather than a floating grid
+  for(const s of [1,-1]){
+    const v = new THREE.Mesh(new THREE.BoxGeometry(.32, BOARD_H+.4, .8), frameMat);
+    v.position.set(s*BOARD_W/2, .3, -.8); cabinet.add(v);
+    const h = new THREE.Mesh(new THREE.BoxGeometry(BOARD_W+.6, .32, .8), frameMat);
+    h.position.set(0, .3 + s*BOARD_H/2, -.8); cabinet.add(h);
+  }
+  // DIN rails: one horizontal bar behind each row of breakers
+  for(let r=0;r<ROWS;r++){
+    const rail = new THREE.Mesh(new THREE.BoxGeometry(BOARD_W-.9, .16, .3), railMat);
+    rail.position.set(0, cellY(r*COLS) - .95, -.55); cabinet.add(rail);
+  }
+  cabinet.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  scene.add(cabinet);
+})();
+
+// the bus bar along the bottom — where all the power arrives from
+const bus = new THREE.Group();
+const busGlow = new THREE.Mesh(new THREE.BoxGeometry(BOARD_W-1.0, .10, .12),
+  new THREE.MeshBasicMaterial({color:0xffd070}));
+(function buildBus(){
+  const bar = new THREE.Mesh(new THREE.BoxGeometry(BOARD_W-1.0, .34, .34), busMat);
+  bar.castShadow = true; bus.add(bar);
+  busGlow.position.set(0, .22, .1); bus.add(busGlow);
+  // stubby feeds climbing from the bar towards each column
+  for(let c=0;c<COLS;c++){
+    const feed = new THREE.Mesh(new THREE.BoxGeometry(.13, .9, .13), busMat);
+    feed.position.set(cellX(c), .6, 0); feed.castShadow = true; bus.add(feed);
+  }
+  bus.position.set(0, cellY((ROWS-1)*COLS) - 1.75, -.2);
+  scene.add(bus);
+})();
+
+// ---------- one breaker ----------
+// A boxy DIN-rail breaker: dark case, a little lever that flips when it
+// pops, and a load meter that fills from the bottom and changes colour.
+function buildBreaker(){
+  const g = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.BoxGeometry(1.62, 1.72, .62), caseMat);
+  body.castShadow = true; body.receiveShadow = true; g.add(body);
+  // a lighter face plate so the case has an edge to catch the light
+  const face = new THREE.Mesh(new THREE.BoxGeometry(1.46, 1.56, .06),
+    new THREE.MeshStandardMaterial({color:0x36415a, roughness:.7}));
+  face.position.z = .32; g.add(face);
+
+  // --- load meter: a bar that scales up from its bottom edge ---
+  const METER_H = 1.0;                       // the bar's travel, matching the recess
+  const meterBack = new THREE.Mesh(new THREE.BoxGeometry(1.24, METER_H + .12, .04),
+    new THREE.MeshStandardMaterial({color:0x080c16, roughness:.95}));
+  meterBack.position.set(0, -.30, .36); g.add(meterBack);
+  const meterMat = new THREE.MeshBasicMaterial({color:0x3fa9ff});
+  const meter = new THREE.Mesh(new THREE.BoxGeometry(1.10, METER_H, .06), meterMat);
+  // scale from the bottom: put the geometry's origin at its base
+  meter.geometry.translate(0, METER_H/2, 0);
+  meter.position.set(0, -.30 - METER_H/2, .40); g.add(meter);
+
+  // --- lever: up = live, flipped down = popped ---
+  const leverPivot = new THREE.Group();
+  leverPivot.position.set(0, .52, .38);
+  const lever = new THREE.Mesh(new THREE.BoxGeometry(.42, .5, .26), leverMat);
+  lever.position.y = .2; lever.castShadow = true; leverPivot.add(lever);
+  const nub = new THREE.Mesh(new THREE.BoxGeometry(.46, .12, .30),
+    new THREE.MeshStandardMaterial({color:0xe04a2a, roughness:.5}));
+  nub.position.y = .40; leverPivot.add(nub);
+  g.add(leverPivot);
+
+  // --- a glow plate behind the case: how "hot" this breaker looks ---
+  // A flat additive plane would read as a hard rectangle, so the falloff
+  // happens in the shader: bright at the centre, gone by the edge.
+  const haloMat = new THREE.ShaderMaterial({
+    transparent:true, depthWrite:false, blending:THREE.AdditiveBlending,
+    uniforms:{c:{value:new THREE.Color(0xff6a2a)}, a:{value:0}},
+    vertexShader:`varying vec2 vUv; void main(){ vUv=uv;
+      gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }`,
+    fragmentShader:`uniform vec3 c; uniform float a; varying vec2 vUv;
+      void main(){ float d=distance(vUv,vec2(.5));
+        gl_FragColor=vec4(c, pow(max(0.,1.-d*2.),2.4)*a); }`,
+  });
+  const halo = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 3.5), haloMat);
+  halo.position.z = -.45; g.add(halo);
+
+  // --- leak arcs: crackling sticks that only show while this one leaks ---
+  const arcs = [];
+  const arcMat = new THREE.MeshBasicMaterial({color:0xaee4ff, transparent:true, opacity:0,
+    blending:THREE.AdditiveBlending, depthWrite:false});
+  for(let k=0;k<5;k++){
+    const a = new THREE.Mesh(new THREE.BoxGeometry(.07, .5, .07), arcMat);
+    a.position.set((Math.random()-.5)*1.3, (Math.random()-.5)*1.4, .5);
+    a.rotation.z = Math.random()*Math.PI;
+    g.add(a); arcs.push(a);
+  }
+  return {group:g, body, face, meter, meterMat, halo, leverPivot, arcs, arcMat};
+}
+
+const breakers = [];
+for(let i=0;i<N;i++){
+  const b = buildBreaker();
+  b.group.position.set(cellX(i), cellY(i), 0);
+  scene.add(b.group);
+  breakers.push(Object.assign(b, {
+    load:0,          // 0..1 — pops at 1
+    rate:0,          // how fast it fills right now
+    leak:0,          // >0 while this breaker is leaking (deadly to route through)
+    popped:false,
+    flash:0,         // white kick right after a discharge
+  }));
+}
+
+// ---------- the routing cable the player draws ----------
+// A tube through the cells the stroke has touched. Rebuilt each time the
+// path changes, which is at most a few times a second — cheap enough.
+const cableMat = new THREE.MeshBasicMaterial({color:0xffd24a});
+let cableMesh = null;
+const nodeMat = new THREE.MeshBasicMaterial({color:0xfff1b0});
+const nodes = [];
+for(let i=0;i<N;i++){
+  const n = new THREE.Mesh(new THREE.SphereGeometry(.2, 14, 10), nodeMat);
+  n.visible = false; n.position.set(cellX(i), cellY(i), .75);
+  scene.add(n); nodes.push(n);
+}
+function redrawCable(path){
+  if(cableMesh){ scene.remove(cableMesh); cableMesh.geometry.dispose(); cableMesh = null; }
+  for(let i=0;i<N;i++) nodes[i].visible = path.includes(i);
+  if(path.length < 2) return;
+  const pts = path.map(i => new THREE.Vector3(cellX(i), cellY(i), .75));
+  const curve = new THREE.CatmullRomCurve3(pts, false, 'catmullrom', .0);
+  cableMesh = new THREE.Mesh(new THREE.TubeGeometry(curve, path.length*10, .11, 8, false), cableMat);
+  scene.add(cableMesh);
+}
+
+// ---------- the cursor ring (keyboard play needs a visible focus) ----------
+const cursor = new THREE.Mesh(new THREE.TorusGeometry(1.05, .06, 8, 36),
+  new THREE.MeshBasicMaterial({color:0xffffff, transparent:true, opacity:.75}));
+cursor.position.set(cellX(4), cellY(4), .7);
+cursor.visible = false;
+scene.add(cursor);
+
+// ---------- sparks: little cubes thrown out when power is dumped ----------
+const sparks = [];
+const sparkMat = new THREE.MeshBasicMaterial({color:0xffdf7a});
+for(let i=0;i<90;i++){
+  const s = new THREE.Mesh(new THREE.BoxGeometry(.09,.09,.09), sparkMat);
+  s.visible = false; scene.add(s);
+  sparks.push({mesh:s, vx:0, vy:0, vz:0, life:0});
+}
+function burst(x, y, n, spread){
+  let made = 0;
+  for(const s of sparks){
+    if(s.life > 0) continue;
+    s.mesh.position.set(x + (Math.random()-.5)*.4, y + (Math.random()-.5)*.4, .8);
+    s.vx = (Math.random()-.5)*spread; s.vy = (Math.random()-.5)*spread + 1.2;
+    s.vz = Math.random()*spread*.4;
+    s.life = .5 + Math.random()*.5;
+    s.mesh.visible = true;
+    if(++made >= n) break;
+  }
+}
+
+// ---------- game state ----------
+let running=false, dead=false, t=0, score=0;
+let timeScale=1;                 // slow-motion multiplier
+let deadAt=0;                    // when the run ended (touch retry gate)
+let shake=0;                     // camera shake amount
+let camDistTarget=0;             // death zoom pulls the camera in (offset from camBaseZ)
+let camDist=0;
+let blackoutT=0;                 // >0 while the meters are hidden
+let surgeT=0;                    // >0 while everything fills faster
+let reverseT=0;                  // >0 while a discharge fills its NEIGHBOURS
+let nextEventAt=9;               // seconds until the first event
+let eventQueue=[];               // event names not yet used in this run
+let path=[];                     // cells the current stroke has touched
+let drawing=false;               // true while a stroke is being drawn
+let combo=0;                     // length of the last completed circuit
+let cursorIdx=4, spaceHeld=false; // keyboard focus cell + Space held state
+let killer=-1;                   // which breaker ended the run
+const scoreEl = document.getElementById('score');
+const msgEl = document.getElementById('msg');
+const titleEl = document.getElementById('title');
+const bannerEl = document.getElementById('banner');
+const bannerText = bannerEl.querySelector('.b');
+const flashEl = document.getElementById('flash');
+const vignetteEl = document.getElementById('vignette');
+const koEl = document.getElementById('ko');
+const koScoreEl = koEl.querySelector('.finalScore');
+
+// how fast the board fills, rising with time survived
+const baseRate = () => 0.050 + Math.min(0.085, t * 0.0022);
+
+// ---------- presentation helpers ----------
+function banner(text, color){
+  bannerText.textContent = text;
+  bannerText.style.color = color;
+  bannerEl.classList.remove('go');
+  void bannerEl.offsetWidth;      // restart the CSS animation
+  bannerEl.style.opacity = 1;
+  bannerEl.classList.add('go');
+}
+function flash(color, strength, ms){
+  flashEl.style.background = color;
+  flashEl.style.transition = 'none';
+  flashEl.style.opacity = strength;
+  requestAnimationFrame(()=>{
+    flashEl.style.transition = `opacity ${ms}ms ease-out`;
+    flashEl.style.opacity = 0;
+  });
+}
+// start a leak on a breaker that is not already leaking
+function startLeak(dur){
+  const cand = [];
+  for(let i=0;i<N;i++) if(breakers[i].leak <= 0) cand.push(i);
+  if(!cand.length) return -1;
+  const i = cand[Math.floor(Math.random()*cand.length)];
+  breakers[i].leak = dur;
+  return i;
+}
+
+// ---------- events ----------
+// Each one attacks the board in a visibly different way, so the footage
+// never repeats itself: fill faster / hide the meters / poison cells /
+// invert the discharge / smash one breaker outright.
+const EVENTS = {
+  // everything fills much faster for a while
+  surge(){
+    banner('過負荷', '#ff8a2a');
+    surgeT = 6.5;
+    flash('#ff9b30', .34, 420);
+    shake = Math.max(shake, .28);
+    return 7;
+  },
+  // the meters go dark — you have to remember which ones were hot
+  blackout(){
+    banner('停電', '#9b6bff');
+    blackoutT = 4.2;
+    return 5.5;
+  },
+  // three breakers start leaking at once: the safe routes narrow sharply
+  leakstorm(){
+    banner('漏電多発', '#66e0ff');
+    for(let k=0;k<3;k++) startLeak(6 + Math.random()*2);
+    flash('#aee4ff', .3, 380);
+    return 7;
+  },
+  // discharging now DUMPS into the neighbours instead of draining
+  reverse(){
+    banner('逆流', '#ff4a7a');
+    reverseT = 6;
+    flash('#ff4a7a', .32, 420);
+    return 7;
+  },
+  // one breaker takes a direct hit and jumps most of the way to popping
+  lightning(){
+    banner('落雷', '#ffe14a');
+    const i = Math.floor(Math.random()*N);
+    breakers[i].load = Math.min(.94, breakers[i].load + .72);
+    breakers[i].flash = 1;
+    burst(cellX(i), cellY(i), 22, 7);
+    flash('#ffffff', .85, 320);
+    shake = Math.max(shake, .5);
+    return 5;
+  },
+};
+const EVENT_NAMES = Object.keys(EVENTS);
+window.__events = EVENT_NAMES.slice();
+
+// recording/debug hook: fire a named event on cue (used by the capture script)
+// returns false if the run is already over, so a capture script can wait
+// for the next run instead of firing an event onto the K.O. screen
+window.__ev = name => {
+  if(!running || dead || !EVENTS[name]) return false;
+  const busy = EVENTS[name]();
+  if(!SILENT) SND.event();
+  nextEventAt = t + busy + 5;
+  return true;
+};
+window.__alive = () => running && !dead;
+window.__kill = () => { if(running && !dead){ killer = 4; dead=true; gameOver(4); } };
+window.__recStop = () => SND.recStop();
+window.__snd = () => ({enabled: SND.enabled, silent: SILENT});
+window.__probe = () => ({t:+t.toFixed(2), score:Math.floor(score),
+  load: breakers.map(b => +b.load.toFixed(2)),
+  leak: breakers.map(b => +b.leak.toFixed(1)),
+  path: path.slice(), next:+nextEventAt.toFixed(2)});
+
+function refillEventQueue(){
+  eventQueue = EVENT_NAMES.slice();
+  for(let i=eventQueue.length-1;i>0;i--){        // shuffle so the order varies per run
+    const j = Math.floor(Math.random()*(i+1));
+    [eventQueue[i],eventQueue[j]]=[eventQueue[j],eventQueue[i]];
+  }
+}
+
+function triggerEvent(){
+  if(!eventQueue.length) refillEventQueue();
+  const name = eventQueue.pop();
+  const busy = EVENTS[name]();
+  if(!SILENT) SND.event();
+  nextEventAt = t + busy + 6 + Math.random()*4;  // breathing room between events
+}
+
+// ---------- reset ----------
+function reset(){
+  for(let i=0;i<N;i++){
+    const b = breakers[i];
+    b.load = .12 + Math.random()*.22;
+    b.leak = 0; b.popped = false; b.flash = 0;
+    b.leverPivot.rotation.x = 0;
+    b.group.position.set(cellX(i), cellY(i), 0);
+    b.group.rotation.set(0,0,0);
+    b.halo.material.uniforms.a.value = 0;
+    b.arcMat.opacity = 0;
+  }
+  path = []; drawing = false; combo = 0; killer = -1;
+  redrawCable(path);
+  cursorIdx = 4; cursor.visible = false;
+  for(const s of sparks){ s.life = 0; s.mesh.visible = false; }
+  t=0; score=0; dead=false;
+  timeScale=1; shake=0; camDist=0; camDistTarget=0;
+  blackoutT=0; surgeT=0; reverseT=0;
+  nextEventAt = 9;
+  refillEventQueue();
+  msgEl.textContent='';
+  koEl.classList.remove('on');
+  vignetteEl.style.transition='opacity .3s'; vignetteEl.style.opacity=0;
+}
+
+// ---------- routing: the one and only verb ----------
+// A stroke walks from breaker to breaker. Adjacent cells only (diagonals
+// count), no revisiting, and a leaking breaker ends the run on contact.
+function adjacent(a, b){
+  const dx = Math.abs((a%COLS) - (b%COLS));
+  const dy = Math.abs(Math.floor(a/COLS) - Math.floor(b/COLS));
+  return dx <= 1 && dy <= 1 && (dx + dy) > 0;
+}
+
+function pathBegin(i){
+  if(!running || dead || i < 0) return;
+  drawing = true;
+  path = [i];
+  redrawCable(path);
+  if(!SILENT) SND.move();
+  touchCell(i);
+}
+
+// extend the stroke onto cell i, if that is a legal step
+function pathExtend(i){
+  if(!drawing || !running || dead || i < 0) return;
+  const last = path[path.length-1];
+  if(i === last) return;
+  // stepping back onto the previous cell undoes the last hop
+  if(path.length >= 2 && i === path[path.length-2]){
+    path.pop(); redrawCable(path); return;
+  }
+  if(path.includes(i) || !adjacent(last, i)) return;
+  path.push(i);
+  redrawCable(path);
+  if(!SILENT) SND.link(Math.min(path.length, 8));
+  touchCell(i);
+}
+
+// touching a leaking breaker is instantly fatal — that is the whole risk
+function touchCell(i){
+  if(breakers[i].leak > 0){
+    killer = i;
+    dead = true;
+    gameOver(i);
+  }
+}
+
+// release: a circuit of 2+ dumps the load of every cell it passed through
+function pathEnd(){
+  if(!drawing) return;
+  drawing = false;
+  const p = path.slice();
+  path = [];
+  redrawCable(path);
+  if(dead) return;
+  if(p.length < 2){                 // one cell is not a circuit
+    if(!SILENT) SND.fizzle();
+    return;
+  }
+  combo = p.length;
+  let dumped = 0;
+  for(const i of p){
+    const b = breakers[i];
+    dumped += b.load;
+    if(reverseT > 0){
+      // 逆流: the circuit backfires into everything it touches
+      b.load = Math.min(.99, b.load + .16);
+    } else {
+      b.load = Math.max(0, b.load - (.55 + .12*p.length));
+    }
+    b.flash = 1;
+    burst(cellX(i), cellY(i), 7, 4.2);
+  }
+  // longer circuits are worth disproportionately more
+  score += dumped * 60 * p.length * (reverseT > 0 ? .3 : 1);
+  if(!SILENT) SND.discharge(p.length);
+  shake = Math.max(shake, .06 + p.length*.02);
+}
+
+// ---------- sound: everything synthesised, no audio files ----------
+// Keeps the single-HTML rule (nothing to download) and lets the music
+// react to play: the bass line speeds up with the game, events drop a
+// stinger, and the whole thing ducks out on a game over.
+const SND = (() => {
+  let ctx = null, master = null, musicGain = null, on = true, started = false;
+  let step = 0, timer = null, tempo = 0.25;
+
+  // A pentatonic scale never sounds wrong against itself, which matters
+  // when the tempo drifts with the player's speed.
+  // minor pentatonic, driving — a chase that never lets up
+  const SCALE = [0, 3, 5, 7, 10];
+  const ROOT = 196;
+  const BASS = 'square', LEAD = 'sawtooth';
+  const hz = (deg, oct = 0) =>
+    ROOT * Math.pow(2, oct + Math.floor(deg / SCALE.length)) *
+    Math.pow(2, SCALE[((deg % SCALE.length) + SCALE.length) % SCALE.length] / 12);
+
+  function ensure() {
+    if (ctx) return ctx;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    ctx = new AC();
+    master = ctx.createGain();
+    master.gain.value = 0.32;
+    master.connect(ctx.destination);
+    musicGain = ctx.createGain();
+    musicGain.gain.value = 1;
+    musicGain.connect(master);
+    return ctx;
+  }
+
+
+  // ---- 録音用の分岐（?rec=1）----
+  // Playwright の録画には音声が入らないので、ゲーム自身に master バスを
+  // 録らせる。鳴っているものそのものなので映像と必ず同期する。
+  let recDest = null, recorder = null, recChunks = [];
+  function recStart() {
+    if (!ctx || recorder) return;
+    recDest = ctx.createMediaStreamDestination();
+    master.connect(recDest);
+    recorder = new MediaRecorder(recDest.stream, {mimeType: 'audio/webm'});
+    recorder.ondataavailable = e => { if (e.data.size) recChunks.push(e.data); };
+    recorder.start();
+  }
+  function recStop() {
+    return new Promise(res => {
+      if (!recorder) return res(null);
+      recorder.onstop = async () => {
+        const blob = new Blob(recChunks, {type: 'audio/webm'});
+        const buf = await blob.arrayBuffer();
+        res(Array.from(new Uint8Array(buf)));
+      };
+      recorder.stop();
+    });
+  }
+
+  function blip(freq, dur, type = 'square', vol = 0.25, dest = null, slideTo = null) {
+    if (!ctx || !on) return;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, ctx.currentTime);
+    if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, ctx.currentTime + dur);
+    // a short attack stops every note from clicking
+    g.gain.setValueAtTime(0, ctx.currentTime);
+    g.gain.linearRampToValueAtTime(vol, ctx.currentTime + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
+    o.connect(g); g.connect(dest || master);
+    o.start(); o.stop(ctx.currentTime + dur + 0.02);
+  }
+
+  function noise(dur, vol = 0.2, hp = 800) {
+    if (!ctx || !on) return;
+    const n = Math.floor(ctx.sampleRate * dur);
+    const buf = ctx.createBuffer(1, n, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    const f = ctx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = hp;
+    const g = ctx.createGain(); g.gain.value = vol;
+    src.connect(f); f.connect(g); g.connect(master);
+    src.start();
+  }
+
+  // --- the loop: a walking bass plus an offbeat blip ---
+  function tick() {
+    if (!ctx || !on) return;
+    const bar = step % 16;
+    // straight driving pulse: bass on every beat, lead stabs offbeat
+    if (bar % 2 === 0) blip(hz(bar % 8 === 0 ? 0 : 1, -1), tempo * 1.1, BASS, 0.30, musicGain);
+    if (bar % 8 === 5) blip(hz(4, 0), tempo * 0.6, LEAD, 0.09, musicGain);
+    if (bar % 4 === 2) noise(0.04, 0.05, 5000);
+    step++;
+    timer = setTimeout(tick, tempo * 1000);
+  }
+
+  return {
+    // must be called from a user gesture — browsers block audio otherwise
+    start() {
+      if (!ensure() || started) return;
+      if (ctx.state === 'suspended') ctx.resume();
+      started = true; step = 0; tick();
+    },
+    stop() { if (timer) { clearTimeout(timer); timer = null; } started = false; },
+    /** speed the music up with the game; 1 = starting pace */
+    setPace(mult) { tempo = Math.max(0.11, 0.25 / Math.max(0.2, mult)); },
+    duck(sec = 1.6) {                                      // for game over
+      if (!ctx) return;
+      musicGain.gain.cancelScheduledValues(ctx.currentTime);
+      musicGain.gain.setValueAtTime(musicGain.gain.value, ctx.currentTime);
+      musicGain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + sec);
+    },
+    unduck() {
+      if (!ctx) return;
+      musicGain.gain.cancelScheduledValues(ctx.currentTime);
+      musicGain.gain.setValueAtTime(0.0001, ctx.currentTime);
+      musicGain.gain.exponentialRampToValueAtTime(1, ctx.currentTime + 0.4);
+    },
+    // --- one-shots ---
+    // Kept short and pitched: these sit under narration in the video, so a
+    // wash of noise would be useless — each one has to read on its own.
+    move()  { ensure(); blip(hz(3, 1), 0.07, LEAD, 0.12); },
+    /** each extra breaker in the circuit is a step up the scale */
+    link(n) { ensure(); blip(hz(1 + n, 0), 0.07, LEAD, 0.15); },
+    /** the discharge: a rising sweep whose top note scales with the circuit */
+    discharge(n) { ensure();
+                blip(hz(2, 0), 0.26, BASS, 0.26, null, hz(2 + n, 1));
+                noise(0.10, 0.09, 2400); },
+    /** a single cell released on its own — a dud, deliberately unmusical */
+    fizzle(){ ensure(); blip(hz(0, -1), 0.09, 'triangle', 0.10, null, hz(0, -2)); },
+    /** a breaker crossing into the red: a nagging two-note warning */
+    warn()  { ensure(); [0, 130].forEach((ms) =>
+                setTimeout(() => blip(hz(4, 1), 0.09, 'square', 0.10), ms)); },
+    land()  { ensure(); noise(0.06, 0.10, 500); },
+    place() { ensure(); blip(hz(2, 0), 0.10, BASS, 0.22, null, hz(4, 1)); },
+    event() { ensure(); [0, 90, 180].forEach((ms, i) =>
+                setTimeout(() => blip(hz(2 + i, 0), 0.18, 'sawtooth', 0.20), ms)); },
+    hit()   { ensure(); noise(0.35, 0.30, 200);
+              blip(180, 0.5, 'sawtooth', 0.28, null, 40); },
+    over()  { ensure(); [0, 140, 280, 460].forEach((ms, i) =>
+                setTimeout(() => blip(hz(-i, -1), 0.42, 'triangle', 0.26), ms)); },
+    recStart() { ensure(); recStart(); },
+    recStop() { return recStop(); },
+    toggle() { on = !on; if (!on) { this.stop(); } else { this.start(); } return on; },
+    get enabled() { return on; },
+  };
+})();
+
+// --- one place for every action, so touch and keyboard stay in step ---
+function startRun(){
+  titleEl.classList.add('hidden'); reset(); running=true;
+  if(!SILENT){ SND.unduck(); SND.start(); if(REC) SND.recStart(); }
+}
+
+const startBtn = document.getElementById('startBtn');
+const muteBtn = document.getElementById('mute');
+function toggleMute(){ muteBtn.textContent = SND.toggle() ? '🔊' : '🔇'; }
+muteBtn.addEventListener('click', toggleMute);
+muteBtn.addEventListener('touchend', e=>{ e.preventDefault(); toggleMute(); },
+                         {passive:false});
+if(SILENT) muteBtn.style.display='none';   // automated modes have no audio
+addEventListener('keydown', e=>{ if(e.code==='KeyM') toggleMute(); });
+
+startBtn.addEventListener('click', startRun);
+// a touch on the button must start too — click alone is unreliable on touch
+startBtn.addEventListener('touchend', e=>{ e.preventDefault(); startRun(); },
+                          {passive:false});
+
+// ---------- pointer → cell ----------
+// Unproject the screen point onto the board plane (z = 0) and see which
+// breaker it lands inside. One helper serves mouse, touch and the autopilot.
+const ray = new THREE.Raycaster();
+const ndc = new THREE.Vector2();
+const boardPlane = new THREE.Plane(new THREE.Vector3(0,0,1), 0);
+const hitPoint = new THREE.Vector3();
+function cellAtScreen(clientX, clientY){
+  ndc.x = (clientX / innerWidth) * 2 - 1;
+  ndc.y = -(clientY / innerHeight) * 2 + 1;
+  ray.setFromCamera(ndc, camera);
+  if(!ray.ray.intersectPlane(boardPlane, hitPoint)) return -1;
+  for(let i=0;i<N;i++){
+    // a generous hit box: a finger is wider than the drawn case
+    if(Math.abs(hitPoint.x - cellX(i)) < 1.12 && Math.abs(hitPoint.y - cellY(i)) < 1.16) return i;
+  }
+  return -1;
+}
+
+// ---------- keyboard: a cursor you drag with Space held ----------
+// Same verb as the finger: hold, walk across breakers, release. The two
+// paths call pathBegin / pathExtend / pathEnd, so they cannot drift apart.
+function moveCursor(dx, dy){
+  const c = cursorIdx % COLS, r = Math.floor(cursorIdx / COLS);
+  const nc = Math.min(COLS-1, Math.max(0, c + dx));
+  const nr = Math.min(ROWS-1, Math.max(0, r + dy));
+  const ni = nr*COLS + nc;
+  if(ni === cursorIdx) return;
+  cursorIdx = ni;
+  if(spaceHeld && drawing) pathExtend(cursorIdx);
+  else if(!SILENT) SND.move();
+}
+addEventListener('keydown', e=>{
+  if(!running){
+    if(e.code==='Space'||e.code==='Enter'){ e.preventDefault(); startRun(); }
+    return;
+  }
+  if(dead) return;
+  cursor.visible = true;                       // reveal the cursor on first key
+  if(e.code==='ArrowLeft' ||e.code==='KeyA'){ e.preventDefault(); moveCursor(-1, 0); }
+  if(e.code==='ArrowRight'||e.code==='KeyD'){ e.preventDefault(); moveCursor( 1, 0); }
+  if(e.code==='ArrowUp'   ||e.code==='KeyW'){ e.preventDefault(); moveCursor( 0,-1); }
+  if(e.code==='ArrowDown' ||e.code==='KeyS'){ e.preventDefault(); moveCursor( 0, 1); }
+  if(e.code==='Space' && !spaceHeld){
+    e.preventDefault(); spaceHeld = true; pathBegin(cursorIdx);
+  }
+});
+addEventListener('keyup', e=>{
+  if(e.code==='Space'){ spaceHeld = false; pathEnd(); }
+});
+
+// --- touch / mouse: trace a circuit with one stroke ---
+// Most viewers arrive from a phone, so the game has to be playable without
+// a keyboard: press on a breaker, drag through its neighbours, lift.
+(function(){
+  const canvas = renderer.domElement;
+
+  canvas.addEventListener('touchstart', e=>{
+    if(!running || dead) return;
+    const p = e.changedTouches[0];
+    pathBegin(cellAtScreen(p.clientX, p.clientY));
+  }, {passive:true});
+
+  canvas.addEventListener('touchmove', e=>{
+    if(!drawing) return;
+    const p = e.changedTouches[0];
+    pathExtend(cellAtScreen(p.clientX, p.clientY));
+  }, {passive:true});
+
+  canvas.addEventListener('touchend', e=>{
+    if(dead){
+      // give the K.O. animation time to read, then a tap retries
+      if(!AUTO && Date.now()-deadAt > 1500) startRun();
+      return;
+    }
+    if(!running){ startRun(); return; }
+    pathEnd();
+  }, {passive:true});
+  canvas.addEventListener('touchcancel', ()=>{ if(drawing) pathEnd(); }, {passive:true});
+
+  // mouse mirrors the same three calls
+  let mouseDown = false;
+  canvas.addEventListener('mousedown', e=>{
+    if(dead){ if(!AUTO && Date.now()-deadAt > 1500) startRun(); return; }
+    if(!running){ startRun(); return; }
+    mouseDown = true; cursor.visible = false;
+    pathBegin(cellAtScreen(e.clientX, e.clientY));
+  });
+  canvas.addEventListener('mousemove', e=>{
+    if(mouseDown && drawing) pathExtend(cellAtScreen(e.clientX, e.clientY));
+  });
+  addEventListener('mouseup', ()=>{ if(mouseDown){ mouseDown = false; pathEnd(); } });
+
+  // The title overlay sits above the canvas, so a tap anywhere on it never
+  // reaches the canvas handler. Start from the overlay itself.
+  titleEl.addEventListener('touchend', e=>{
+    if(!running){ e.preventDefault(); startRun(); }
+  }, {passive:false});
+
+  // stop the browser treating game drags as scroll / double-tap zoom
+  canvas.addEventListener('touchmove', e=>e.preventDefault(), {passive:false});
+})();
+
+// ---------- autopilot for recording: ?auto=1 ----------
+// recording holds the K.O. longer than play does: ?hold=9000
+const RETRY_MS = Math.max(1200, parseInt(QS.get('hold')||'4200', 10));
+// ?noev=1 records a calm run with no events, for narration beds
+const NOEV = QS.get('noev')==='1';
+if(AUTO){ setTimeout(startRun, 1200); }   // startRun 経由にする（音/録音も始まる）
+
+// The AI draws a stroke the way a good player would: start from the hottest
+// safe breaker, then greedily walk to the hottest safe neighbour. It plays
+// the stroke out over several frames so the cable is visible on camera.
+let aiCooldown = .6, aiPlan = null, aiStep = 0, aiTimer = 0;
+function planCircuit(){
+  const safe = i => breakers[i].leak <= 0;
+  let best = null;
+  for(let s=0;s<N;s++){
+    if(!safe(s)) continue;
+    const used = [s];
+    let heat = breakers[s].load;
+    // greedy walk: always hop to the hottest unused safe neighbour
+    for(;;){
+      const last = used[used.length-1];
+      let pick = -1, pickHeat = -1;
+      for(let j=0;j<N;j++){
+        if(used.includes(j) || !safe(j) || !adjacent(last, j)) continue;
+        if(breakers[j].load > pickHeat){ pickHeat = breakers[j].load; pick = j; }
+      }
+      // stop extending once the remaining cells are nearly empty — a long
+      // chain through cold breakers wastes the stroke
+      if(pick < 0 || used.length >= 6 || pickHeat < .10) break;
+      used.push(pick); heat += pickHeat;
+    }
+    if(used.length < 2) continue;
+    const value = heat * used.length;
+    if(!best || value > best.value) best = {used, value, heat};
+  }
+  return best;
+}
+function autoPilot(dt){
+  if(aiPlan){                      // play the planned stroke out, one hop per tick
+    aiTimer -= dt;
+    if(aiTimer > 0) return;
+    aiTimer = .055;
+    if(aiStep === 0) pathBegin(aiPlan.used[0]);
+    else if(aiStep < aiPlan.used.length) pathExtend(aiPlan.used[aiStep]);
+    else { pathEnd(); aiPlan = null; aiCooldown = .35 + Math.random()*.3; return; }
+    aiStep++;
+    return;
+  }
+  aiCooldown -= dt;
+  if(aiCooldown > 0) return;
+  const hottest = Math.max(...breakers.map(b => b.load));
+  // 逆流 flips the discharge, so the AI simply stops routing and waits it out
+  if(reverseT > 0 && hottest < .9){ aiCooldown = .3; return; }
+  const plan = planCircuit();
+  // hold out for a worthwhile circuit unless something is close to popping
+  if(!plan || (plan.heat < .9 && hottest < .62)){ aiCooldown = .25; return; }
+  aiPlan = plan; aiStep = 0; aiTimer = 0;
+}
+
+// ---------- showcase mode ----------
+// Puts one object on a turntable against an empty stage so the video can
+// talk about it while the real thing is on screen. Uses the game's own
+// meshes, so what the narration describes is exactly what ships.
+const SHOWCASE = QS.get('showcase');
+const showcase = {group:null, pivot:null, spin:.55, label:''};
+// every valid ?showcase= name — the capture tooling reads this list
+window.__subjects = ['breaker','meter','leak','surge','blackout','reverse','lightning','cable','busbar'];
+
+function buildShowcase(name){
+  const g = new THREE.Group();
+  let label = '', spin = .55;
+
+  // a fresh breaker, reused for several subjects at different load levels
+  const freshBreaker = (load, leaking) => {
+    const b = buildBreaker();
+    b.meter.scale.y = Math.max(.001, load);
+    b.meterMat.color.setHex(load > .80 ? 0xff3a2a : load > .55 ? 0xffc61e : 0x3fa9ff);
+    if(leaking){ b.arcMat.opacity = .95; b.arcMat.color.setHex(0xaee4ff); }
+    b.halo.material.uniforms.a.value = load * .85;
+    b.halo.material.uniforms.c.value.setHex(load > .72 ? 0xff4020 : 0xff8a20);
+    return b;
+  };
+
+  if(name==='breaker'){
+    const b = freshBreaker(.35, false);
+    b.group.scale.set(1.6,1.6,1.6); g.add(b.group);
+    label = 'ブレーカー'; spin = .5;
+  } else if(name==='meter'){
+    const b = freshBreaker(.88, false);
+    b.group.scale.set(1.6,1.6,1.6); g.add(b.group);
+    label = '負荷メーター'; spin = .5;
+  } else if(name==='leak'){
+    const b = freshBreaker(.5, true);
+    b.group.scale.set(1.6,1.6,1.6); g.add(b.group);
+    label = '漏電'; spin = .5;
+  } else if(name==='surge'){
+    // 過負荷: three breakers all in the red
+    for(let k=0;k<3;k++){
+      const b = freshBreaker(.93, false);
+      b.group.position.x = (k-1)*1.95; g.add(b.group);
+    }
+    label = '過負荷'; spin = .4;
+  } else if(name==='blackout'){
+    // 停電: the same three with their meters dead
+    for(let k=0;k<3;k++){
+      const b = buildBreaker();
+      b.meter.scale.y = .001;
+      b.halo.material.uniforms.a.value = 0;
+      b.group.position.x = (k-1)*1.95; g.add(b.group);
+    }
+    label = '停電'; spin = .4;
+  } else if(name==='reverse'){
+    // 逆流: a cable feeding power backwards into two breakers
+    for(const s of [-1,1]){
+      const b = freshBreaker(.8, false);
+      b.group.position.x = s*1.95; g.add(b.group);
+    }
+    const curve = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(-1.95,0,.8), new THREE.Vector3(0,.9,.8), new THREE.Vector3(1.95,0,.8)]);
+    g.add(new THREE.Mesh(new THREE.TubeGeometry(curve, 40, .13, 8, false),
+      new THREE.MeshBasicMaterial({color:0xff4a7a})));
+    label = '逆流'; spin = .45;
+  } else if(name==='lightning'){
+    // 落雷: a jagged bolt striking a single breaker
+    const b = freshBreaker(.95, false);
+    b.group.scale.set(1.35,1.35,1.35); b.group.position.y = -1.3; g.add(b.group);
+    const boltMat = new THREE.MeshBasicMaterial({color:0xffe14a});
+    let y = 2.8, x = 0;
+    for(let k=0;k<6;k++){
+      const seg = new THREE.Mesh(new THREE.BoxGeometry(.18, .7, .18), boltMat);
+      const nx = x + (Math.random()-.5)*.9;
+      seg.position.set((x+nx)/2, y, .7);
+      seg.rotation.z = Math.atan2(nx-x, -.7);
+      g.add(seg); x = nx; y -= .62;
+    }
+    label = '落雷'; spin = .4;
+  } else if(name==='cable'){
+    // the routing cable the player draws, on its own
+    const pts = [new THREE.Vector3(-2,-1.4,0), new THREE.Vector3(-.7,.5,0),
+                 new THREE.Vector3(.8,-.6,0),  new THREE.Vector3(2,1.3,0)];
+    const curve = new THREE.CatmullRomCurve3(pts);
+    g.add(new THREE.Mesh(new THREE.TubeGeometry(curve, 60, .17, 10, false), cableMat));
+    for(const p of pts){
+      const n = new THREE.Mesh(new THREE.SphereGeometry(.3, 16, 12), nodeMat);
+      n.position.copy(p); g.add(n);
+    }
+    label = '回路（なぞった線）'; spin = .6;
+  } else if(name==='busbar'){
+    const bar = new THREE.Mesh(new THREE.BoxGeometry(5.2, .5, .5), busMat);
+    g.add(bar);
+    const glow = new THREE.Mesh(new THREE.BoxGeometry(5.2, .14, .16),
+      new THREE.MeshBasicMaterial({color:0xffd070}));
+    glow.position.y = .33; g.add(glow);
+    for(let k=0;k<3;k++){
+      const feed = new THREE.Mesh(new THREE.BoxGeometry(.2, 1.3, .2), busMat);
+      feed.position.set((k-1)*1.7, .9, 0); g.add(feed);
+    }
+    label = 'ブスバー（電源）'; spin = .55;
+  }
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  scene.add(g);
+
+  // Centre the subject on the origin and pull the camera back to fit it,
+  // so every object is framed the same way regardless of its size.
+  // The glow plates are much larger than what they light up, so they are
+  // hidden for the measurement — otherwise every subject frames too small.
+  const glows = [];
+  g.traverse(o=>{ if(o.isMesh && o.material && o.material.uniforms &&
+                     o.material.uniforms.a){ glows.push(o); o.visible = false; } });
+  const box = new THREE.Box3().setFromObject(g);
+  for(const o of glows) o.visible = true;
+  const size = box.getSize(new THREE.Vector3());
+  const mid = box.getCenter(new THREE.Vector3());
+  g.position.sub(mid);                       // sit centred at the origin
+  const reach = Math.max(size.x, size.y) * 0.5;
+  const fov = THREE.MathUtils.degToRad(camera.fov);
+  const dist = (reach / Math.tan(fov/2)) * 1.75 + 1.0;   // 1.75 = breathing room
+  camera.position.set(0, size.y*0.10, dist);
+
+  // Slide the subject sideways so a text panel can own the other half.
+  // The offset lives on a parent so the turntable still spins in place —
+  // rotating an offset group would make it orbit instead.
+  const bias = parseFloat(QS.get('sx') || '0');
+  const pivot = new THREE.Group();
+  pivot.position.x = -bias * reach * 1.15;
+  scene.add(pivot);
+  pivot.add(g);
+  showcase.group = g; showcase.pivot = pivot;
+  showcase.spin = spin; showcase.label = label;
+}
+
+fitCamera();          // SHOWCASE is known by here
+if(SHOWCASE){
+  titleEl.classList.add('hidden');
+  buildShowcase(SHOWCASE);
+  scoreEl.textContent = '';
+  msgEl.textContent = QS.get('nolabel')==='1' ? '' : showcase.label;
+  msgEl.style.fontSize = 'clamp(18px,4.6vw,30px)';
+  msgEl.style.letterSpacing = '4px';
+  // a plain dark stage: nothing on screen but the subject
+  cabinet.visible = false; bus.visible = false; cursor.visible = false;
+  for(const b of breakers) b.group.visible = false;   // playfield breakers are separate objects
+  for(const n of nodes) n.visible = false;
+  scene.fog = null;
+  scene.background = new THREE.Color(0x0b0d16);
+  roomLight.position.set(2.6, 3.2, 5.2);
+  roomLight.intensity = 150;
+  hemi.intensity = 3.2;
+  sun.intensity = 3.6; sun.position.set(2.5, 6, 7);
+  // a second light from the other side so the far face is not pure black
+  const fill = new THREE.PointLight(0x88aaff, 55, 30);
+  fill.position.set(-4.5, 2.4, 4.2); scene.add(fill);
+}
+// let the capture script drive the turntable and swap subjects
+window.__showcase = name => {
+  if(showcase.pivot) scene.remove(showcase.pivot);   // pivot owns the group
+  buildShowcase(name);
+  msgEl.textContent = showcase.label;
+};
+
+// ---------- loop ----------
+const HOT = new THREE.Color(0xff3a2a), WARM = new THREE.Color(0xffc61e),
+      COOL = new THREE.Color(0x3fa9ff);
+const tmpCol = new THREE.Color();
+let leakTimer = 5;                 // seconds until the next routine leak
+const clock = new THREE.Clock();
+
+function tick(){
+  requestAnimationFrame(tick);
+  const raw = Math.min(clock.getDelta(), .05);
+  const dt = raw * timeScale;
+
+  if(SHOWCASE){
+    if(showcase.group) showcase.group.rotation.y += raw*showcase.spin;
+    camera.lookAt(0, 0, 0);        // subject is offset, camera stays on axis
+    renderer.render(scene, camera);
+    return;
+  }
+
+  if(running && !dead){
+    t += dt;
+    score += dt * 8;               // a slow trickle, so the score always moves
+    scoreEl.textContent = Math.floor(score);
+    // the music tracks how loaded the board is, not just how long you lasted
+    const peak = Math.max(...breakers.map(b => b.load));
+    if(!SILENT) SND.setPace(.9 + t*0.012 + peak*0.8);
+    if(AUTO) autoPilot(dt);
+
+    // --- events ---
+    if(t > nextEventAt && !NOEV) triggerEvent();
+    if(surgeT > 0) surgeT -= dt;
+    if(reverseT > 0) reverseT -= dt;
+    if(blackoutT > 0) blackoutT -= dt;
+
+    // --- routine leaks: one wanders the board, more often as time passes ---
+    leakTimer -= dt;
+    if(leakTimer <= 0){
+      const i = startLeak(3.2 + Math.random()*2.4);
+      if(i >= 0 && !SILENT) SND.warn();
+      leakTimer = Math.max(2.4, 7.5 - t*0.06) * (0.7 + Math.random()*0.6);
+    }
+
+    // --- fill every breaker ---
+    const mult = surgeT > 0 ? 2.5 : 1;
+    for(let i=0;i<N;i++){
+      const b = breakers[i];
+      // each breaker has its own slightly different appetite, so the board
+      // never fills evenly and there is always a choice to make
+      b.rate = baseRate() * mult * (0.7 + ((i*37)%11)/11 * 0.75);
+      b.load += b.rate * dt;
+      if(b.leak > 0) b.leak -= dt;
+      if(b.flash > 0) b.flash = Math.max(0, b.flash - dt*3);
+      if(b.load >= 1 && !dead){
+        b.load = 1; b.popped = true;
+        killer = i; dead = true; gameOver(i);
+      }
+    }
+  }
+
+  // --- draw every breaker (runs while dead too, so the K.O. shot is lit) ---
+  for(let i=0;i<N;i++){
+    const b = breakers[i];
+    const hidden = blackoutT > 0 && !dead;     // 停電 blanks the meters
+    const shown = hidden ? 0 : b.load;
+    b.meter.scale.y = Math.max(.001, shown);
+    // colour ramp: cool → warm → hot, the player's only real clock
+    // blue holds until the breaker is over half full, then swings hard into
+    // amber and red — so "how much time is left" reads at a glance
+    if(shown < .55) tmpCol.copy(COOL).lerp(WARM, Math.pow(shown/.55, 1.9));
+    else tmpCol.copy(WARM).lerp(HOT, Math.min(1,(shown-.55)/.33));
+    if(b.flash > 0) tmpCol.lerp(new THREE.Color(0xffffff), b.flash);
+    b.meterMat.color.copy(tmpCol);
+    // a hot breaker pushes a halo out behind itself and starts to buzz
+    const heat = hidden ? 0 : Math.max(0, (b.load - .5) / .5);
+    b.halo.material.uniforms.c.value.copy(tmpCol);
+    b.halo.material.uniforms.a.value = heat*heat * .95 * (b.popped ? 1 : (.8 + .2*Math.sin(t*22)));
+    const buzz = b.popped ? 0 : heat*heat * .045;
+    b.group.position.x = cellX(i) + (Math.random()-.5)*buzz;
+    b.group.position.y = cellY(i) + (Math.random()-.5)*buzz;
+    // popped: the lever slams down and the case tips forward
+    if(b.popped){
+      b.leverPivot.rotation.x = Math.min(2.2, b.leverPivot.rotation.x + raw*7);
+      b.group.rotation.x = Math.min(.35, b.group.rotation.x + raw*1.2);
+    }
+    // a leaking breaker crackles with short white arcs
+    if(b.leak > 0){
+      b.arcMat.opacity = .55 + Math.random()*.45;
+      for(const a of b.arcs){
+        if(Math.random() < .35){
+          a.position.set((Math.random()-.5)*1.4, (Math.random()-.5)*1.5, .5);
+          a.rotation.z = Math.random()*Math.PI;
+          a.scale.y = .5 + Math.random();
+        }
+      }
+    } else if(b.arcMat.opacity > 0){
+      b.arcMat.opacity = Math.max(0, b.arcMat.opacity - raw*4);
+    }
+  }
+
+  // the bus bar pulses with the total load on the board
+  const total = breakers.reduce((s,b)=>s+b.load,0)/N;
+  busGlow.material.color.setRGB(1, .82 - total*.5, .44 - total*.42);
+  busMat.emissive.setRGB(.25*total, .13*total, 0);
+
+  // cursor ring sits on the focused cell
+  if(cursor.visible){
+    cursor.position.x += (cellX(cursorIdx) - cursor.position.x)*Math.min(1, raw*18);
+    cursor.position.y += (cellY(cursorIdx) - cursor.position.y)*Math.min(1, raw*18);
+    cursor.material.opacity = drawing ? .95 : .5 + .25*Math.sin(t*6);
+  }
+  // the drawn cable glows brighter the longer it gets
+  if(cableMesh) cableMat.color.setHSL(.11, 1, .50 + Math.min(.22, path.length*.035));
+
+  // sparks
+  for(const s of sparks){
+    if(s.life <= 0) continue;
+    s.life -= raw;
+    if(s.life <= 0){ s.mesh.visible = false; continue; }
+    s.vy -= 11*raw;
+    s.mesh.position.x += s.vx*raw;
+    s.mesh.position.y += s.vy*raw;
+    s.mesh.position.z += s.vz*raw;
+    s.mesh.rotation.x += raw*9; s.mesh.rotation.y += raw*7;
+  }
+
+  // --- death sequence: slow-mo unwinds, camera pushes in ---
+  if(dead){
+    timeScale += (0 - timeScale)*Math.min(1, raw*1.1);   // ease down to a near-freeze
+  }
+
+  // --- camera (runs even while dead, so the zoom and shake still play) ---
+  camDist += (camDistTarget - camDist)*Math.min(1, raw*2.4);
+  const fx = killer >= 0 ? cellX(killer)*.45 : 0;
+  const fy = killer >= 0 ? cellY(killer)*.45 : 0;
+  camera.position.z = camBaseZ - camDist;
+  camera.position.x += (fx - camera.position.x)*Math.min(1, raw*2.2);
+  camera.position.y += ((fy + .3) - camera.position.y)*Math.min(1, raw*2.2);
+  let lx = camera.position.x, ly = camera.position.y;
+  if(shake>0){
+    shake = Math.max(0, shake - raw*.9);
+    camera.position.x += (Math.random()-.5)*shake;
+    camera.position.y += (Math.random()-.5)*shake;
+  }
+  camera.lookAt(lx*1.0, ly*1.0, 0);
+
+  renderer.render(scene, camera);
+}
+
+function gameOver(byIndex){
+  running=false; deadAt=Date.now(); killer = byIndex;
+  drawing = false; path = []; redrawCable(path);
+  const b = breakers[byIndex];
+  if(b) b.popped = true;
+  if(!SILENT){ SND.hit(); SND.duck(1.6); setTimeout(()=>SND.over(), 700); }
+  // hit feedback: red flash, red vignette, hard shake, camera punches in
+  flash('#ff2b3a', .8, 500);
+  vignetteEl.style.transition='opacity .5s'; vignetteEl.style.opacity=1;
+  shake = .9;
+  camDistTarget = camBaseZ * .30;         // push in, but keep the board readable
+  burst(cellX(byIndex), cellY(byIndex), 30, 8);
+  const finalScore = Math.floor(score);
+  koScoreEl.textContent = finalScore;
+  msgEl.textContent = '';
+  setTimeout(()=>{ koEl.classList.add('on'); }, 620);   // K.O. lands after the slow-mo
+  if(AUTO){ setTimeout(()=>{ reset(); running=true;
+                             if(!SILENT) SND.unduck(); }, RETRY_MS); }
+  else setTimeout(()=>{
+    msgEl.textContent = matchMedia('(pointer:coarse)').matches
+      ? 'タップでもう一度' : 'スペースでもう一度';
+  }, 1800);
+}
+tick();
+
+// --- help (?) : ルールを見せる。録画中は出さない ---
+(function(){
+  const btn = document.getElementById('helpBtn');
+  const panel = document.getElementById('help');
+  if(!btn || !panel) return;
+  if(NOCHROME){                      // 録画・showcase では画面から消す
+    btn.style.display = 'none';
+    const back = document.getElementById('back');
+    if(back) back.style.display = 'none';
+    return;
+  }
+  const open = () => { panel.classList.add('on'); };
+  const close = () => { panel.classList.remove('on'); };
+  btn.addEventListener('click', open);
+  btn.addEventListener('touchend', e => { e.preventDefault(); open(); }, {passive:false});
+  panel.addEventListener('click', e => { if(e.target === panel) close(); });
+  panel.querySelector('.close').addEventListener('click', close);
+  panel.querySelector('.close').addEventListener('touchend',
+    e => { e.preventDefault(); close(); }, {passive:false});
+  addEventListener('keydown', e => {
+    if(e.code === 'Escape') close();
+    else if(e.key === '?' || (e.code === 'Slash' && e.shiftKey)) open();
+  });
+})();
+</script>
+</body>
+</html>
