@@ -1,0 +1,230 @@
+{
+  "id": "0020_balloon_ascent",
+  "title": "バルーン・アセント",
+  "video_title": "上がりすぎると怒られ、下がりすぎても怒られる高さが、たった30メートルしかない",
+  "lang": "ja",
+  "voice": "ja_female",
+  "scenes": [
+    {
+      "kind": "hook",
+      "clip": "updraft",
+      "narration": "このゲームは、ある気球乗りの朝から生まれました。"
+    },
+    {
+      "kind": "image",
+      "prompt": "a single hot air balloon floating low over a wide farm valley at sunrise, cattle grazing in the fields below, morning mist between the hills, realistic photograph, cinematic wide shot, warm golden light, highly detailed",
+      "narration": "牧場が広がる谷に、毎朝ひとりで気球を飛ばす人がいます。ハルさん、といいます。観光のお客さんを乗せる仕事です。"
+    },
+    {
+      "kind": "image",
+      "prompt": "a handwritten flight rule notice pinned to a corkboard inside a small airfield office, a simple diagram of two horizontal altitude lines with a balloon between them, morning light through a dusty window, realistic photograph, shallow depth of field, cinematic, highly detailed",
+      "narration": "ただ、飛べる高さが決まっています。上は、空港の管制が通してくれません。下は、牛がおどろくと牧場から苦情が来ます。残った幅は、たった30メートルです。"
+    },
+    {
+      "kind": "image",
+      "prompt": "close-up of a gloved hand gripping a red vent line rope inside a hot air balloon basket, burner frame and rigging above, valley landscape blurred far below, realistic photograph, dramatic morning light, shallow depth of field, highly detailed",
+      "narration": "そしてここからが本題です。気球には、ブレーキがありません。あるのは、天井のガスを抜く1本のひもだけ。ハルさんは今朝も、そのひもを引いたり放したりしています。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "balloon",
+      "kicker": "主役",
+      "title": "気球",
+      "bullets": [
+        "何もしないと **ひとりでに上がりつづけます**",
+        "押している間だけ、ガスが抜けて **下がります**",
+        "浮力は時間とともに **どんどん強くなります**"
+      ],
+      "narration": "これが気球です。何もしないと、ひとりでに上がります。止まりません。押している間だけ、ガスが抜けて下がります。操作はこれだけです。ただし、浮力は時間とともに強くなります。さっきと同じ長さ押しても、もう足りません。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "band",
+      "kicker": "守るところ",
+      "title": "安全帯",
+      "bullets": [
+        "オレンジの帯の中にいる間だけ **点が入ります**",
+        "帯は **ゆっくり上下にうねります**",
+        "時間がたつほど **どんどんせまくなります**"
+      ],
+      "narration": "オレンジの帯が、飛んでいい高さです。この中にいる間だけ、点が入ります。そして帯は、じっとしていません。ゆっくり上下にうねります。さらに、時間がたつほどせまくなっていきます。広くはなりません。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "vent",
+      "kicker": "唯一の操作",
+      "title": "ガス抜き",
+      "bullets": [
+        "押しっぱなしにすると、下の口から **ガスが抜けます**",
+        "**離した瞬間から、また上がりはじめます**",
+        "強さの調整はありません。出すか、出さないか"
+      ],
+      "narration": "押すと、下の口から青いガスが抜けます。見てください、ちゃんと吹き出しています。離した瞬間から、また上がりはじめます。強さの調整はありません。出すか、出さないか。その2つだけです。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "gauge",
+      "kicker": "残り",
+      "title": "気球の耐久",
+      "bullets": [
+        "帯から出ると、左のゲージが **減りはじめます**",
+        "遠くはみ出すほど **減りが速くなります**",
+        "**ゼロで破裂**。それで終わりです"
+      ],
+      "narration": "帯から出ると、左のゲージが減りはじめます。遠くはみ出すほど、減りが速くなります。緑、黄色、赤と変わります。赤になったら、もうあまり時間はありません。ゼロで破裂です。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "bird",
+      "kicker": "じゃまなもの",
+      "title": "鳥",
+      "bullets": [
+        "**こちらに向かって** 飛んできます",
+        "上下にふわふわ動くので、位置が読みにくい",
+        "当たったら、そこで終わり"
+      ],
+      "narration": "谷には鳥がいます。しかも、こちらに向かって飛んできます。上下にふわふわ動くので、どこを通るのか読みにくい。もちろん、当たったら終わりです。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "pylon",
+      "kicker": "よけられないもの",
+      "title": "鉄塔",
+      "bullets": [
+        "**縦に長い**。上か下か、どちらかに逃げるしかない",
+        "鳥とちがって、まったく動きません",
+        "帯のまん中に立っていることがあります"
+      ],
+      "narration": "鉄塔です。とにかく縦に長い。上か下か、どちらかに逃げるしかありません。動かないぶん親切に見えますよね。ところがこれ、帯のまん中に立っていることがあります。そうなると、帯からはみ出してよけるしかありません。"
+    },
+    {
+      "kind": "events",
+      "clip": "events",
+      "kicker": "そのうえで",
+      "title": "空は静かにしていません",
+      "bullets": [
+        "**上昇気流** — 浮力が跳ね上がって、押しても上がります",
+        "**ダウンバースト** — 一気に下へ叩き落とされます",
+        "**ガス欠** — しばらく、押しても何も起きません",
+        "**乱気流** — 帯が激しくうねります",
+        "**霧** — 帯そのものが見えなくなります"
+      ],
+      "narration": "空は静かにしていません。上昇気流。浮力が跳ね上がって、押していても上がっていきます。ダウンバースト。今度は一気に下へ叩き落とされます。ここは押すのをやめて、上がるのを待つ場面です。ガス欠。しばらく、押しても何も起きません。乱気流。帯が激しくうねります。そして霧。帯そのものが消えます。数秒間、覚えている場所を頼りに飛ぶことになります。"
+    },
+    {
+      "kind": "death",
+      "clip": "death",
+      "kicker": "終わりかた",
+      "title": "終わるのは、たいてい押しすぎたとき",
+      "bullets": [
+        "時間が **すうっと止まります**",
+        "気球がしぼんで、**そのまま落ちていきます**",
+        "そのあと、最終スコアが出ます"
+      ],
+      "narration": "終わりかたは静かです。時間がすうっと止まって、気球がしぼんで、そのまま落ちていきます。そしてスコアが出ます。ハルさんは、この30メートルの幅を毎朝1時間たもっています。あなたは、たぶん1分ももちません。"
+    },
+    {
+      "kind": "outro",
+      "title": "概要欄のリンクから遊べます",
+      "subtitle": "チャンネル登録で、毎日1本",
+      "narration": "ブラウザで、いますぐ無料で遊べます。概要欄のリンクからどうぞ。チャンネル登録もお願いします。明日も1本出します。"
+    }
+  ],
+  "slug": "balloon-ascent",
+  "channel": "Daily Arcade Studio",
+  "events": [
+    "updraft",
+    "downburst",
+    "gasout",
+    "turbulence",
+    "fog",
+    "flock"
+  ],
+  "short": [
+    {
+      "mark": "downburst",
+      "lead": -0.3,
+      "dur": 8.0,
+      "headline": "一気に叩き落とされる"
+    },
+    {
+      "mark": "fog",
+      "lead": -0.5,
+      "dur": 8.0,
+      "headline": "帯が見えなくなる"
+    },
+    {
+      "mark": "gasout",
+      "lead": -0.5,
+      "dur": 7.0,
+      "headline": "押しても下がらない"
+    },
+    {
+      "mark": "flock",
+      "lead": -0.5,
+      "dur": 7.0,
+      "headline": "鳥が横切る"
+    },
+    {
+      "mark": "death",
+      "lead": -2.0,
+      "dur": 9.0,
+      "headline": "はみ出したら破裂"
+    }
+  ],
+  "thumb": {
+    "hook": "帯から出るな",
+    "sub": "気球は勝手に上がる。押して下げるだけ。ブラウザで無料。",
+    "frame_mark": "downburst",
+    "frame_lead": 1.0
+  },
+  "short_v2": {
+    "cuts": [
+      {
+        "kind": "clip",
+        "mark": "downburst",
+        "lead": -0.3,
+        "dur": 4.5,
+        "headline": "今日のゲーム",
+        "narration": "今日のゲームです。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "balloon",
+        "dur": 5.0,
+        "headline": "バルーン・アセント",
+        "narration": "あなたは、決められた高さを守って飛ぶ気球乗りです。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "band",
+        "dur": 5.0,
+        "headline": "安全帯",
+        "narration": "このオレンジの帯の中にいる間だけ、点が入ります。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "vent",
+        "dur": 5.0,
+        "headline": "ガス抜き",
+        "narration": "気球は勝手に上がります。押している間だけ、下がります。"
+      },
+      {
+        "kind": "clip",
+        "mark": "death",
+        "lead": -2.0,
+        "dur": 5.0,
+        "headline": "",
+        "narration": "はみ出しつづけると、破裂します。"
+      },
+      {
+        "kind": "clip",
+        "mark": "run2",
+        "lead": 1.0,
+        "dur": 4.5,
+        "cta": "概要欄のリンクから遊べます",
+        "narration": "ブラウザで無料で遊べます。リンクは概要欄です。"
+      }
+    ]
+  }
+}

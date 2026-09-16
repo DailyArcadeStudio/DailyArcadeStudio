@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>バルーン・アセント</title>
+<style>
+  html,body{margin:0;padding:0;overflow:hidden;background:#070a14;font-family:'Helvetica Neue',Arial,sans-serif;}
+  #ui{position:fixed;top:16px;left:0;right:0;text-align:center;color:#fff;z-index:10;pointer-events:none;}
+  #score{font-size:clamp(24px,5.6vw,34px);font-weight:800;text-shadow:0 2px 8px #000;}
+  #msg{font-size:clamp(13px,3.4vw,19px);margin-top:6px;opacity:.9;text-shadow:0 2px 6px #000;}
+  #title{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:rgba(5,7,16,.74);z-index:20;color:#fff;transition:opacity .4s;padding:16px;box-sizing:border-box;}
+  #title h1{font-size:clamp(28px,8.4vw,58px);margin:0 0 10px;letter-spacing:2px;text-shadow:0 4px 18px #ff8a3d;text-align:center;}
+  #title p{font-size:clamp(13px,3.4vw,19px);opacity:.88;margin:4px 0;text-align:center;line-height:1.6;}
+  #title .btn{margin-top:24px;padding:14px 44px;font-size:clamp(18px,5vw,22px);font-weight:700;color:#fff;
+    background:linear-gradient(180deg,#ff8a3d,#c4551a);border:none;border-radius:12px;cursor:pointer;
+    box-shadow:0 6px 24px rgba(255,138,61,.5);}
+  #title .btn:hover{transform:scale(1.05);}
+  .hidden{opacity:0;pointer-events:none;}
+  #back{position:fixed;top:14px;left:14px;z-index:30;text-decoration:none;
+    background:rgba(12,16,26,.72);color:#fff;font:600 clamp(12px,3.2vw,15px)/1 'Helvetica Neue',Arial,sans-serif;
+    padding:0 14px;height:44px;display:flex;align-items:center;border-radius:12px;white-space:nowrap;}
+  #back:hover{background:rgba(30,38,56,.9);}
+  #mute{position:fixed;top:14px;right:14px;z-index:30;border:none;cursor:pointer;
+    background:rgba(12,16,26,.72);color:#fff;font-size:20px;line-height:1;
+    width:44px;height:44px;border-radius:12px;}
+  #mute:hover{background:rgba(30,38,56,.9);}
+  /* show the hint that matches the device */
+  .tc{display:none;}
+  @media (pointer:coarse){ .kb{display:none;} .tc{display:block;} }
+  /* a finger-sized START button on touch devices */
+  @media (pointer:coarse){ #title .btn{padding:18px 54px;} }
+
+  /* --- event banner: slams into the middle of the screen --- */
+  #banner{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    z-index:15;pointer-events:none;opacity:0;}
+  #banner .b{font-size:clamp(24px,7.4vw,66px);font-weight:900;letter-spacing:.06em;color:#fff;
+    padding:10px 4vw;max-width:94vw;text-align:center;transform:scale(2.4);opacity:0;
+    text-shadow:0 0 26px currentColor, 0 6px 20px #000;
+    border-top:5px solid currentColor;border-bottom:5px solid currentColor;}
+  #banner.go .b{animation:slam .62s cubic-bezier(.12,.85,.2,1) forwards;}
+  @keyframes slam{
+    0%  {transform:scale(2.4) rotate(-4deg);opacity:0;}
+    22% {transform:scale(1)   rotate(0deg); opacity:1;}
+    70% {transform:scale(1)   rotate(0deg); opacity:1;}
+    100%{transform:scale(1.12);opacity:0;}
+  }
+
+  /* --- full-screen colour flashes --- */
+  #flash{position:fixed;inset:0;z-index:14;pointer-events:none;opacity:0;background:#fff;}
+  #vignette{position:fixed;inset:0;z-index:13;pointer-events:none;opacity:0;
+    background:radial-gradient(ellipse at center,rgba(0,0,0,0) 32%,rgba(120,0,10,.85) 100%);}
+
+  /* --- K.O. screen --- */
+  #ko{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    z-index:22;pointer-events:none;opacity:0;color:#fff;transition:opacity .3s;}
+  #ko.on{opacity:1;}
+  #ko .koText{font-size:clamp(84px,24vw,180px);font-weight:900;letter-spacing:10px;color:#fff;
+    text-shadow:0 0 40px #ff8a3d,0 0 90px #ff5a1a,0 10px 30px #000;
+    transform:scale(3);opacity:0;}
+  #ko.on .koText{animation:koSlam .8s cubic-bezier(.1,.9,.2,1) forwards;}
+  @keyframes koSlam{
+    0%  {transform:scale(3) rotate(-8deg);opacity:0;}
+    30% {transform:scale(1) rotate(0deg);opacity:1;}
+    36% {transform:scale(1.06);}
+    100%{transform:scale(1);opacity:1;}
+  }
+  #ko .finalLabel{font-size:clamp(14px,3.8vw,21px);letter-spacing:4px;opacity:0;margin-top:6px;text-shadow:0 2px 8px #000;}
+  #ko .finalScore{font-size:clamp(44px,13vw,80px);font-weight:800;opacity:0;text-shadow:0 4px 20px #000;}
+  #ko.on .finalLabel{animation:fadeUp .5s .75s forwards;}
+  #ko.on .finalScore{animation:fadeUp .5s .9s forwards;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+
+  /* --- help (?) --- */
+  #helpBtn{position:fixed;top:14px;right:66px;z-index:30;border:none;cursor:pointer;
+    background:rgba(12,16,26,.72);color:#fff;font:700 20px/1 'Helvetica Neue',Arial,sans-serif;
+    width:44px;height:44px;border-radius:12px;}
+  #helpBtn:hover{background:rgba(30,38,56,.9);}
+  #help{position:fixed;inset:0;z-index:40;display:none;align-items:center;
+    justify-content:center;background:rgba(4,6,12,.86);padding:20px;}
+  #help.on{display:flex;}
+  #help .box{background:#111726;border:1px solid #2b3550;border-radius:18px;
+    max-width:560px;width:100%;max-height:86vh;overflow:auto;padding:24px 24px 20px;
+    color:#e6edf3;font-family:'Helvetica Neue',Arial,sans-serif;box-sizing:border-box;}
+  #help h2{margin:0 0 4px;font-size:clamp(19px,5vw,25px);}
+  #help .sub{color:#8b949e;font-size:clamp(12px,3.2vw,14px);margin:0 0 16px;}
+  #help h3{font-size:clamp(13px,3.4vw,15px);color:#ff8a3d;margin:16px 0 6px;letter-spacing:.04em;}
+  #help ul{margin:0;padding-left:20px;}
+  #help li{font-size:clamp(13px,3.4vw,15px);line-height:1.7;margin:3px 0;}
+  #help b{color:#ff8a3d;font-weight:700;}
+  #help .close{margin-top:18px;width:100%;padding:12px;border:none;border-radius:10px;
+    background:#2b3550;color:#fff;font-size:16px;font-weight:700;cursor:pointer;}
+  #help .close:hover{background:#3a4668;}
+</style>
+</head>
+<body>
+<div id="ui"><div id="score">0</div><div id="msg"></div></div>
+<button id="helpBtn" title="あそびかた">?</button>
+<div id="help"><div class="box">
+  <h2>バルーン・アセント</h2>
+  <p class="sub">高度を保つだけ。それだけが、むずかしい。</p>
+    <h3>気球</h3>
+    <ul><li>放っておくと<b>ひとりでに上がる</b></li><li>押している間だけ、ガスを抜いて下がる</li><li>浮力は時間とともに<b>強くなっていく</b></li></ul>
+    <h3>安全帯（オレンジの帯）</h3>
+    <ul><li>この帯の中にいる間だけ、スコアが伸びる</li><li>帯は<b>ゆっくり上下にうねる</b></li><li>帯の幅は、高度が上がるほど<b>せまくなる</b></li></ul>
+    <h3>ゲージ</h3>
+    <ul><li>帯から出ると、左のゲージが減りはじめる</li><li>帯にもどれば、また溜まる</li><li><b>ゼロになると破裂</b>。それで終わり</li></ul>
+    <h3>起きること</h3>
+    <ul><li><b>上昇気流</b>：浮力が跳ね上がる</li><li><b>ダウンバースト</b>：一気に押し下げられる</li><li><b>ガス欠</b>：しばらくガスが抜けない</li><li><b>乱気流</b>：帯が激しくうねる</li><li><b>霧</b>：帯が見えなくなる</li></ul>
+  <button class="close">とじる</button>
+</div></div>
+<a id="back" href="../../" title="ゲーム一覧にもどる">‹ ゲーム一覧</a>
+<button id="mute" title="音のオン／オフ">🔊</button>
+<div id="vignette"></div>
+<div id="flash"></div>
+<div id="banner"><div class="b"></div></div>
+<div id="ko">
+  <div class="koText">K.O.</div>
+  <div class="finalLabel">さいしゅうスコア</div>
+  <div class="finalScore">0</div>
+</div>
+<div id="title">
+  <h1>バルーン・アセント</h1>
+  <p>気球は、勝手に上がっていく。</p>
+  <p>オレンジの帯から、はみ出すな。</p>
+  <p class="kb">スペース / ↓ / クリックを<b>押しっぱなし</b> : ガスを抜く</p>
+  <p class="tc">画面を<b>押しっぱなし</b> : ガスを抜く<br>はなすと、また上がる</p>
+  <button class="btn" id="startBtn">スタート</button>
+</div>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+// ---------- url flags (declared first: sound and camera both read them) ----------
+const QS = new URLSearchParams(location.search);
+const AUTO = QS.get('auto')==='1';
+const SHOWCASE_Q = QS.get('showcase');
+// Recording must produce clean footage, so every automated mode is muted.
+const REC = QS.get('rec')==='1';   // 録音モード: 音を鳴らして拾う
+const SILENT = (AUTO || !!SHOWCASE_Q || QS.get('mute')==='1') && !REC;
+// 録画・showcase では「?」と「ゲーム一覧」を出さない（動画の邪魔になる）
+const NOCHROME = AUTO || !!SHOWCASE_Q || QS.get('nochrome')==='1';
+
+// ---------- renderer / scene ----------
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.shadowMap.enabled = true;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const SKY = new THREE.Color(0x0b1020);
+scene.background = SKY.clone();
+scene.fog = new THREE.Fog(0x0b1020, 26, 90);
+
+const camera = new THREE.PerspectiveCamera(58, innerWidth/innerHeight, .1, 260);
+
+// The whole game is a vertical column of air, so the camera sits to the side
+// looking in. X is "along the wind", Y is altitude, Z is depth.
+const CAM_X = 0, CAM_Z = 26;
+
+// Portrait and landscape both have to work. A phone held upright is far
+// narrower than 16:9; the playfield here is TALL, so a portrait phone is
+// actually the friendly case — but a wide screen crops the band off the
+// top and bottom, so hold the *vertical* extent constant instead and let
+// portrait keep the base FOV.
+const BASE_FOV = 58;
+function fitCamera(){
+  const aspect = innerWidth / innerHeight;
+  camera.aspect = aspect;
+  if(typeof SHOWCASE !== 'undefined' && SHOWCASE){
+    camera.fov = aspect < 1 ? 62 : 46;
+  } else {
+    // A tall screen needs a slightly wider vertical FOV so the whole band
+    // plus the balloon's swing stays in frame; a wide screen already has it.
+    const ref = 16/9;
+    camera.fov = aspect >= ref ? BASE_FOV
+      : Math.min(88, THREE.MathUtils.radToDeg(
+          2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(BASE_FOV)/2) * Math.pow(ref/aspect, .55))));
+  }
+  camera.__base = camera.fov;    // 上昇気流 returns to this
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+}
+addEventListener('resize', fitCamera);
+addEventListener('orientationchange', ()=>setTimeout(fitCamera, 120));
+
+// ---------- lights ----------
+const hemi = new THREE.HemisphereLight(0x8fb4ff, 0x241a2e, 1.4);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xffd9b0, 2.2);
+sun.position.set(8, 14, 10); sun.castShadow = true;
+sun.shadow.camera.left=-18; sun.shadow.camera.right=18;
+sun.shadow.camera.top=18; sun.shadow.camera.bottom=-18;
+scene.add(sun);
+
+// ---------- world constants ----------
+const LO = -8, HI = 8;            // the balloon's playable Y range on screen
+const ACCENT = 0xff8a3d;
+
+// ---------- the safe band ----------
+// Two translucent walls of light with a marked centre line. Its centre
+// drifts on a sum of sines so the player can read where it is going.
+const bandGroup = new THREE.Group();
+scene.add(bandGroup);
+const bandMat = new THREE.MeshBasicMaterial({
+  color:ACCENT, transparent:true, opacity:.14, side:THREE.DoubleSide, depthWrite:false});
+const bandFill = new THREE.Mesh(new THREE.PlaneGeometry(60, 1), bandMat);
+bandFill.position.z = -3;
+bandGroup.add(bandFill);
+const edgeMat = new THREE.MeshBasicMaterial({color:ACCENT, transparent:true, opacity:.85});
+const edgeTop = new THREE.Mesh(new THREE.PlaneGeometry(60, .16), edgeMat);
+const edgeBot = new THREE.Mesh(new THREE.PlaneGeometry(60, .16), edgeMat);
+edgeTop.position.z = -2.9; edgeBot.position.z = -2.9;
+bandGroup.add(edgeTop, edgeBot);
+// dashes along the band's centre — gives the eye something to track
+const dashes = [];
+const dashMat = new THREE.MeshBasicMaterial({color:0xffd9a8, transparent:true, opacity:.45});
+for(let i=0;i<22;i++){
+  const d = new THREE.Mesh(new THREE.PlaneGeometry(1.1, .07), dashMat);
+  d.position.set(-26 + i*2.5, 0, -2.85);
+  bandGroup.add(d); dashes.push(d);
+}
+
+// ---------- the balloon ----------
+function buildBalloon(){
+  const g = new THREE.Group();
+  const skin = new THREE.MeshStandardMaterial({color:0xff8a3d, roughness:.45, metalness:.05});
+  const dark = new THREE.MeshStandardMaterial({color:0xc4551a, roughness:.55});
+  const rope = new THREE.MeshStandardMaterial({color:0x8a7a63, roughness:.9});
+  const wood = new THREE.MeshStandardMaterial({color:0x6b4a2c, roughness:.85});
+  // envelope: a sphere squashed into a teardrop
+  const env = new THREE.Mesh(new THREE.SphereGeometry(1.35, 28, 22), skin);
+  env.scale.set(1, 1.18, 1); env.position.y = 1.5; g.add(env);
+  // vertical gore stripes so the rotation reads
+  for(let i=0;i<4;i++){
+    const s = new THREE.Mesh(new THREE.SphereGeometry(1.36, 10, 22,
+      i*Math.PI/2, .30), dark);
+    s.scale.set(1, 1.18, 1); s.position.y = 1.5; g.add(s);
+  }
+  // the neck where the gas escapes
+  const neck = new THREE.Mesh(new THREE.CylinderGeometry(.34, .5, .45, 14), dark);
+  neck.position.y = .22; g.add(neck);
+  // basket
+  const basket = new THREE.Mesh(new THREE.BoxGeometry(.85, .6, .85), wood);
+  basket.position.y = -.85; g.add(basket);
+  for(const s of [[-.36,-.36],[.36,-.36],[-.36,.36],[.36,.36]]){
+    const r = new THREE.Mesh(new THREE.CylinderGeometry(.035,.035,.9,6), rope);
+    r.position.set(s[0], -.12, s[1]); g.add(r);
+  }
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  return {group:g, env, neck, basket};
+}
+const balloon = buildBalloon();
+scene.add(balloon.group);
+
+// the vent plume: a cone of escaping gas under the neck, only while venting
+const ventMat = new THREE.MeshBasicMaterial({
+  color:0xa8e8ff, transparent:true, opacity:0, depthWrite:false});
+const vent = new THREE.Mesh(new THREE.ConeGeometry(.34, 1.7, 14, 1, true), ventMat);
+vent.rotation.x = Math.PI;      // point the cone downwards
+vent.position.y = -.7;
+balloon.group.add(vent);
+
+// hero light rides with the balloon
+const heroLight = new THREE.PointLight(0xffc48a, 40, 24);
+scene.add(heroLight);
+
+// ---------- hazards: drifting obstacles the player must also miss ----------
+// Only two shapes so a glance is enough: a spiked bird and a hard pylon.
+const birdMat = new THREE.MeshStandardMaterial({color:0xdce4f5, roughness:.5});
+const birdDark = new THREE.MeshStandardMaterial({color:0x5a6480, roughness:.6});
+function buildBird(){
+  const g = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.SphereGeometry(.34, 14, 12), birdMat);
+  body.scale.set(1.5, .8, .8); g.add(body);
+  const wingGeo = new THREE.BoxGeometry(.12, .06, 1.25);
+  const wl = new THREE.Mesh(wingGeo, birdDark); wl.position.set(0,.1,.72);
+  const wr = new THREE.Mesh(wingGeo, birdDark); wr.position.set(0,.1,-.72);
+  const beak = new THREE.Mesh(new THREE.ConeGeometry(.1,.34,8), birdMat);
+  beak.rotation.z = Math.PI/2; beak.position.x = -.6; g.add(beak);
+  g.add(wl, wr);
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  return {group:g, wl, wr};
+}
+const pylonMat = new THREE.MeshStandardMaterial({color:0x8c3a42, roughness:.6, metalness:.3});
+const pylonTrim = new THREE.MeshStandardMaterial({color:0xffd23b, roughness:.5});
+function buildPylon(){
+  const g = new THREE.Group();
+  const mast = new THREE.Mesh(new THREE.CylinderGeometry(.12,.18, 4.4, 8), pylonMat);
+  g.add(mast);
+  for(const y of [-1.4, 0, 1.4]){
+    const arm = new THREE.Mesh(new THREE.BoxGeometry(.1, .1, 2.2), pylonMat);
+    arm.position.y = y; g.add(arm);
+  }
+  const lamp = new THREE.Mesh(new THREE.SphereGeometry(.2, 12, 10), pylonTrim);
+  lamp.position.y = 2.3; g.add(lamp);
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  return g;
+}
+
+const hazards = [];
+function spawnHazard(x){
+  const isBird = Math.random() < .55;
+  let mesh, type, half;
+  if(isBird){
+    const b = buildBird();
+    mesh = b.group; type='bird'; half = .65;
+    mesh.userData.wings = b;
+  } else {
+    mesh = buildPylon(); type='pylon'; half = 2.3;
+  }
+  // Hazards sit at a random altitude; the band will sometimes cross them,
+  // which is the whole point — hold the band AND thread the gap.
+  mesh.position.set(x, LO + Math.random()*(HI-LO), 0);
+  scene.add(mesh);
+  hazards.push({mesh, type, half, phase: Math.random()*6.28});
+}
+
+// ---------- parallax background: distant cloud slabs and stars ----------
+const clouds = [];
+const cloudMat = new THREE.MeshBasicMaterial({color:0x1b2440, transparent:true, opacity:.75});
+for(let i=0;i<26;i++){
+  const c = new THREE.Mesh(new THREE.SphereGeometry(2 + Math.random()*3.2, 10, 8), cloudMat);
+  c.scale.set(1.8, .5, 1);
+  c.position.set(-40 + Math.random()*90, -16 + Math.random()*34, -18 - Math.random()*34);
+  scene.add(c); clouds.push(c);
+}
+const stars = [];
+const starMat = new THREE.MeshBasicMaterial({color:0xcfe0ff, transparent:true, opacity:.8});
+for(let i=0;i<70;i++){
+  const s = new THREE.Mesh(new THREE.PlaneGeometry(.16,.16), starMat);
+  s.position.set(-50 + Math.random()*110, -20 + Math.random()*48, -55 - Math.random()*20);
+  scene.add(s); stars.push(s);
+}
+// the moon, far behind everything
+const moon = new THREE.Mesh(new THREE.CircleGeometry(3.6, 40),
+  new THREE.MeshBasicMaterial({color:0xfff3d0}));
+moon.position.set(-18, 13, -68); scene.add(moon);
+
+// gust streaks — only visible during 乱気流 / ダウンバースト
+const gusts = [];
+const gustMat = new THREE.MeshBasicMaterial({color:0xa8e8ff, transparent:true, opacity:0});
+for(let i=0;i<34;i++){
+  const m = new THREE.Mesh(new THREE.BoxGeometry(3.6,.05,.05), gustMat);
+  m.position.set(-30 + Math.random()*60, -14 + Math.random()*28, -6 + Math.random()*8);
+  scene.add(m); gusts.push(m);
+}
+
+// ---------- the integrity gauge (drawn in 3D so it survives any aspect) ----------
+// A vertical bar pinned to the left of the play column: the balloon's skin.
+const gauge = new THREE.Group();
+scene.add(gauge);
+const gaugeBack = new THREE.Mesh(new THREE.PlaneGeometry(.5, 11),
+  new THREE.MeshBasicMaterial({color:0x1b2338, transparent:true, opacity:.85}));
+const gaugeFill = new THREE.Mesh(new THREE.PlaneGeometry(.38, 10.7),
+  new THREE.MeshBasicMaterial({color:0x5bd6a0}));
+gauge.add(gaugeBack, gaugeFill);
+gauge.position.set(-11.4, 0, 1);
+
+// ---------- game state ----------
+let running=false, dead=false, t=0, score=0;
+let y = 0;                       // balloon altitude
+let vy = 0;                      // vertical velocity
+let venting = false;             // is the player holding the input?
+let lift = 2.6;                  // buoyancy: pushes up, grows with the run
+let integrity = 1;               // 1 = intact, 0 = burst
+let bandCentre = 0, bandHalf = 2.6;
+let drift = 0;                   // world scroll distance (feeds the score + spawns)
+let timeScale=1;                 // slow-motion multiplier
+let deadAt=0;                    // when the run ended (touch retry gate)
+let shake=0;                     // camera shake amount
+let camDist=CAM_Z, camDistTarget=CAM_Z;   // death zoom pulls the camera in
+let inBand=true;
+let nextEventAt=7;               // seconds until the first event
+let eventQueue=[];               // event names not yet used in this run
+
+// --- per-event state ---
+let updraft=0;                   // >0 while buoyancy is boosted
+let downburst=0;                 // >0 while being pushed down
+let gasOut=0;                    // >0 while the vent does nothing
+let turbulence=0;                // >0 while the band thrashes
+let fogT=0;                      // >0 while the band is invisible
+let ventSputter=0;               // visual: vent coughs during gas-out
+
+const scoreEl = document.getElementById('score');
+const msgEl = document.getElementById('msg');
+const titleEl = document.getElementById('title');
+const bannerEl = document.getElementById('banner');
+const bannerText = bannerEl.querySelector('.b');
+const flashEl = document.getElementById('flash');
+const vignetteEl = document.getElementById('vignette');
+const koEl = document.getElementById('ko');
+const koScoreEl = koEl.querySelector('.finalScore');
+
+// ---------- presentation helpers ----------
+function banner(text, color){
+  bannerText.textContent = text;
+  bannerText.style.color = color;
+  bannerEl.classList.remove('go');
+  void bannerEl.offsetWidth;      // restart the CSS animation
+  bannerEl.style.opacity = 1;
+  bannerEl.classList.add('go');
+}
+function flash(color, strength, ms){
+  flashEl.style.background = color;
+  flashEl.style.transition = 'none';
+  flashEl.style.opacity = strength;
+  requestAnimationFrame(()=>{
+    flashEl.style.transition = `opacity ${ms}ms ease-out`;
+    flashEl.style.opacity = 0;
+  });
+}
+
+// ---------- the band's path ----------
+// Sum of three sines: readable, never repeating on a human timescale.
+// `turbulence` widens the swing without changing the shape's character.
+function bandAt(time){
+  const amp = 3.0 + turbulence*2.4;
+  return Math.sin(time*.42)*amp
+       + Math.sin(time*.83 + 1.7)*(1.25 + turbulence*1.5)
+       + Math.sin(time*1.51 + .4)*(.45 + turbulence*1.1);
+}
+
+// ---------- events ----------
+const EVENTS = {
+  // buoyancy spikes: the balloon wants to run away upwards
+  updraft(){
+    banner('上 昇 気 流', '#ffd23b');
+    updraft = 5.0;
+    flash('#ffe6a8', .3, 420);
+    shake = Math.max(shake, .22);
+    return 5.5;
+  },
+  // a hard shove downwards: you must STOP venting and let it climb back
+  downburst(){
+    banner('ダウンバースト', '#5ad6ff');
+    downburst = 3.2;
+    vy -= 7.5;
+    flash('#a8e8ff', .42, 380);
+    shake = Math.max(shake, .4);
+    return 5;
+  },
+  // the vent stops working — holding does nothing, so plan around the rise
+  gasout(){
+    banner('ガ ス 欠', '#ff4d5e');
+    gasOut = 3.4;
+    return 5;
+  },
+  // the band thrashes: same job, much less forgiving
+  turbulence(){
+    banner('乱 気 流', '#9b6bff');
+    turbulence = 6.0;
+    shake = Math.max(shake, .3);
+    return 6.5;
+  },
+  // the band goes invisible: fly it from memory for a couple of seconds
+  fog(){
+    banner('霧', '#c8d4e8');
+    fogT = 3.0;
+    return 5;
+  },
+  // a wall of birds crosses the column all at once
+  flock(){
+    banner('鳥 の 群 れ', '#dce4f5');
+    const x0 = balloon.group.position.x + 42;
+    for(let i=0;i<5;i++){
+      const b = buildBird();
+      b.group.position.set(x0 + i*3.4, LO + 1 + (i*3.1) % (HI-LO-2), 0);
+      b.group.userData.wings = b;
+      scene.add(b.group);
+      hazards.push({mesh:b.group, type:'bird', half:.65, phase:Math.random()*6.28, temp:true});
+    }
+    return 4.5;
+  },
+};
+const EVENT_NAMES = Object.keys(EVENTS);
+// recording/debug hook: fire a named event on cue (used by the capture script)
+// returns false if the run is already over, so a capture script can wait
+// for the next run instead of firing an event onto the K.O. screen
+window.__ev = name => {
+  if(!running || dead || !EVENTS[name]) return false;
+  const busy = EVENTS[name]();
+  if(!SILENT) SND.event(); nextEventAt = t + busy + 5; return true;
+};
+window.__events = EVENT_NAMES.slice();
+window.__alive = () => running && !dead;
+window.__kill = () => { if(running && !dead){ dead=true; gameOver(); } };
+window.__recStop = () => SND.recStop();
+window.__snd = () => ({enabled: SND.enabled, silent: SILENT});
+window.__fov = () => +camera.fov.toFixed(1);
+window.__probe = () => ({t:+t.toFixed(2), y:+y.toFixed(2), vy:+vy.toFixed(2),
+  band:+bandCentre.toFixed(2), half:+bandHalf.toFixed(2),
+  integrity:+integrity.toFixed(2), lift:+lift.toFixed(2), next:+nextEventAt.toFixed(2)});
+
+function refillEventQueue(){
+  eventQueue = EVENT_NAMES.slice();
+  for(let i=eventQueue.length-1;i>0;i--){        // shuffle so the order varies per run
+    const j = Math.floor(Math.random()*(i+1));
+    [eventQueue[i],eventQueue[j]]=[eventQueue[j],eventQueue[i]];
+  }
+}
+
+function triggerEvent(){
+  if(!eventQueue.length) refillEventQueue();
+  const name = eventQueue.pop();
+  const busy = EVENTS[name]();
+  if(!SILENT) SND.event();
+  nextEventAt = t + busy + 5 + Math.random()*4;  // breathing room between events
+}
+
+// ---------- reset ----------
+function reset(){
+  for(const h of hazards) scene.remove(h.mesh);
+  hazards.length=0;
+  let x = 34;
+  for(let i=0;i<7;i++){ spawnHazard(x); x += 16 + Math.random()*12; }
+  nextHazardX = x;
+  y = 0; vy = 0; venting = false; lift = 2.6; integrity = 1;
+  drift = 0; bandCentre = 0; bandHalf = 2.6; inBand = true;
+  balloon.group.position.set(0, 0, 0);
+  balloon.group.rotation.set(0,0,0);
+  balloon.group.scale.set(1,1,1);
+  t=0; score=0; dead=false;
+  timeScale=1; shake=0; camDist=CAM_Z; camDistTarget=CAM_Z;
+  updraft=0; downburst=0; gasOut=0; turbulence=0; fogT=0; ventSputter=0;
+  gustMat.opacity = 0;
+  bandMat.opacity = .14; edgeMat.opacity = .85; dashMat.opacity = .45;
+  nextEventAt = 7;
+  refillEventQueue();
+  msgEl.textContent='';
+  koEl.classList.remove('on');
+  vignetteEl.style.transition='opacity .3s'; vignetteEl.style.opacity=0;
+  camera.position.set(CAM_X, 0, CAM_Z);
+}
+let nextHazardX = 34;
+
+const startBtn = document.getElementById('startBtn');
+
+// ---------- sound: everything synthesised, no audio files ----------
+// Keeps the single-HTML rule (nothing to download) and lets the music
+// react to play: the bass line speeds up with the game, events drop a
+// stinger, and the whole thing ducks out on a game over.
+const SND = (() => {
+  let ctx = null, master = null, musicGain = null, on = true, started = false;
+  let step = 0, timer = null, tempo = 0.25;
+
+  // A pentatonic scale never sounds wrong against itself, which matters
+  // when the tempo drifts with the player's speed.
+  // minor pentatonic, driving — a chase that never lets up
+  const SCALE = [0, 3, 5, 7, 10];
+  const ROOT = 196;
+  const BASS = 'square', LEAD = 'sawtooth';
+  const hz = (deg, oct = 0) =>
+    ROOT * Math.pow(2, oct + Math.floor(deg / SCALE.length)) *
+    Math.pow(2, SCALE[((deg % SCALE.length) + SCALE.length) % SCALE.length] / 12);
+
+  function ensure() {
+    if (ctx) return ctx;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    ctx = new AC();
+    master = ctx.createGain();
+    master.gain.value = 0.32;
+    master.connect(ctx.destination);
+    musicGain = ctx.createGain();
+    musicGain.gain.value = 1;
+    musicGain.connect(master);
+    return ctx;
+  }
+
+
+  // ---- 録音用の分岐（?rec=1）----
+  // Playwright の録画には音声が入らないので、ゲーム自身に master バスを
+  // 録らせる。鳴っているものそのものなので映像と必ず同期する。
+  let recDest = null, recorder = null, recChunks = [];
+  function recStart() {
+    if (!ctx || recorder) return;
+    recDest = ctx.createMediaStreamDestination();
+    master.connect(recDest);
+    recorder = new MediaRecorder(recDest.stream, {mimeType: 'audio/webm'});
+    recorder.ondataavailable = e => { if (e.data.size) recChunks.push(e.data); };
+    recorder.start();
+  }
+  function recStop() {
+    return new Promise(res => {
+      if (!recorder) return res(null);
+      recorder.onstop = async () => {
+        const blob = new Blob(recChunks, {type: 'audio/webm'});
+        const buf = await blob.arrayBuffer();
+        res(Array.from(new Uint8Array(buf)));
+      };
+      recorder.stop();
+    });
+  }
+
+  function blip(freq, dur, type = 'square', vol = 0.25, dest = null, slideTo = null) {
+    if (!ctx || !on) return;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, ctx.currentTime);
+    if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, ctx.currentTime + dur);
+    // a short attack stops every note from clicking
+    g.gain.setValueAtTime(0, ctx.currentTime);
+    g.gain.linearRampToValueAtTime(vol, ctx.currentTime + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
+    o.connect(g); g.connect(dest || master);
+    o.start(); o.stop(ctx.currentTime + dur + 0.02);
+  }
+
+  function noise(dur, vol = 0.2, hp = 800) {
+    if (!ctx || !on) return;
+    const n = Math.floor(ctx.sampleRate * dur);
+    const buf = ctx.createBuffer(1, n, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    const f = ctx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = hp;
+    const g = ctx.createGain(); g.gain.value = vol;
+    src.connect(f); f.connect(g); g.connect(master);
+    src.start();
+  }
+
+  // --- the loop: a walking bass plus an offbeat blip ---
+  function tick() {
+    if (!ctx || !on) return;
+    const bar = step % 16;
+    // straight driving pulse: bass on every beat, lead stabs offbeat
+    if (bar % 2 === 0) blip(hz(bar % 8 === 0 ? 0 : 1, -1), tempo * 1.1, BASS, 0.30, musicGain);
+    if (bar % 8 === 5) blip(hz(4, 0), tempo * 0.6, LEAD, 0.09, musicGain);
+    if (bar % 4 === 2) noise(0.04, 0.05, 5000);
+    step++;
+    timer = setTimeout(tick, tempo * 1000);
+  }
+
+  return {
+    // must be called from a user gesture — browsers block audio otherwise
+    start() {
+      if (!ensure() || started) return;
+      if (ctx.state === 'suspended') ctx.resume();
+      started = true; step = 0; tick();
+    },
+    stop() { if (timer) { clearTimeout(timer); timer = null; } started = false; },
+    /** speed the music up with the game; 1 = starting pace */
+    setPace(mult) { tempo = Math.max(0.11, 0.25 / Math.max(0.2, mult)); },
+    duck(sec = 1.6) {                                      // for game over
+      if (!ctx) return;
+      musicGain.gain.cancelScheduledValues(ctx.currentTime);
+      musicGain.gain.setValueAtTime(musicGain.gain.value, ctx.currentTime);
+      musicGain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + sec);
+    },
+    unduck() {
+      if (!ctx) return;
+      musicGain.gain.cancelScheduledValues(ctx.currentTime);
+      musicGain.gain.setValueAtTime(0.0001, ctx.currentTime);
+      musicGain.gain.exponentialRampToValueAtTime(1, ctx.currentTime + 0.4);
+    },
+    // --- one-shots ---
+    // ventOn / ventOff: a held hiss, so the player HEARS how long they vented.
+    // This is the game's signature sound, so it gets its own filtered noise
+    // source rather than a blip — pitched low and steady, easy to mix under
+    // narration and instantly distinct from every stinger below.
+    ventOn() {
+      ensure(); if (!ctx || !on || this._vent) return;
+      const n = Math.floor(ctx.sampleRate * 1.0);
+      const buf = ctx.createBuffer(1, n, ctx.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+      const src = ctx.createBufferSource(); src.buffer = buf; src.loop = true;
+      const f = ctx.createBiquadFilter(); f.type = 'bandpass';
+      f.frequency.value = 900; f.Q.value = 1.4;
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0, ctx.currentTime);
+      g.gain.linearRampToValueAtTime(0.16, ctx.currentTime + 0.05);
+      src.connect(f); f.connect(g); g.connect(master);
+      src.start();
+      this._vent = {src, g};
+      blip(hz(2, 1), 0.05, LEAD, 0.10);          // a click so the press reads
+    },
+    ventOff() {
+      if (!ctx || !this._vent) return;
+      const {src, g} = this._vent; this._vent = null;
+      g.gain.cancelScheduledValues(ctx.currentTime);
+      g.gain.setValueAtTime(g.gain.value, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.12);
+      src.stop(ctx.currentTime + 0.16);
+    },
+    enter() { ensure(); blip(hz(2, 0), 0.10, BASS, 0.20, null, hz(4, 1)); },  // back in the band
+    leave() { ensure(); blip(hz(2, 0), 0.14, 'triangle', 0.20, null, hz(0, -1)); }, // fell out
+    warn()  { ensure(); blip(hz(4, 0), 0.09, 'square', 0.16); },   // gauge running low
+    event() { ensure(); [0, 90, 180].forEach((ms, i) =>
+                setTimeout(() => blip(hz(2 + i, 0), 0.18, 'sawtooth', 0.20), ms)); },
+    hit()   { ensure(); noise(0.35, 0.30, 200);
+              blip(180, 0.5, 'sawtooth', 0.28, null, 40); },
+    over()  { ensure(); [0, 140, 280, 460].forEach((ms, i) =>
+                setTimeout(() => blip(hz(-i, -1), 0.42, 'triangle', 0.26), ms)); },
+    recStart() { ensure(); recStart(); },
+    recStop() { return recStop(); },
+    toggle() { on = !on; if (!on) { this.ventOff(); this.stop(); } else { this.start(); } return on; },
+    get enabled() { return on; },
+  };
+})();
+
+// --- one place for every action, so touch and keyboard stay in step ---
+function startRun(){
+  titleEl.classList.add('hidden'); reset(); running=true;
+  if(!SILENT){ SND.unduck(); SND.start(); if(REC) SND.recStart(); }
+}
+// The whole game is one held input: press = vent, release = rise.
+function ventStart(){
+  if(!running || dead || venting) return;
+  venting = true;
+  if(!SILENT) SND.ventOn();
+}
+function ventEnd(){
+  if(!venting) return;
+  venting = false;
+  if(!SILENT) SND.ventOff();
+}
+
+const muteBtn = document.getElementById('mute');
+function toggleMute(){ muteBtn.textContent = SND.toggle() ? '🔊' : '🔇'; }
+muteBtn.addEventListener('click', toggleMute);
+muteBtn.addEventListener('touchend', e=>{ e.preventDefault(); toggleMute(); },
+                         {passive:false});
+if(SILENT) muteBtn.style.display='none';   // automated modes have no audio
+addEventListener('keydown', e=>{ if(e.code==='KeyM') toggleMute(); });
+
+startBtn.addEventListener('click', startRun);
+// a touch on the button must start too — click alone is unreliable on touch
+startBtn.addEventListener('touchend', e=>{ e.preventDefault(); startRun(); },
+                          {passive:false});
+
+const VENT_KEYS = ['Space','ArrowDown','KeyS'];
+addEventListener('keydown', e=>{
+  if(!running){
+    if(e.code==='Space'||e.code==='Enter'){
+      // after a game over, the same key retries
+      if(dead && Date.now()-deadAt < 800) return;
+      startRun();
+    }
+    return;
+  }
+  if(VENT_KEYS.includes(e.code)){ e.preventDefault(); ventStart(); }
+});
+addEventListener('keyup', e=>{ if(VENT_KEYS.includes(e.code)) ventEnd(); });
+// a lost focus must not leave the vent stuck open
+addEventListener('blur', ventEnd);
+
+// mouse: hold the button down to vent
+renderer.domElement.addEventListener('mousedown', e=>{
+  if(AUTO) return;
+  if(!running && !dead){ startRun(); return; }
+  ventStart();
+});
+addEventListener('mouseup', ventEnd);
+
+// --- touch: press and hold anywhere on the canvas to vent ---
+// Most viewers arrive from a phone, so the game has to be playable
+// without a keyboard. This game only needs one input, and a hold maps
+// onto a finger perfectly: touchstart opens the valve, touchend shuts it.
+(function(){
+  const canvas = renderer.domElement;
+
+  canvas.addEventListener('touchstart', e=>{
+    if(AUTO) return;
+    if(dead){
+      // give the K.O. animation time to read, then a tap retries
+      if(Date.now()-deadAt > 1500) startRun();
+      return;
+    }
+    if(!running){ startRun(); return; }
+    ventStart();
+  }, {passive:true});
+
+  const stop = ()=>{ if(!AUTO) ventEnd(); };
+  canvas.addEventListener('touchend', stop, {passive:true});
+  canvas.addEventListener('touchcancel', stop, {passive:true});
+
+  // The title overlay sits above the canvas, so a tap anywhere on it never
+  // reaches the canvas handler. Start from the overlay itself.
+  titleEl.addEventListener('touchend', e=>{
+    if(!running){ e.preventDefault(); startRun(); }
+  }, {passive:false});
+
+  // stop the browser treating game taps as scroll / double-tap zoom
+  canvas.addEventListener('touchmove', e=>e.preventDefault(), {passive:false});
+})();
+
+// autoplay mode for recording: ?auto=1
+// recording holds the K.O. longer than play does: ?hold=9000
+const RETRY_MS = Math.max(1200, parseInt(QS.get('hold')||'4200', 10));
+// ?noev=1 records a calm run with no events, for narration beds
+const NOEV = QS.get('noev')==='1';
+if(AUTO){ setTimeout(startRun, 1200); }   // startRun 経由にする（音/録音も始まる）
+
+// ---------- autopilot ----------
+// A proportional controller on altitude, not a rule list: it predicts where
+// the band will be in `LEAD` seconds and vents whenever it is heading above
+// that. The same one input the player has, so the footage looks like play.
+function autoPilot(dt){
+  const LEAD = 0.55;
+  const aim = bandAt(t + LEAD) + dodgeBias();
+  // where the balloon will be shortly if nothing changes
+  const predicted = y + vy*LEAD;
+  // Vent when we are (or will be) above the aim point, stop when below.
+  // The deadband keeps it from chattering on every frame.
+  const err = predicted - aim;
+  if(err > 0.25) venting = true;
+  else if(err < -0.25) venting = false;
+  // gas-out: venting achieves nothing, so stop pretending
+  if(gasOut > 0) venting = false;
+}
+// If a hazard sits where the band is, aim for whichever side of it is
+// still inside the band. Returns an offset from the band centre.
+function dodgeBias(){
+  const bx = balloon.group.position.x;
+  let worst = 0;
+  for(const h of hazards){
+    const dx = h.mesh.position.x - bx;
+    if(dx < -1.5 || dx > 11) continue;
+    const gapNeeded = h.half + 1.5;
+    const d = bandCentre - h.mesh.position.y;
+    if(Math.abs(d) < gapNeeded){
+      // push toward the free side, but never further than the band edge
+      const push = (d >= 0 ? 1 : -1) * Math.min(gapNeeded - Math.abs(d) + .4, bandHalf*.7);
+      if(Math.abs(push) > Math.abs(worst)) worst = push;
+    }
+  }
+  return worst;
+}
+
+// ---------- showcase mode ----------
+// Puts one object on a turntable against an empty stage so the video can
+// talk about it while the real thing is on screen. Uses the game's own
+// meshes, so what the narration describes is exactly what ships.
+const SHOWCASE = QS.get('showcase');
+const showcase = {group:null, spin:.55, label:''};
+// every valid ?showcase= name — the recording tooling reads this
+window.__subjects = ['balloon','band','bird','pylon','flock','vent','gauge'];
+
+function buildShowcase(name){
+  const g = new THREE.Group();
+  let label = '', spin = .55;
+  if(name==='balloon'){
+    const b = buildBalloon();
+    b.group.scale.set(1.25,1.25,1.25);
+    g.add(b.group); label = '気球'; spin = .5;
+  } else if(name==='band'){
+    // a short section of the safe band, tilted so it reads as a corridor
+    const fill = new THREE.Mesh(new THREE.PlaneGeometry(9, 5.2),
+      new THREE.MeshBasicMaterial({color:ACCENT, transparent:true, opacity:.18,
+                                   side:THREE.DoubleSide, depthWrite:false}));
+    const e1 = new THREE.Mesh(new THREE.PlaneGeometry(9, .22),
+      new THREE.MeshBasicMaterial({color:ACCENT, side:THREE.DoubleSide}));
+    const e2 = e1.clone();
+    e1.position.y = 2.6; e2.position.y = -2.6;
+    g.add(fill, e1, e2);
+    for(let i=0;i<7;i++){
+      const d = new THREE.Mesh(new THREE.PlaneGeometry(.8,.1),
+        new THREE.MeshBasicMaterial({color:0xffd9a8, side:THREE.DoubleSide}));
+      d.position.set(-3.6 + i*1.2, 0, .02); g.add(d);
+    }
+    label = '安全帯'; spin = .38;
+  } else if(name==='bird'){
+    const b = buildBird();
+    b.group.scale.set(2.1,2.1,2.1);
+    b.wl.rotation.x = -.5; b.wr.rotation.x = .5;   // hold a wingbeat pose
+    g.add(b.group); label = '鳥'; spin = .7;
+  } else if(name==='pylon'){
+    const p = buildPylon();
+    p.scale.set(1.1,1.1,1.1);
+    g.add(p); label = '鉄塔'; spin = .5;
+  } else if(name==='flock'){
+    // the event: five birds in formation
+    for(let i=0;i<5;i++){
+      const b = buildBird();
+      b.wl.rotation.x = -.4 + i*.15; b.wr.rotation.x = .4 - i*.15;
+      b.group.position.set((i-2)*1.7, ((i%2)?.9:-.9), (i-2)*.5);
+      b.group.scale.set(1.1,1.1,1.1);
+      g.add(b.group);
+    }
+    label = '鳥の群れ'; spin = .55;
+  } else if(name==='vent'){
+    // the balloon's neck with the escaping gas plume made solid
+    const b = buildBalloon();
+    g.add(b.group);
+    const plume = new THREE.Mesh(new THREE.ConeGeometry(.5, 2.4, 16, 1, true),
+      new THREE.MeshBasicMaterial({color:0xa8e8ff, transparent:true, opacity:.55,
+                                   side:THREE.DoubleSide, depthWrite:false}));
+    plume.rotation.x = Math.PI; plume.position.y = -1.0;
+    b.group.add(plume);
+    label = 'ガス抜き'; spin = .45;
+  } else if(name==='gauge'){
+    const back = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 7),
+      new THREE.MeshBasicMaterial({color:0x1b2338, side:THREE.DoubleSide}));
+    const fill = new THREE.Mesh(new THREE.PlaneGeometry(.92, 4.6),
+      new THREE.MeshBasicMaterial({color:0x5bd6a0, side:THREE.DoubleSide}));
+    fill.position.set(0, -1.2, .02);
+    g.add(back, fill);
+    label = '気球の耐久'; spin = .4;
+  }
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  scene.add(g);
+
+  // Centre the subject on the origin and pull the camera back to fit it,
+  // so every object is framed the same way regardless of its size.
+  const box = new THREE.Box3().setFromObject(g);
+  const size = box.getSize(new THREE.Vector3());
+  const mid = box.getCenter(new THREE.Vector3());
+  g.position.sub(mid);                       // sit centred at the origin
+  const reach = Math.max(size.x, size.y) * 0.5;
+  const fov = THREE.MathUtils.degToRad(camera.fov);
+  const dist = (reach / Math.tan(fov/2)) * 1.75 + 1.0;   // 1.75 = breathing room
+  camera.position.set(0, size.y*0.10, dist);
+
+  // Slide the subject sideways so a text panel can own the other half.
+  // The offset lives on a parent so the turntable still spins in place —
+  // rotating an offset group would make it orbit instead.
+  const bias = parseFloat(QS.get('sx') || '0');
+  const pivot = new THREE.Group();
+  pivot.position.x = -bias * reach * 1.15;
+  scene.add(pivot);
+  pivot.add(g);
+  showcase.group = g; showcase.pivot = pivot;
+  showcase.spin = spin; showcase.label = label;
+}
+
+fitCamera();          // SHOWCASE is known by here
+if(SHOWCASE){
+  titleEl.classList.add('hidden');
+  buildShowcase(SHOWCASE);
+  scoreEl.textContent = '';
+  msgEl.textContent = QS.get('nolabel')==='1' ? '' : showcase.label;
+  msgEl.style.fontSize = 'clamp(20px,5.4vw,30px)';
+  msgEl.style.letterSpacing = '6px';
+  // a plain dark stage: nothing on screen but the subject
+  balloon.group.visible = false;      // the playable balloon is a separate object
+  bandGroup.visible = false;
+  gauge.visible = false;
+  moon.visible = false;
+  for(const c of clouds) c.visible = false;
+  for(const s of stars) s.visible = false;
+  for(const m of gusts) m.visible = false;
+  scene.fog = null;
+  scene.background = new THREE.Color(0x0b0d16);
+  heroLight.position.set(2.6, 3.2, 4.2);
+  heroLight.intensity = 140;
+  hemi.intensity = 3.2;
+  sun.intensity = 4.0; sun.position.set(2.5, 6, 6);
+  // a second light from the other side so the far face is not pure black
+  const fill = new THREE.PointLight(0x88aaff, 45, 26);
+  fill.position.set(-4.5, 2.4, 3.6); scene.add(fill);
+}
+// let the capture script drive the turntable and swap subjects
+window.__showcase = name => {
+  if(showcase.pivot) scene.remove(showcase.pivot);   // pivot owns the group
+  buildShowcase(name);
+  msgEl.textContent = showcase.label;
+};
+
+// ---------- loop ----------
+const clock = new THREE.Clock();
+let warnCooldown = 0;
+function tick(){
+  requestAnimationFrame(tick);
+  const raw = Math.min(clock.getDelta(), .05);
+  const dt = raw * timeScale;
+
+  if(SHOWCASE){
+    if(showcase.group) showcase.group.rotation.y += raw*showcase.spin;
+    camera.lookAt(0, 0, 0);        // subject is offset, camera stays on axis
+    renderer.render(scene, camera);
+    return;
+  }
+
+  if(running && !dead){
+    t += dt;
+    if(AUTO) autoPilot(dt);
+
+    // --- events ---
+    if(t > nextEventAt && !NOEV) triggerEvent();
+
+    // event timers
+    if(updraft>0)    updraft    -= dt;
+    if(downburst>0)  downburst  -= dt;
+    if(gasOut>0)   { gasOut     -= dt; ventSputter += dt; }
+    if(turbulence>0) turbulence = Math.max(0, turbulence - dt*1.1);
+    if(fogT>0)       fogT       -= dt;
+
+    // --- the physics: buoyancy up, vented gas down ---
+    // Buoyancy grows through the run: the same hold that held you level a
+    // minute ago is no longer enough, so the player must hold longer and
+    // longer. It is CAPPED below the vent's strength on purpose — if lift
+    // ever exceeded VENT_FORCE the balloon could not be pushed down at all
+    // and the run would become unwinnable rather than merely hard.
+    const VENT_FORCE = 9.2;
+    lift = Math.min(5.4, 2.6 + t*0.028) + (updraft>0 ? 5.2 : 0);
+    const canVent = gasOut <= 0;
+    const ventForce = (venting && canVent) ? VENT_FORCE : 0;
+    const push = (downburst>0 ? -6.0 : 0);
+    vy += (lift - ventForce + push) * dt;
+    vy *= Math.pow(0.12, dt);        // air drag: velocity settles, never runs away
+    y += vy * dt;
+    // the ceiling and floor are hard: bounce off with a penalty
+    if(y > HI){ y = HI; vy = Math.min(vy, -1.5); }
+    if(y < LO){ y = LO; vy = Math.max(vy, 1.5); }
+
+    // --- the band ---
+    bandCentre = bandAt(t);
+    // the band narrows as the run goes on, floored so it stays flyable
+    bandHalf = Math.max(1.35, 2.6 - t*0.014);
+    bandGroup.position.y = bandCentre;
+    bandFill.scale.y = bandHalf*2;
+    edgeTop.position.y =  bandHalf;
+    edgeBot.position.y = -bandHalf;
+
+    // --- in or out of the band ---
+    const wasIn = inBand;
+    inBand = Math.abs(y - bandCentre) <= bandHalf;
+    if(inBand && !wasIn && !SILENT) SND.enter();
+    if(!inBand && wasIn && !SILENT) SND.leave();
+
+    if(inBand){
+      score += dt * (34 + t*0.7);              // only the band pays
+      integrity = Math.min(1, integrity + dt*0.30);
+    } else {
+      // the further outside, the faster the skin gives
+      const over = Math.abs(y - bandCentre) - bandHalf;
+      integrity -= dt * (0.22 + over*0.05);
+      warnCooldown -= dt;
+      if(integrity < .35 && warnCooldown <= 0){
+        if(!SILENT) SND.warn(); warnCooldown = .38;
+      }
+      if(integrity <= 0){ integrity = 0; dead = true; gameOver('band'); }
+    }
+    scoreEl.textContent = Math.floor(score);
+    if(!SILENT) SND.setPace(1 + t*0.012);
+
+    // --- the world scrolls past ---
+    const windSpeed = 9 + t*0.14;
+    drift += windSpeed * dt;
+    balloon.group.position.x += windSpeed * dt;
+    balloon.group.position.y = y;
+    // the balloon tips into its own vertical motion — reads the state at a glance
+    balloon.group.rotation.z = THREE.MathUtils.clamp(-vy*0.035, -.35, .35);
+    balloon.env.scale.y = 1.18 + (venting && canVent ? -.07 : .02) * Math.sin(t*6)*.5
+                        + (venting && canVent ? -.06 : 0);
+
+    // --- vent plume ---
+    const sputter = gasOut>0 ? (Math.sin(ventSputter*22)>0.6 ? 1 : 0) : 1;
+    const wantVent = (venting && canVent) ? .55*sputter : 0;
+    ventMat.opacity += (wantVent - ventMat.opacity) * Math.min(1, raw*14);
+    vent.scale.y = 1 + Math.sin(t*24)*.16;
+
+    // --- hazards ---
+    const bx = balloon.group.position.x;
+    for(let i=hazards.length-1;i>=0;i--){
+      const h = hazards[i];
+      if(h.type==='bird'){
+        // birds fly toward the balloon and bob
+        h.mesh.position.x -= (windSpeed*0.35) * dt;
+        h.mesh.position.y += Math.sin(t*2 + h.phase)*dt*1.2;
+        const w = h.mesh.userData.wings;
+        if(w){ const f = Math.sin(t*12 + h.phase)*.8; w.wl.rotation.x = f; w.wr.rotation.x = -f; }
+      }
+      if(h.mesh.position.x < bx - 16){
+        if(h.temp){ scene.remove(h.mesh); hazards.splice(i,1); continue; }
+        // recycle far ahead
+        h.mesh.position.x = nextHazardX;
+        h.mesh.position.y = LO + Math.random()*(HI-LO);
+        nextHazardX += 16 + Math.random()*12;
+      }
+      // collision: the balloon is a tall soft blob, so test a generous box
+      const dx = Math.abs(h.mesh.position.x - bx);
+      const dy = Math.abs(h.mesh.position.y - y);
+      if(dx < h.half + .9 && dy < (h.type==='pylon' ? 2.2 : .95) + 1.1){
+        dead = true; gameOver(h.type);
+      }
+    }
+    // keep the spawn frontier ahead of the balloon
+    if(nextHazardX < bx + 60){ spawnHazard(nextHazardX); nextHazardX += 16 + Math.random()*12; }
+
+    // --- 霧: the band fades out, everything else stays ---
+    const fogK = fogT > 0 ? Math.max(0, Math.min(1, fogT/0.5)) : 0;
+    bandMat.opacity   = .14 * (1-fogK);
+    edgeMat.opacity   = .85 * (1-fogK*.97);
+    dashMat.opacity   = .45 * (1-fogK);
+    scene.fog.near = 26 - fogK*22;
+
+    // --- gust streaks ride with 乱気流 / ダウンバースト ---
+    const wantGust = (turbulence>0 || downburst>0) ? .5 : 0;
+    gustMat.opacity += (wantGust - gustMat.opacity) * Math.min(1, raw*3);
+    for(const m of gusts){
+      m.position.x -= (windSpeed*3.2)*dt;
+      if(downburst>0) m.position.y -= 14*dt;
+      if(m.position.x < bx - 34){
+        m.position.x = bx + 30 + Math.random()*14;
+        m.position.y = y - 14 + Math.random()*28;
+      }
+    }
+
+    // --- 上昇気流 punches the FOV out, then it eases back ---
+    const wantFov = camera.__base * (updraft>0 ? 1.13 : 1);
+    camera.fov += (wantFov - camera.fov) * Math.min(1, raw*3.2);
+    camera.updateProjectionMatrix();
+
+    if(turbulence>0) shake = Math.max(shake, .10);
+  }
+
+  // --- the gauge follows the camera so it is always on screen ---
+  gauge.position.set(camera.position.x - 11.4, camera.position.y, 1);
+  gaugeFill.scale.y = Math.max(0.001, integrity);
+  gaugeFill.position.y = -10.7*(1-integrity)/2;
+  gaugeFill.material.color.setHex(
+    integrity > .6 ? 0x5bd6a0 : integrity > .3 ? 0xffd23b : 0xff4d5e);
+
+  // --- world objects ride along with the balloon on X ---
+  if(!SHOWCASE){
+    const bx = balloon.group.position.x;
+    bandGroup.position.x = bx;
+    heroLight.position.set(bx - 2, y + 2.5, 7);
+    moon.position.x = -18 + bx*0.82;          // far away: barely moves
+    for(const c of clouds){
+      if(c.position.x < bx - 52) c.position.x += 92;
+      if(c.position.x > bx + 52) c.position.x -= 92;
+    }
+    for(const s of stars){
+      if(s.position.x < bx - 58) s.position.x += 112;
+      if(s.position.x > bx + 58) s.position.x -= 112;
+    }
+  }
+
+  // --- death sequence: slow-mo unwinds, the balloon deflates and drops ---
+  if(dead){
+    timeScale += (0 - timeScale)*Math.min(1, raw*1.1);   // ease down to a near-freeze
+    balloon.group.rotation.z += raw*1.6;
+    balloon.env.scale.multiplyScalar(1 - raw*1.1);       // the envelope collapses
+    balloon.group.position.y -= raw*3.2;
+    ventMat.opacity = Math.max(0, ventMat.opacity - raw*3);
+  }
+
+  // --- camera (runs even while dead, so the zoom and shake still play) ---
+  camDist += (camDistTarget - camDist)*Math.min(1, raw*2.4);
+  camera.position.x = balloon.group.position.x + 2.5;
+  // follow the balloon softly, so the band's motion is visible as motion
+  camera.position.y += (balloon.group.position.y*0.55 - camera.position.y)*Math.min(1, raw*2.2);
+  camera.position.z = camDist;
+  if(shake>0){
+    shake = Math.max(0, shake - raw*.9);
+    camera.position.x += (Math.random()-.5)*shake;
+    camera.position.y += (Math.random()-.5)*shake;
+  }
+  camera.lookAt(balloon.group.position.x + 2.5, camera.position.y*0.9 + balloon.group.position.y*0.1, 0);
+
+  renderer.render(scene, camera);
+}
+
+function gameOver(cause){
+  running=false; deadAt=Date.now();
+  ventEnd();
+  if(!SILENT){ SND.hit(); SND.duck(1.6); setTimeout(()=>SND.over(), 700); }
+  // hit feedback: red flash, red vignette, hard shake, camera punches in
+  flash('#ff2b3a', .8, 500);
+  vignetteEl.style.transition='opacity .5s'; vignetteEl.style.opacity=1;
+  shake = .9;
+  camDistTarget = 11;
+  const finalScore = Math.floor(score);
+  koScoreEl.textContent = finalScore;
+  msgEl.textContent = '';
+  setTimeout(()=>{ koEl.classList.add('on'); }, 620);   // K.O. lands after the slow-mo
+  if(AUTO){ setTimeout(()=>{ reset(); running=true;
+                             if(!SILENT) SND.unduck(); }, RETRY_MS); }
+  else setTimeout(()=>{
+    msgEl.textContent = matchMedia('(pointer:coarse)').matches
+      ? 'タップでもう一度' : 'スペースでもう一度';
+  }, 1800);
+}
+tick();
+
+// --- help (?) : ルールを見せる。録画中は出さない ---
+(function(){
+  const btn = document.getElementById('helpBtn');
+  const panel = document.getElementById('help');
+  if(!btn || !panel) return;
+  if(NOCHROME){                      // 録画・showcase では画面から消す
+    btn.style.display = 'none';
+    const back = document.getElementById('back');
+    if(back) back.style.display = 'none';
+    return;
+  }
+  const open = () => { panel.classList.add('on'); };
+  const close = () => { panel.classList.remove('on'); };
+  btn.addEventListener('click', open);
+  btn.addEventListener('touchend', e => { e.preventDefault(); open(); }, {passive:false});
+  panel.addEventListener('click', e => { if(e.target === panel) close(); });
+  panel.querySelector('.close').addEventListener('click', close);
+  panel.querySelector('.close').addEventListener('touchend',
+    e => { e.preventDefault(); close(); }, {passive:false});
+  addEventListener('keydown', e => {
+    if(e.code === 'Escape') close();
+    else if(e.key === '?' || (e.code === 'Slash' && e.shiftKey)) open();
+  });
+})();
+</script>
+</body>
+</html>
