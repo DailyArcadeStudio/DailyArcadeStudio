@@ -1,0 +1,229 @@
+{
+  "id": "0032_mirror_maze",
+  "title": "ミラー・メイズ",
+  "video_title": "窓がひとつしかない地下の写真スタジオの話",
+  "lang": "ja",
+  "voice": "jp_female",
+  "scenes": [
+    {
+      "kind": "hook",
+      "clip": "spin",
+      "narration": "光をまっすぐ進ませない、という仕事があります。"
+    },
+    {
+      "kind": "image",
+      "prompt": "a small basement photo studio, one narrow high window near the ceiling casting a single hard shaft of daylight across a bare concrete floor, dust in the air, photorealistic, cinematic, deep shadows, highly detailed",
+      "narration": "地下の、小さな写真スタジオです。借りているのは、ミナさんという写真家さん。窓は、天井近くにひとつだけあります。"
+    },
+    {
+      "kind": "image",
+      "prompt": "a photographer adjusting a large silver reflector panel on a stand in a dim basement studio, angling it to bounce a beam of window light toward a corner, photorealistic, cinematic, warm rim light, shallow depth of field, highly detailed",
+      "narration": "照明を買えばいい話なんですが、電気の容量が足りないんです。大家さんに何度も頼みました。答えは、配線は変えられません。それで、ミナさんはレフ板を買いました。"
+    },
+    {
+      "kind": "image",
+      "prompt": "several mirrors and silver reflector panels on stands arranged across a basement studio floor, a single shaft of daylight bouncing between them toward a chair in the corner, photorealistic, cinematic, dramatic contrast, highly detailed",
+      "narration": "窓から入る光を、板で跳ね返す。それをもう一枚で、また跳ね返す。そうやって、部屋のすみまで光を届けます。今日も、角度をさがしています。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "emitter",
+      "kicker": "光のもと",
+      "title": "発射口",
+      "bullets": [
+        "左のはしから、**ずっと光が出ています**",
+        "向きは**変えられません**。真横にだけ進みます",
+        "止めることもできません"
+      ],
+      "narration": "これが光のもとです。部屋の左のはしにあって、ずっと光を出しています。ここ、大事なところです。向きは変えられません。真横にしか進みません。止めることも、できないんです。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "beam",
+      "kicker": "あつかうもの",
+      "title": "ビーム",
+      "bullets": [
+        "**まっすぐしか進めません**",
+        "鏡に当たると、**入った角度と同じだけ跳ね返る**",
+        "壁に当たったら、そこで消えます"
+      ],
+      "narration": "出てくるのは、一本の光です。まっすぐしか進めません。鏡に当たると、入った角度と同じだけ跳ね返ります。理科の時間にやったやつです。壁に当たったら、そこで消えます。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "mirror",
+      "kicker": "あなたの持ち場",
+      "title": "可動ミラー",
+      "bullets": [
+        "**ふちが水色の鏡だけ**、まわせます",
+        "左右キーかドラッグで、**じわじわ**動く",
+        "面が進むと**2枚**になる。スペースで持ちかえ"
+      ],
+      "narration": "そして、あなたが触れるのはこれです。ふちが水色に光っている鏡。これだけ、まわせます。左右のキーか、ドラッグです。ぱっとは向きません。じわじわ回ります。面が進むと2枚になって、スペースで持ちかえます。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "fixedmirror",
+      "kicker": "動かないほう",
+      "title": "固定ミラー",
+      "bullets": [
+        "灰色の鏡。**まわせません**",
+        "部屋のすみに、勝手に置かれている",
+        "うまく使えば近道。**邪魔になることも**"
+      ],
+      "narration": "灰色の鏡もあります。こっちは、まわせません。部屋のすみに、勝手に置かれています。読んで使えば近道になります。でも正直に言うと、じゃまなときのほうが多いです。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "target",
+      "kicker": "とどける先",
+      "title": "ターゲット",
+      "bullets": [
+        "リングの**真ん中に当てつづける**",
+        "中心に近いほど、**メーターが速く溜まる**",
+        "満タンでクリア。**時間が回復します**"
+      ],
+      "narration": "光をとどける先が、ここです。リングの真ん中に、当てつづけてください。かすっただけでは、だめなんです。中心に近いほど、メーターが速く溜まります。満タンになればクリアで、残り時間も回復します。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "blocker",
+      "kicker": "じゃまするもの",
+      "title": "じゃま板",
+      "bullets": [
+        "光を**そこで止めます**。跳ね返りません",
+        "面が進むと、**3枚まで**増える",
+        "最初から詰まないように置かれています"
+      ],
+      "narration": "部屋には、こんな板も立っています。光がこれに当たると、跳ね返りません。そこで止まります。面が進むと3枚まで増えます。ただし、絶対に届かない置き方はされません。道は、かならずあります。"
+    },
+    {
+      "kind": "events",
+      "clip": "events",
+      "kicker": "部屋の都合",
+      "title": "ときどき、じゃまが入ります",
+      "bullets": [
+        "**ミラー暴走** — 鏡がひとりでにまわる",
+        "**停電** — 部屋が暗くなる。光の筋だけが見える",
+        "**ターゲット移動** — とどける先が左右に歩きだす",
+        "**視点ぐらつき** — カメラが傾いて引く",
+        "**シャッター降下** — 板が上から落ちてくる"
+      ],
+      "narration": "そして、ここからが本題です。部屋には都合があります。ミラー暴走。鏡がひとりでにまわりはじめます。手を離していられません。停電。部屋が暗くなって、光の筋だけが見えます。ターゲット移動。とどける先が、左右に歩きだします。視点ぐらつき。カメラが傾いて、すこし引きます。角度の感覚が狂います。そしてシャッター降下。板が、上から落ちてきます。今の通り道の真上にです。"
+    },
+    {
+      "kind": "death",
+      "clip": "death",
+      "kicker": "終わりかた",
+      "title": "時間がゼロになった瞬間",
+      "bullets": [
+        "やられるのではなく、**時間切れ**で終わります",
+        "迷っている時間が、いちばん高くつく",
+        "最後に、さいしゅうスコアが出ます"
+      ],
+      "narration": "このゲーム、やられて終わりません。左上の数字がゼロになって、終わります。つまり、迷っている時間がいちばん高くつくんです。ここも見てください。ぱっと切り替わりません。時間がゆっくり落ちて、鏡が力なくまわって、光が消えます。ミナさんは、この部屋で3年撮っています。あなたは、何面すすめるでしょうか。"
+    },
+    {
+      "kind": "outro",
+      "title": "概要欄のリンクから遊べます",
+      "subtitle": "チャンネル登録もお願いします",
+      "narration": "概要欄のリンクから、今すぐ遊べます。無料です。チャンネル登録といいねも、ぜひお願いします。明日も新しいゲームを持ってきます。"
+    }
+  ],
+  "slug": "mirror-maze",
+  "channel": "Daily Arcade Studio",
+  "events": [
+    "spin",
+    "fog",
+    "drift",
+    "tilt",
+    "shutter"
+  ],
+  "short": [
+    {
+      "mark": "spin",
+      "lead": -0.3,
+      "dur": 9.0,
+      "headline": "鏡が勝手にまわる"
+    },
+    {
+      "mark": "shutter",
+      "lead": -0.5,
+      "dur": 8.0,
+      "headline": "板が落ちてくる"
+    },
+    {
+      "mark": "drift",
+      "lead": -0.5,
+      "dur": 8.0,
+      "headline": "的が歩きだす"
+    },
+    {
+      "mark": "fog",
+      "lead": -0.3,
+      "dur": 7.0,
+      "headline": "見えるのは光だけ"
+    },
+    {
+      "mark": "death",
+      "lead": -2.0,
+      "dur": 9.0,
+      "headline": "迷うと時間が切れる"
+    }
+  ],
+  "thumb": {
+    "hook": "光を曲げて届ける",
+    "sub": "鏡の角度は、あなたが決める。ブラウザで無料。",
+    "frame_mark": "spin",
+    "frame_lead": 1.0
+  },
+  "short_v2": {
+    "cuts": [
+      {
+        "kind": "clip",
+        "mark": "spin",
+        "lead": -0.3,
+        "dur": 4.5,
+        "headline": "今日のゲーム",
+        "narration": "今日のゲームです。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "mirror",
+        "dur": 5.0,
+        "headline": "ミラー・メイズ",
+        "narration": "鏡をまわして、光を的まで届ける人です。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "beam",
+        "dur": 5.0,
+        "headline": "まっすぐしか進めない",
+        "narration": "光はまっすぐしか進めません。鏡で跳ね返して曲げます。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "target",
+        "dur": 5.0,
+        "headline": "真ん中に当てる",
+        "narration": "リングの真ん中に当てつづけると、メーターが溜まります。"
+      },
+      {
+        "kind": "clip",
+        "mark": "death",
+        "lead": -2.0,
+        "dur": 5.0,
+        "headline": "",
+        "narration": "迷っていると、時間が切れます。"
+      },
+      {
+        "kind": "clip",
+        "mark": "run2",
+        "lead": 1.0,
+        "dur": 4.5,
+        "cta": "概要欄のリンクから遊べます",
+        "narration": "ブラウザで無料で遊べます。リンクは概要欄です。"
+      }
+    ]
+  }
+}

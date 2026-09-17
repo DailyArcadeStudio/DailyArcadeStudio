@@ -1,0 +1,1376 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ミラー・メイズ</title>
+<style>
+  html,body{margin:0;padding:0;overflow:hidden;background:#07080f;font-family:'Helvetica Neue',Arial,sans-serif;}
+  #ui{position:fixed;top:16px;left:0;right:0;text-align:center;color:#fff;z-index:10;pointer-events:none;}
+  #score{font-size:clamp(26px,6vw,34px);font-weight:800;text-shadow:0 2px 8px #000;}
+  #msg{font-size:clamp(14px,3.6vw,19px);margin-top:6px;opacity:.9;text-shadow:0 2px 6px #000;}
+  /* 残り時間の表示。左上の戻るリンクの下に置く */
+  #lead{position:fixed;top:68px;left:14px;z-index:11;text-align:left;
+    background:rgba(12,16,26,.66);border-radius:12px;padding:7px 13px;
+    color:#fff;font-size:clamp(12px,3.2vw,15px);}
+  #lead .cap{display:block;opacity:.7;font-size:.85em;}
+  #lead .v{font-weight:800;font-size:clamp(17px,4.4vw,23px);}
+  #lead.warn{background:rgba(70,10,12,.72);}
+  #lead.warn .v{color:#ff6a5a;}
+  #lead.hide{display:none;}
+
+  #title{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:rgba(5,6,13,.74);z-index:20;color:#fff;transition:opacity .4s;padding:16px;box-sizing:border-box;}
+  #title h1{font-size:clamp(30px,9vw,56px);margin:0 0 10px;letter-spacing:2px;
+    text-align:center;line-height:1.1;text-shadow:0 4px 18px #32e6ff;}
+  #title p{font-size:clamp(13px,3.4vw,19px);opacity:.88;margin:4px 0;text-align:center;line-height:1.5;}
+  #title .keys span{display:block;margin:2px 0;}
+  #title .btn{margin-top:24px;padding:14px 44px;font-size:clamp(18px,5vw,22px);font-weight:700;color:#04202a;
+    background:linear-gradient(180deg,#5cf0ff,#12a8c8);border:none;border-radius:12px;cursor:pointer;
+    box-shadow:0 6px 24px rgba(50,230,255,.45);}
+  #title .btn:hover{transform:scale(1.05);}
+  .hidden{opacity:0;pointer-events:none;}
+  #back{position:fixed;top:14px;left:14px;z-index:30;text-decoration:none;
+    background:rgba(12,16,26,.72);color:#fff;font:600 15px/1 'Helvetica Neue',Arial,sans-serif;
+    padding:0 16px;height:44px;display:flex;align-items:center;border-radius:12px;}
+  #back:hover{background:rgba(30,38,56,.9);}
+  #mute{position:fixed;top:14px;right:14px;z-index:30;border:none;cursor:pointer;
+    background:rgba(12,16,26,.72);color:#fff;font-size:20px;line-height:1;
+    width:44px;height:44px;border-radius:12px;}
+  #mute:hover{background:rgba(30,38,56,.9);}
+  /* 端末に合った操作説明だけ出す */
+  .tc{display:none;}
+  @media (pointer:coarse){ .kb{display:none;} .tc{display:block;} }
+  @media (pointer:coarse){ #title .btn{padding:18px 52px;} }
+
+  /* --- イベントのバナー: 画面中央に叩きつける --- */
+  #banner{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    z-index:15;pointer-events:none;opacity:0;}
+  #banner .b{font-size:clamp(24px,7vw,60px);font-weight:900;letter-spacing:.06em;color:#fff;
+    padding:10px 4vw;max-width:94vw;text-align:center;transform:scale(2.4);opacity:0;
+    text-shadow:0 0 26px currentColor, 0 6px 20px #000;
+    border-top:5px solid currentColor;border-bottom:5px solid currentColor;}
+  #banner.go .b{animation:slam .62s cubic-bezier(.12,.85,.2,1) forwards;}
+  @keyframes slam{
+    0%  {transform:scale(2.4) rotate(-4deg);opacity:0;}
+    22% {transform:scale(1)   rotate(0deg); opacity:1;}
+    70% {transform:scale(1)   rotate(0deg); opacity:1;}
+    100%{transform:scale(1.12);opacity:0;}
+  }
+
+  /* --- 全画面のフラッシュ --- */
+  #flash{position:fixed;inset:0;z-index:14;pointer-events:none;opacity:0;background:#fff;}
+  #vignette{position:fixed;inset:0;z-index:13;pointer-events:none;opacity:0;
+    background:radial-gradient(ellipse at center,rgba(0,0,0,0) 32%,rgba(120,0,10,.85) 100%);}
+
+  /* --- K.O. 画面 --- */
+  #ko{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    z-index:22;pointer-events:none;opacity:0;color:#fff;transition:opacity .3s;}
+  #ko.on{opacity:1;}
+  #ko .koText{font-size:clamp(88px,24vw,180px);font-weight:900;letter-spacing:10px;color:#fff;
+    text-shadow:0 0 40px #ff3b4a,0 0 90px #ff3b4a,0 10px 30px #000;
+    transform:scale(3);opacity:0;}
+  #ko.on .koText{animation:koSlam .8s cubic-bezier(.1,.9,.2,1) forwards;}
+  @keyframes koSlam{
+    0%  {transform:scale(3) rotate(-8deg);opacity:0;}
+    30% {transform:scale(1) rotate(0deg);opacity:1;}
+    36% {transform:scale(1.06);}
+    100%{transform:scale(1);opacity:1;}
+  }
+  #ko .finalLabel{font-size:clamp(14px,4vw,20px);letter-spacing:4px;opacity:0;margin-top:6px;text-shadow:0 2px 8px #000;}
+  #ko .finalScore{font-size:clamp(46px,13vw,78px);font-weight:800;opacity:0;text-shadow:0 4px 20px #000;}
+  #ko.on .finalLabel{animation:fadeUp .5s .75s forwards;}
+  #ko.on .finalScore{animation:fadeUp .5s .9s forwards;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+
+  /* --- あそびかた (?) --- */
+  #helpBtn{position:fixed;top:14px;right:66px;z-index:30;border:none;cursor:pointer;
+    background:rgba(12,16,26,.72);color:#fff;font:700 20px/1 'Helvetica Neue',Arial,sans-serif;
+    width:44px;height:44px;border-radius:12px;}
+  #helpBtn:hover{background:rgba(30,38,56,.9);}
+  #help{position:fixed;inset:0;z-index:40;display:none;align-items:center;
+    justify-content:center;background:rgba(3,5,11,.86);padding:20px;}
+  #help.on{display:flex;}
+  #help .box{background:#101724;border:1px solid #27354f;border-radius:18px;
+    max-width:560px;width:100%;max-height:86vh;overflow:auto;padding:24px 26px 20px;
+    color:#e6edf3;font-family:'Helvetica Neue',Arial,sans-serif;}
+  #help h2{margin:0 0 4px;font-size:clamp(19px,5vw,25px);}
+  #help .sub{color:#8b949e;font-size:clamp(12px,3.2vw,14px);margin:0 0 16px;line-height:1.5;}
+  #help h3{font-size:clamp(13px,3.4vw,15px);color:#5cf0ff;margin:16px 0 6px;letter-spacing:.04em;}
+  #help ul{margin:0;padding-left:20px;}
+  #help li{font-size:clamp(13px,3.4vw,15px);line-height:1.7;margin:3px 0;}
+  #help b{color:#5cf0ff;font-weight:700;}
+  #help .close{margin-top:18px;width:100%;padding:12px;border:none;border-radius:10px;
+    background:#27354f;color:#fff;font-size:16px;font-weight:700;cursor:pointer;}
+  #help .close:hover{background:#374765;}
+</style>
+</head>
+<body>
+<div id="ui"><div id="score">0</div><div id="msg"></div></div>
+<div id="lead"><span class="cap">のこり</span><span class="v">0.0</span></div>
+<button id="helpBtn" title="あそびかた">?</button>
+<div id="help"><div class="box">
+  <h2>ミラー・メイズ</h2>
+  <p class="sub">光はまっすぐしか進めない。曲げてやるのはあなたの仕事です。</p>
+    <h3>ビーム</h3>
+    <ul><li>左の発射口から<b>ずっと出つづけている</b></li><li>鏡に当たると<b>入った角度と同じだけ跳ね返る</b></li><li>壁に当たったらそこで消える</li></ul>
+    <h3>鏡</h3>
+    <ul><li>まわせるのは<b>光っている鏡だけ</b>（ふちが水色）</li><li>ドラッグ／← → で<b>角度をじわじわ変える</b></li><li>止まっている灰色の鏡は動かせない。<b>読んで使う</b></li></ul>
+    <h3>ターゲット</h3>
+    <ul><li>リングの<b>真ん中にビームを当てつづける</b></li><li>メーターが満タンになれば<b>クリア、次の面へ</b></li><li>面が進むと鏡が増えて、制限時間は短くなる</li></ul>
+    <h3>のこり時間</h3>
+    <ul><li>左上の数字。<b>ゼロになったら終わり</b></li><li>クリアするたび<b>回復する</b></li><li>迷っている時間がいちばん高くつく</li></ul>
+    <h3>スコア</h3>
+    <ul><li>生きているあいだ、じわじわ増える</li><li>ビームが<b>当たっているあいだは増え方が速い</b></li><li>クリアで<b>まとめてボーナス</b></li></ul>
+  <button class="close">とじる</button>
+</div></div>
+<a id="back" href="../../" title="ゲーム一覧にもどる">‹ ゲーム一覧</a>
+<button id="mute" title="音のオン/オフ">🔊</button>
+<div id="vignette"></div>
+<div id="flash"></div>
+<div id="banner"><div class="b"></div></div>
+<div id="ko">
+  <div class="koText">K.O.</div>
+  <div class="finalLabel">さいしゅうスコア</div>
+  <div class="finalScore">0</div>
+</div>
+<div id="title">
+  <h1>ミラー・メイズ</h1>
+  <p>光をターゲットへ。<br>鏡の角度は、あなたが決める。</p>
+  <p class="kb keys"><span>← → / A D : 鏡をまわす</span><span>スペース : つぎの鏡へ</span><span>M : 音のオン/オフ</span></p>
+  <p class="tc">左右にドラッグ : 鏡をまわす<br>タップ : つぎの鏡へ</p>
+  <button class="btn" id="startBtn">スタート</button>
+</div>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+// ---------- url flags (declared first: sound and camera both read them) ----------
+const QS = new URLSearchParams(location.search);
+const AUTO = QS.get('auto')==='1';
+const SHOWCASE_Q = QS.get('showcase');
+// Recording must produce clean footage, so every automated mode is muted.
+const REC = QS.get('rec')==='1';   // 録音モード: 音を鳴らして拾う
+const SILENT = (AUTO || !!SHOWCASE_Q || QS.get('mute')==='1') && !REC;
+// 録画・showcase では「?」と「ゲーム一覧」を出さない（動画の邪魔になる）
+const NOCHROME = AUTO || !!SHOWCASE_Q || QS.get('nochrome')==='1';
+// ?noev=1 でランダムイベントを止める（ナレーション用の静かな映像）
+const NOEV = QS.get('noev')==='1';
+// 録画は K.O. を長めに見せる: ?hold=9000
+const RETRY_MS = Math.max(1200, parseInt(QS.get('hold')||'4200', 10));
+
+// ---------- renderer / scene ----------
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.shadowMap.enabled = true;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const SKY = new THREE.Color(0x07080f);
+scene.background = SKY.clone();
+
+const camera = new THREE.PerspectiveCamera(48, innerWidth/innerHeight, .1, 200);
+
+// 盤面は XZ 平面に置き、カメラは上からやや手前に引いて見下ろす。
+// 半径 ARENA の正方形の部屋がそのまま画面に収まってほしい。
+const ARENA = 11;              // 部屋の半径（壁までの距離）
+
+// Portrait and landscape both have to work. A phone held upright is far
+// narrower than 16:9, and with a fixed FOV the arena falls outside the
+// frame — so widen the vertical FOV as the screen gets taller.
+const BASE_FOV = 48;
+function fitCamera(){
+  const aspect = innerWidth / innerHeight;
+  camera.aspect = aspect;
+  if(typeof SHOWCASE !== 'undefined' && SHOWCASE){
+    camera.fov = aspect < 1 ? 62 : 46;
+  } else {
+    // 横方向の視野をだいたい一定に保つ（縦長ほど FOV を広げる）
+    const ref = 16/9;
+    camera.fov = aspect >= ref ? BASE_FOV
+      : Math.min(102, THREE.MathUtils.radToDeg(
+          2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(BASE_FOV)/2) * (ref/aspect))));
+  }
+  camera.__base = camera.fov;    // TILT イベントがここへ戻る
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+}
+addEventListener('resize', fitCamera);
+addEventListener('orientationchange', ()=>setTimeout(fitCamera, 120));
+
+// ---------- lights ----------
+const hemi = new THREE.HemisphereLight(0x5588ff, 0x101020, 1.1);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xdfe8ff, 1.7);
+sun.position.set(6, 16, 8); sun.castShadow = true;
+sun.shadow.camera.left=-16; sun.shadow.camera.right=16;
+sun.shadow.camera.top=16; sun.shadow.camera.bottom=-16;
+scene.add(sun);
+
+// ---------- arena ----------
+const floorMat = new THREE.MeshStandardMaterial({color:0x151a28, roughness:.95});
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(ARENA*2, ARENA*2), floorMat);
+floor.rotation.x = -Math.PI/2; floor.receiveShadow = true;
+scene.add(floor);
+
+// 床のグリッド。奥行きが分かるだけの薄い線
+const gridHelper = new THREE.GridHelper(ARENA*2, 22, 0x243356, 0x1a2338);
+gridHelper.position.y = .01; scene.add(gridHelper);
+
+// 壁: 四方を囲む低いブロック。ビームはここで消える
+const wallMat = new THREE.MeshStandardMaterial({color:0x232c42, roughness:.7, metalness:.15});
+const wallTrimMat = new THREE.MeshStandardMaterial({color:0x32e6ff, roughness:.4,
+  emissive:0x0d4a5c, emissiveIntensity:1});
+const walls = [];
+for(const [dx,dz] of [[0,-1],[0,1],[-1,0],[1,0]]){
+  const horiz = dz !== 0;
+  const w = horiz ? ARENA*2+1.4 : 1.4, d = horiz ? 1.4 : ARENA*2+1.4;
+  const g = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.BoxGeometry(w, 1.6, d), wallMat);
+  body.position.y = .8; body.castShadow = true; body.receiveShadow = true;
+  const trim = new THREE.Mesh(new THREE.BoxGeometry(w*.98, .12, d*.98), wallTrimMat);
+  trim.position.y = 1.62;
+  g.add(body, trim);
+  g.position.set(dx*(ARENA+.7), 0, dz*(ARENA+.7));
+  scene.add(g); walls.push(g);
+}
+
+// ---------- emitter (発射口) ----------
+function buildEmitter(){
+  const g = new THREE.Group();
+  const baseMesh = new THREE.Mesh(new THREE.CylinderGeometry(.62,.8,.5,20),
+    new THREE.MeshStandardMaterial({color:0x2b344e, roughness:.6, metalness:.3}));
+  baseMesh.position.y = .25; g.add(baseMesh);
+  const barrel = new THREE.Mesh(new THREE.CylinderGeometry(.3,.38,1.5,16),
+    new THREE.MeshStandardMaterial({color:0x3b4870, roughness:.45, metalness:.5}));
+  barrel.rotation.z = -Math.PI/2; barrel.position.set(.75,.72,0); g.add(barrel);
+  const lens = new THREE.Mesh(new THREE.SphereGeometry(.28,18,14),
+    new THREE.MeshBasicMaterial({color:0xfff6c8}));
+  lens.position.set(1.5,.72,0); g.add(lens);
+  // 発射口のまわりの光
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(.46,.07,10,22),
+    new THREE.MeshBasicMaterial({color:0x32e6ff}));
+  ring.rotation.y = Math.PI/2; ring.position.set(1.18,.72,0); g.add(ring);
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  return {group:g, lens, ring};
+}
+const emitter = buildEmitter();
+emitter.group.position.set(-ARENA+1.1, 0, 0);
+scene.add(emitter.group);
+const emitLight = new THREE.PointLight(0xfff0b0, 14, 9);
+emitLight.position.set(-ARENA+2.6, 1.1, 0); scene.add(emitLight);
+
+// ---------- mirror ----------
+// 鏡は板一枚。中心を軸に Y 回転する。可動のものはふちが水色に光る。
+const mirrorFaceMat = new THREE.MeshStandardMaterial({color:0xcfe8ff, metalness:.95,
+  roughness:.08, emissive:0x0a1a28, emissiveIntensity:1});
+const mirrorEdgeLive = new THREE.MeshStandardMaterial({color:0x32e6ff, roughness:.35,
+  emissive:0x1a8aa8, emissiveIntensity:1.4});
+const mirrorEdgeFixed = new THREE.MeshStandardMaterial({color:0x5a6684, roughness:.7});
+const MIRROR_LEN = 2.6;        // 鏡の幅（反射面の長さ）
+
+function buildMirror(fixed){
+  const g = new THREE.Group();
+  const face = new THREE.Mesh(new THREE.BoxGeometry(MIRROR_LEN, 1.15, .16), mirrorFaceMat);
+  face.position.y = .95; g.add(face);
+  const edge = new THREE.Mesh(new THREE.BoxGeometry(MIRROR_LEN+.22, .16, .3),
+    fixed ? mirrorEdgeFixed : mirrorEdgeLive);
+  edge.position.y = 1.6; g.add(edge);
+  const edge2 = new THREE.Mesh(new THREE.BoxGeometry(MIRROR_LEN+.22, .16, .3),
+    fixed ? mirrorEdgeFixed : mirrorEdgeLive);
+  edge2.position.y = .3; g.add(edge2);
+  // 台座: 回転軸がどこかを見せる
+  const post = new THREE.Mesh(new THREE.CylinderGeometry(.2,.28,.36,14),
+    new THREE.MeshStandardMaterial({color:0x2b344e, roughness:.6, metalness:.3}));
+  post.position.y = .18; g.add(post);
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  return {group:g, face, edge, edge2, post, fixed};
+}
+
+// ---------- target (ターゲット) ----------
+function buildTarget(){
+  const g = new THREE.Group();
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(.9,.14,12,30),
+    new THREE.MeshStandardMaterial({color:0xffc83b, roughness:.35,
+      emissive:0x6b4a00, emissiveIntensity:1.2}));
+  ring.position.y = .95; g.add(ring);
+  const ring2 = new THREE.Mesh(new THREE.TorusGeometry(.5,.09,10,24),
+    new THREE.MeshStandardMaterial({color:0xff8a3b, roughness:.35,
+      emissive:0x5c2800, emissiveIntensity:1.2}));
+  ring2.position.y = .95; g.add(ring2);
+  // 中心のコア。当たっているあいだ明るくなる
+  const core = new THREE.Mesh(new THREE.SphereGeometry(.26,18,14),
+    new THREE.MeshBasicMaterial({color:0x6b5a2a}));
+  core.position.y = .95; g.add(core);
+  const stand = new THREE.Mesh(new THREE.CylinderGeometry(.14,.24,.72,12),
+    new THREE.MeshStandardMaterial({color:0x2b344e, roughness:.6, metalness:.3}));
+  stand.position.y = .36; g.add(stand);
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  return {group:g, ring, ring2, core};
+}
+const target = buildTarget();
+scene.add(target.group);
+const targetLight = new THREE.PointLight(0xffc83b, 0, 9);
+targetLight.position.y = 1.4; scene.add(targetLight);
+
+// ---------- blocker (じゃま板: 光を吸う黒い板) ----------
+const blockerMat = new THREE.MeshStandardMaterial({color:0x1a1120, roughness:.98});
+const blockerTrimMat = new THREE.MeshStandardMaterial({color:0x9b4bff, roughness:.5,
+  emissive:0x3a1060, emissiveIntensity:1.3});
+function buildBlocker(){
+  const g = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.BoxGeometry(2.4, 1.9, .3), blockerMat);
+  body.position.y = .95; g.add(body);
+  const trim = new THREE.Mesh(new THREE.BoxGeometry(2.5, .16, .4), blockerTrimMat);
+  trim.position.y = 1.95; g.add(trim);
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  return {group:g, body, trim};
+}
+
+// ---------- beam ----------
+// ビームは折れ線。区間ごとに細い箱を伸ばして描く（Line だと太さが出ない）
+const BEAM_SEGS = 10;
+const beamMat = new THREE.MeshBasicMaterial({color:0xfff2a8, transparent:true, opacity:.95});
+const beamGlowMat = new THREE.MeshBasicMaterial({color:0xffd24a, transparent:true,
+  opacity:.22, blending:THREE.AdditiveBlending, depthWrite:false});
+const beamSegs = [], beamGlows = [];
+for(let i=0;i<BEAM_SEGS;i++){
+  const m = new THREE.Mesh(new THREE.BoxGeometry(1,.13,.13), beamMat);
+  m.visible = false; scene.add(m); beamSegs.push(m);
+  const gl = new THREE.Mesh(new THREE.BoxGeometry(1,.5,.5), beamGlowMat);
+  gl.visible = false; scene.add(gl); beamGlows.push(gl);
+}
+// 反射した点に置く小さな火花
+const sparks = [];
+for(let i=0;i<BEAM_SEGS;i++){
+  const s = new THREE.Mesh(new THREE.SphereGeometry(.17,12,10),
+    new THREE.MeshBasicMaterial({color:0xfff6c8, transparent:true, opacity:.85}));
+  s.visible = false; scene.add(s); sparks.push(s);
+}
+const BEAM_Y = .95;            // ビームの高さ（鏡とターゲットの中心）
+
+// ---------- game state ----------
+let running=false, dead=false, t=0, score=0;
+let level=1;                   // 面。上がるほど鏡が増え、時間が減る
+let charge=0;                  // ターゲットのメーター 0..1
+let clock_left=0;              // のこり時間（秒）
+let mirrors=[];                // {group, fixed, ...} の配列
+let blockers=[];               // じゃま板
+let activeIdx=0;               // いま回している鏡
+let hitting=false;             // ビームがターゲットに当たっているか
+let timeScale=1;               // スローモーション
+let deadAt=0;                  // 終了時刻（タップ再挑戦のガード）
+let shake=0;                   // カメラの揺れ
+let camPush=0;                 // 死亡時の寄り 0..1
+let spin=0;                    // >0 のあいだ鏡が勝手にまわる（イベント）
+let fog=0;                     // >0 のあいだ視界が暗い（イベント）
+let drift=0;                   // >0 のあいだターゲットが動く（イベント）
+let tilt=0;                    // >0 のあいだカメラが傾く（イベント）
+let nextEventAt=9;             // 最初のイベントまでの秒数
+let eventQueue=[];             // まだ使っていないイベント名
+let clearFlashT=0;             // クリア演出の残り時間
+let aimAng=null;               // autopilot がいま目指している角度（面/鏡が変わったら捨てる）
+
+const scoreEl = document.getElementById('score');
+const msgEl = document.getElementById('msg');
+const leadEl = document.getElementById('lead');
+const leadVal = leadEl.querySelector('.v');
+const titleEl = document.getElementById('title');
+const bannerEl = document.getElementById('banner');
+const bannerText = bannerEl.querySelector('.b');
+const flashEl = document.getElementById('flash');
+const vignetteEl = document.getElementById('vignette');
+const koEl = document.getElementById('ko');
+const koScoreEl = koEl.querySelector('.finalScore');
+
+// ---------- presentation helpers ----------
+function banner(text, color){
+  bannerText.textContent = text;
+  bannerText.style.color = color;
+  bannerEl.classList.remove('go');
+  void bannerEl.offsetWidth;      // CSS アニメーションをやり直す
+  bannerEl.style.opacity = 1;
+  bannerEl.classList.add('go');
+}
+function flash(color, strength, ms){
+  flashEl.style.background = color;
+  flashEl.style.transition = 'none';
+  flashEl.style.opacity = strength;
+  requestAnimationFrame(()=>{
+    flashEl.style.transition = `opacity ${ms}ms ease-out`;
+    flashEl.style.opacity = 0;
+  });
+}
+
+// ---------- 面の組み立て ----------
+function clearStage(){
+  for(const m of mirrors) scene.remove(m.group);
+  for(const b of blockers) scene.remove(b.group);
+  mirrors = []; blockers = [];
+}
+
+// 面をつくる。可動の鏡は必ず 1〜2 枚、固定の鏡とじゃま板が面ごとに増える。
+// 「解ける配置」を保証するため、まずターゲットを鏡から素直に狙える位置に置く。
+function buildStage(){
+  clearStage();
+  const liveCount = level >= 4 ? 2 : 1;
+  const fixedCount = Math.min(2, Math.floor((level-1)/2));
+  const blockCount = Math.min(3, Math.floor(level/2));
+
+  // 可動の鏡: 発射口の正面付近に並べる（ビームが最初に必ず当たる場所）
+  for(let i=0;i<liveCount;i++){
+    const m = buildMirror(false);
+    const x = -2.5 + i*4.6;
+    const z = i===0 ? 0 : (Math.random()<.5 ? -3.4 : 3.4);
+    m.group.position.set(x, 0, z);
+    m.group.rotation.y = Math.PI/4;      // 45°: 素直に横へ曲げる向きから始める
+    m.live = true;
+    scene.add(m.group); mirrors.push(m);
+  }
+  // 固定の鏡: 部屋のすみに置く。読めば近道になるが、邪魔にもなる
+  for(let i=0;i<fixedCount;i++){
+    const m = buildMirror(true);
+    const sx = Math.random()<.5 ? -1 : 1, sz = Math.random()<.5 ? -1 : 1;
+    m.group.position.set(sx*(4.5+Math.random()*3), 0, sz*(5.5+Math.random()*3));
+    m.group.rotation.y = (Math.random()<.5?1:-1)*Math.PI/4 + (Math.random()-.5)*.5;
+    m.live = false;
+    scene.add(m.group); mirrors.push(m);
+  }
+
+  // ターゲット: 可動の鏡から見て「横方向」に置くので、45°前後で必ず当てられる
+  const anchor = mirrors[0].group.position;
+  const side = Math.random()<.5 ? -1 : 1;
+  const dist = 5.5 + Math.random()*3.5;
+  target.group.position.set(anchor.x + (Math.random()-.5)*2.5, 0, anchor.z + side*dist);
+  // はみ出さないように部屋の中へ収める
+  target.group.position.x = THREE.MathUtils.clamp(target.group.position.x, -ARENA+2, ARENA-2);
+  target.group.position.z = THREE.MathUtils.clamp(target.group.position.z, -ARENA+2, ARENA-2);
+  target.__side = side;
+
+  // じゃま板: 発射口とターゲットを直接結ぶ線の上には置かない（詰みを防ぐ）
+  for(let i=0;i<blockCount;i++){
+    const b = buildBlocker();
+    let px=0, pz=0, ok=false;
+    for(let tries=0;tries<30 && !ok;tries++){
+      px = (Math.random()-.5)*(ARENA*2-5);
+      pz = (Math.random()-.5)*(ARENA*2-5);
+      ok = true;
+      // 鏡・ターゲット・発射口から離す
+      for(const m of mirrors) if(Math.hypot(px-m.group.position.x, pz-m.group.position.z) < 3.4) ok=false;
+      if(Math.hypot(px-target.group.position.x, pz-target.group.position.z) < 3.6) ok=false;
+      if(Math.hypot(px-emitter.group.position.x, pz-emitter.group.position.z) < 4.0) ok=false;
+      // 鏡 → ターゲットの通り道を塞がない
+      if(ok && distToSegment(px,pz, anchor.x,anchor.z, target.group.position.x,target.group.position.z) < 2.2) ok=false;
+      // 発射口 → 鏡 の通り道も塞がない
+      if(ok && distToSegment(px,pz, emitter.group.position.x,emitter.group.position.z,
+                             anchor.x,anchor.z) < 2.2) ok=false;
+    }
+    if(!ok) continue;
+    b.group.position.set(px, 0, pz);
+    b.group.rotation.y = Math.random()*Math.PI;
+    scene.add(b.group); blockers.push(b);
+  }
+  activeIdx = 0;
+  charge = 0;
+  aimAng = null;               // 面が変わったら狙いは作り直す
+}
+
+// 点 (px,pz) から線分 (ax,az)-(bx,bz) までの距離
+function distToSegment(px,pz, ax,az, bx,bz){
+  const vx=bx-ax, vz=bz-az, wx=px-ax, wz=pz-az;
+  const len2 = vx*vx+vz*vz;
+  const tt = len2 ? THREE.MathUtils.clamp((wx*vx+wz*vz)/len2, 0, 1) : 0;
+  return Math.hypot(px-(ax+vx*tt), pz-(az+vz*tt));
+}
+
+// ---------- ビームの追跡 ----------
+// 発射口から真横に撃ち、鏡で反射させ、壁・じゃま板・ターゲットで止める。
+// 返り値はターゲット中心までの最短距離（当たっていなければ大きい値）。
+const beamPath = [];           // {x,z} の列
+function traceBeam(){
+  beamPath.length = 0;
+  let ox = emitter.group.position.x + 1.5, oz = emitter.group.position.z;
+  let dx = 1, dz = 0;                     // 右向きに発射
+  beamPath.push({x:ox, z:oz});
+  let best = 1e9;
+  let lastMirror = -1;
+
+  for(let bounce=0; bounce<BEAM_SEGS-1; bounce++){
+    let hitT = 1e9, hitKind = null, hitMirror = -1, nx=0, nz=0;
+
+    // 鏡との交差（線分どうし）
+    for(let i=0;i<mirrors.length;i++){
+      if(i===lastMirror) continue;        // 同じ鏡に張りつくのを防ぐ
+      const m = mirrors[i];
+      const c = m.group.position, ang = m.group.rotation.y;
+      // 鏡の面は、法線が +Z（ローカル）の板。面に沿う方向は X 軸
+      const ux = Math.cos(ang), uz = -Math.sin(ang);          // 面に沿う単位ベクトル
+      const ax = c.x - ux*MIRROR_LEN/2, az = c.z - uz*MIRROR_LEN/2;
+      const bx = c.x + ux*MIRROR_LEN/2, bz = c.z + uz*MIRROR_LEN/2;
+      const r = raySegment(ox,oz,dx,dz, ax,az,bx,bz);
+      if(r && r.t > 1e-4 && r.t < hitT){
+        hitT = r.t; hitKind='mirror'; hitMirror=i;
+        // 面の法線
+        nx = Math.sin(ang); nz = Math.cos(ang);
+      }
+    }
+    // じゃま板との交差（光を吸う）
+    for(const b of blockers){
+      const c = b.group.position, ang = b.group.rotation.y;
+      const ux = Math.cos(ang), uz = -Math.sin(ang);
+      const ax = c.x - ux*1.2, az = c.z - uz*1.2;
+      const bx = c.x + ux*1.2, bz = c.z + uz*1.2;
+      const r = raySegment(ox,oz,dx,dz, ax,az,bx,bz);
+      if(r && r.t > 1e-4 && r.t < hitT){ hitT = r.t; hitKind='block'; hitMirror=-1; }
+    }
+    // 壁（部屋の境界）
+    for(const [axis,sign] of [['x',-1],['x',1],['z',-1],['z',1]]){
+      const d = axis==='x' ? dx : dz, o = axis==='x' ? ox : oz;
+      if(Math.abs(d) < 1e-6) continue;
+      const tt = (sign*ARENA - o)/d;
+      if(tt > 1e-4 && tt < hitT){ hitT = tt; hitKind='wall'; hitMirror=-1; }
+    }
+
+    if(hitKind === null) break;
+    const ex = ox + dx*hitT, ez = oz + dz*hitT;
+
+    // この区間でターゲットの中心にどれだけ近づいたか
+    const dseg = distToSegment(target.group.position.x, target.group.position.z, ox,oz, ex,ez);
+    if(dseg < best) best = dseg;
+
+    beamPath.push({x:ex, z:ez, kind:hitKind});
+    if(hitKind !== 'mirror') break;
+
+    // 反射: d' = d - 2(d·n)n
+    const dot = dx*nx + dz*nz;
+    dx = dx - 2*dot*nx; dz = dz - 2*dot*nz;
+    const L = Math.hypot(dx,dz); dx/=L; dz/=L;
+    ox = ex; oz = ez; lastMirror = hitMirror;
+  }
+  return best;
+}
+
+// レイ (o,d) と線分 (a,b) の交差。交差すれば {t} を返す
+function raySegment(ox,oz,dx,dz, ax,az,bx,bz){
+  const sx = bx-ax, sz = bz-az;
+  const den = dx*sz - dz*sx;
+  if(Math.abs(den) < 1e-9) return null;
+  const t = ((ax-ox)*sz - (az-oz)*sx) / den;
+  const u = ((ax-ox)*dz - (az-oz)*dx) / den;
+  if(t <= 0 || u < 0 || u > 1) return null;
+  return {t};
+}
+
+// 追跡した折れ線を箱で描く
+function drawBeam(){
+  let n = 0;
+  for(let i=0;i<beamPath.length-1;i++){
+    const a = beamPath[i], b = beamPath[i+1];
+    const len = Math.hypot(b.x-a.x, b.z-a.z);
+    if(len < 1e-3) continue;
+    const ang = Math.atan2(-(b.z-a.z), b.x-a.x);
+    for(const arr of [beamSegs, beamGlows]){
+      const m = arr[n];
+      m.visible = true;
+      m.position.set((a.x+b.x)/2, BEAM_Y, (a.z+b.z)/2);
+      m.rotation.set(0, ang, 0);
+      m.scale.x = len;
+    }
+    // 反射点の火花（壁で消えた点には出さない）
+    const s = sparks[n];
+    if(b.kind === 'mirror'){
+      s.visible = true; s.position.set(b.x, BEAM_Y, b.z);
+      s.scale.setScalar(.8 + Math.sin(t*22 + n)*.22);
+    } else s.visible = false;
+    n++;
+  }
+  for(let i=n;i<BEAM_SEGS;i++){
+    beamSegs[i].visible=false; beamGlows[i].visible=false; sparks[i].visible=false;
+  }
+}
+function hideBeam(){
+  for(let i=0;i<BEAM_SEGS;i++){
+    beamSegs[i].visible=false; beamGlows[i].visible=false; sparks[i].visible=false;
+  }
+}
+
+// ---------- events ----------
+const HIT_R = .62;             // これより中心に近ければ「当たっている」
+
+const EVENTS = {
+  // 鏡がひとりでにまわる。手を離していられない
+  spin(){
+    banner('ミラー暴走', '#32e6ff');
+    spin = 5.5;
+    shake = Math.max(shake, .22);
+    return 6;
+  },
+  // 部屋が暗くなる。ビームの光だけが頼り
+  fog(){
+    banner('停 電', '#9b6bff');
+    fog = 4.5;
+    return 5.5;
+  },
+  // ターゲットが左右に動く。止まっていてくれない
+  drift(){
+    banner('ターゲット移動', '#ffc83b');
+    drift = 7;
+    target.__driftPhase = 0;
+    flash('#ffc83b', .22, 380);
+    return 7.5;
+  },
+  // カメラが傾いて引く。角度の感覚が狂う
+  tilt(){
+    banner('視点ぐらつき', '#ff6a9a');
+    tilt = 5;
+    shake = Math.max(shake, .3);
+    return 6;
+  },
+  // じゃま板が降ってきて道を塞ぐ
+  shutter(){
+    banner('シャッター降下', '#ff8a3b');
+    // ビームの現在の通り道の上に 1 枚落とす（中間の区間を選ぶ）
+    const seg = beamPath.length >= 3 ? 1 : 0;
+    const a = beamPath[seg], b = beamPath[seg+1] || beamPath[seg];
+    const b2 = buildBlocker();
+    b2.group.position.set((a.x+b.x)/2 + (Math.random()-.5)*1.4, 0,
+                          (a.z+b.z)/2 + (Math.random()-.5)*1.4);
+    b2.group.rotation.y = Math.atan2(-(b.z-a.z), b.x-a.x) + Math.PI/2;
+    b2.__drop = 6;              // 上から降りてくる
+    b2.group.position.y = 6;
+    b2.__temp = true;           // このイベントだけの板
+    scene.add(b2.group); blockers.push(b2);
+    flash('#ff8a3b', .3, 420);
+    shake = Math.max(shake, .25);
+    return 6;
+  },
+};
+const EVENT_NAMES = Object.keys(EVENTS);
+// 録画ツールはこの配列を名前で読む。中身の識別子は英語のまま
+window.__events = EVENT_NAMES.slice();
+window.__subjects = ['mirror','fixedmirror','emitter','target','blocker','beam'];
+
+// 録画・デバッグ用のフック: 名前でイベントを鳴らす。
+// 走行が終わっていれば false を返すので、ツールは次の走行を待てる
+window.__ev = name => {
+  if(!running || dead || !EVENTS[name]) return false;
+  const busy = EVENTS[name]();
+  if(!SILENT) SND.event();
+  nextEventAt = t + busy + 5; return true;
+};
+window.__alive = () => running && !dead;
+window.__kill = () => { if(running && !dead){ dead=true; gameOver(); } };
+window.__recStop = () => SND.recStop();
+window.__snd = () => ({enabled: SND.enabled, silent: SILENT});
+window.__probe = () => ({t:+t.toFixed(2), level, charge:+charge.toFixed(2),
+  left:+clock_left.toFixed(2), hit:hitting, next:+nextEventAt.toFixed(2),
+  ang:+(mirrors[activeIdx]?mirrors[activeIdx].group.rotation.y:0).toFixed(3)});
+
+function refillEventQueue(){
+  eventQueue = EVENT_NAMES.slice();
+  for(let i=eventQueue.length-1;i>0;i--){        // 走行ごとに順番が変わるようシャッフル
+    const j = Math.floor(Math.random()*(i+1));
+    [eventQueue[i],eventQueue[j]]=[eventQueue[j],eventQueue[i]];
+  }
+}
+function triggerEvent(){
+  if(!eventQueue.length) refillEventQueue();
+  const name = eventQueue.pop();
+  const busy = EVENTS[name]();
+  if(!SILENT) SND.event();
+  nextEventAt = t + busy + 5 + Math.random()*4;  // イベントの間に息をつく時間
+}
+
+// ---------- reset ----------
+function reset(){
+  t=0; score=0; level=1; dead=false; charge=0; hitting=false;
+  clock_left = 16;
+  timeScale=1; shake=0; camPush=0;
+  spin=0; fog=0; drift=0; tilt=0; clearFlashT=0;
+  nextEventAt = 9;
+  refillEventQueue();
+  buildStage();
+  msgEl.textContent='';
+  leadEl.classList.remove('hide','warn');
+  koEl.classList.remove('on');
+  vignetteEl.style.transition='opacity .3s'; vignetteEl.style.opacity=0;
+  hemi.intensity=1.1; sun.intensity=1.7;
+  scene.background.copy(SKY);
+  camera.fov = camera.__base; camera.updateProjectionMatrix();
+}
+
+const startBtn = document.getElementById('startBtn');
+
+// ---------- sound: everything synthesised, no audio files ----------
+// Keeps the single-HTML rule (nothing to download) and lets the music
+// react to play: the bass line speeds up with the game, events drop a
+// stinger, and the whole thing ducks out on a game over.
+const SND = (() => {
+  let ctx = null, master = null, musicGain = null, on = true, started = false;
+  let step = 0, timer = null, tempo = 0.25;
+
+  // A pentatonic scale never sounds wrong against itself, which matters
+  // when the tempo drifts with the player's speed.
+  // minor pentatonic, driving — a chase that never lets up
+  const SCALE = [0, 3, 5, 7, 10];
+  const ROOT = 196;
+  const BASS = 'square', LEAD = 'sawtooth';
+  const hz = (deg, oct = 0) =>
+    ROOT * Math.pow(2, oct + Math.floor(deg / SCALE.length)) *
+    Math.pow(2, SCALE[((deg % SCALE.length) + SCALE.length) % SCALE.length] / 12);
+
+  function ensure() {
+    if (ctx) return ctx;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    ctx = new AC();
+    master = ctx.createGain();
+    master.gain.value = 0.32;
+    master.connect(ctx.destination);
+    musicGain = ctx.createGain();
+    musicGain.gain.value = 1;
+    musicGain.connect(master);
+    return ctx;
+  }
+
+
+  // ---- 録音用の分岐（?rec=1）----
+  // Playwright の録画には音声が入らないので、ゲーム自身に master バスを
+  // 録らせる。鳴っているものそのものなので映像と必ず同期する。
+  let recDest = null, recorder = null, recChunks = [];
+  function recStart() {
+    if (!ctx || recorder) return;
+    recDest = ctx.createMediaStreamDestination();
+    master.connect(recDest);
+    recorder = new MediaRecorder(recDest.stream, {mimeType: 'audio/webm'});
+    recorder.ondataavailable = e => { if (e.data.size) recChunks.push(e.data); };
+    recorder.start();
+  }
+  function recStop() {
+    return new Promise(res => {
+      if (!recorder) return res(null);
+      recorder.onstop = async () => {
+        const blob = new Blob(recChunks, {type: 'audio/webm'});
+        const buf = await blob.arrayBuffer();
+        res(Array.from(new Uint8Array(buf)));
+      };
+      recorder.stop();
+    });
+  }
+
+  function blip(freq, dur, type = 'square', vol = 0.25, dest = null, slideTo = null) {
+    if (!ctx || !on) return;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, ctx.currentTime);
+    if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, ctx.currentTime + dur);
+    // a short attack stops every note from clicking
+    g.gain.setValueAtTime(0, ctx.currentTime);
+    g.gain.linearRampToValueAtTime(vol, ctx.currentTime + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
+    o.connect(g); g.connect(dest || master);
+    o.start(); o.stop(ctx.currentTime + dur + 0.02);
+  }
+
+  function noise(dur, vol = 0.2, hp = 800) {
+    if (!ctx || !on) return;
+    const n = Math.floor(ctx.sampleRate * dur);
+    const buf = ctx.createBuffer(1, n, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    const f = ctx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = hp;
+    const g = ctx.createGain(); g.gain.value = vol;
+    src.connect(f); f.connect(g); g.connect(master);
+    src.start();
+  }
+
+  // --- the loop: a walking bass plus an offbeat blip ---
+  function tick() {
+    if (!ctx || !on) return;
+    const bar = step % 16;
+    // straight driving pulse: bass on every beat, lead stabs offbeat
+    if (bar % 2 === 0) blip(hz(bar % 8 === 0 ? 0 : 1, -1), tempo * 1.1, BASS, 0.30, musicGain);
+    if (bar % 8 === 5) blip(hz(4, 0), tempo * 0.6, LEAD, 0.09, musicGain);
+    if (bar % 4 === 2) noise(0.04, 0.05, 5000);
+    step++;
+    timer = setTimeout(tick, tempo * 1000);
+  }
+
+  return {
+    // must be called from a user gesture — browsers block audio otherwise
+    start() {
+      if (!ensure() || started) return;
+      if (ctx.state === 'suspended') ctx.resume();
+      started = true; step = 0; tick();
+    },
+    stop() { if (timer) { clearTimeout(timer); timer = null; } started = false; },
+    /** speed the music up with the game; 1 = starting pace */
+    setPace(mult) { tempo = Math.max(0.11, 0.25 / Math.max(0.2, mult)); },
+    duck(sec = 1.6) {                                      // for game over
+      if (!ctx) return;
+      musicGain.gain.cancelScheduledValues(ctx.currentTime);
+      musicGain.gain.setValueAtTime(musicGain.gain.value, ctx.currentTime);
+      musicGain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + sec);
+    },
+    unduck() {
+      if (!ctx) return;
+      musicGain.gain.cancelScheduledValues(ctx.currentTime);
+      musicGain.gain.setValueAtTime(0.0001, ctx.currentTime);
+      musicGain.gain.exponentialRampToValueAtTime(1, ctx.currentTime + 0.4);
+    },
+    // --- one-shots ---
+    // 鏡をまわす音。短くて高い、連打しても濁らないもの
+    turn()  { ensure(); blip(hz(3, 1), 0.05, LEAD, 0.09); },
+    // 回す鏡を切り替えた合図
+    swap()  { ensure(); blip(hz(1, 0), 0.09, BASS, 0.20, null, hz(4, 1)); },
+    // ビームがターゲットに乗った瞬間の上向きの音
+    lock()  { ensure(); blip(hz(2, 0), 0.20, LEAD, 0.17, null, hz(2, 2)); },
+    // 外れた合図。下向きに短く
+    unlock(){ ensure(); blip(hz(2, 1), 0.10, 'triangle', 0.11, null, hz(0, 0)); },
+    // 面クリア。三音の上昇アルペジオ
+    clear() { ensure(); [0, 80, 160, 240].forEach((ms, i) =>
+                setTimeout(() => blip(hz(i, 0), 0.24, 'triangle', 0.22), ms)); },
+    event() { ensure(); [0, 90, 180].forEach((ms, i) =>
+                setTimeout(() => blip(hz(2 + i, 0), 0.18, 'sawtooth', 0.20), ms)); },
+    hit()   { ensure(); noise(0.35, 0.30, 200);
+              blip(180, 0.5, 'sawtooth', 0.28, null, 40); },
+    over()  { ensure(); [0, 140, 280, 460].forEach((ms, i) =>
+                setTimeout(() => blip(hz(-i, -1), 0.42, 'triangle', 0.26), ms)); },
+    recStart() { ensure(); recStart(); },
+    recStop() { return recStop(); },
+    toggle() { on = !on; if (!on) { this.stop(); } else { this.start(); } return on; },
+    get enabled() { return on; },
+  };
+})();
+
+// --- one place for every action, so touch and keyboard stay in step ---
+function startRun(){
+  titleEl.classList.add('hidden'); reset(); running=true;
+  if(!SILENT){ SND.unduck(); SND.start(); if(REC) SND.recStart(); }
+}
+// 鏡をまわす。key/touch のどちらもここを通る（dir は -1 / +1、amt は倍率）
+function turnMirror(dir, amt){
+  if(!running || dead) return;
+  const m = mirrors[activeIdx];
+  if(!m || !m.live) return;
+  m.group.rotation.y += dir * 1.9 * amt;
+  // 音が鳴りすぎないよう、ある程度まわしてから鳴らす
+  m.__sndAcc = (m.__sndAcc||0) + Math.abs(dir*amt);
+  if(m.__sndAcc > .16){ m.__sndAcc = 0; if(!SILENT) SND.turn(); }
+}
+// 動かせる鏡が複数あるとき、回す対象を切り替える
+function nextMirror(){
+  if(!running || dead) return;
+  const live = mirrors.map((m,i)=>m.live?i:-1).filter(i=>i>=0);
+  if(live.length < 2) return;
+  const at = live.indexOf(activeIdx);
+  activeIdx = live[(at+1) % live.length];
+  aimAng = null;               // 鏡が変わったら狙いは作り直す
+  if(!SILENT) SND.swap();
+}
+
+const muteBtn = document.getElementById('mute');
+function toggleMute(){ muteBtn.textContent = SND.toggle() ? '🔊' : '🔇'; }
+muteBtn.addEventListener('click', toggleMute);
+muteBtn.addEventListener('touchend', e=>{ e.preventDefault(); toggleMute(); },
+                         {passive:false});
+if(SILENT) muteBtn.style.display='none';   // automated modes have no audio
+addEventListener('keydown', e=>{ if(e.code==='KeyM') toggleMute(); });
+
+startBtn.addEventListener('click', startRun);
+// a touch on the button must start too — click alone is unreliable on touch
+startBtn.addEventListener('touchend', e=>{ e.preventDefault(); startRun(); },
+                          {passive:false});
+
+// --- キーボード: 押しっぱなしで回しつづける ---
+const keys = {left:false, right:false};
+addEventListener('keydown', e=>{
+  if(!running){
+    if(e.code==='Space'||e.code==='Enter'){
+      if(dead && Date.now()-deadAt < 900) return;   // K.O. を読む時間を残す
+      startRun();
+    }
+    return;
+  }
+  if(e.code==='ArrowLeft'||e.code==='KeyA')  keys.left = true;
+  if(e.code==='ArrowRight'||e.code==='KeyD') keys.right = true;
+  if(e.code==='Space'||e.code==='ArrowUp'||e.code==='KeyW'){ e.preventDefault(); nextMirror(); }
+});
+addEventListener('keyup', e=>{
+  if(e.code==='ArrowLeft'||e.code==='KeyA')  keys.left = false;
+  if(e.code==='ArrowRight'||e.code==='KeyD') keys.right = false;
+});
+
+// --- touch: 左右にドラッグして鏡をまわす、タップで鏡を切り替える ---
+// 携帯からの来訪がほとんどなので、キーボードなしで全部できること。
+// 指の横移動量がそのまま角度になる（押して離すのではなく、なぞる操作）
+(function(){
+  let sx=0, sy=0, st=0, lastX=0, moved=false;
+  const TAPMOVE = 14;         // これ以下の移動ならタップ扱い
+  const canvas = renderer.domElement;
+
+  canvas.addEventListener('touchstart', e=>{
+    const tt = e.changedTouches[0];
+    sx=lastX=tt.clientX; sy=tt.clientY; st=Date.now(); moved=false;
+  }, {passive:true});
+
+  canvas.addEventListener('touchmove', e=>{
+    if(!running || dead) return;
+    const tt = e.changedTouches[0];
+    const dx = tt.clientX - lastX;
+    lastX = tt.clientX;
+    if(Math.abs(tt.clientX - sx) > TAPMOVE || Math.abs(tt.clientY - sy) > TAPMOVE) moved = true;
+    // 画面幅を基準にするので端末の大小で感度が変わらない
+    if(dx) turnMirror(Math.sign(dx), Math.abs(dx)/innerWidth * 5.0);
+  }, {passive:true});
+
+  canvas.addEventListener('touchend', e=>{
+    if(dead){
+      // K.O. の演出を読む時間を置いてから、タップで再挑戦
+      if(!AUTO && Date.now()-deadAt > 1500) startRun();
+      return;
+    }
+    if(!running){ startRun(); return; }
+    // 動かさない短いタッチはタップ → 鏡の切り替え
+    if(!moved && Date.now()-st < 350) nextMirror();
+  }, {passive:true});
+
+  // マウスでも同じことができるように（PC でクリックドラッグ）
+  let down=false, mx=0, mmoved=false;
+  canvas.addEventListener('mousedown', e=>{ down=true; mx=e.clientX; mmoved=false; });
+  addEventListener('mousemove', e=>{
+    if(!down || !running || dead) return;
+    const dx = e.clientX - mx; mx = e.clientX;
+    if(Math.abs(dx) > 1) mmoved = true;
+    if(dx) turnMirror(Math.sign(dx), Math.abs(dx)/innerWidth * 5.0);
+  });
+  addEventListener('mouseup', ()=>{
+    if(down && !mmoved && running && !dead) nextMirror();
+    down=false;
+  });
+
+  // タイトルの覆いはキャンバスより上なので、タップがキャンバスに届かない。
+  // 覆いそのものからも開始できるようにする。
+  titleEl.addEventListener('touchend', e=>{
+    if(!running){ e.preventDefault(); startRun(); }
+  }, {passive:false});
+
+  // ゲーム中のタップをスクロールやダブルタップ拡大にさせない
+  canvas.addEventListener('touchmove', e=>e.preventDefault(), {passive:false});
+})();
+
+// autoplay mode for recording: ?auto=1
+if(AUTO){ setTimeout(startRun, 1200); }   // startRun 経由にする（音/録音も始まる）
+
+// ---------- autopilot ----------
+// 角度を少しずつ変えながらビームを追跡し、ターゲットに最も近づく角度へ寄せる。
+// 人がやっていることと同じ（回して、当たりを探して、そこで止める）。
+let autoCool = 0;
+function autoPilot(dt){
+  const m = mirrors[activeIdx];
+  if(!m || !m.live) return;
+  autoCool -= dt;
+
+  const d0 = traceBeam();
+  // 当たっているあいだは触らない（メーターが溜まるのを待つ）
+  if(d0 < HIT_R*.55){ aimAng = null; return; }
+
+  const cur = m.group.rotation.y;
+  // 目標角が無いときだけ、一周ぐるっと試して一番近づく角度を決める。
+  // いったん決めたら着くまで変えない ── 回している最中はビームの行き先が
+  // 大きく暴れるので、途中の距離で決め直すと永久に往復してしまう。
+  if(aimAng === null){
+    let bestAng = cur, bestD = 1e9;
+    const N = 180;
+    for(let i=0;i<N;i++){
+      const a = cur + (i/N)*Math.PI*2;
+      m.group.rotation.y = a;
+      const d = traceBeam();
+      if(d < bestD){ bestD = d; bestAng = a; }
+    }
+    m.group.rotation.y = cur;
+    // この鏡ではどう回しても届かない。もう一枚の鏡へ
+    if(bestD > HIT_R*.9 && autoCool <= 0 &&
+       mirrors.filter(x=>x.live).length > 1){
+      nextMirror(); autoCool = 1.5; aimAng = null; return;
+    }
+    aimAng = bestAng;
+  }
+
+  // 目標角までの差（-π..π に畳む）
+  let diff = aimAng - cur;
+  while(diff >  Math.PI) diff -= Math.PI*2;
+  while(diff < -Math.PI) diff += Math.PI*2;
+
+  if(Math.abs(diff) > 0.006){
+    // 遠いうちは速く、近づいたらゆっくり（人の手つきに似せる）
+    const rate = Math.abs(diff) > .4 ? 2.6 : .7;
+    const stepAng = Math.min(Math.abs(diff), rate*dt);
+    turnMirror(Math.sign(diff), stepAng/1.9);
+    return;
+  }
+
+  // 目標に着いた。まわりを細かく探して中心へ詰める
+  let bestAng = cur, bestD = d0;
+  for(const step of [.004, .012, .035]){
+    for(const s of [-1, 1]){
+      m.group.rotation.y = cur + s*step;
+      const d = traceBeam();
+      if(d < bestD - 1e-5){ bestD = d; bestAng = m.group.rotation.y; }
+    }
+  }
+  m.group.rotation.y = cur;
+  if(bestAng !== cur) turnMirror(Math.sign(bestAng-cur), Math.min(.02, .8*dt));
+  else if(d0 > HIT_R) aimAng = null;   // 詰めきれない＝探しなおす
+}
+
+// ---------- showcase mode ----------
+// 被写体をひとつだけ暗いステージに置いて回す。ゲームと同じメッシュを使うので、
+// ナレーションが説明するものと実物が必ず一致する。
+const SHOWCASE = QS.get('showcase');
+const showcase = {group:null, spin:.55, label:''};
+
+function buildShowcase(name){
+  const g = new THREE.Group();
+  let label = '', spin = .55, flat = false;
+  if(name==='mirror'){
+    const m = buildMirror(false);
+    m.group.scale.set(1.5,1.5,1.5); g.add(m.group);
+    label = '可動ミラー'; spin = .6;
+  } else if(name==='fixedmirror'){
+    const m = buildMirror(true);
+    m.group.scale.set(1.5,1.5,1.5); g.add(m.group);
+    label = '固定ミラー'; spin = .6;
+  } else if(name==='emitter'){
+    const e = buildEmitter();
+    e.group.scale.set(1.7,1.7,1.7); g.add(e.group);
+    label = '発射口'; spin = .7;
+  } else if(name==='target'){
+    const tg = buildTarget();
+    tg.group.scale.set(1.5,1.5,1.5);
+    tg.core.material = new THREE.MeshBasicMaterial({color:0xfff2a8});
+    g.add(tg.group);
+    label = 'ターゲット'; spin = .8;
+  } else if(name==='blocker'){
+    const b = buildBlocker();
+    b.group.scale.set(1.4,1.4,1.4); g.add(b.group);
+    label = 'じゃま板'; spin = .55;
+  } else if(name==='beam'){
+    // ビームは一本の光の筋。折れ曲がった形にして、反射する物だと分かるように
+    const mk = (len, ax, ay, az, rot)=>{
+      const core = new THREE.Mesh(new THREE.BoxGeometry(len,.3,.3), beamMat);
+      const glow = new THREE.Mesh(new THREE.BoxGeometry(len,1.0,1.0), beamGlowMat);
+      for(const o of [core, glow]){ o.position.set(ax,ay,az); o.rotation.y = rot; }
+      g.add(core, glow);
+    };
+    mk(4.4, -1.4, 0, 0, 0);
+    mk(4.4, 1.6, 0, -1.6, Math.PI/2);
+    const sp = new THREE.Mesh(new THREE.SphereGeometry(.4,16,12),
+      new THREE.MeshBasicMaterial({color:0xfff6c8}));
+    sp.position.set(.8,0,0); g.add(sp);
+    label = 'ビーム'; spin = .5;
+  }
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  scene.add(g);
+
+  // 被写体を原点に寄せ、バウンディングボックスに合わせてカメラを引く。
+  // どの大きさの物でも同じ大きさに見える。
+  const box = new THREE.Box3().setFromObject(g);
+  const size = box.getSize(new THREE.Vector3());
+  const mid = box.getCenter(new THREE.Vector3());
+  g.position.sub(mid);
+  const reach = Math.max(size.x, size.y) * 0.5;
+  const fov = THREE.MathUtils.degToRad(camera.fov);
+  const dist = (reach / Math.tan(fov/2)) * 1.75 + 1.0;   // 1.75 = 余白
+  camera.position.set(0, size.y*0.10, dist);
+
+  // 被写体を横へずらして、反対側に字を置けるようにする。
+  // ずらしは親に持たせる（ずれた group をまわすと公転してしまう）
+  const bias = parseFloat(QS.get('sx') || '0');
+  const pivot = new THREE.Group();
+  pivot.position.x = -bias * reach * 1.15;
+  scene.add(pivot);
+  pivot.add(g);
+  showcase.group = g; showcase.pivot = pivot;
+  showcase.spin = spin; showcase.label = label; showcase.flat = flat;
+}
+
+fitCamera();          // ここで SHOWCASE は分かっている
+if(SHOWCASE){
+  titleEl.classList.add('hidden');
+  buildShowcase(SHOWCASE);
+  scoreEl.textContent = '';
+  msgEl.textContent = QS.get('nolabel')==='1' ? '' : showcase.label;
+  msgEl.style.fontSize = 'clamp(18px,5vw,30px)';
+  msgEl.style.letterSpacing = '4px';
+  leadEl.classList.add('hide');
+  // まっ暗なステージ: 画面には被写体だけ
+  floor.visible = false; gridHelper.visible = false;
+  emitter.group.visible = false; target.group.visible = false;
+  for(const w of walls) w.visible = false;
+  hideBeam();
+  scene.background = new THREE.Color(0x0a0c14);
+  hemi.intensity = 2.6;
+  sun.intensity = 3.0; sun.position.set(2.5, 6, 6);
+  emitLight.position.set(2.8, 3.0, 4.2); emitLight.intensity = 90; emitLight.distance = 26;
+  // 反対側からの光。奥の面がまっ黒にならないように
+  const fill = new THREE.PointLight(0x88aaff, 45, 26);
+  fill.position.set(-4.5, 2.4, 3.6); scene.add(fill);
+}
+// 録画スクリプトが被写体を差し替えられるように
+window.__showcase = name => {
+  if(showcase.pivot) scene.remove(showcase.pivot);   // pivot が group を持っている
+  buildShowcase(name);
+  msgEl.textContent = showcase.label;
+};
+
+// ---------- 面クリア ----------
+function levelCleared(){
+  level++;
+  score += 250 + level*60;
+  clock_left = Math.min(22, clock_left + Math.max(7, 15 - level*.7));
+  clearFlashT = .8;
+  banner('クリア！ LV ' + level, '#5cf0ff');
+  flash('#5cf0ff', .4, 420);
+  if(!SILENT) SND.clear();
+  buildStage();
+  // 次の面は少しだけ厳しく。時間の減りが速くなる
+}
+
+// ---------- loop ----------
+const clock = new THREE.Clock();
+function tick(){
+  requestAnimationFrame(tick);
+  const raw = Math.min(clock.getDelta(), .05);
+  const dt = raw * timeScale;
+  t += dt;
+
+  if(SHOWCASE){
+    if(showcase.group){
+      if(showcase.flat) showcase.group.rotation.z += raw*showcase.spin;
+      else showcase.group.rotation.y += raw*showcase.spin;
+    }
+    camera.lookAt(0, 0, 0);        // 被写体はずれていても、カメラは軸の上
+    renderer.render(scene, camera);
+    return;
+  }
+
+  if(running && !dead){
+    // --- 入力（キーの押しっぱなし）---
+    if(keys.left)  turnMirror(-1, raw);
+    if(keys.right) turnMirror( 1, raw);
+    if(AUTO) autoPilot(raw);
+
+    // --- イベント ---
+    if(t > nextEventAt && !NOEV) triggerEvent();
+
+    // ミラー暴走: 可動の鏡がひとりでにまわる
+    if(spin > 0){
+      spin -= dt;
+      for(let i=0;i<mirrors.length;i++){
+        const m = mirrors[i];
+        if(!m.live) continue;
+        m.__spinDir = m.__spinDir || (i%2===0 ? 1 : -1);
+        m.group.rotation.y += m.__spinDir * dt * .85;
+      }
+    }
+    // 停電: 部屋の照明を落とす。ビームの筋だけが見える
+    if(fog > 0){
+      fog -= dt;
+      const k = fog > .5 ? .12 : .12 + (1 - fog/.5)*.88;   // 終わりぎわに戻る
+      hemi.intensity = 1.1*k; sun.intensity = 1.7*k;
+      scene.background.copy(SKY).multiplyScalar(k*.6 + .4);
+      if(fog <= 0){ hemi.intensity=1.1; sun.intensity=1.7; scene.background.copy(SKY); }
+    }
+    // ターゲット移動: 左右にゆっくり往復する
+    if(drift > 0){
+      drift -= dt;
+      target.__driftPhase = (target.__driftPhase||0) + dt*1.15;
+      const base = target.__base || (target.__base = {
+        x:target.group.position.x, z:target.group.position.z});
+      const sw = Math.sin(target.__driftPhase) * 3.2;
+      target.group.position.x = THREE.MathUtils.clamp(base.x + sw, -ARENA+2, ARENA-2);
+      target.group.position.z = THREE.MathUtils.clamp(base.z + Math.cos(target.__driftPhase)*1.2,
+                                                      -ARENA+2, ARENA-2);
+      if(drift <= 0) target.__base = null;
+    } else target.__base = null;
+    // 視点ぐらつき: カメラを傾けて引く
+    if(tilt > 0){
+      tilt -= dt;
+      camera.fov += (camera.__base*1.14 - camera.fov)*Math.min(1, dt*3);
+      camera.updateProjectionMatrix();
+      shake = Math.max(shake, .07);
+    } else if(Math.abs(camera.fov - camera.__base) > .05){
+      camera.fov += (camera.__base - camera.fov)*Math.min(1, dt*3);
+      camera.updateProjectionMatrix();
+    }
+    // 降りてくるシャッター
+    for(let i=blockers.length-1;i>=0;i--){
+      const b = blockers[i];
+      if(b.__drop > 0){
+        b.__drop -= dt*9;
+        b.group.position.y = Math.max(0, b.__drop);
+      }
+    }
+
+    // --- ビーム ---
+    const dist = traceBeam();
+    drawBeam();
+    const nowHit = dist < HIT_R;
+    if(nowHit !== hitting){
+      hitting = nowHit;
+      if(!SILENT) nowHit ? SND.lock() : SND.unlock();
+    }
+
+    // --- メーター ---
+    if(hitting){
+      // 中心に近いほど速く溜まる
+      const acc = 0.30 + (1 - dist/HIT_R)*0.30;
+      charge = Math.min(1, charge + dt*acc);
+      score += dt*70;
+    } else {
+      charge = Math.max(0, charge - dt*.16);    // 外すとじわじわ抜ける
+      score += dt*16;
+    }
+    scoreEl.textContent = Math.floor(score);
+
+    if(charge >= 1) levelCleared();
+
+    // --- のこり時間 ---
+    clock_left -= dt * (1 + level*.055);
+    leadVal.textContent = Math.max(0, clock_left).toFixed(1);
+    leadEl.classList.toggle('warn', clock_left < 5);
+    if(clock_left <= 0){ dead = true; gameOver(); }
+
+    // 音のテンポは面が進むほど速く
+    if(!SILENT) SND.setPace(1 + level*.09);
+
+    // --- 見た目のフィードバック ---
+    // ターゲットのコアは当たっているあいだ明るく脈打つ
+    const glow = hitting ? .55 + charge*.45 : .12;
+    target.core.material.color.setRGB(glow, glow*.9, glow*.42);
+    target.core.scale.setScalar(hitting ? 1 + Math.sin(t*16)*.16 + charge*.3 : 1);
+    targetLight.intensity = hitting ? 10 + charge*26 : 1.5;
+    targetLight.position.set(target.group.position.x, 1.4, target.group.position.z);
+    // リングはメーターの量だけ回る（溜まり具合が形で分かる）
+    target.ring.rotation.z = charge * Math.PI * 2;
+    target.ring2.rotation.z = -charge * Math.PI * 3;
+    target.ring.rotation.x = Math.PI/2 + Math.sin(t*2)*.05;
+    target.ring2.rotation.x = Math.PI/2;
+    // 回している鏡のふちを点滅させて、どれが自分の鏡か分かるようにする
+    for(let i=0;i<mirrors.length;i++){
+      const m = mirrors[i];
+      if(!m.live) continue;
+      const act = i===activeIdx;
+      const e = act ? 1.4 + Math.sin(t*7)*.7 : .45;
+      m.edge.material === mirrorEdgeLive || (m.edge.material = mirrorEdgeLive);
+      m.edge.material.emissiveIntensity = e;   // 共有マテリアルなので毎フレーム設定
+      m.group.position.y = act ? Math.sin(t*4)*.035 : 0;
+    }
+    emitter.lens.material.color.setRGB(1, .96, .72 + Math.sin(t*12)*.1);
+    emitter.ring.rotation.z += raw*2.2;
+    emitLight.intensity = 12 + Math.sin(t*9)*3;
+
+    if(clearFlashT > 0) clearFlashT -= raw;
+  }
+
+  // --- 終了の演出: スローモーション、カメラが寄る、ビームが落ちる ---
+  if(dead){
+    timeScale += (0 - timeScale)*Math.min(1, raw*1.1);   // ほぼ停止まで落とす
+    camPush += (1 - camPush)*Math.min(1, raw*1.6);
+    // ビームが力を失って細く暗くなる
+    beamMat.opacity = Math.max(0, beamMat.opacity - raw*1.1);
+    beamGlowMat.opacity = Math.max(0, beamGlowMat.opacity - raw*.4);
+    for(const m of mirrors) m.group.rotation.y += raw*(m.live ? 1.6 : 0);
+    target.core.scale.setScalar(Math.max(.1, target.core.scale.x - raw*1.2));
+    targetLight.intensity = Math.max(0, targetLight.intensity - raw*40);
+  }
+
+  // --- カメラ（死んでいても動かす。寄りと揺れを見せるため）---
+  // 盤面全体が入る俯瞰。死ぬとターゲットへ寄る
+  const px = target.group.position.x, pz = target.group.position.z;
+  const height = THREE.MathUtils.lerp(ARENA*1.42, ARENA*.55, camPush);
+  const back   = THREE.MathUtils.lerp(ARENA*.92, ARENA*.30, camPush);
+  camera.position.x = THREE.MathUtils.lerp(0, px*.8, camPush);
+  camera.position.y = height;
+  camera.position.z = THREE.MathUtils.lerp(back, pz*.8 + back, camPush);
+  if(shake>0){
+    shake = Math.max(0, shake - raw*.9);
+    camera.position.x += (Math.random()-.5)*shake;
+    camera.position.y += (Math.random()-.5)*shake;
+  }
+  const lookX = THREE.MathUtils.lerp(0, px, camPush);
+  const lookZ = THREE.MathUtils.lerp(0, pz, camPush);
+  camera.lookAt(lookX, 0, lookZ);
+  // 視点ぐらつき: 見ている向きを軸にひねる
+  camera.rotation.z += (tilt > 0 ? Math.sin(t*1.7)*.12 : 0);
+
+  renderer.render(scene, camera);
+}
+
+function gameOver(){
+  running=false; deadAt=Date.now();
+  if(!SILENT){ SND.hit(); SND.duck(1.6); setTimeout(()=>SND.over(), 700); }
+  // 当たったときの手応え: 赤いフラッシュ、赤い周辺減光、強い揺れ、カメラが寄る
+  flash('#ff2b3a', .8, 500);
+  vignetteEl.style.transition='opacity .5s'; vignetteEl.style.opacity=1;
+  shake = .9;
+  const finalScore = Math.floor(score);
+  koScoreEl.textContent = finalScore;
+  msgEl.textContent = '';
+  leadEl.classList.add('hide');
+  setTimeout(()=>{ koEl.classList.add('on'); }, 620);   // スローモーションの後に K.O.
+  if(AUTO){ setTimeout(()=>{
+    beamMat.opacity=.95; beamGlowMat.opacity=.22;
+    reset(); running=true;
+    if(!SILENT) SND.unduck(); }, RETRY_MS); }
+  else setTimeout(()=>{
+    msgEl.textContent = matchMedia('(pointer:coarse)').matches
+      ? 'タップでもう一度' : 'スペースでもう一度';
+  }, 1800);
+}
+
+// 走行が始まるまでは盤面だけ見せて、HUD の数字は隠しておく
+leadEl.classList.add('hide');
+if(!SHOWCASE){
+  buildStage();
+  scoreEl.textContent = '0';
+  const showLead = ()=>{ if(running) leadEl.classList.remove('hide'); };
+  startBtn.addEventListener('click', showLead);
+  startBtn.addEventListener('touchend', showLead);
+  addEventListener('keydown', ()=>setTimeout(showLead, 0));
+  titleEl.addEventListener('touchend', ()=>setTimeout(showLead, 0));
+}
+tick();
+
+// --- あそびかた (?) : ルールを見せる。録画中は出さない ---
+(function(){
+  const btn = document.getElementById('helpBtn');
+  const panel = document.getElementById('help');
+  if(!btn || !panel) return;
+  if(NOCHROME){                      // 録画・showcase では画面から消す
+    btn.style.display = 'none';
+    const back = document.getElementById('back');
+    if(back) back.style.display = 'none';
+    return;
+  }
+  const open = () => { panel.classList.add('on'); };
+  const close = () => { panel.classList.remove('on'); };
+  btn.addEventListener('click', open);
+  btn.addEventListener('touchend', e => { e.preventDefault(); open(); }, {passive:false});
+  panel.addEventListener('click', e => { if(e.target === panel) close(); });
+  panel.querySelector('.close').addEventListener('click', close);
+  panel.querySelector('.close').addEventListener('touchend',
+    e => { e.preventDefault(); close(); }, {passive:false});
+  addEventListener('keydown', e => {
+    if(e.code === 'Escape') close();
+    else if(e.key === '?' || (e.code === 'Slash' && e.shiftKey)) open();
+  });
+})();
+</script>
+</body>
+</html>
