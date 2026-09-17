@@ -1,0 +1,228 @@
+{
+  "id": "0026_ice_cube_slide",
+  "title": "アイスキューブ・スライド",
+  "video_title": "溶かして細く、放して太く。すき間に合わせて氷を通すだけ",
+  "lang": "ja",
+  "voice": "ja",
+  "scenes": [
+    {
+      "kind": "hook",
+      "clip": "narrow",
+      "narration": "このゲームは、製氷所の配送係のぐちから生まれました。"
+    },
+    {
+      "kind": "image",
+      "prompt": "a small old ice factory at night, stacks of large clear ice blocks on a wet concrete floor, steel roller conveyor leading into a narrow doorway, cold blue fluorescent light, steam in the air, cinematic, photorealistic, highly detailed",
+      "narration": "港の近くに、小さな製氷所があります。氷をつくって、料理屋に配る店です。裏口に、古い搬出口があります。"
+    },
+    {
+      "kind": "image",
+      "prompt": "a narrow rusted metal doorway in a factory wall, a large block of clear ice jammed halfway through the gap, chipped edges, water pooling on the floor, harsh work light from one side, cinematic, photorealistic, highly detailed",
+      "narration": "その搬出口が、なぜか毎回ちがう幅なんです。ゆがんだ鉄の扉なので、日によって開きかたが変わります。氷は決まった大きさで出てきます。そうなんです。入らないんです。"
+    },
+    {
+      "kind": "image",
+      "prompt": "a factory worker in a thick padded coat holding a small gas torch close to the corner of a huge ice block, orange flame against pale blue ice, meltwater dripping, cold blue background, dramatic side light, cinematic, photorealistic, highly detailed",
+      "narration": "扉の修理は、何度も頼みました。答えはいつも同じです。来月やります。だから配送係のカネコさんは、今日も氷をあぶります。ちょっと溶かして、すき間に合わせて、押し出す。それだけの仕事です。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "cube",
+      "kicker": "主役",
+      "title": "氷のかたまり",
+      "bullets": [
+        "とまらない。**大きさを決めるだけ**が仕事",
+        "押しているあいだ**溶けて小さく**なる",
+        "放せば**凍り直して大きく**戻る"
+      ],
+      "narration": "これが主役の氷です。氷は勝手に滑っていきます。あなたにできるのは、大きさを決めることだけ。押しているあいだ溶けて、細くなります。放すと凍り直して、また太くなります。操作はこの2つだけです。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "gate",
+      "kicker": "通る場所",
+      "title": "すき間の壁",
+      "bullets": [
+        "すき間の幅は**毎回ちがう**",
+        "氷が太ければ、そこで砕ける",
+        "くぐるたびにスコアが伸びる"
+      ],
+      "narration": "前から壁が来ます。まん中にすき間があいています。この幅が毎回ちがいます。氷のほうが太ければ、ぶつかって砕けます。うまく通れば、スコアが1つ伸びます。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "gateNarrow",
+      "kicker": "きつい壁",
+      "title": "せまいすき間",
+      "bullets": [
+        "ほとんど溶かしきらないと通らない",
+        "溶かす時間は**前もって**要る",
+        "見えてから押しても間に合わない"
+      ],
+      "narration": "ときどき、こういう細いすき間が来ます。かなり溶かさないと通りません。ここが面白いところです。溶けるのには時間がかかります。見えてから押したのでは、もう遅い。ずっと手前から準備しておく必要があります。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "cubeThin",
+      "kicker": "溶かしすぎ",
+      "title": "赤い線",
+      "bullets": [
+        "ゲージの**赤い線**より小さくなると失敗",
+        "水になって消える",
+        "細ければ安全、ではない"
+      ],
+      "narration": "じゃあ、ずっと押していればいいのか。だめなんです。画面の下のゲージに、赤い線があります。そこより小さくなると、氷は水になって消えます。細ければ安全、ではありません。ちょうど細く、が正解です。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "burner",
+      "kicker": "じゃま その1",
+      "title": "バーナー",
+      "bullets": [
+        "両脇から火が出る",
+        "押していなくても**勝手に溶ける**",
+        "凍り直しが火に負ける"
+      ],
+      "narration": "通路の両脇から、火が出ることがあります。これが出ているあいだは、押していなくても氷が溶けます。放しても、思ったほど太く戻りません。読みがまるごと変わります。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "jet",
+      "kicker": "じゃま その2",
+      "title": "冷却ノズル",
+      "bullets": [
+        "通りすぎると**一気に凍る**",
+        "せっかく溶かした分が戻る",
+        "手前で溶かし直すしかない"
+      ],
+      "narration": "逆に、冷たい風を吹くノズルもあります。この前を通ると、氷が一気に凍ります。せっかく溶かした分が戻ってしまう。見てください。この直後のすき間が、本当に嫌なんです。"
+    },
+    {
+      "kind": "events",
+      "clip": "events",
+      "kicker": "そうぞうしい通路",
+      "title": "通路は静かにしてくれない",
+      "bullets": [
+        "**寒波** — 凍り直しが速く、溶けにくい",
+        "**急流** — 全部が速く来る。押す時間が短い",
+        "**ホワイトアウト** — ゲージが消える。目で測る"
+      ],
+      "narration": "通路は静かにしてくれません。寒波が来ると、凍り直しが速くなります。押しても溶けにくい。急流では、全部が速く流れてきます。押している時間が足りません。そして、ホワイトアウト。ゲージが消えます。あとは目で測るだけです。"
+    },
+    {
+      "kind": "death",
+      "clip": "death",
+      "kicker": "失敗のしかた",
+      "title": "負けかたが2つある",
+      "bullets": [
+        "太すぎて**砕ける**",
+        "溶かしすぎて**消える**",
+        "どちらも押しかた一つで決まる"
+      ],
+      "narration": "このゲーム、負けかたが2つあります。太すぎて砕けるか、溶かしすぎて消えるか。どちらも、指を押す長さだけで決まります。だから言いわけができません。カネコさんは、この作業を毎日続けています。あなたは、たぶん10個目の壁で砕けます。"
+    },
+    {
+      "kind": "outro",
+      "title": "概要欄のリンクから遊べます",
+      "subtitle": "チャンネル登録で、毎日ひとつ新しいゲーム",
+      "narration": "ブラウザで、今すぐ無料で遊べます。概要欄のリンクからどうぞ。チャンネル登録もお願いします。明日も新しいゲームを出します。"
+    }
+  ],
+  "slug": "ice-cube-slide",
+  "channel": "Daily Arcade Studio",
+  "events": [
+    "burner",
+    "freeze",
+    "jet",
+    "rapids",
+    "whiteout",
+    "narrow"
+  ],
+  "short": [
+    {
+      "mark": "narrow",
+      "lead": -0.5,
+      "dur": 9.0,
+      "headline": "せまい壁が4連続"
+    },
+    {
+      "mark": "burner",
+      "lead": -0.3,
+      "dur": 8.0,
+      "headline": "勝手に溶ける"
+    },
+    {
+      "mark": "jet",
+      "lead": -0.3,
+      "dur": 7.0,
+      "headline": "溶かした分が戻る"
+    },
+    {
+      "mark": "whiteout",
+      "lead": -0.5,
+      "dur": 7.0,
+      "headline": "ゲージが消える"
+    },
+    {
+      "mark": "death",
+      "lead": -2.0,
+      "dur": 9.0,
+      "headline": "負けかたが2つある"
+    }
+  ],
+  "thumb": {
+    "hook": "溶かして通す",
+    "sub": "太すぎても、細すぎても砕ける。ブラウザで無料。",
+    "frame_mark": "narrow",
+    "frame_lead": 1.2
+  },
+  "short_v2": {
+    "cuts": [
+      {
+        "kind": "clip",
+        "mark": "narrow",
+        "lead": -0.5,
+        "dur": 4.5,
+        "headline": "今日のゲーム",
+        "narration": "今日のゲームです。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "cube",
+        "dur": 5.0,
+        "headline": "アイスキューブ・スライド",
+        "narration": "氷のかたまりを、すき間に合わせて通す人です。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "gateNarrow",
+        "dur": 5.0,
+        "headline": "すき間",
+        "narration": "壁のすき間は毎回ちがいます。太ければ砕けます。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "cubeThin",
+        "dur": 5.0,
+        "headline": "赤い線",
+        "narration": "押すと溶けます。溶かしすぎると、水になって消えます。"
+      },
+      {
+        "kind": "clip",
+        "mark": "death",
+        "lead": -2.0,
+        "dur": 5.0,
+        "headline": "",
+        "narration": "負けかたが、2つあります。"
+      },
+      {
+        "kind": "clip",
+        "mark": "run2",
+        "lead": 1.0,
+        "dur": 4.5,
+        "cta": "概要欄のリンクから遊べます",
+        "narration": "ブラウザで無料で遊べます。リンクは概要欄です。"
+      }
+    ]
+  }
+}

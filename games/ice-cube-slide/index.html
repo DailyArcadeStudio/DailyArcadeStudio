@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>アイスキューブ・スライド</title>
+<style>
+  html,body{margin:0;padding:0;overflow:hidden;background:#050a14;font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Helvetica Neue',Arial,sans-serif;}
+  #ui{position:fixed;top:16px;left:0;right:0;text-align:center;color:#fff;z-index:10;pointer-events:none;}
+  #score{font-size:clamp(24px,5.6vw,34px);font-weight:800;text-shadow:0 2px 8px #000;}
+  #msg{font-size:clamp(14px,3.6vw,20px);margin-top:6px;opacity:.9;text-shadow:0 2px 6px #000;}
+  #title{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:rgba(4,8,18,.78);z-index:20;color:#fff;transition:opacity .4s;padding:0 16px;box-sizing:border-box;}
+  #title h1{font-size:clamp(27px,7.6vw,56px);margin:0 0 10px;letter-spacing:2px;text-align:center;
+    text-shadow:0 4px 18px #4fd8ff;}
+  #title p{font-size:clamp(13px,3.4vw,19px);opacity:.86;margin:4px 0;text-align:center;line-height:1.6;}
+  #title .btn{margin-top:26px;padding:14px 44px;font-size:clamp(18px,4.6vw,22px);font-weight:700;color:#04121a;
+    background:linear-gradient(180deg,#7cecff,#1f9fd0);border:none;border-radius:12px;cursor:pointer;
+    box-shadow:0 6px 24px rgba(79,216,255,.45);}
+  #title .btn:hover{transform:scale(1.05);}
+  .hidden{opacity:0;pointer-events:none;}
+  #back{position:fixed;top:14px;left:14px;z-index:30;text-decoration:none;
+    background:rgba(12,20,32,.72);color:#fff;font:600 clamp(13px,3.2vw,15px)/1 'Hiragino Sans','Helvetica Neue',Arial,sans-serif;
+    padding:0 16px;height:44px;display:flex;align-items:center;border-radius:12px;}
+  #back:hover{background:rgba(30,44,62,.9);}
+  #mute{position:fixed;top:14px;right:14px;z-index:30;border:none;cursor:pointer;
+    background:rgba(12,20,32,.72);color:#fff;font-size:20px;line-height:1;
+    width:44px;height:44px;border-radius:12px;}
+  #mute:hover{background:rgba(30,44,62,.9);}
+  /* show the hint that matches the device */
+  .tc{display:none;}
+  @media (pointer:coarse){ .kb{display:none;} .tc{display:block;} }
+  /* a finger-sized START button on touch devices */
+  @media (pointer:coarse){ #title .btn{padding:18px 52px;} }
+
+  /* --- size meter: the cube's width against the next slot --- */
+  #gauge{position:fixed;left:0;right:0;bottom:calc(18px + env(safe-area-inset-bottom,0px));
+    z-index:11;pointer-events:none;display:flex;flex-direction:column;align-items:center;gap:6px;}
+  #gauge .bar{position:relative;width:min(72vw,420px);height:16px;border-radius:9px;
+    background:rgba(10,20,34,.78);border:1px solid rgba(124,236,255,.35);overflow:hidden;}
+  /* the target slot shown as a bright band; the cube fill has to land inside it */
+  /* z-order matters: the cube's fill is the bottom layer, the slot edge and the
+     melt line are drawn over it so the two targets are never painted out */
+  #gauge .fill{position:absolute;top:0;bottom:0;left:0;z-index:1;
+    background:linear-gradient(90deg,#bff4ff,#4fd8ff);box-shadow:0 0 10px rgba(79,216,255,.7);}
+  #gauge .slot{position:absolute;top:0;bottom:0;z-index:2;
+    border-right:3px solid #fff;box-shadow:3px 0 8px rgba(255,255,255,.55);}
+  #gauge .min{position:absolute;top:0;bottom:0;width:3px;z-index:3;background:#ff5a6a;
+    box-shadow:0 0 6px #ff5a6a;}
+  #gauge .lab{color:#cfeaff;font-size:clamp(11px,2.9vw,14px);letter-spacing:.06em;
+    text-shadow:0 2px 6px #000;opacity:.92;}
+
+  /* --- event banner: slams into the middle of the screen --- */
+  #banner{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    z-index:15;pointer-events:none;opacity:0;}
+  #banner .b{font-size:clamp(24px,7vw,60px);font-weight:900;letter-spacing:.06em;color:#fff;
+    padding:10px 4vw;max-width:94vw;text-align:center;transform:scale(2.4);opacity:0;
+    text-shadow:0 0 26px currentColor, 0 6px 20px #000;
+    border-top:5px solid currentColor;border-bottom:5px solid currentColor;}
+  #banner.go .b{animation:slam .62s cubic-bezier(.12,.85,.2,1) forwards;}
+  @keyframes slam{
+    0%  {transform:scale(2.4) rotate(-4deg);opacity:0;}
+    22% {transform:scale(1)   rotate(0deg); opacity:1;}
+    70% {transform:scale(1)   rotate(0deg); opacity:1;}
+    100%{transform:scale(1.12);opacity:0;}
+  }
+
+  /* --- full-screen colour flashes --- */
+  #flash{position:fixed;inset:0;z-index:14;pointer-events:none;opacity:0;background:#fff;}
+  #vignette{position:fixed;inset:0;z-index:13;pointer-events:none;opacity:0;
+    background:radial-gradient(ellipse at center,rgba(0,0,0,0) 32%,rgba(120,0,10,.85) 100%);}
+
+  /* --- K.O. screen --- */
+  #ko{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    z-index:22;pointer-events:none;opacity:0;color:#fff;transition:opacity .3s;}
+  #ko.on{opacity:1;}
+  #ko .koText{font-size:clamp(84px,22vw,180px);font-weight:900;letter-spacing:10px;color:#fff;
+    text-shadow:0 0 40px #ff3b4a,0 0 90px #ff3b4a,0 10px 30px #000;
+    transform:scale(3);opacity:0;}
+  #ko.on .koText{animation:koSlam .8s cubic-bezier(.1,.9,.2,1) forwards;}
+  @keyframes koSlam{
+    0%  {transform:scale(3) rotate(-8deg);opacity:0;}
+    30% {transform:scale(1) rotate(0deg);opacity:1;}
+    36% {transform:scale(1.06);}
+    100%{transform:scale(1);opacity:1;}
+  }
+  #ko .finalLabel{font-size:clamp(15px,4vw,22px);letter-spacing:4px;opacity:0;margin-top:6px;text-shadow:0 2px 8px #000;}
+  #ko .finalScore{font-size:clamp(44px,12vw,78px);font-weight:800;opacity:0;text-shadow:0 4px 20px #000;}
+  #ko.on .finalLabel{animation:fadeUp .5s .75s forwards;}
+  #ko.on .finalScore{animation:fadeUp .5s .9s forwards;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+
+  /* --- help (?) --- */
+  #helpBtn{position:fixed;top:14px;right:66px;z-index:30;border:none;cursor:pointer;
+    background:rgba(12,20,32,.72);color:#fff;font:700 20px/1 'Helvetica Neue',Arial,sans-serif;
+    width:44px;height:44px;border-radius:12px;}
+  #helpBtn:hover{background:rgba(30,44,62,.9);}
+  #help{position:fixed;inset:0;z-index:40;display:none;align-items:center;
+    justify-content:center;background:rgba(3,6,12,.86);padding:20px;}
+  #help.on{display:flex;}
+  #help .box{background:#0e1725;border:1px solid #244055;border-radius:18px;
+    max-width:560px;width:100%;max-height:86vh;overflow:auto;padding:24px 24px 20px;
+    color:#e6f2fa;}
+  #help h2{margin:0 0 4px;font-size:clamp(19px,5vw,25px);}
+  #help .sub{color:#8ba6b9;font-size:clamp(12px,3.2vw,14px);margin:0 0 16px;line-height:1.6;}
+  #help h3{font-size:clamp(13px,3.4vw,15px);color:#7cecff;margin:16px 0 6px;letter-spacing:.04em;}
+  #help ul{margin:0;padding-left:20px;}
+  #help li{font-size:clamp(13px,3.4vw,15px);line-height:1.7;margin:3px 0;}
+  #help b{color:#7cecff;font-weight:700;}
+  #help .close{margin-top:20px;width:100%;padding:12px;border:none;border-radius:10px;
+    background:#244055;color:#fff;font-size:clamp(14px,3.8vw,16px);font-weight:700;cursor:pointer;}
+  #help .close:hover{background:#31597a;}
+</style>
+</head>
+<body>
+<div id="ui"><div id="score">0</div><div id="msg"></div></div>
+<div id="gauge">
+  <div class="lab">おおきさ</div>
+  <div class="bar"><div class="slot"></div><div class="min"></div><div class="fill"></div></div>
+</div>
+<button id="helpBtn" title="あそびかた">?</button>
+<div id="help"><div class="box">
+  <h2>アイスキューブ・スライド</h2>
+  <p class="sub">溶かして細く、放して太く。すき間に合わせて通すだけ。ブラウザで無料。</p>
+    <h3>氷のかたまり</h3>
+    <ul><li>とまらない。<b>通る大きさを決めるだけ</b>が仕事</li><li>押しているあいだ<b>溶けて小さく</b>なる</li><li>放せば<b>凍り直して大きく</b>戻る</li></ul>
+    <h3>すき間の壁</h3>
+    <ul><li>壁のすき間は<b>毎回ちがう幅</b></li><li>氷がすき間より太ければ、そこで砕ける</li><li>くぐるたびにスコアが伸びる</li></ul>
+    <h3>赤い線（溶けきり）</h3>
+    <ul><li>ゲージの赤い線より小さくなると<b>水になって消える</b></li><li>溶かしすぎも失敗。<b>ちょうど細く</b>が正解</li></ul>
+    <h3>バーナー</h3>
+    <ul><li>両脇から火が出て、押していなくても<b>勝手に溶ける</b></li><li>凍り直しが火に負ける。通す幅の読みが変わる</li></ul>
+    <h3>凍結・寒波</h3>
+    <ul><li>放したときの<b>凍り直しが速くなる</b></li><li>押しても溶けにくい。長めに押す必要がある</li></ul>
+  <button class="close">とじる</button>
+</div></div>
+<a id="back" href="../../" title="ゲーム一覧へ">‹ ゲーム一覧</a>
+<button id="mute" title="音のオン／オフ">🔊</button>
+<div id="vignette"></div>
+<div id="flash"></div>
+<div id="banner"><div class="b"></div></div>
+<div id="ko">
+  <div class="koText">K.O.</div>
+  <div class="finalLabel">さいしゅうスコア</div>
+  <div class="finalScore">0</div>
+</div>
+<div id="title">
+  <h1>アイスキューブ・スライド</h1>
+  <p>溶かして細く、放して太く。すき間に合わせて通す。</p>
+  <p class="kb">スペース / ↓ を押しているあいだ : 溶ける &nbsp;&nbsp; 放す : 凍る</p>
+  <p class="tc">画面を押しているあいだ : 溶ける &nbsp;&nbsp; 指を放す : 凍る</p>
+  <button class="btn" id="startBtn">スタート</button>
+</div>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+// ---------- url flags (declared first: sound and camera both read them) ----------
+const QS = new URLSearchParams(location.search);
+const AUTO = QS.get('auto')==='1';
+const SHOWCASE_Q = QS.get('showcase');
+// Recording must produce clean footage, so every automated mode is muted.
+const REC = QS.get('rec')==='1';   // 録音モード: 音を鳴らして拾う
+const SILENT = (AUTO || !!SHOWCASE_Q || QS.get('mute')==='1') && !REC;
+// 録画・showcase では「?」と「ゲーム一覧」を出さない（動画の邪魔になる）
+const NOCHROME = AUTO || !!SHOWCASE_Q || QS.get('nochrome')==='1';
+
+// ---------- renderer / scene ----------
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.shadowMap.enabled = true;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const SKY = new THREE.Color(0x070d1c);
+scene.background = SKY.clone();
+scene.fog = new THREE.Fog(0x070d1c, 26, 72);
+
+const camera = new THREE.PerspectiveCamera(56, innerWidth/innerHeight, .1, 140);
+
+// Portrait and landscape both have to work. A phone held upright is far
+// narrower than 16:9, and with a fixed FOV the chute walls fall outside the
+// frame — so widen the vertical FOV as the screen gets taller.
+const BASE_FOV = 56;
+function fitCamera(){
+  const aspect = innerWidth / innerHeight;
+  camera.aspect = aspect;
+  if(typeof SHOWCASE !== 'undefined' && SHOWCASE){
+    camera.fov = aspect < 1 ? 62 : 46;
+  } else {
+    // keep the horizontal field roughly constant across aspect ratios
+    const ref = 16/9;
+    camera.fov = aspect >= ref ? BASE_FOV
+      : Math.min(96, THREE.MathUtils.radToDeg(
+          2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(BASE_FOV)/2) * (ref/aspect))));
+  }
+  camera.__base = camera.fov;    // 加速イベントがここへ戻る
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+}
+addEventListener('resize', fitCamera);
+addEventListener('orientationchange', ()=>setTimeout(fitCamera, 120));
+
+// ---------- lights ----------
+const hemi = new THREE.HemisphereLight(0x8fd8ff, 0x101a2e, 1.5);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xdff2ff, 2.2);
+sun.position.set(5, 12, 6); sun.castShadow = true;
+sun.shadow.camera.left=-12; sun.shadow.camera.right=12;
+sun.shadow.camera.top=12; sun.shadow.camera.bottom=-12;
+scene.add(sun);
+
+// ---------- the chute ----------
+// The cube slides down a straight ice channel. Everything is measured in
+// "width units": the cube's side length and each gate's slot share the scale,
+// so the on-screen gauge is a literal read of the collision test.
+const CHUTE_W = 7.2;              // inner width of the channel
+const MAX_SIZE = 3.0;             // fully refrozen cube side
+const MIN_SIZE = 0.62;            // below this the cube is water — a loss
+
+const iceMat = new THREE.MeshStandardMaterial({
+  color:0x9fe6ff, roughness:.22, metalness:.05, transparent:true, opacity:.88,
+  emissive:0x18506e, emissiveIntensity:.6});
+const floorMat = new THREE.MeshStandardMaterial({color:0x16283c, roughness:.55, metalness:.15});
+const wallMat  = new THREE.MeshStandardMaterial({color:0x1d3550, roughness:.6, metalness:.2});
+const gateMat  = new THREE.MeshStandardMaterial({color:0x3d6b8f, roughness:.45, metalness:.3});
+const gateTrimMat = new THREE.MeshStandardMaterial({color:0x7cecff, roughness:.3,
+  emissive:0x2aa9d8, emissiveIntensity:.9});
+const burnerMat = new THREE.MeshStandardMaterial({color:0x4a2a22, roughness:.7, metalness:.3});
+const flameMat  = new THREE.MeshBasicMaterial({color:0xff8a3a, transparent:true, opacity:.85});
+const frostMat  = new THREE.MeshBasicMaterial({color:0xcaf4ff, transparent:true, opacity:.5});
+
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(CHUTE_W, 500), floorMat);
+floor.rotation.x = -Math.PI/2; floor.position.z = -220; floor.receiveShadow = true;
+scene.add(floor);
+
+// glowing rails along the channel edge so the width is always readable
+const rails = [];
+for(const sx of [-CHUTE_W/2, CHUTE_W/2]){
+  const r = new THREE.Mesh(new THREE.BoxGeometry(.12, .1, 500),
+    new THREE.MeshBasicMaterial({color:0x4fd8ff, transparent:true, opacity:.5}));
+  r.position.set(sx, .05, -220); scene.add(r); rails.push(r);
+}
+// side walls, plus ribs for a sense of speed
+const walls = [];
+for(const sx of [-CHUTE_W/2 - .5, CHUTE_W/2 + .5]){
+  const w = new THREE.Mesh(new THREE.BoxGeometry(1, 3.2, 500), wallMat);
+  w.position.set(sx, 1.6, -220); w.receiveShadow = true;
+  scene.add(w); walls.push(w);
+}
+const ribs = [];
+for(let i=0;i<40;i++){
+  for(const sx of [-CHUTE_W/2 - .5, CHUTE_W/2 + .5]){
+    const r = new THREE.Mesh(new THREE.BoxGeometry(1.14, .5, .3),
+      new THREE.MeshStandardMaterial({color:0x2c5273, roughness:.5}));
+    r.position.set(sx, 2.6, -i*9 - 4);
+    scene.add(r); ribs.push(r);
+  }
+}
+// distant cold sun so the horizon is not empty
+const coldSun = new THREE.Mesh(new THREE.CircleGeometry(3.0, 40),
+  new THREE.MeshBasicMaterial({color:0xd6f2ff}));
+coldSun.position.set(4, 10, -70); scene.add(coldSun);
+
+// falling snow — also the visual for the 寒波 event
+const snow = [];
+const snowMat = new THREE.MeshBasicMaterial({color:0xe8faff, transparent:true, opacity:0});
+for(let i=0;i<120;i++){
+  const s = new THREE.Mesh(new THREE.SphereGeometry(.07, 6, 5), snowMat);
+  s.position.set((Math.random()-.5)*14, Math.random()*10, -Math.random()*70);
+  scene.add(s); snow.push(s);
+}
+
+// speed lines — only visible during 急流 (rapids)
+const speedLines = [];
+const speedLineMat = new THREE.MeshBasicMaterial({color:0xcaf4ff, transparent:true, opacity:0});
+for(let i=0;i<36;i++){
+  const m = new THREE.Mesh(new THREE.BoxGeometry(.05,.05,4), speedLineMat);
+  m.position.set((Math.random()-.5)*11, .4+Math.random()*4, -Math.random()*60);
+  scene.add(m); speedLines.push(m);
+}
+
+// ---------- the cube (primitive build) ----------
+function buildCube(){
+  const g = new THREE.Group();
+  // a rounded block reads as ice better than a hard box
+  const body = new THREE.Mesh(new THREE.BoxGeometry(1,1,1,2,2,2), iceMat);
+  body.castShadow = true; g.add(body);
+  // inner core catches the light and gives the block some depth
+  const core = new THREE.Mesh(new THREE.OctahedronGeometry(.34),
+    new THREE.MeshBasicMaterial({color:0xe6fbff, transparent:true, opacity:.5}));
+  g.add(core);
+  // frost edges: a wireframe box that sells the crystal
+  const edges = new THREE.Mesh(new THREE.BoxGeometry(1.01,1.01,1.01),
+    new THREE.MeshBasicMaterial({color:0xcaf4ff, wireframe:true, transparent:true, opacity:.35}));
+  g.add(edges);
+  return {group:g, body, core, edges};
+}
+const cube = buildCube();
+scene.add(cube.group);
+const heroLight = new THREE.PointLight(0xbfeaff, 26, 16);
+scene.add(heroLight);
+
+// steam puffs that rise while the cube is melting
+const steam = [];
+const steamMat = new THREE.MeshBasicMaterial({color:0xdff4ff, transparent:true, opacity:0});
+for(let i=0;i<26;i++){
+  const p = new THREE.Mesh(new THREE.SphereGeometry(.22, 8, 6), steamMat.clone());
+  p.visible = false; scene.add(p);
+  steam.push({mesh:p, life:0});
+}
+function puff(x, y, z){
+  const s = steam.find(s=>s.life<=0);
+  if(!s) return;
+  s.life = .75;
+  s.mesh.visible = true;
+  // small and trailing behind the cube: a puff that drifts toward the lens
+  // covers the very gate the player is reading
+  s.mesh.scale.setScalar(.25 + Math.random()*.25);
+  s.mesh.position.set(x + (Math.random()-.5)*1.0, y, z - 1.2 - Math.random()*1.4);
+  s.vx = (Math.random()-.5)*.8; s.vy = 1.6 + Math.random()*1.0;
+}
+
+// ---------- gates ----------
+// A gate is a wall with one slot in the middle. The cube passes only if its
+// side is narrower than the slot; anything wider shatters on the frame.
+const gates = [];
+function buildGate(slot, z){
+  const g = new THREE.Group();
+  const side = (CHUTE_W + 1 - slot) / 2;       // width of each blocking panel
+  for(const s of [-1, 1]){
+    const panel = new THREE.Mesh(new THREE.BoxGeometry(side, 3.4, .45), gateMat);
+    panel.position.set(s*(slot/2 + side/2), 1.7, 0);
+    panel.castShadow = true; g.add(panel);
+    // lit inner edge marks exactly where the slot begins
+    const edge = new THREE.Mesh(new THREE.BoxGeometry(.14, 3.4, .55), gateTrimMat);
+    edge.position.set(s*(slot/2 + .07), 1.7, 0); g.add(edge);
+  }
+  // lintel over the slot, so the opening reads as a hole not a doorway
+  const top = new THREE.Mesh(new THREE.BoxGeometry(CHUTE_W + 1, .5, .5), gateMat);
+  top.position.y = 3.65; g.add(top);
+  // a glowing sill across the bottom of the opening: during ホワイトアウト the
+  // gauge is gone, so the slot width has to be judgeable by eye alone
+  const sill = new THREE.Mesh(new THREE.BoxGeometry(slot, .1, .5), gateTrimMat);
+  sill.position.y = .05; g.add(sill);
+  g.position.set(0, 0, z);
+  scene.add(g);
+  const rec = {group:g, slot, z, passed:false, melt:0};
+  gates.push(rec);
+  return rec;
+}
+
+// ---------- burners (hazard: melt the cube without any input) ----------
+const burners = [];
+function buildBurner(z, side){
+  const g = new THREE.Group();
+  const nozzle = new THREE.Mesh(new THREE.CylinderGeometry(.3,.42,1.1,10), burnerMat);
+  nozzle.rotation.z = Math.PI/2 * -side;
+  nozzle.position.x = side * (CHUTE_W/2 + .5);
+  nozzle.position.y = .9; g.add(nozzle);
+  // flame cone pointing into the channel
+  const flame = new THREE.Mesh(new THREE.ConeGeometry(.5, 2.6, 10), flameMat);
+  flame.rotation.z = Math.PI/2 * -side;
+  flame.position.set(side * (CHUTE_W/2 - .9), .9, 0);
+  g.add(flame);
+  g.position.z = z;
+  scene.add(g);
+  const rec = {group:g, flame, z, side, temp:true};
+  burners.push(rec);
+  return rec;
+}
+
+// ---------- frost jets (hazard: refreeze the cube against your will) ----------
+const jets = [];
+function buildJet(z, side){
+  const g = new THREE.Group();
+  const pipe = new THREE.Mesh(new THREE.CylinderGeometry(.26,.34,1.0,10),
+    new THREE.MeshStandardMaterial({color:0x2b4f6b, roughness:.4, metalness:.5}));
+  pipe.rotation.z = Math.PI/2 * -side;
+  pipe.position.set(side * (CHUTE_W/2 + .45), 1.4, 0); g.add(pipe);
+  const spray = new THREE.Mesh(new THREE.ConeGeometry(.62, 2.4, 10), frostMat);
+  spray.rotation.z = Math.PI/2 * -side;
+  spray.position.set(side * (CHUTE_W/2 - .8), 1.4, 0); g.add(spray);
+  g.position.z = z;
+  scene.add(g);
+  const rec = {group:g, spray, z, side, temp:true};
+  jets.push(rec);
+  return rec;
+}
+
+// ---------- game state ----------
+let running=false, dead=false, t=0, speed=13, score=0;
+let size=MAX_SIZE;               // the cube's current side length
+let melting=false;               // is the player holding?
+let meltBias=0;                  // >0 while burners force extra melting
+let freezeMul=1, meltMul=1;      // event modifiers on the two rates
+let timeScale=1, deadAt=0, shake=0;
+let deadBy='gate';            // 'gate' = 砕けた / 'melt' = 溶けきった
+let camDist=11.5, camDistTarget=11.5;
+let surge=0;                     // >0 while the chute runs fast
+let fogEvent=0;                  // >0 while the gauge is hidden
+let nextEventAt=9, eventQueue=[];
+let nextGateZ=-34;               // where the next gate spawns
+let passCount=0;
+const scoreEl = document.getElementById('score');
+const msgEl = document.getElementById('msg');
+const titleEl = document.getElementById('title');
+const bannerEl = document.getElementById('banner');
+const bannerText = bannerEl.querySelector('.b');
+const flashEl = document.getElementById('flash');
+const vignetteEl = document.getElementById('vignette');
+const koEl = document.getElementById('ko');
+const koScoreEl = koEl.querySelector('.finalScore');
+const gaugeEl = document.getElementById('gauge');
+const gaugeFill = gaugeEl.querySelector('.fill');
+const gaugeSlot = gaugeEl.querySelector('.slot');
+const gaugeMin  = gaugeEl.querySelector('.min');
+
+// ---------- presentation helpers ----------
+function banner(text, color){
+  bannerText.textContent = text;
+  bannerText.style.color = color;
+  bannerEl.classList.remove('go');
+  void bannerEl.offsetWidth;      // restart the CSS animation
+  bannerEl.style.opacity = 1;
+  bannerEl.classList.add('go');
+}
+function flash(color, strength, ms){
+  flashEl.style.background = color;
+  flashEl.style.transition = 'none';
+  flashEl.style.opacity = strength;
+  requestAnimationFrame(()=>{
+    flashEl.style.transition = `opacity ${ms}ms ease-out`;
+    flashEl.style.opacity = 0;
+  });
+}
+
+// the gate the player is currently aiming at
+function nextGate(){
+  let best=null;
+  for(const g of gates){
+    if(g.group.position.z < cube.group.position.z - .3 && !g.passed){
+      if(!best || g.group.position.z > best.group.position.z) best=g;
+    }
+  }
+  return best;
+}
+
+// ---------- events ----------
+// Each one changes the melt/freeze arithmetic in a different way, so the
+// same two-state input has to be timed differently every time.
+const EVENTS = {
+  // heat from the sides: the cube shrinks even when you are not holding
+  burner(){
+    banner('バーナー', '#ff8a3a');
+    const z0 = cube.group.position.z - 30;
+    for(let i=0;i<5;i++) buildBurner(z0 - i*7, i%2===0 ? -1 : 1);
+    meltBias = 1;
+    flash('#ff7a2a', .28, 420);
+    shake = Math.max(shake, .18);
+    return 7;
+  },
+  // cold snap: refreezing is fast and melting is sluggish
+  freeze(){
+    banner('寒波', '#7cecff');
+    freezeMul = 2.3; meltMul = .55;
+    snowMat.opacity = .0;
+    flash('#cdf4ff', .32, 460);
+    return 7.5;
+  },
+  // frost jets: discrete bursts that snap the cube back up mid-approach
+  jet(){
+    banner('冷却ノズル', '#bfe9ff');
+    const z0 = cube.group.position.z - 32;
+    for(let i=0;i<4;i++) buildJet(z0 - i*8, i%2===0 ? 1 : -1);
+    return 7;
+  },
+  // rapids: everything arrives faster, so the hold has to be shorter
+  rapids(){
+    banner('急流', '#4fd8ff');
+    surge = 5;
+    flash('#9ffff0', .3, 420);
+    shake = Math.max(shake, .2);
+    return 6;
+  },
+  // whiteout: the gauge is gone, judge the cube by eye against the slot
+  whiteout(){
+    banner('ホワイトアウト', '#e8faff');
+    fogEvent = 5.5;
+    flash('#ffffff', .5, 520);
+    return 6.5;
+  },
+  // a run of very tight slots back to back
+  narrow(){
+    banner('せまい連続', '#ffd23b');
+    // queue four hard gates immediately ahead, ignoring the usual spacing
+    let z = Math.min(nextGateZ, cube.group.position.z - 30);
+    for(let i=0;i<4;i++){ buildGate(1.0 + Math.random()*.35, z); z -= 12; }
+    nextGateZ = z - 8;
+    return 7;
+  },
+};
+const EVENT_NAMES = Object.keys(EVENTS);
+window.__events = EVENT_NAMES.slice();
+
+// recording/debug hook: fire a named event on cue (used by the capture script)
+// returns false if the run is already over, so a capture script can wait
+// for the next run instead of firing an event onto the K.O. screen
+window.__ev = name => {
+  if(!running || dead || !EVENTS[name]) return false;
+  const busy = EVENTS[name]();
+  if(!SILENT) SND.event();
+  nextEventAt = t + busy + 5;
+  return true;
+};
+window.__alive = () => running && !dead;
+window.__kill = () => { if(running && !dead){ dead=true; gameOver(); } };
+window.__recStop = () => SND.recStop();
+window.__snd = () => ({enabled: SND.enabled, silent: SILENT});
+window.__fov = () => +camera.fov.toFixed(1);
+window.__probe = () => {
+  const g = nextGate();
+  return {t:+t.toFixed(2), size:+size.toFixed(2), melting,
+          slot: g ? +g.slot.toFixed(2) : null,
+          dz: g ? +(cube.group.position.z - g.group.position.z).toFixed(2) : null,
+          next:+nextEventAt.toFixed(2), pass:passCount};
+};
+
+function refillEventQueue(){
+  eventQueue = EVENT_NAMES.slice();
+  for(let i=eventQueue.length-1;i>0;i--){        // shuffle so the order varies per run
+    const j = Math.floor(Math.random()*(i+1));
+    [eventQueue[i],eventQueue[j]]=[eventQueue[j],eventQueue[i]];
+  }
+}
+
+function triggerEvent(){
+  if(!eventQueue.length) refillEventQueue();
+  const name = eventQueue.pop();
+  const busy = EVENTS[name]();
+  if(!SILENT) SND.event();
+  nextEventAt = t + busy + 5 + Math.random()*4;  // breathing room between events
+}
+
+// ---------- spawning ----------
+// Slots get tighter as the run goes on, but never below what a full melt
+// can reach — the game stays fair, it just needs finer timing.
+function slotFor(){
+  const hard = Math.min(1, passCount/26);
+  const lo = 0.95 + (1-hard)*0.55;      // 1.50 → 0.95
+  const hi = 2.55 - hard*0.75;          // 2.55 → 1.80
+  return lo + Math.random()*(hi-lo);
+}
+function fillGates(){
+  // keep a rolling window of gates ahead of the cube
+  while(nextGateZ > cube.group.position.z - 150){
+    buildGate(slotFor(), nextGateZ);
+    nextGateZ -= 14 + Math.random()*8;
+  }
+}
+
+// ---------- reset ----------
+function reset(){
+  for(const g of gates) scene.remove(g.group);
+  gates.length = 0;
+  for(const b of burners) scene.remove(b.group);
+  burners.length = 0;
+  for(const j of jets) scene.remove(j.group);
+  jets.length = 0;
+  for(const s of steam){ s.life=0; s.mesh.visible=false; }
+  cube.group.position.set(0, MAX_SIZE/2, 0);
+  cube.group.rotation.set(0,0,0);
+  size = MAX_SIZE; melting=false; meltBias=0; freezeMul=1; meltMul=1;
+  t=0; speed=13; score=0; dead=false; passCount=0;
+  timeScale=1; shake=0; camDist=11.5; camDistTarget=11.5;
+  surge=0; fogEvent=0;
+  nextGateZ = -34;
+  fillGates();
+  nextEventAt = 9;
+  refillEventQueue();
+  snowMat.opacity = 0;
+  speedLineMat.opacity = 0;
+  msgEl.textContent = '';
+  koEl.classList.remove('on');
+  gaugeEl.style.opacity = 1;
+  vignetteEl.style.transition='opacity .3s'; vignetteEl.style.opacity=0;
+  camera.position.set(0, 5.4, 11.5);
+}
+
+const startBtn = document.getElementById('startBtn');
+
+// ---------- sound: everything synthesised, no audio files ----------
+// Keeps the single-HTML rule (nothing to download) and lets the music
+// react to play: the bass line speeds up with the game, events drop a
+// stinger, and the whole thing ducks out on a game over.
+const SND = (() => {
+  let ctx = null, master = null, musicGain = null, on = true, started = false;
+  let step = 0, timer = null, tempo = 0.25;
+
+  // A pentatonic scale never sounds wrong against itself, which matters
+  // when the tempo drifts with the player's speed.
+  // minor pentatonic, driving — a chase that never lets up
+  const SCALE = [0, 3, 5, 7, 10];
+  const ROOT = 196;
+  const BASS = 'square', LEAD = 'sawtooth';
+  const hz = (deg, oct = 0) =>
+    ROOT * Math.pow(2, oct + Math.floor(deg / SCALE.length)) *
+    Math.pow(2, SCALE[((deg % SCALE.length) + SCALE.length) % SCALE.length] / 12);
+
+  function ensure() {
+    if (ctx) return ctx;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    ctx = new AC();
+    master = ctx.createGain();
+    master.gain.value = 0.32;
+    master.connect(ctx.destination);
+    musicGain = ctx.createGain();
+    musicGain.gain.value = 1;
+    musicGain.connect(master);
+    return ctx;
+  }
+
+
+  // ---- 録音用の分岐（?rec=1）----
+  // Playwright の録画には音声が入らないので、ゲーム自身に master バスを
+  // 録らせる。鳴っているものそのものなので映像と必ず同期する。
+  let recDest = null, recorder = null, recChunks = [];
+  function recStart() {
+    if (!ctx || recorder) return;
+    recDest = ctx.createMediaStreamDestination();
+    master.connect(recDest);
+    recorder = new MediaRecorder(recDest.stream, {mimeType: 'audio/webm'});
+    recorder.ondataavailable = e => { if (e.data.size) recChunks.push(e.data); };
+    recorder.start();
+  }
+  function recStop() {
+    return new Promise(res => {
+      if (!recorder) return res(null);
+      recorder.onstop = async () => {
+        const blob = new Blob(recChunks, {type: 'audio/webm'});
+        const buf = await blob.arrayBuffer();
+        res(Array.from(new Uint8Array(buf)));
+      };
+      recorder.stop();
+    });
+  }
+
+  function blip(freq, dur, type = 'square', vol = 0.25, dest = null, slideTo = null) {
+    if (!ctx || !on) return;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, ctx.currentTime);
+    if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, ctx.currentTime + dur);
+    // a short attack stops every note from clicking
+    g.gain.setValueAtTime(0, ctx.currentTime);
+    g.gain.linearRampToValueAtTime(vol, ctx.currentTime + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
+    o.connect(g); g.connect(dest || master);
+    o.start(); o.stop(ctx.currentTime + dur + 0.02);
+  }
+
+  function noise(dur, vol = 0.2, hp = 800) {
+    if (!ctx || !on) return;
+    const n = Math.floor(ctx.sampleRate * dur);
+    const buf = ctx.createBuffer(1, n, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    const f = ctx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = hp;
+    const g = ctx.createGain(); g.gain.value = vol;
+    src.connect(f); f.connect(g); g.connect(master);
+    src.start();
+  }
+
+  // --- the loop: a walking bass plus an offbeat blip ---
+  function tick() {
+    if (!ctx || !on) return;
+    const bar = step % 16;
+    // straight driving pulse: bass on every beat, lead stabs offbeat
+    if (bar % 2 === 0) blip(hz(bar % 8 === 0 ? 0 : 1, -1), tempo * 1.1, BASS, 0.30, musicGain);
+    if (bar % 8 === 5) blip(hz(4, 0), tempo * 0.6, LEAD, 0.09, musicGain);
+    if (bar % 4 === 2) noise(0.04, 0.05, 5000);
+    step++;
+    timer = setTimeout(tick, tempo * 1000);
+  }
+
+  return {
+    // must be called from a user gesture — browsers block audio otherwise
+    start() {
+      if (!ensure() || started) return;
+      if (ctx.state === 'suspended') ctx.resume();
+      started = true; step = 0; tick();
+    },
+    stop() { if (timer) { clearTimeout(timer); timer = null; } started = false; },
+    /** speed the music up with the game; 1 = starting pace */
+    setPace(mult) { tempo = Math.max(0.11, 0.25 / Math.max(0.2, mult)); },
+    duck(sec = 1.6) {                                      // for game over
+      if (!ctx) return;
+      musicGain.gain.cancelScheduledValues(ctx.currentTime);
+      musicGain.gain.setValueAtTime(musicGain.gain.value, ctx.currentTime);
+      musicGain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + sec);
+    },
+    unduck() {
+      if (!ctx) return;
+      musicGain.gain.cancelScheduledValues(ctx.currentTime);
+      musicGain.gain.setValueAtTime(0.0001, ctx.currentTime);
+      musicGain.gain.exponentialRampToValueAtTime(1, ctx.currentTime + 0.4);
+    },
+    // --- one-shots: each one pitched and short so it reads under narration ---
+    // hold begins: a hiss with a downward slide — ice giving way to water
+    meltOn()  { ensure(); blip(hz(4, 1), 0.22, 'sawtooth', 0.14, null, hz(0, 0));
+                noise(0.18, 0.07, 2600); },
+    // release: a bright upward chirp — the block snapping back solid
+    freezeOn(){ ensure(); blip(hz(0, 0), 0.16, 'triangle', 0.17, null, hz(3, 1)); },
+    // cleared a gate: two rising notes, the clearest sound in the mix
+    pass()    { ensure(); blip(hz(2, 0), 0.09, 'square', 0.20);
+                setTimeout(()=>blip(hz(4, 1), 0.14, 'square', 0.18), 80); },
+    // scraped through with almost no margin: a short metallic ping
+    close()   { ensure(); blip(hz(4, 2), 0.10, 'triangle', 0.15); },
+    event()   { ensure(); [0, 90, 180].forEach((ms, i) =>
+                  setTimeout(() => blip(hz(2 + i, 0), 0.18, 'sawtooth', 0.20), ms)); },
+    // shattered on a gate frame: hard crack
+    hit()     { ensure(); noise(0.35, 0.30, 200);
+                blip(180, 0.5, 'sawtooth', 0.28, null, 40); },
+    // melted away entirely: a wet, falling gurgle instead of a crack
+    dissolve(){ ensure(); blip(hz(3, 0), 0.7, 'sine', 0.26, null, 55);
+                noise(0.5, 0.14, 500); },
+    over()    { ensure(); [0, 140, 280, 460].forEach((ms, i) =>
+                  setTimeout(() => blip(hz(-i, -1), 0.42, 'triangle', 0.26), ms)); },
+    recStart() { ensure(); recStart(); },
+    recStop() { return recStop(); },
+    toggle() { on = !on; if (!on) { this.stop(); } else { this.start(); } return on; },
+    get enabled() { return on; },
+  };
+})();
+
+// --- one place for every action, so touch and keyboard stay in step ---
+function startRun(){
+  titleEl.classList.add('hidden'); reset(); running=true;
+  if(!SILENT){ SND.unduck(); SND.start(); if(REC) SND.recStart(); }
+}
+// The whole game is these two: press-and-hold melts, release refreezes.
+function meltStart(){
+  if(!running || dead || melting) return;
+  melting = true;
+  if(!SILENT) SND.meltOn();
+}
+function meltEnd(){
+  if(!melting) return;
+  melting = false;
+  if(running && !dead && !SILENT) SND.freezeOn();
+}
+
+const muteBtn = document.getElementById('mute');
+function toggleMute(){ muteBtn.textContent = SND.toggle() ? '🔊' : '🔇'; }
+muteBtn.addEventListener('click', toggleMute);
+muteBtn.addEventListener('touchend', e=>{ e.preventDefault(); toggleMute(); },
+                         {passive:false});
+if(SILENT) muteBtn.style.display='none';   // automated modes have no audio
+addEventListener('keydown', e=>{ if(e.code==='KeyM') toggleMute(); });
+
+startBtn.addEventListener('click', startRun);
+// a touch on the button must start too — click alone is unreliable on touch
+startBtn.addEventListener('touchend', e=>{ e.preventDefault(); startRun(); },
+                          {passive:false});
+
+addEventListener('keydown', e=>{
+  if(e.repeat) return;                    // autorepeat must not re-trigger the blip
+  const act = e.code==='Space'||e.code==='ArrowDown'||e.code==='KeyS';
+  if(!running){
+    if(act||e.code==='Enter'){ e.preventDefault(); startRun(); }
+    return;
+  }
+  if(dead){
+    if(act && Date.now()-deadAt > 1200) startRun();
+    return;
+  }
+  if(act){ e.preventDefault(); meltStart(); }
+});
+addEventListener('keyup', e=>{
+  if(e.code==='Space'||e.code==='ArrowDown'||e.code==='KeyS') meltEnd();
+});
+// a lost keyup (tab switch) would leave the cube melting forever
+addEventListener('blur', meltEnd);
+
+// --- touch: hold anywhere on the canvas to melt, lift to freeze ---
+// Most viewers arrive from a phone, so the game has to be playable without a
+// keyboard. Both input paths call the same meltStart/meltEnd.
+(function(){
+  const canvas = renderer.domElement;
+
+  canvas.addEventListener('touchstart', e=>{
+    if(dead) return;
+    if(!running){ return; }               // start happens on touchend
+    meltStart();
+  }, {passive:true});
+
+  canvas.addEventListener('touchend', e=>{
+    if(dead){
+      // give the K.O. animation time to read, then a tap retries
+      if(!AUTO && Date.now()-deadAt > 1500) startRun();
+      return;
+    }
+    if(!running){ startRun(); return; }
+    meltEnd();
+  }, {passive:true});
+  canvas.addEventListener('touchcancel', meltEnd, {passive:true});
+
+  // mouse: same two actions, so a desktop player never needs the keyboard
+  canvas.addEventListener('mousedown', ()=>{
+    if(!running || dead) return;
+    meltStart();
+  });
+  addEventListener('mouseup', meltEnd);
+
+  // The title overlay sits above the canvas, so a tap anywhere on it never
+  // reaches the canvas handler. Start from the overlay itself.
+  titleEl.addEventListener('touchend', e=>{
+    if(!running){ e.preventDefault(); startRun(); }
+  }, {passive:false});
+
+  // stop the browser treating game taps as scroll / double-tap zoom
+  canvas.addEventListener('touchmove', e=>e.preventDefault(), {passive:false});
+})();
+
+// autoplay mode for recording: ?auto=1
+// recording holds the K.O. longer than play does: ?hold=9000
+const RETRY_MS = Math.max(1200, parseInt(QS.get('hold')||'4200', 10));
+// ?noev=1 records a calm run with no events, for narration beds
+const NOEV = QS.get('noev')==='1';
+if(AUTO){ setTimeout(startRun, 1200); }   // startRun 経由にする（音/録音も始まる）
+
+// The autopilot solves the same arithmetic the player does by feel: from the
+// current size, how long does the hold have to be to arrive inside the slot?
+const MELT_RATE = 1.5, FREEZE_RATE = 0.95;
+function autoPilot(dt){
+  const g = nextGate();
+  if(!g){ if(melting) meltEnd(); return; }
+  const dz = cube.group.position.z - g.group.position.z;   // distance to the gate
+  const eta = dz / Math.max(1, speed);
+  // Aim for the middle of the usable range rather than the slot edge: a target
+  // sitting on the boundary arrives with no margin and one frame of drift kills
+  // the run, which is useless footage.
+  const hi = g.slot - .16;
+  const lo = MIN_SIZE + .30;
+  const target = hi <= lo ? lo : Math.min(MAX_SIZE, lo + (hi-lo)*.55);
+  // rates including whatever the current event is doing to them
+  const mr = MELT_RATE*meltMul + meltBias*0.7;
+  // Any jet between here and the gate will refreeze the cube on the way in, so
+  // count the seconds spent inside a spray and fold that into the freeze rate.
+  // (z decreases forward, so a jet still ahead has a LARGER z than the gate and
+  // a SMALLER z than the cube.)
+  let jetSecs = 0;
+  for(const j of jets){
+    const jz = j.group.position.z;
+    if(jz < cube.group.position.z + 1 && jz > g.group.position.z - 1){
+      jetSecs += 4.0 / Math.max(1, speed);      // the spray is ~4 units deep
+    }
+  }
+  const baseFr = Math.max(0, FREEZE_RATE*freezeMul - meltBias*0.7);
+  // spread the jet refreeze over the whole approach so it reads as one rate
+  const fr = baseFr + (eta > .05 ? (1.05 * Math.min(jetSecs, eta)) / eta : 0);
+  if(size > target){
+    // Start the hold with a little lead time — melting late is elegant but
+    // leaves nothing in hand if a burner lights up on the way in.
+    const need = (size - target)/mr;             // seconds of holding required
+    if(need + .18 >= eta) meltStart(); else meltEnd();
+  } else if(size < target - .05 && fr*eta < (target - size)){
+    meltEnd();                                   // let it refreeze back up
+  } else {
+    // at size: hold only if coasting would refreeze us past the slot
+    if(fr*eta > (hi - size)) meltStart(); else meltEnd();
+  }
+  // hard safety: never let the block reach the water line
+  if(size < MIN_SIZE + .26) meltEnd();
+}
+
+// ---------- showcase mode ----------
+// Puts one object on a turntable against an empty stage so the video can talk
+// about it while the real thing is on screen. Uses the game's own meshes, so
+// what the narration describes is exactly what ships.
+const SHOWCASE = QS.get('showcase');
+const showcase = {group:null, spin:.55, label:''};
+window.__subjects = ['cube','cubeThin','gate','gateNarrow','burner','jet'];
+
+function buildShowcase(name){
+  const g = new THREE.Group();
+  let label = '', spin = .55;
+  if(name==='cube'){
+    const c = buildCube();
+    c.group.scale.setScalar(MAX_SIZE);
+    g.add(c.group); label = '氷のかたまり'; spin = .5;
+  } else if(name==='cubeThin'){
+    const c = buildCube();
+    c.group.scale.setScalar(MIN_SIZE + .12);
+    g.add(c.group); label = '溶けきる寸前'; spin = .7;
+  } else if(name==='gate'){
+    const rec = buildGate(2.3, 0);
+    gates.pop();                       // showcase copy only, not a playable gate
+    scene.remove(rec.group);
+    g.add(rec.group); rec.group.position.set(0,0,0);
+    label = 'すき間の壁'; spin = .4;
+  } else if(name==='gateNarrow'){
+    const rec = buildGate(1.0, 0);
+    gates.pop();
+    scene.remove(rec.group);
+    g.add(rec.group); rec.group.position.set(0,0,0);
+    label = 'せまいすき間'; spin = .4;
+  } else if(name==='burner'){
+    const rec = buildBurner(0, -1);
+    burners.pop();
+    scene.remove(rec.group);
+    g.add(rec.group); rec.group.position.set(0,0,0);
+    label = 'バーナー'; spin = .6; g.rotation.y = Math.PI/2;
+  } else if(name==='jet'){
+    const rec = buildJet(0, 1);
+    jets.pop();
+    scene.remove(rec.group);
+    g.add(rec.group); rec.group.position.set(0,0,0);
+    label = '冷却ノズル'; spin = .6; g.rotation.y = Math.PI/2;
+  }
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  scene.add(g);
+
+  // Centre the subject on the origin and pull the camera back to fit it,
+  // so every object is framed the same way regardless of its size.
+  // The shift has to go on an INNER holder: several subjects (the burner, the
+  // jet) are built at the side of the chute, and moving the outer group would
+  // leave the geometry off-axis, so the turntable would orbit it out of frame.
+  const holder = new THREE.Group();
+  while(g.children.length) holder.add(g.children[0]);
+  g.add(holder);
+  const box = new THREE.Box3().setFromObject(holder);
+  const size3 = box.getSize(new THREE.Vector3());
+  const mid = box.getCenter(new THREE.Vector3());
+  holder.position.sub(mid);                  // subject's own centre on the axis
+  const reach = Math.max(size3.x, size3.y) * 0.5;
+  const fov = THREE.MathUtils.degToRad(camera.fov);
+  const dist = (reach / Math.tan(fov/2)) * 1.75 + 1.0;   // 1.75 = breathing room
+  camera.position.set(0, size3.y*0.10, dist);
+
+  // Slide the subject sideways so a text panel can own the other half.
+  // The offset lives on a parent so the turntable still spins in place —
+  // rotating an offset group would make it orbit instead.
+  const bias = parseFloat(QS.get('sx') || '0');
+  const pivot = new THREE.Group();
+  pivot.position.x = -bias * reach * 1.15;
+  scene.add(pivot);
+  pivot.add(g);
+  showcase.group = g; showcase.pivot = pivot;
+  showcase.spin = spin; showcase.label = label;
+}
+
+fitCamera();          // SHOWCASE is known by here
+if(SHOWCASE){
+  titleEl.classList.add('hidden');
+  buildShowcase(SHOWCASE);
+  scoreEl.textContent = '';
+  msgEl.textContent = QS.get('nolabel')==='1' ? '' : showcase.label;
+  msgEl.style.fontSize = 'clamp(18px,5vw,30px)';
+  msgEl.style.letterSpacing = '4px';
+  // a plain dark stage: nothing on screen but the subject
+  gaugeEl.style.display = 'none';
+  floor.visible = false; coldSun.visible = false;
+  cube.group.visible = false;         // the playable cube is a separate object
+  for(const w of walls) w.visible = false;
+  for(const r of ribs) r.visible = false;
+  for(const r of rails) r.visible = false;
+  for(const s of snow) s.visible = false;
+  for(const m of speedLines) m.visible = false;
+  scene.fog = null;
+  scene.background = new THREE.Color(0x080d18);
+  heroLight.position.set(2.6, 3.2, 4.2);
+  heroLight.intensity = 130;
+  hemi.intensity = 3.2;
+  sun.intensity = 4.0; sun.position.set(2.5, 6, 6);
+  // a second light from the other side so the far face is not pure black
+  const fill = new THREE.PointLight(0x88ccff, 45, 26);
+  fill.position.set(-4.5, 2.4, 3.6); scene.add(fill);
+}
+// let the capture script drive the turntable and swap subjects
+window.__showcase = name => {
+  if(showcase.pivot) scene.remove(showcase.pivot);   // pivot owns the group
+  buildShowcase(name);
+  msgEl.textContent = showcase.label;
+};
+
+// ---------- gauge ----------
+// Draws the cube's width, the slot it has to fit, and the melt line, all on
+// the same 0..MAX_SIZE scale as the collision test.
+function updateGauge(){
+  const g = nextGate();
+  const pct = v => (v / MAX_SIZE) * 100;
+  gaugeFill.style.width = pct(size) + '%';
+  gaugeMin.style.left = pct(MIN_SIZE) + '%';
+  if(g){
+    gaugeSlot.style.display = 'block';
+    gaugeSlot.style.left = '0%';
+    gaugeSlot.style.width = pct(g.slot) + '%';
+  } else gaugeSlot.style.display = 'none';
+  // red while the cube will not fit, blue once it will
+  const ok = g ? size < g.slot : true;
+  gaugeFill.style.background = ok
+    ? 'linear-gradient(90deg,#bff4ff,#4fd8ff)'
+    : 'linear-gradient(90deg,#ffb4bc,#ff5a6a)';
+}
+
+// ---------- loop ----------
+const clock = new THREE.Clock();
+function tick(){
+  requestAnimationFrame(tick);
+  const raw = Math.min(clock.getDelta(), .05);
+  const dt = raw * timeScale;
+
+  if(SHOWCASE){
+    if(showcase.group) showcase.group.rotation.y += raw*showcase.spin;
+    camera.lookAt(0, 0, 0);        // subject is offset, camera stays on axis
+    renderer.render(scene, camera);
+    return;
+  }
+
+  if(running && !dead){
+    t += dt;
+    speed = 13 + t*.32 + (surge>0 ? 9 : 0);
+    score += dt*2;                                  // survival trickle
+    scoreEl.textContent = Math.floor(score);
+    if(!SILENT) SND.setPace(speed/13);
+    if(AUTO) autoPilot(dt);
+
+    // --- events ---
+    if(t > nextEventAt && !NOEV) triggerEvent();
+
+    // --- the one mechanic: melt while held, refreeze while released ---
+    // Burner heat fades out near the water line: passive damage that can finish
+    // the cube off with no input would make a burner unsurvivable, so below the
+    // safety band the flames only cancel the refreeze instead of eating mass.
+    const guard = THREE.MathUtils.clamp((size - MIN_SIZE)/.5, 0, 1);
+    const bias = meltBias*0.7*guard;
+    const mr = MELT_RATE*meltMul + bias;             // burners add to the melt
+    const fr = FREEZE_RATE*freezeMul;
+    if(melting) size -= mr*dt;
+    else        size = Math.min(MAX_SIZE, size + (fr - bias)*dt);
+    if(melting || meltBias>0){
+      // steam while losing mass, so melting is visible without the gauge
+      if(Math.random() < dt*14) puff(cube.group.position.x, size*0.4, cube.group.position.z);
+    }
+    if(size <= MIN_SIZE){ size = MIN_SIZE; dead=true; gameOver('melt'); }
+
+    // cube geometry follows the size directly — what you see is the hitbox
+    cube.group.scale.setScalar(size);
+    cube.group.position.y = size/2;
+    cube.group.position.z -= speed*dt;
+    // a slide, not a roll: gentle wobble only
+    cube.group.rotation.z = Math.sin(t*3.1)*.05;
+    cube.group.rotation.x = -speed*0.004;
+    // ice glows hotter as it thins, so it reads even in ホワイトアウト
+    const thin = 1 - (size - MIN_SIZE)/(MAX_SIZE - MIN_SIZE);
+    iceMat.emissive.setHex(0x18506e).lerp(new THREE.Color(0x3fd0ff), thin);
+    iceMat.opacity = .88 - thin*.24;
+    heroLight.position.set(cube.group.position.x, 3.4, cube.group.position.z + 2.4);
+
+    fillGates();
+
+    // --- gates: pass or shatter ---
+    for(let i=gates.length-1;i>=0;i--){
+      const g = gates[i];
+      const dz = cube.group.position.z - g.group.position.z;
+      if(!g.passed && dz < size*0.5 + .3){
+        // the moment the leading face reaches the frame
+        g.passed = true;
+        if(size >= g.slot){
+          dead = true; gameOver('gate', g);
+        } else {
+          passCount++;
+          // reward precision: a tight squeeze is worth much more
+          const margin = g.slot - size;
+          const bonus = Math.round(10 + Math.max(0, (0.55 - margin))*90);
+          score += bonus;
+          if(!SILENT){ SND.pass(); if(margin < .22) setTimeout(()=>SND.close(), 90); }
+          // trim flashes cyan on a clean pass
+          flash(margin < .22 ? '#ffd23b' : '#7cecff', margin < .22 ? .22 : .12, 260);
+        }
+      }
+      // recycle gates well behind the cube
+      if(g.group.position.z > cube.group.position.z + 12){
+        scene.remove(g.group); gates.splice(i,1);
+      }
+    }
+
+    // --- burners: heat while the cube is inside the cone ---
+    let inHeat = false;
+    for(let i=burners.length-1;i>=0;i--){
+      const b = burners[i];
+      const d = Math.abs(cube.group.position.z - b.group.position.z);
+      // flicker the flame so it does not look like a static cone
+      b.flame.scale.set(1, .8 + Math.random()*.45, 1);
+      b.flame.material.opacity = .65 + Math.random()*.3;
+      if(d < 2.2) inHeat = true;
+      if(b.group.position.z > cube.group.position.z + 10){
+        scene.remove(b.group); burners.splice(i,1);
+      }
+    }
+    // meltBias survives while any burner is still ahead, but only bites close up
+    if(burners.length===0) meltBias = 0;
+    else meltBias = inHeat ? 1.5 : 0.45;
+
+    // --- frost jets: snap the cube back up while inside the spray ---
+    for(let i=jets.length-1;i>=0;i--){
+      const j = jets[i];
+      const d = Math.abs(cube.group.position.z - j.group.position.z);
+      j.spray.material.opacity = .35 + Math.random()*.25;
+      // Refreezes hard, held or not — but deliberately slower than a full melt,
+      // so holding through a jet still wins. A jet that outran the melt rate
+      // would make the gate behind it impossible rather than tight.
+      if(d < 2.0 && size < MAX_SIZE){
+        size = Math.min(MAX_SIZE, size + 1.05*dt);
+      }
+      if(j.group.position.z > cube.group.position.z + 10){
+        scene.remove(j.group); jets.splice(i,1);
+      }
+    }
+
+    // --- 寒波: snow builds up, then the rates go back to normal ---
+    if(freezeMul > 1){
+      snowMat.opacity = Math.min(.8, snowMat.opacity + dt*1.4);
+      if(t > nextEventAt - 5.2){                   // relax before the next event
+        freezeMul += (1 - freezeMul)*Math.min(1, dt*2);
+        meltMul += (1 - meltMul)*Math.min(1, dt*2);
+        if(freezeMul < 1.04){ freezeMul=1; meltMul=1; }
+      }
+    } else if(snowMat.opacity > 0){
+      snowMat.opacity = Math.max(0, snowMat.opacity - dt*.8);
+    }
+    for(const s of snow){
+      s.position.y -= (1.6 + speed*.05)*dt;
+      s.position.z += speed*dt*.9;
+      if(s.position.y < 0 || s.position.z > cube.group.position.z + 8){
+        s.position.set((Math.random()-.5)*14, 6+Math.random()*5,
+                       cube.group.position.z - 24 - Math.random()*40);
+      }
+    }
+
+    // --- 急流: extra speed + streaking lines + a wider lens ---
+    if(surge>0){
+      surge -= dt;
+      speedLineMat.opacity = Math.min(.5, speedLineMat.opacity + dt*3);
+      camera.fov += (camera.__base*1.14 - camera.fov)*Math.min(1,dt*4);
+      camera.updateProjectionMatrix();
+    } else if(speedLineMat.opacity > 0 || camera.fov > camera.__base + 0.05){
+      speedLineMat.opacity = Math.max(0, speedLineMat.opacity - dt*1.2);
+      camera.fov += (camera.__base - camera.fov)*Math.min(1,dt*3);
+      camera.updateProjectionMatrix();
+    }
+    for(const m of speedLines){
+      m.position.z += (speed*2.0)*dt;
+      if(m.position.z > cube.group.position.z + 8){
+        m.position.z = cube.group.position.z - 50 - Math.random()*20;
+        m.position.x = (Math.random()-.5)*11;
+        m.position.y = .4 + Math.random()*4;
+      }
+    }
+
+    // --- ホワイトアウト: hide the gauge, judge by eye ---
+    if(fogEvent>0){
+      fogEvent -= dt;
+      gaugeEl.style.opacity = 0;
+      if(fogEvent<=0) gaugeEl.style.opacity = 1;
+    }
+
+    updateGauge();
+    coldSun.position.z = cube.group.position.z - 70;
+  }
+
+  // steam rises regardless of state so the last puffs finish
+  for(const s of steam){
+    if(s.life<=0) continue;
+    s.life -= raw*1.6;
+    s.mesh.position.x += s.vx*raw;
+    s.mesh.position.y += s.vy*raw;
+    s.mesh.material.opacity = Math.max(0, s.life*.42);
+    s.mesh.scale.multiplyScalar(1 + raw*.7);
+    if(s.life<=0) s.mesh.visible = false;
+  }
+
+  // --- death sequence: slow-mo unwinds, the block tumbles or sinks ---
+  if(dead){
+    timeScale += (0 - timeScale)*Math.min(1, raw*1.1);
+    if(deadBy==='melt'){
+      // dissolve: flatten into a puddle
+      cube.group.scale.y = Math.max(.04, cube.group.scale.y - raw*1.6);
+      cube.group.scale.x += raw*1.2; cube.group.scale.z += raw*1.2;
+      cube.group.position.y = cube.group.scale.y/2;
+      iceMat.opacity = Math.max(.12, iceMat.opacity - raw*.7);
+    } else {
+      cube.group.rotation.z += raw*2.6;
+      cube.group.rotation.x -= raw*1.4;
+      cube.group.position.y += Math.max(0, 1.2 - (1-timeScale)*1.2)*raw*2.2;
+    }
+  }
+
+  // --- camera (runs even while dead, so the zoom and shake still play) ---
+  camDist += (camDistTarget - camDist)*Math.min(1, raw*2.4);
+  camera.position.z = cube.group.position.z + camDist;
+  camera.position.y = 5.4 - (11.5-camDist)*.22;
+  camera.position.x += (cube.group.position.x*.4 - camera.position.x)*Math.min(1,raw*6);
+  if(shake>0){
+    shake = Math.max(0, shake - raw*.9);
+    camera.position.x += (Math.random()-.5)*shake;
+    camera.position.y += (Math.random()-.5)*shake;
+  }
+  camera.lookAt(cube.group.position.x*.5, 1.2, cube.group.position.z - 5);
+
+  renderer.render(scene, camera);
+}
+
+function gameOver(how, gate){
+  deadBy = how === 'melt' ? 'melt' : 'gate';
+  running=false; deadAt=Date.now(); melting=false;
+  if(!SILENT){
+    if(deadBy==='melt') SND.dissolve(); else SND.hit();
+    SND.duck(1.6); setTimeout(()=>SND.over(), 700);
+  }
+  // hit feedback: red flash, red vignette, hard shake, camera punches in
+  flash(deadBy==='melt' ? '#4fd8ff' : '#ff2b3a', .8, 500);
+  vignetteEl.style.transition='opacity .5s'; vignetteEl.style.opacity=1;
+  shake = deadBy==='melt' ? .4 : .95;
+  camDistTarget = 6.0;
+  gaugeEl.style.opacity = 0;
+  koScoreEl.textContent = Math.floor(score);
+  msgEl.textContent = deadBy==='melt' ? '溶けきった' : 'すき間に入らなかった';
+  setTimeout(()=>{ koEl.classList.add('on'); }, 620);   // K.O. lands after the slow-mo
+  if(AUTO){ setTimeout(()=>{ reset(); running=true;
+                             if(!SILENT) SND.unduck(); }, RETRY_MS); }
+  else setTimeout(()=>{
+    msgEl.textContent = matchMedia('(pointer:coarse)').matches
+      ? 'タップでもう一度' : 'スペースでもう一度';
+  }, 1800);
+}
+if(!SHOWCASE) updateGauge();
+tick();
+
+// --- help (?) : ルールを見せる。録画中は出さない ---
+(function(){
+  const btn = document.getElementById('helpBtn');
+  const panel = document.getElementById('help');
+  if(!btn || !panel) return;
+  if(NOCHROME){                      // 録画・showcase では画面から消す
+    btn.style.display = 'none';
+    const back = document.getElementById('back');
+    if(back) back.style.display = 'none';
+    return;
+  }
+  const open = () => { panel.classList.add('on'); };
+  const close = () => { panel.classList.remove('on'); };
+  btn.addEventListener('click', open);
+  btn.addEventListener('touchend', e => { e.preventDefault(); open(); }, {passive:false});
+  panel.addEventListener('click', e => { if(e.target === panel) close(); });
+  panel.querySelector('.close').addEventListener('click', close);
+  panel.querySelector('.close').addEventListener('touchend',
+    e => { e.preventDefault(); close(); }, {passive:false});
+  addEventListener('keydown', e => {
+    if(e.code === 'Escape') close();
+    else if(e.key === '?' || (e.code === 'Slash' && e.shiftKey)) open();
+  });
+})();
+</script>
+</body>
+</html>
