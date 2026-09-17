@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>あなたがマゼランだったら</title>
+<meta property="og:title" content="あなたがマゼランだったら">
+<meta property="og:description" content="1519年の夏。あなたはポルトガル生まれですが、仕えているのはスペイン王です。母国では相手にされず、隣の国に売り込んで、船を5隻もらいました。人は265人。いちばん大きい船でも、長さは30メートルほどしかありません。あなたの主張はひとつです。南アメリカのどこかに、西へ抜ける道があるはずだ。根拠は、正直あまりありません。これから、決める場面が8回あります。押すか、待つか。自分で決めるか、人に任せるか。ひとつずつ、選んでください。">
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;background:#0b0e14;color:#e6edf3;
+       font-family:-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;
+       line-height:1.75;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+  .wrap{max-width:600px;margin:0 auto;padding:22px 18px 60px}
+  h1{font-size:clamp(21px,5.6vw,29px);margin:6px 0 8px;line-height:1.4}
+  .lead{color:#8b949e;font-size:14.5px;margin:0 0 20px}
+  .prog{position:sticky;top:0;background:#0b0e14;padding:10px 0 12px;z-index:5}
+  .bar{height:4px;background:#1c2333;border-radius:2px;overflow:hidden}
+  .bar i{display:block;height:100%;background:#d4a544;width:0;transition:width .3s}
+  .count{font-size:12.5px;color:#8b949e;margin-top:6px;letter-spacing:.04em}
+  .scene{background:#121722;border:1px solid #222b3d;border-radius:14px;
+          padding:20px 18px;margin:0 0 16px}
+  .year{color:#d4a544;font-size:12.5px;letter-spacing:.1em;margin:0 0 8px}
+  .sit{font-size:16px;margin:0 0 18px;color:#dbe3ec}
+  .opts{display:grid;gap:10px}
+  .opt{border:1px solid #2b3550;background:#161d2b;color:#e6edf3;border-radius:11px;
+        padding:15px 16px;font-size:15.5px;cursor:pointer;text-align:left;
+        font-family:inherit;line-height:1.6;transition:.15s}
+  .opt:hover{border-color:#d4a544}
+  .opt:active{transform:scale(.985)}
+  .log{margin:0 0 20px}
+  .logi{border-left:2px solid #2b3550;padding:2px 0 2px 14px;margin:0 0 10px;
+         font-size:13.5px;color:#7d8796}
+  .logi b{color:#b3bdcc;font-weight:600}
+  #end{display:none} #end.on{display:block}
+  .eimg{width:100%;border-radius:14px;display:block;margin:0 0 18px;background:#121722}
+  .etag{color:#d4a544;font-size:13px;letter-spacing:.09em;margin:0 0 4px}
+  .ename{font-size:clamp(23px,6.4vw,32px);margin:0 0 14px;line-height:1.35}
+  .ebody{font-size:15.5px;color:#c9d1d9;margin:0 0 20px;white-space:pre-wrap}
+  .fact{background:#121722;border-left:3px solid #58a6ff;border-radius:0 10px 10px 0;
+         padding:14px 16px;margin:0 0 20px;font-size:14.5px;color:#c9d1d9}
+  .fact b{color:#58a6ff;display:block;margin-bottom:5px;font-size:12.5px;
+           letter-spacing:.08em}
+  .warn{color:#6e7681;font-size:12.5px;margin:18px 0 0;padding:12px 14px;
+         border:1px dashed #2b3550;border-radius:10px}
+  .share{display:grid;gap:10px;margin:22px 0}
+  .share a,.share button{display:block;text-align:center;padding:14px;border-radius:12px;
+        text-decoration:none;font-weight:700;font-size:15px;border:1px solid #2b3550;
+        background:#161d2b;color:#e6edf3;cursor:pointer;font-family:inherit}
+  .back{display:inline-block;margin-top:6px;color:#8b949e;font-size:14px}
+  footer{margin-top:32px;color:#6e7681;font-size:12.5px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div id="sim">
+  <h1>あなたがマゼランだったら</h1>
+  <p class="lead">1519年の夏。あなたはポルトガル生まれですが、仕えているのはスペイン王です。母国では相手にされず、隣の国に売り込んで、船を5隻もらいました。人は265人。いちばん大きい船でも、長さは30メートルほどしかありません。あなたの主張はひとつです。南アメリカのどこかに、西へ抜ける道があるはずだ。根拠は、正直あまりありません。これから、決める場面が8回あります。押すか、待つか。自分で決めるか、人に任せるか。ひとつずつ、選んでください。</p>
+  <div class="prog"><div class="bar"><i id="pbar"></i></div>
+    <div class="count"><span id="pnum">1</span> / 8</div></div>
+  <div class="log" id="log"></div>
+  <div class="scene" id="scene"></div>
+</div>
+
+<div id="end">
+  <img class="eimg" id="eimg" alt="">
+  <p class="etag" id="etag"></p>
+  <h1 class="ename" id="ename"></h1>
+  <p class="ebody" id="ebody"></p>
+  <div class="fact" id="fact"></div>
+  <div class="share">
+    <a id="tw" target="_blank" rel="noopener">結果をXに投稿する</a>
+    <button id="again">やり直す</button>
+  </div>
+  <a class="back" href="../">ほかのシミュレータを見る</a>
+  <p class="warn">これはシミュレータです。あなたの選択によっては史実と異なる結末になります。
+  実際に起きたことは上の「史実」の欄をご覧ください。</p>
+</div>
+
+<footer>MosukeStudio</footer>
+</div>
+
+<script>
+const DATA = {"title": "あなたがマゼランだったら", "lead": "1519年の夏。あなたはポルトガル生まれですが、仕えているのはスペイン王です。母国では相手にされず、隣の国に売り込んで、船を5隻もらいました。人は265人。いちばん大きい船でも、長さは30メートルほどしかありません。あなたの主張はひとつです。南アメリカのどこかに、西へ抜ける道があるはずだ。根拠は、正直あまりありません。これから、決める場面が8回あります。押すか、待つか。自分で決めるか、人に任せるか。ひとつずつ、選んでください。", "axes": [{"label": "押し通すか、引いて待つか", "pos": "押", "neg": "退"}, {"label": "自分で決めるか、人と分けるか", "pos": "独", "neg": "分"}], "history": "マゼランは反乱を力ずくで抑え、約1年かけて海峡を見つけ、太平洋を98日で渡りました。フィリピンの争いに加わって戦死します。残った者が西へ進み続け、1522年に1隻18人が帰りました。", "scenes": [{"year": "1519年9月・航路を明かすか", "situation": "まだ出港の直前です。船長の多くはスペイン人で、あなたはポルトガル人です。すでに、あの男は裏切るつもりだという噂が流れています。彼らは、どの道を通るのか先に教えろと言ってきました。あなたの頭の中には、南アメリカの南に抜け道があるという当てがあります。ただ、それは確かめた話ではありません。話せば、根拠の薄さが知られます。話さなければ、疑いはもっと濃くなります。", "options": [{"text": "教えない。航路は自分の胸にしまう。命令に従え、とだけ言う", "a": 2, "b": 2}, {"text": "船長たちに打ち明ける。当てが薄いことも含めて話し、納得のうえで出る", "a": -1, "b": -2}]}, {"year": "1520年1月・大きな入り江", "situation": "南アメリカの海岸を、南へ下っています。とても大きな入り江に出ました。幅が広く、水は塩からくありません。ここが抜け道ではないか、と誰もが思いました。確かめるには、小舟を出して奥まで入り、行き止まりかどうか見るしかありません。日数がかかります。いま食料は減り始めていて、季節は冬に向かっています。ここで時間を使えば、寒さの中で立ち往生するかもしれません。", "options": [{"text": "何日かけても奥まで確かめる。見落としたら、二度と戻ってこられない", "a": 1, "b": 1}, {"text": "水が真水なら川だ。すぐ切り上げて南へ急ぐ。冬が来る前に距離を稼ぐ", "a": 1, "b": 0}]}, {"year": "1520年3月・冬をどこで越すか", "situation": "南半球なので、季節が逆です。寒さが本格的になってきました。目の前に、風をよけられる湾があります。ただし、何もない場所です。ここに入れば、春まで数か月は動けません。食料の配給を減らすことになります。別の道もあります。北へ戻って、暖かく物資も手に入る土地で冬を越し、来年もう一度南下する。ただしそれは、この1年が無駄になったと認めることでもあります。", "options": [{"text": "この湾で越冬する。配給を減らしてでも、進んだ位置を手放さない", "a": 2, "b": 1}, {"text": "北へ戻って暖かい土地で冬を越す。人を減らさないことを優先する", "a": -2, "b": -1}]}, {"year": "1520年4月・反乱", "situation": "寒さと減った食料で、不満が限界を超えました。スペイン人の船長たちが、5隻のうち3隻を押さえます。要求は、スペインへ帰ること。彼らの言い分にも理はあります。抜け道は見つかっていません。人は死に始めています。ここで折れれば、命は助かるかもしれません。突っぱねれば、味方の船員と斬り合うことになります。決めるのは、今夜です。", "options": [{"text": "力ずくで抑える。首謀者を裁き、見せしめにする。ここで折れたら二度と命令は通らない", "a": 2, "b": 2}, {"text": "話し合う。目的の期限を切り、それまでに見つからなければ帰ると約束する", "a": -1, "b": -2}]}, {"year": "1520年11月・海峡の分かれ道", "situation": "ついに、細長い水路に入りました。ただ、中は迷路です。いくつも枝分かれしていて、どれが抜け道か分かりません。偵察に出した1隻が、戻ってきません。残りの船で、枝道を一つずつ確かめています。船員からは、もう十分だ、香辛料なしでも帰ればいいという声が出ています。目の前の水路も、また行き止まりかもしれません。ここまでで、1年以上が過ぎています。", "options": [{"text": "進む。全船に、食料が尽きるまで進めと伝える。引き返す話は聞かない", "a": 2, "b": 2}, {"text": "各船の意見を集めて決める。書面で賛否を取り、多数に従う", "a": 0, "b": -2}]}, {"year": "1520年11月・1隻が消える", "situation": "海峡を抜けようという、そのときです。5隻のうち最も食料を積んだ1隻が、夜のうちに姿を消しました。故意に引き返したのは、ほぼ間違いありません。あの船の食料は、この先の航海の要でした。追えば、日数を失います。しかも、風向きしだいでは追いつけません。追わなければ、残った食料だけで、広さも分からない海に出ることになります。", "options": [{"text": "数日だけ探して、見つからなければ切り捨てる。残りの船で、そのまま西へ出る", "a": 2, "b": 1}, {"text": "引き返して追う。食料なしで未知の海には出られない。取り戻すまで先へは進まない", "a": -2, "b": 1}]}, {"year": "1521年2月・尽きていく食料", "situation": "海に出て、もう2か月近くたちます。陸が見えません。あなたは、2、3週間で向こう岸だと思っていました。ビスケットは粉になり、虫が入っています。マストに巻いた牛の革を、海水につけて食べています。ネズミが売り買いされています。壊血病で、人が次々に動けなくなりました。北へ向きを変えれば、陸か島に当たる見込みは上がります。ただし、香辛料の島からは遠ざかります。", "options": [{"text": "このまま西へ進む。針路を変えない。ここで曲げたら、この2か月が何にもならない", "a": 2, "b": 2}, {"text": "北へ寄せる。まず陸を見つけて、人を生かす。香辛料は、そのあとでいい", "a": -1, "b": 0}]}, {"year": "1521年4月・マクタン島", "situation": "ようやく陸に着き、水も食べ物も手に入りました。島の王が、あなたに味方するようになります。その王が、隣の島のラプ＝ラプという首長が従わない、と訴えてきました。力を見せれば、この地域はまとまるかもしれません。ただし相手の兵は千人を超えると言われ、こちらは60人ほどです。浅瀬なので、船の大砲は届きません。部下たちは、行かないほうがいいと言っています。", "options": [{"text": "自ら先頭に立って上陸する。武器と鎧の差を見せれば、数は関係ない", "a": 2, "b": 2}, {"text": "関わらない。香辛料の島へ急ぐ。他人の争いのために、この船団を賭けない", "a": -2, "b": -1}]}], "endings": {"押独": {"tag": "ENDING 1", "name": "18人が降りてきた", "body": "これが、史実にいちばん近い道です。あなたは航路を明かさず、反乱を力ずくで抑え、海峡を1年かけて探し当てました。太平洋は98日かかりました。革とおがくずを食べ、およそ20人が死にます。そしてフィリピンで、あなた自身が浅瀬で倒れました。世界一周をした人として名が残りますが、本人は一周していません。残った者たちは、人が足りず船を1隻燃やし、香辛料を積み、最後の1隻だけが西へ進み続けます。1522年9月、スペインの港に戻ったのは18人でした。船倉には、丁子がおよそ26トン。売ってみると、5隻ぶんの費用を上回ったと言われています。そして分かったことが、ひとつあります。地球は、思っていたよりずっと大きかった。", "image_prompt": "A single battered wooden sailing ship with torn sails limping into a Spanish river harbour in 1522, eighteen gaunt barefoot sailors in rags helped down a gangplank by townspeople, barrels of cloves being unloaded, stone quay and church towers behind, warm late summer light, 16th century, academic history painting, oil on canvas, cinematic composition, no text, no letters, no words, no writing, no signage", "image": "img/押独.jpg"}, "押分": {"tag": "ENDING 2", "name": "みんなで決めた船団", "body": "もし、こうしていたら。あなたは目的では引かず、決め方は人と分けました。航路を打ち明け、反乱の代わりに期限を約束し、枝道は書面の多数決で選びます。船長たちは離れませんでした。人も、たぶん多く残ったでしょう。ただ、多数決は遠い目的に弱いものです。食料が半分になった日、革を食べる先を選ぶ手は、なかなか挙がりません。どこかで船団は、北へ寄せて島を探し、香辛料の島まで行き着かないまま引き返したかもしれません。全員が生きて帰り、しかし一周はしていない。命を分け合った代わりに、最後の一歩を手放した航海です。", "image_prompt": "Ships officers of the early 16th century gathered around a table in a cramped wooden cabin, charts and dividers spread out, several men raising their hands in a vote, a lantern swinging above, others listening at the doorway, warm dim light, academic history painting, oil on canvas, no text, no letters, no words, no writing, no signage", "image": "img/押分.jpg"}, "退独": {"tag": "ENDING 3", "name": "海峡だけを持ち帰る", "body": "もし、こうしていたら。あなたは自分で決めましたが、決めたのは引くことでした。暖かい土地で冬を越し、消えた船を追いかけ、太平洋では北へ寄せて陸を探します。人は、ずっと多く生き残ったはずです。そして、いちばん大事なものを持って帰れます。南アメリカを抜ける海峡の位置です。一周はしていません。香辛料も、たいして積んでいません。それでも、地図に一本の線が引けました。次に行く者は、1年かけて入り江を探さなくてすみます。手柄を分ける航海です。誰かが一度で成し遂げる代わりに、二度に分ける。そういう終わり方も、あります。", "image_prompt": "A small wooden sailing ship anchored at the mouth of a narrow strait between snowy cliffs, a boat party taking bearings with an astrolabe on a rocky shore, a pilot sketching the coastline on a chart board, cold clear southern light, 16th century, academic history painting, oil on canvas, no text, no letters, no words, no writing, no signage", "image": "img/退独.jpg"}, "退分": {"tag": "ENDING 4", "name": "帰ってきた5隻", "body": "もし、こうしていたら。あなたは急がず、まわりに従いました。航路を明かし、反乱の前に折れ、北へ戻って冬を越します。船は5隻のまま、人もほとんど欠けません。ただ、抜け道は見つかりませんでした。約束した期限が来て、船団はスペインへ帰ります。港では、失敗と受け取られたでしょう。王の支援は、もう出ません。それでも265人のうち、大半が家に戻りました。世界が一周できると分かるのは、もう少し先になります。誰も死なない航海と、地図が変わる航海は、たいてい別のものです。どちらを選ぶかという話でした。", "image_prompt": "Five wooden sailing ships of the early 16th century riding at anchor in a Spanish harbour, crews coming ashore in small boats, families waiting on the stone quay, a group of officials watching coldly from the steps, overcast morning light, academic history painting, oil on canvas, no text, no letters, no words, no writing, no signage", "image": "img/退分.jpg"}}};
+let i = 0;
+const score = [0, 0];
+const picks = [];
+
+const sceneEl = document.getElementById('scene');
+const logEl = document.getElementById('log');
+
+function render() {
+  const s = DATA.scenes[i];
+  document.getElementById('pnum').textContent = i + 1;
+  document.getElementById('pbar').style.width = (i / DATA.scenes.length * 100) + '%';
+  sceneEl.innerHTML = `<p class="year">${s.year}</p><p class="sit">${s.situation}</p>`;
+  const box = document.createElement('div');
+  box.className = 'opts';
+  s.options.forEach(o => {
+    const b = document.createElement('button');
+    b.className = 'opt';
+    b.textContent = o.text;
+    b.onclick = () => choose(o);
+    box.appendChild(b);
+  });
+  sceneEl.appendChild(box);
+}
+
+function choose(o) {
+  score[0] += o.a || 0;
+  score[1] += o.b || 0;
+  picks.push(o.text);
+  const d = document.createElement('div');
+  d.className = 'logi';
+  d.innerHTML = `<b>${DATA.scenes[i].year}</b> ${o.text}`;
+  logEl.appendChild(d);
+  i++;
+  if (i < DATA.scenes.length) { render(); scrollTo(0, 0); }
+  else finish();
+}
+
+function finish() {
+  // 2軸の符号で4象限 → 4つの結末
+  const key = (score[0] >= 0 ? DATA.axes[0].pos : DATA.axes[0].neg)
+            + (score[1] >= 0 ? DATA.axes[1].pos : DATA.axes[1].neg);
+  const e = DATA.endings[key] || DATA.endings[Object.keys(DATA.endings)[0]];
+  document.getElementById('eimg').src = e.image;
+  document.getElementById('eimg').alt = e.name;
+  document.getElementById('etag').textContent = e.tag || 'ENDING';
+  document.getElementById('ename').textContent = e.name;
+  document.getElementById('ebody').textContent = e.body;
+  document.getElementById('fact').innerHTML =
+    `<b>史実では</b>${DATA.history}`;
+  const txt = encodeURIComponent(
+    `${DATA.title}\n私の結末は「${e.name}」でした。\n`);
+  document.getElementById('tw').href =
+    `https://twitter.com/intent/tweet?text=${txt}&url=${encodeURIComponent(location.href)}`;
+  document.getElementById('sim').style.display = 'none';
+  document.getElementById('end').classList.add('on');
+  scrollTo(0, 0);
+}
+
+document.getElementById('again').onclick = () => location.reload();
+render();
+</script>
+</body>
+</html>
