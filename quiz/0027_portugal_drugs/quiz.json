@@ -1,0 +1,177 @@
+{
+  "title": "あなたの「困っている人への向き合い方」診断",
+  "lead": "罰で止めるか、手を差し出すか。あなたの向き合い方は、どの国のタイプに近いでしょうか。",
+  "story": "ポルトガルは2001年に、変わった決断をしました。麻薬を使った人を、逮捕しないことにしたんです。売る人は、今も罪のままです。変えたのは、使った本人の扱いだけでした。なぜ、そんなことをしたのか。順番が逆なんです。先に、かなり困っていました。1990年代、注射器の使い回しで感染症が広がりました。刑務所に入れても、出てきたらまた同じことになる。取り締まりを強くしても、数は減らなかったんです。専門家の集まりは、こう結論しました。これは犯罪の問題ではなく、健康の問題だ。仕組みはこう変わりました。前は、見つかったら警察と裁判所へ。今は、面談の場に呼ばれます。医者と、ソーシャルワーカーと、法律の人が座っています。話を聞いて、次にどうするかを決める。罰を与える場ではありません。大事なのは、来やすくすることでした。捕まると思っていると、人は隠れます。隠れた人には、何も届きません。そしてここが本題です。逮捕をやめただけなら、うまくいきませんでした。同時に、受け皿を作ったんです。治療と相談の窓口を大きく増やして、注射器の交換や、街に出ていく支援のチームも置きました。結果として、注射に関係する新しい感染症の報告は大きく減ったと言われています。刑務所に入る人も減りました。ただ、合法になったわけではありません。麻薬は今も違法です。日本では、見つかるとまず法律の手続きに乗りますよね。あちらは、まず医療の窓口に送られます。入口の向きがちがうだけで、やりたいことは同じです。どちらも、使う人を減らしたい。あなたなら、どちらを先に選ぶでしょうか。10問で見てみましょう。",
+  "axes": [
+    {
+      "label": "罰で止めるか、手を差し出して止めるか",
+      "pos": "P",
+      "neg": "C"
+    },
+    {
+      "label": "決まりを守ることを重くみるか、結果が出ることを重くみるか",
+      "pos": "R",
+      "neg": "O"
+    },
+    {
+      "label": "うまくいかなければ変えるか、今のやり方を続けるか",
+      "pos": "N",
+      "neg": "K"
+    },
+    {
+      "label": "まず相手を信じるか、まず用心するか",
+      "pos": "T",
+      "neg": "G"
+    }
+  ],
+  "questions": [
+    {
+      "text": "決まりを破った人には、まず罰があるべきだと思う。",
+      "axis": 0,
+      "sign": 1
+    },
+    {
+      "text": "困っている人を見つけたら、先に助けの手を考えたい。",
+      "axis": 0,
+      "sign": -1
+    },
+    {
+      "text": "厳しくしたほうが、同じことをくり返す人は減ると思う。",
+      "axis": 0,
+      "sign": 1
+    },
+    {
+      "text": "手続きのとおりに進めることが、いちばん大事だと思う。",
+      "axis": 1,
+      "sign": 1
+    },
+    {
+      "text": "数字がよくなるなら、やり方は変えてしまってかまわない。",
+      "axis": 1,
+      "sign": -1
+    },
+    {
+      "text": "きれいな理屈より、実際に効いたかどうかで判断したい。",
+      "axis": 1,
+      "sign": -1
+    },
+    {
+      "text": "何年も効かなかったやり方は、思いきってやめたほうがいい。",
+      "axis": 2,
+      "sign": 1
+    },
+    {
+      "text": "今まで続いてきたやり方には、それなりの理由があると思う。",
+      "axis": 2,
+      "sign": -1
+    },
+    {
+      "text": "相談に来た人の話は、まず本当だと思って聞きたい。",
+      "axis": 3,
+      "sign": 1
+    },
+    {
+      "text": "知らない人の言うことは、少し疑ってから信じたい。",
+      "axis": 3,
+      "sign": -1
+    }
+  ],
+  "results": {
+    "PRNT": {
+      "name": "シンガポール型",
+      "body": "罰ではっきり線を引くけれど、うまくいかないところは手早く直していく。人は信じるほうです。決まりを厳しく守りながら、仕組みはどんどん作り変えていくシンガポールに近いタイプです。ルールは固く、運用はやわらかい。そんな進み方ですね。",
+      "image_prompt": "photorealistic view of a dense tropical modern city with tall glass towers, immaculate clean streets, manicured green trees along a wide boulevard, humid golden evening light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/PRNT.jpg"
+    },
+    "PRNG": {
+      "name": "スイス型",
+      "body": "決まりはきっちり守り、うまくいかなければ細かく直す。相手はまず用心して見るほうです。国民に何度も聞いてから制度を少しずつ動かしていくスイスに近いタイプです。急がないけれど、止まってもいない。そんな歩き方ですね。",
+      "image_prompt": "photorealistic alpine valley village with stone and wood houses, tidy fenced fields, snow covered mountain peaks behind, clear crisp morning light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/PRNG.jpg"
+    },
+    "PRKT": {
+      "name": "ドイツ型",
+      "body": "決まりは守る、罰もはっきりさせる。でも人そのものは信じている。長く積み上げてきた手続きを大事にするドイツに近いタイプです。書類は多いけれど、そのぶん誰にでも同じように扱われる。そういう安心のつくり方ですね。",
+      "image_prompt": "photorealistic old European town square with timber framed buildings, a stone fountain in the center, cobblestone pavement, overcast soft daylight, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/PRKT.jpg"
+    },
+    "PRKG": {
+      "name": "日本型",
+      "body": "決まりを守り、罰もきちんと置き、今までのやり方を大事にする。相手はまず用心して見るほうです。動画でくらべた日本に近いタイプです。日本では、見つかるとまず法律の手続きに乗ります。入口を一本にしておくことで、みんなが同じ扱いになる。そこに強さがありますね。",
+      "image_prompt": "photorealistic quiet Japanese residential street in the early morning, low houses with tiled roofs, power lines overhead, a narrow asphalt road with white painted lines, soft clear light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/PRKG.jpg"
+    },
+    "PONT": {
+      "name": "アメリカ型",
+      "body": "罰は罰として置きながら、結果が出るなら何でも試す。人も信じるほうです。州ごとにちがう方法をいっせいに試してみるアメリカに近いタイプです。うまくいった州のやり方が、となりの州に広がっていく。そんな進み方ですね。",
+      "image_prompt": "photorealistic wide American highway crossing open plains at sunset, a distant small town with water tower, long shadows, dramatic sky, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/PONT.jpg"
+    },
+    "PONG": {
+      "name": "韓国型",
+      "body": "罰ははっきりさせる、結果が出なければすぐ変える。相手はまず用心して見るほうです。決めたら一気に切りかえる韓国に近いタイプです。速さが武器になりますが、走りながら直す形になりますね。",
+      "image_prompt": "photorealistic night view of a dense Korean city street with high rise apartment blocks, wet asphalt reflecting lights, cars passing, cool blue evening tone, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/PONG.jpg"
+    },
+    "POKT": {
+      "name": "オーストラリア型",
+      "body": "罰は置くけれど、細かい手続きより結果を見る。今までのやり方は続けたいほうで、人は信じています。おおらかに構えながら、決めたことはきっちり運ぶオーストラリアに近いタイプです。肩の力が抜けているのに、抜けていない。そんなバランスですね。",
+      "image_prompt": "photorealistic coastal Australian town with low houses, wide empty beach with turquoise water, eucalyptus trees on a hill, bright midday sun, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/POKT.jpg"
+    },
+    "POKG": {
+      "name": "ロシア型",
+      "body": "罰で止める、結果で判断する、やり方は変えない。相手はまず用心して見るほうです。広い土地を強い決まりでまとめてきたロシアに近いタイプです。厳しさで秩序をつくるやり方ですね。",
+      "image_prompt": "photorealistic vast snow covered plain with a lone road, dark pine forest on the horizon, heavy grey winter sky, cold pale light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/POKG.jpg"
+    },
+    "CRNT": {
+      "name": "ポルトガル型",
+      "body": "罰より先に手を差し出す。決まりはきちんと残しながら、効かないやり方は変える。人を信じるほうです。動画で見たポルトガルそのものです。麻薬は今も違法のままで、売る人も罪のまま。変えたのは、使った人を警察から医療の窓口に送るという一点でした。そして同時に、受け皿を作り続けた。片方だけでは、たぶんうまくいかなかったと言われています。",
+      "image_prompt": "photorealistic sunlit Lisbon street with pastel tiled buildings and cobblestones, an old yellow tram passing in the distance, laundry hanging from balconies, calm morning light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/CRNT.jpg"
+    },
+    "CRNG": {
+      "name": "オランダ型",
+      "body": "手を差し出すほうを選ぶけれど、決まりは残す。効かなければ変える。相手はまず用心して見るほうです。認めるところと認めないところを細かく線引きしてきたオランダに近いタイプです。おおらかに見えて、実はかなり細かいんですね。",
+      "image_prompt": "photorealistic Amsterdam canal with narrow brick houses, bicycles parked along the railing, a small boat on the water, soft cloudy afternoon light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/CRNG.jpg"
+    },
+    "CRKT": {
+      "name": "カナダ型",
+      "body": "まず助けを考え、決まりも守り、今までのやり方を続けたい。人は信じています。穏やかに制度を積み上げてきたカナダに近いタイプです。急がないけれど、誰も置いていかない。そんな進め方ですね。",
+      "image_prompt": "photorealistic Canadian lakeside town in autumn, wooden houses among red and orange maple trees, calm water reflecting mountains, soft daylight, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/CRKT.jpg"
+    },
+    "CRKG": {
+      "name": "フランス型",
+      "body": "助けは用意する、決まりも守る、やり方は変えない。相手はまず用心して見るほうです。国の形を大事にしながら手厚い仕組みを続けてきたフランスに近いタイプです。守るものが多いぶん、簡単には動かないんですね。",
+      "image_prompt": "photorealistic Parisian boulevard with stone apartment buildings, zinc roofs, a small cafe terrace with round tables, grey soft light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/CRKG.jpg"
+    },
+    "CONT": {
+      "name": "ノルウェー型",
+      "body": "罰よりも手を差し出す、結果を見る、効かなければ変える、人を信じる。いちばん受け皿を大事にするタイプです。刑務所を罰の場ではなく戻ってくるための場として作ってきたノルウェーに近いですね。やり直せることを前提に、仕組みを組んでいく考え方です。",
+      "image_prompt": "photorealistic Norwegian fjord with steep green cliffs, a few red wooden houses at the water edge, still deep blue water, clear cool summer light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/CONT.jpg"
+    },
+    "CONG": {
+      "name": "スウェーデン型",
+      "body": "手は差し出すし、結果が出なければ変える。でも相手はまず用心して見るほうです。支える仕組みは手厚く、線引きははっきりさせるスウェーデンに近いタイプです。優しさと厳しさを、場面で使い分ける感じですね。",
+      "image_prompt": "photorealistic Swedish town by a lake in early evening, modern wooden apartment buildings, birch trees, long soft northern light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/CONG.jpg"
+    },
+    "COKT": {
+      "name": "アイルランド型",
+      "body": "まず手を差し出し、結果で判断し、今までのやり方は続けたい。人を信じています。人のつながりで支え合う形を長く続けてきたアイルランドに近いタイプです。制度より先に、まわりの人が動く。そんな温かさですね。",
+      "image_prompt": "photorealistic Irish countryside with green fields divided by stone walls, a small white cottage, grey clouds breaking with sunlight, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/COKT.jpg"
+    },
+    "COKG": {
+      "name": "ブータン型",
+      "body": "手を差し出すほうを選び、結果を見て、やり方は変えず、相手はまず用心して見る。静かに自分たちのやり方を守るブータンに近いタイプです。外から来るものをゆっくり選びながら、内側の支え合いは崩さない。そんな構えですね。",
+      "image_prompt": "photorealistic Himalayan valley with a white monastery building on a hillside, terraced fields, prayer flags on a ridge, misty mountains behind, soft morning light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/COKG.jpg"
+    }
+  }
+}

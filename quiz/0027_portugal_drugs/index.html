@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>あなたの「困っている人への向き合い方」診断</title>
+<meta property="og:title" content="あなたの「困っている人への向き合い方」診断">
+<meta property="og:description" content="罰で止めるか、手を差し出すか。あなたの向き合い方は、どの国のタイプに近いでしょうか。">
+<meta property="og:type" content="website">
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;background:#0d1117;color:#e6edf3;
+       font-family:-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;
+       line-height:1.7;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+  .wrap{max-width:560px;margin:0 auto;padding:24px 18px 60px}
+  h1{font-size:clamp(22px,6vw,30px);margin:8px 0 6px;line-height:1.4}
+  .lead{color:#8b949e;font-size:15px;margin:0 0 22px}
+  .story{background:#161b22;border-left:3px solid #ffd23b;border-radius:0 10px 10px 0;
+          padding:14px 16px;margin:0 0 26px;font-size:14.5px;color:#c9d1d9}
+  .prog{position:sticky;top:0;background:#0d1117;padding:10px 0 12px;z-index:5}
+  .bar{height:5px;background:#21262d;border-radius:3px;overflow:hidden}
+  .bar i{display:block;height:100%;background:#ffd23b;width:0;transition:width .25s}
+  .count{font-size:13px;color:#8b949e;margin-top:6px}
+  .q{margin:0 0 30px}
+  .qt{font-size:17px;font-weight:700;margin:0 0 14px}
+  .opts{display:grid;gap:8px}
+  .opt{border:1px solid #30363d;background:#161b22;color:#e6edf3;border-radius:10px;
+        padding:13px 14px;font-size:15px;cursor:pointer;text-align:left;
+        font-family:inherit;transition:.15s}
+  .opt:active{transform:scale(.985)}
+  .opt.on{border-color:#ffd23b;background:#1c2128;color:#ffd23b;font-weight:700}
+  .go{width:100%;padding:16px;border:none;border-radius:12px;background:#ffd23b;
+       color:#0d1117;font-size:17px;font-weight:700;cursor:pointer;font-family:inherit;
+       margin-top:8px}
+  .go:disabled{background:#21262d;color:#6e7681;cursor:default}
+  #result{display:none}
+  #result.on{display:block}
+  .rimg{width:100%;border-radius:14px;display:block;margin:0 0 18px;background:#161b22}
+  .rtype{color:#ffd23b;font-size:14px;letter-spacing:.08em;margin:0 0 4px}
+  .rname{font-size:clamp(24px,7vw,34px);margin:0 0 14px;line-height:1.35}
+  .rbody{font-size:15.5px;color:#c9d1d9;margin:0 0 18px}
+  .axes{display:grid;gap:10px;margin:0 0 24px}
+  .ax{font-size:13px;color:#8b949e}
+  .axbar{height:6px;background:#21262d;border-radius:3px;margin-top:5px;position:relative}
+  .axbar i{position:absolute;top:0;height:100%;background:#58a6ff;border-radius:3px}
+  .share{display:grid;gap:10px;margin:24px 0}
+  .share a,.share button{display:block;text-align:center;padding:14px;border-radius:12px;
+        text-decoration:none;font-weight:700;font-size:15px;border:1px solid #30363d;
+        background:#161b22;color:#e6edf3;cursor:pointer;font-family:inherit}
+  .back{display:inline-block;margin-top:8px;color:#8b949e;font-size:14px}
+  footer{margin-top:34px;color:#6e7681;font-size:12.5px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div id="quiz">
+  <h1>あなたの「困っている人への向き合い方」診断</h1>
+  <p class="lead">罰で止めるか、手を差し出すか。あなたの向き合い方は、どの国のタイプに近いでしょうか。</p>
+  <div class="story">ポルトガルは2001年に、変わった決断をしました。麻薬を使った人を、逮捕しないことにしたんです。売る人は、今も罪のままです。変えたのは、使った本人の扱いだけでした。なぜ、そんなことをしたのか。順番が逆なんです。先に、かなり困っていました。1990年代、注射器の使い回しで感染症が広がりました。刑務所に入れても、出てきたらまた同じことになる。取り締まりを強くしても、数は減らなかったんです。専門家の集まりは、こう結論しました。これは犯罪の問題ではなく、健康の問題だ。仕組みはこう変わりました。前は、見つかったら警察と裁判所へ。今は、面談の場に呼ばれます。医者と、ソーシャルワーカーと、法律の人が座っています。話を聞いて、次にどうするかを決める。罰を与える場ではありません。大事なのは、来やすくすることでした。捕まると思っていると、人は隠れます。隠れた人には、何も届きません。そしてここが本題です。逮捕をやめただけなら、うまくいきませんでした。同時に、受け皿を作ったんです。治療と相談の窓口を大きく増やして、注射器の交換や、街に出ていく支援のチームも置きました。結果として、注射に関係する新しい感染症の報告は大きく減ったと言われています。刑務所に入る人も減りました。ただ、合法になったわけではありません。麻薬は今も違法です。日本では、見つかるとまず法律の手続きに乗りますよね。あちらは、まず医療の窓口に送られます。入口の向きがちがうだけで、やりたいことは同じです。どちらも、使う人を減らしたい。あなたなら、どちらを先に選ぶでしょうか。10問で見てみましょう。</div>
+  <div class="prog"><div class="bar"><i id="pbar"></i></div>
+    <div class="count"><span id="pnum">0</span> / 10 問</div></div>
+  <div id="qs"></div>
+  <button class="go" id="submit" disabled>結果を見る</button>
+</div>
+
+<div id="result">
+  <img class="rimg" id="rimg" alt="">
+  <p class="rtype" id="rtype"></p>
+  <h1 class="rname" id="rname"></h1>
+  <p class="rbody" id="rbody"></p>
+  <div class="axes" id="axes"></div>
+  <div class="share">
+    <a id="tw" target="_blank" rel="noopener">結果をXに投稿する</a>
+    <button id="again">もう一度やる</button>
+  </div>
+  <a class="back" href="../../">ほかのゲーム・診断を見る</a>
+</div>
+
+<footer>Daily Arcade Studio</footer>
+</div>
+
+<script>
+const DATA = {"title": "あなたの「困っている人への向き合い方」診断", "lead": "罰で止めるか、手を差し出すか。あなたの向き合い方は、どの国のタイプに近いでしょうか。", "story": "ポルトガルは2001年に、変わった決断をしました。麻薬を使った人を、逮捕しないことにしたんです。売る人は、今も罪のままです。変えたのは、使った本人の扱いだけでした。なぜ、そんなことをしたのか。順番が逆なんです。先に、かなり困っていました。1990年代、注射器の使い回しで感染症が広がりました。刑務所に入れても、出てきたらまた同じことになる。取り締まりを強くしても、数は減らなかったんです。専門家の集まりは、こう結論しました。これは犯罪の問題ではなく、健康の問題だ。仕組みはこう変わりました。前は、見つかったら警察と裁判所へ。今は、面談の場に呼ばれます。医者と、ソーシャルワーカーと、法律の人が座っています。話を聞いて、次にどうするかを決める。罰を与える場ではありません。大事なのは、来やすくすることでした。捕まると思っていると、人は隠れます。隠れた人には、何も届きません。そしてここが本題です。逮捕をやめただけなら、うまくいきませんでした。同時に、受け皿を作ったんです。治療と相談の窓口を大きく増やして、注射器の交換や、街に出ていく支援のチームも置きました。結果として、注射に関係する新しい感染症の報告は大きく減ったと言われています。刑務所に入る人も減りました。ただ、合法になったわけではありません。麻薬は今も違法です。日本では、見つかるとまず法律の手続きに乗りますよね。あちらは、まず医療の窓口に送られます。入口の向きがちがうだけで、やりたいことは同じです。どちらも、使う人を減らしたい。あなたなら、どちらを先に選ぶでしょうか。10問で見てみましょう。", "axes": [{"label": "罰で止めるか、手を差し出して止めるか", "pos": "P", "neg": "C"}, {"label": "決まりを守ることを重くみるか、結果が出ることを重くみるか", "pos": "R", "neg": "O"}, {"label": "うまくいかなければ変えるか、今のやり方を続けるか", "pos": "N", "neg": "K"}, {"label": "まず相手を信じるか、まず用心するか", "pos": "T", "neg": "G"}], "questions": [{"text": "決まりを破った人には、まず罰があるべきだと思う。", "axis": 0, "sign": 1}, {"text": "困っている人を見つけたら、先に助けの手を考えたい。", "axis": 0, "sign": -1}, {"text": "厳しくしたほうが、同じことをくり返す人は減ると思う。", "axis": 0, "sign": 1}, {"text": "手続きのとおりに進めることが、いちばん大事だと思う。", "axis": 1, "sign": 1}, {"text": "数字がよくなるなら、やり方は変えてしまってかまわない。", "axis": 1, "sign": -1}, {"text": "きれいな理屈より、実際に効いたかどうかで判断したい。", "axis": 1, "sign": -1}, {"text": "何年も効かなかったやり方は、思いきってやめたほうがいい。", "axis": 2, "sign": 1}, {"text": "今まで続いてきたやり方には、それなりの理由があると思う。", "axis": 2, "sign": -1}, {"text": "相談に来た人の話は、まず本当だと思って聞きたい。", "axis": 3, "sign": 1}, {"text": "知らない人の言うことは、少し疑ってから信じたい。", "axis": 3, "sign": -1}], "results": {"PRNT": {"name": "シンガポール型", "body": "罰ではっきり線を引くけれど、うまくいかないところは手早く直していく。人は信じるほうです。決まりを厳しく守りながら、仕組みはどんどん作り変えていくシンガポールに近いタイプです。ルールは固く、運用はやわらかい。そんな進み方ですね。", "image_prompt": "photorealistic view of a dense tropical modern city with tall glass towers, immaculate clean streets, manicured green trees along a wide boulevard, humid golden evening light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/PRNT.jpg"}, "PRNG": {"name": "スイス型", "body": "決まりはきっちり守り、うまくいかなければ細かく直す。相手はまず用心して見るほうです。国民に何度も聞いてから制度を少しずつ動かしていくスイスに近いタイプです。急がないけれど、止まってもいない。そんな歩き方ですね。", "image_prompt": "photorealistic alpine valley village with stone and wood houses, tidy fenced fields, snow covered mountain peaks behind, clear crisp morning light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/PRNG.jpg"}, "PRKT": {"name": "ドイツ型", "body": "決まりは守る、罰もはっきりさせる。でも人そのものは信じている。長く積み上げてきた手続きを大事にするドイツに近いタイプです。書類は多いけれど、そのぶん誰にでも同じように扱われる。そういう安心のつくり方ですね。", "image_prompt": "photorealistic old European town square with timber framed buildings, a stone fountain in the center, cobblestone pavement, overcast soft daylight, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/PRKT.jpg"}, "PRKG": {"name": "日本型", "body": "決まりを守り、罰もきちんと置き、今までのやり方を大事にする。相手はまず用心して見るほうです。動画でくらべた日本に近いタイプです。日本では、見つかるとまず法律の手続きに乗ります。入口を一本にしておくことで、みんなが同じ扱いになる。そこに強さがありますね。", "image_prompt": "photorealistic quiet Japanese residential street in the early morning, low houses with tiled roofs, power lines overhead, a narrow asphalt road with white painted lines, soft clear light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/PRKG.jpg"}, "PONT": {"name": "アメリカ型", "body": "罰は罰として置きながら、結果が出るなら何でも試す。人も信じるほうです。州ごとにちがう方法をいっせいに試してみるアメリカに近いタイプです。うまくいった州のやり方が、となりの州に広がっていく。そんな進み方ですね。", "image_prompt": "photorealistic wide American highway crossing open plains at sunset, a distant small town with water tower, long shadows, dramatic sky, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/PONT.jpg"}, "PONG": {"name": "韓国型", "body": "罰ははっきりさせる、結果が出なければすぐ変える。相手はまず用心して見るほうです。決めたら一気に切りかえる韓国に近いタイプです。速さが武器になりますが、走りながら直す形になりますね。", "image_prompt": "photorealistic night view of a dense Korean city street with high rise apartment blocks, wet asphalt reflecting lights, cars passing, cool blue evening tone, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/PONG.jpg"}, "POKT": {"name": "オーストラリア型", "body": "罰は置くけれど、細かい手続きより結果を見る。今までのやり方は続けたいほうで、人は信じています。おおらかに構えながら、決めたことはきっちり運ぶオーストラリアに近いタイプです。肩の力が抜けているのに、抜けていない。そんなバランスですね。", "image_prompt": "photorealistic coastal Australian town with low houses, wide empty beach with turquoise water, eucalyptus trees on a hill, bright midday sun, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/POKT.jpg"}, "POKG": {"name": "ロシア型", "body": "罰で止める、結果で判断する、やり方は変えない。相手はまず用心して見るほうです。広い土地を強い決まりでまとめてきたロシアに近いタイプです。厳しさで秩序をつくるやり方ですね。", "image_prompt": "photorealistic vast snow covered plain with a lone road, dark pine forest on the horizon, heavy grey winter sky, cold pale light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/POKG.jpg"}, "CRNT": {"name": "ポルトガル型", "body": "罰より先に手を差し出す。決まりはきちんと残しながら、効かないやり方は変える。人を信じるほうです。動画で見たポルトガルそのものです。麻薬は今も違法のままで、売る人も罪のまま。変えたのは、使った人を警察から医療の窓口に送るという一点でした。そして同時に、受け皿を作り続けた。片方だけでは、たぶんうまくいかなかったと言われています。", "image_prompt": "photorealistic sunlit Lisbon street with pastel tiled buildings and cobblestones, an old yellow tram passing in the distance, laundry hanging from balconies, calm morning light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/CRNT.jpg"}, "CRNG": {"name": "オランダ型", "body": "手を差し出すほうを選ぶけれど、決まりは残す。効かなければ変える。相手はまず用心して見るほうです。認めるところと認めないところを細かく線引きしてきたオランダに近いタイプです。おおらかに見えて、実はかなり細かいんですね。", "image_prompt": "photorealistic Amsterdam canal with narrow brick houses, bicycles parked along the railing, a small boat on the water, soft cloudy afternoon light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/CRNG.jpg"}, "CRKT": {"name": "カナダ型", "body": "まず助けを考え、決まりも守り、今までのやり方を続けたい。人は信じています。穏やかに制度を積み上げてきたカナダに近いタイプです。急がないけれど、誰も置いていかない。そんな進め方ですね。", "image_prompt": "photorealistic Canadian lakeside town in autumn, wooden houses among red and orange maple trees, calm water reflecting mountains, soft daylight, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/CRKT.jpg"}, "CRKG": {"name": "フランス型", "body": "助けは用意する、決まりも守る、やり方は変えない。相手はまず用心して見るほうです。国の形を大事にしながら手厚い仕組みを続けてきたフランスに近いタイプです。守るものが多いぶん、簡単には動かないんですね。", "image_prompt": "photorealistic Parisian boulevard with stone apartment buildings, zinc roofs, a small cafe terrace with round tables, grey soft light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/CRKG.jpg"}, "CONT": {"name": "ノルウェー型", "body": "罰よりも手を差し出す、結果を見る、効かなければ変える、人を信じる。いちばん受け皿を大事にするタイプです。刑務所を罰の場ではなく戻ってくるための場として作ってきたノルウェーに近いですね。やり直せることを前提に、仕組みを組んでいく考え方です。", "image_prompt": "photorealistic Norwegian fjord with steep green cliffs, a few red wooden houses at the water edge, still deep blue water, clear cool summer light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/CONT.jpg"}, "CONG": {"name": "スウェーデン型", "body": "手は差し出すし、結果が出なければ変える。でも相手はまず用心して見るほうです。支える仕組みは手厚く、線引きははっきりさせるスウェーデンに近いタイプです。優しさと厳しさを、場面で使い分ける感じですね。", "image_prompt": "photorealistic Swedish town by a lake in early evening, modern wooden apartment buildings, birch trees, long soft northern light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/CONG.jpg"}, "COKT": {"name": "アイルランド型", "body": "まず手を差し出し、結果で判断し、今までのやり方は続けたい。人を信じています。人のつながりで支え合う形を長く続けてきたアイルランドに近いタイプです。制度より先に、まわりの人が動く。そんな温かさですね。", "image_prompt": "photorealistic Irish countryside with green fields divided by stone walls, a small white cottage, grey clouds breaking with sunlight, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/COKT.jpg"}, "COKG": {"name": "ブータン型", "body": "手を差し出すほうを選び、結果を見て、やり方は変えず、相手はまず用心して見る。静かに自分たちのやり方を守るブータンに近いタイプです。外から来るものをゆっくり選びながら、内側の支え合いは崩さない。そんな構えですね。", "image_prompt": "photorealistic Himalayan valley with a white monastery building on a hillside, terraced fields, prayer flags on a ridge, misty mountains behind, soft morning light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage", "image": "img/COKG.jpg"}}};
+const SCALE = ["とてもそう","ややそう","どちらとも","あまり違う","全く違う"];
+
+const qsEl = document.getElementById('qs');
+const ans = new Array(DATA.questions.length).fill(null);
+
+DATA.questions.forEach((q, i) => {
+  const d = document.createElement('div');
+  d.className = 'q';
+  d.innerHTML = `<p class="qt">Q${i+1}. ${q.text}</p>`;
+  const box = document.createElement('div');
+  box.className = 'opts';
+  SCALE.forEach((label, k) => {
+    const b = document.createElement('button');
+    b.className = 'opt'; b.textContent = label;
+    b.onclick = () => {
+      ans[i] = 2 - k;                    // +2(とてもそう) 〜 -2(全く違う)
+      [...box.children].forEach(c => c.classList.remove('on'));
+      b.classList.add('on');
+      update();
+    };
+    box.appendChild(b);
+  });
+  d.appendChild(box);
+  qsEl.appendChild(d);
+});
+
+function update() {
+  const done = ans.filter(a => a !== null).length;
+  document.getElementById('pnum').textContent = done;
+  document.getElementById('pbar').style.width = (done / ans.length * 100) + '%';
+  document.getElementById('submit').disabled = done < ans.length;
+}
+
+document.getElementById('submit').onclick = () => {
+  // 軸ごとにスコアを合計する。q.axis は 0..3、q.sign は +1/-1
+  const score = [0, 0, 0, 0];
+  const max = [0, 0, 0, 0];
+  DATA.questions.forEach((q, i) => {
+    score[q.axis] += ans[i] * q.sign;
+    max[q.axis] += 2;
+  });
+  // 各軸を2値にして 16 タイプのキーを作る
+  const key = score.map((s, i) => s >= 0 ? DATA.axes[i].pos : DATA.axes[i].neg).join('');
+  const r = DATA.results[key] || DATA.results[Object.keys(DATA.results)[0]];
+
+  document.getElementById('rimg').src = r.image;
+  document.getElementById('rimg').alt = r.name;
+  document.getElementById('rtype').textContent = key;
+  document.getElementById('rname').textContent = r.name;
+  document.getElementById('rbody').textContent = r.body;
+
+  const ax = document.getElementById('axes');
+  ax.innerHTML = '';
+  DATA.axes.forEach((a, i) => {
+    const pct = Math.round((score[i] + max[i]) / (max[i] * 2) * 100);
+    const d = document.createElement('div');
+    d.className = 'ax';
+    d.innerHTML = `${a.label}<div class="axbar"><i style="left:0;width:${pct}%"></i></div>`;
+    ax.appendChild(d);
+  });
+
+  const txt = encodeURIComponent(`${DATA.title}\n私は「${r.name}」でした。\n`);
+  document.getElementById('tw').href =
+    `https://twitter.com/intent/tweet?text=${txt}&url=${encodeURIComponent(location.href)}`;
+
+  document.getElementById('quiz').style.display = 'none';
+  document.getElementById('result').classList.add('on');
+  scrollTo(0, 0);
+};
+
+document.getElementById('again').onclick = () => {
+  location.reload();
+};
+</script>
+</body>
+</html>
