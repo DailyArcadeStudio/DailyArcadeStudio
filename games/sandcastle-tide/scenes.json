@@ -1,0 +1,228 @@
+{
+  "id": "0030_sandcastle_tide",
+  "title": "砂の城を、潮より高く",
+  "video_title": "毎朝、潮に負ける砂の城を作りつづける人がいます",
+  "lang": "javascript",
+  "voice": "am_adam",
+  "scenes": [
+    {
+      "kind": "hook",
+      "clip": "bigwave",
+      "narration": "海の家のおじさんが、毎朝ひとりで砂の城を作っています。理由があります。"
+    },
+    {
+      "kind": "image",
+      "prompt": "a small weathered beach kiosk on an empty morning beach, faded orange awning, plastic chairs stacked outside, calm grey sea in the background, soft overcast dawn light, photorealistic, cinematic wide shot, highly detailed",
+      "narration": "小さな海水浴場に、古い海の家が一軒あります。お客さんは、年々減っていきました。そこで店主のマルコさんは、毎朝ひとつ、砂の城を作ることにしました。写真を撮りに、人が来てくれるからです。"
+    },
+    {
+      "kind": "image",
+      "prompt": "a tall elaborate sandcastle standing alone on wet sand, the tide line already creeping toward its base, early morning sun, long shadows, photorealistic, cinematic, highly detailed",
+      "narration": "これが、うまくいきました。町の観光の写真に、その城が使われたんです。もう、やめられません。ただ、ひとつだけ問題があります。潮が満ちるのは、朝の10時なんです。"
+    },
+    {
+      "kind": "image",
+      "prompt": "seawater swirling around the eroded base of a sandcastle, the lower half already dissolved, foam and debris, morning light on the water, photorealistic, macro cinematic shot, highly detailed",
+      "narration": "お客さんが来るのは、お昼すぎ。つまり、間に合わないんです。だからマルコさんは、横に広げるのをやめました。とにかく、上に積むことにしたんです。潮より、あと一段だけ高く。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "castle",
+      "kicker": "つくるもの",
+      "title": "砂の城",
+      "bullets": [
+        "**上にだけ伸びる**。横には広げない",
+        "下の段が細いと、上は載らない",
+        "潮より高ければ、その日は勝ち"
+      ],
+      "narration": "これが、あなたが積む城です。上にだけ伸びます。横には広げません。下の段が細いと、上はもう載りません。潮より高い、それだけが勝ち条件です。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "bucket",
+      "kicker": "どうぐ",
+      "title": "バケツ",
+      "bullets": [
+        "ボタンひとつ。**押すだけ**",
+        "押した瞬間の力で、段の形が決まる",
+        "道具はこれだけです"
+      ],
+      "narration": "道具はバケツひとつです。操作も、ボタンひとつ。押すだけです。そうなんです、それだけ。ただし、押した瞬間の力で、段の形が決まります。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "gauge",
+      "kicker": "ここが本体",
+      "title": "力ゲージ",
+      "bullets": [
+        "マーカーが**左右に往復**しつづける",
+        "真ん中で押すと、太くて高い段",
+        "端で押すと、細くて傾いた段"
+      ],
+      "narration": "そしてここからが本題です。ゲージのマーカーが、左右に往復しています。真ん中で押すと、太くて高い段ができます。端で押すと、細くて、しかも傾きます。見てください、幅が全然ちがうんです。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "wave",
+      "kicker": "追ってくるもの",
+      "title": "潮",
+      "bullets": [
+        "**止まりません**。ずっと上がりつづける",
+        "時間がたつほど、速くなる",
+        "城のてっぺんが沈んだら、終わり"
+      ],
+      "narration": "潮は止まりません。ずっと上がりつづけます。しかも、時間がたつほど速くなります。城のてっぺんが水に沈んだ瞬間、その日は終わりです。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "crab",
+      "kicker": "じゃまするもの",
+      "title": "カニ",
+      "bullets": [
+        "バケツにしがみついてくる",
+        "**ゲージの左右が入れ替わる**",
+        "6秒ほど、手が言うことを聞かない"
+      ],
+      "narration": "たまに、カニが来ます。バケツにしがみついてくるんです。すると、ゲージの左右が入れ替わります。6秒ほど、手が言うことを聞きません。もちろん失敗します。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "flag",
+      "kicker": "めじるし",
+      "title": "旗",
+      "bullets": [
+        "いちばん上の段に、いつも立っている",
+        "どこまで積んだかが、ひと目で分かる",
+        "沈むときは、これが最後に沈む"
+      ],
+      "narration": "てっぺんには、いつも旗が立っています。どこまで積んだかの、目印です。沈むときは、これが最後に沈みます。"
+    },
+    {
+      "kind": "events",
+      "clip": "events",
+      "kicker": "朝の海",
+      "title": "海は静かにしてくれない",
+      "bullets": [
+        "**高波** — 潮が一気に持ち上がる",
+        "**ぬれ砂** — ゲージが速くなる",
+        "**海霧** — 良い帯が見えなくなる",
+        "**引き潮** — ごほうび。少しだけ息がつける"
+      ],
+      "narration": "海は静かにしてくれません。高波が来ると、潮が一気に持ち上がります。ぬれ砂のときは、ゲージが急に速くなります。海霧が出ると、狙うべき帯が見えなくなります。位置は変わりません。覚えて押すだけです。まれに引き潮が来ます。これだけが、ごほうびです。"
+    },
+    {
+      "kind": "death",
+      "clip": "death",
+      "kicker": "1日の終わり",
+      "title": "終わり方は2つだけ",
+      "bullets": [
+        "**沈む** — 潮がてっぺんを追い越す",
+        "**崩れる** — 傾きがたまって、上から落ちる",
+        "時間がゆっくり止まって、スコアが出る"
+      ],
+      "narration": "終わり方は2つです。潮に追い越されて沈むか、傾きがたまって、上から崩れるか。どちらも、時間がゆっくり止まって、スコアが出ます。マルコさんは、これを毎朝10年つづけています。あなたは、たぶん1分ももちません。"
+    },
+    {
+      "kind": "outro",
+      "title": "概要欄のリンクから遊べます",
+      "subtitle": "チャンネル登録で、毎日1本",
+      "narration": "ブラウザで、いますぐ無料で遊べます。概要欄のリンクからどうぞ。チャンネル登録もお願いします。毎日1本、新しいゲームを出しています。"
+    }
+  ],
+  "slug": "sandcastle-tide",
+  "channel": "Daily Arcade Studio",
+  "events": [
+    "bigwave",
+    "wetsand",
+    "seafog",
+    "crab",
+    "ebb"
+  ],
+  "short": [
+    {
+      "mark": "bigwave",
+      "lead": -0.5,
+      "dur": 9.0,
+      "headline": "潮は止まらない"
+    },
+    {
+      "mark": "crab",
+      "lead": -0.3,
+      "dur": 7.0,
+      "headline": "左右が入れ替わる"
+    },
+    {
+      "mark": "seafog",
+      "lead": -0.5,
+      "dur": 7.0,
+      "headline": "帯が見えない"
+    },
+    {
+      "mark": "wetsand",
+      "lead": -0.5,
+      "dur": 7.0,
+      "headline": "ゲージが速くなる"
+    },
+    {
+      "mark": "death",
+      "lead": -2.0,
+      "dur": 9.0,
+      "headline": "1分もちません"
+    }
+  ],
+  "thumb": {
+    "hook": "潮より高く積め",
+    "sub": "ボタンひとつ。ブラウザで無料。",
+    "frame_mark": "bigwave",
+    "frame_lead": 1.0
+  },
+  "short_v2": {
+    "cuts": [
+      {
+        "kind": "clip",
+        "mark": "bigwave",
+        "lead": -0.3,
+        "dur": 4.5,
+        "headline": "今日のゲーム",
+        "narration": "今日のゲームです。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "castle",
+        "dur": 5.0,
+        "headline": "サンドキャッスル・タイド",
+        "narration": "あなたは、満ちてくる潮より高く砂の城を積む人です。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "gauge",
+        "dur": 5.5,
+        "headline": "力ゲージ",
+        "narration": "マーカーが往復します。真ん中で押すほど、太い段になります。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "crab",
+        "dur": 5.0,
+        "headline": "カニ",
+        "narration": "カニが来ると、ゲージの左右が入れ替わります。"
+      },
+      {
+        "kind": "clip",
+        "mark": "death",
+        "lead": -2.0,
+        "dur": 5.5,
+        "headline": "",
+        "narration": "潮は、どんどん速くなります。"
+      },
+      {
+        "kind": "clip",
+        "mark": "run2",
+        "lead": 1.0,
+        "dur": 4.5,
+        "cta": "概要欄のリンクから遊べます",
+        "narration": "ブラウザで無料で遊べます。リンクは概要欄です。"
+      }
+    ]
+  }
+}
