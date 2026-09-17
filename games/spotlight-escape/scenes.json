@@ -1,0 +1,216 @@
+{
+  "id": "0031_spotlight_escape",
+  "title": "スポットライト・エスケープ",
+  "video_title": "照明さんに嫌われた裏方の話",
+  "lang": "ja",
+  "voice": "jp_female",
+  "scenes": [
+    {
+      "kind": "hook",
+      "clip": "hunter",
+      "narration": "舞台の裏方には、絶対に光ってはいけない人がいます。"
+    },
+    {
+      "kind": "image",
+      "prompt": "backstage of a small theater during a live performance, a stagehand in all black crouching in the dark wing, bright stage lights spilling across the floor in front of him, photorealistic, cinematic, deep shadows, shallow depth of field, highly detailed",
+      "narration": "小さな劇場で働く、ハルさんという裏方さんがいます。仕事は、幕のあいだに舞台を横切ること。小道具を、反対側まで運ぶんです。もちろん、お客さんに見られてはいけません。"
+    },
+    {
+      "kind": "image",
+      "prompt": "a lighting operator's booth at the back of a theater, hands on a lighting console with rows of faders glowing, blurred bright stage visible far below, photorealistic, cinematic, warm and cool light mix, highly detailed",
+      "narration": "ところが去年、照明の担当が変わりました。新しい人は、暗転をほとんど作らないんです。ハルさんは何度も頼みました。答えは、演出なので変えられません。"
+    },
+    {
+      "kind": "image",
+      "prompt": "empty theater stage seen from the wings, several bright circular spotlights sweeping across the dark wooden floor, overlapping pools of light, haze in the air, photorealistic, cinematic wide shot, dramatic contrast, highly detailed",
+      "narration": "だから今日も、光の隙間を探して歩きます。走りません。走ると、音が出ますから。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "runner",
+      "kicker": "逃げる人",
+      "title": "ハルさん",
+      "bullets": [
+        "舞台の**奥の出口**まで歩くだけ",
+        "**歩く速さは一定**。走れません",
+        "止まってもいい。ただし点数は増えません"
+      ],
+      "narration": "これがハルさんです。やることは、ひとつだけ。舞台の奥の出口まで歩く。それだけです。速さは最初から最後まで一定で、走れません。止まってもいいんですよ。ただし、止まっているあいだは点数が増えません。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "spotlight",
+      "kicker": "邪魔するもの",
+      "title": "スポットライト",
+      "bullets": [
+        "丸い光が、舞台を**左右に振れつづける**",
+        "輪に入ると**みつかり度**が伸びる",
+        "影に戻れば、ゆっくり下がる"
+      ],
+      "narration": "そして、こちらが敵です。丸い光が、舞台を左右にずっと振れています。この輪に入ると、みつかり度が伸びます。見てください、ここが優しいところです。影に戻れば、ちゃんと下がるんです。ゆっくりですけど。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "hunter",
+      "kicker": "いちばん嫌なやつ",
+      "title": "追尾ライト",
+      "bullets": [
+        "**あなたを狙って**寄ってくる 1 灯",
+        "舞台の外から入ってくる",
+        "影に隠れても、ついてきます"
+      ],
+      "narration": "ときどき、これが出ます。追尾ライトです。ほかの光は勝手に振れているだけなんですが、こいつだけは違います。あなたを狙って、寄ってきます。舞台の外から入ってきて、影に隠れても、ついてきます。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "exit",
+      "kicker": "ゴール",
+      "title": "出口のライン",
+      "bullets": [
+        "舞台の**いちばん奥**にある線",
+        "抜けると**次の場面**へ、ボーナス250点",
+        "場面が進むほど、照明は増えて速くなる"
+      ],
+      "narration": "目指すのは、舞台のいちばん奥にある、この線です。ここを抜けると次の場面に進んで、250点もらえます。そうなんです、ご褒美があるんです。ただし次の場面では、照明が一つ増えています。そして少し速くなっています。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "stage",
+      "kicker": "舞台",
+      "title": "横に広い、逃げ場のない板",
+      "bullets": [
+        "戻ってもいい。**誰も褒めません**",
+        "照らされたまま横切るのは、まず無理",
+        "**光の切れ目を待つ**のが仕事"
+      ],
+      "narration": "舞台そのものは、ただの板です。横に広くて、隠れる場所はありません。手前に戻ることもできます。でも、誰も褒めてくれません。照らされたまま横切るのは、まず無理です。だからこのゲーム、待つのが仕事なんです。"
+    },
+    {
+      "kind": "events",
+      "clip": "events",
+      "kicker": "照明さんの気分",
+      "title": "ときどき、合図が出ます",
+      "bullets": [
+        "**暗転** — 3秒だけ見つかりません。走れ",
+        "**全灯** — 輪が広がって、舞台の中央が埋まる",
+        "**ストロボ** — 光が消えたり出たりする",
+        "**一斉サーチ** — 全部の光が一列に並んで横切る"
+      ],
+      "narration": "照明さんには、気分があります。合図は画面に大きく出ます。暗転。3秒だけ、誰にも見つかりません。ここは進むところです。全灯。輪が広がって、舞台の真ん中が全部埋まります。ストロボ。光が消えたり出たりして、どこが安全か分からなくなります。そして一斉サーチ。全部の光が一列に並んで、壁みたいに横切ってきます。これは笑いました。"
+    },
+    {
+      "kind": "death",
+      "clip": "death",
+      "kicker": "見つかると",
+      "title": "みつかり度が満タンになった瞬間",
+      "bullets": [
+        "ゲージが満タンになると、その場で**捕まります**",
+        "時間が**止まるのではなく、ゆっくり落ちます**",
+        "最後に、さいしゅうスコアが出ます"
+      ],
+      "narration": "みつかり度が満タンになると、その場で捕まります。ここ、見てほしいんです。画面がぱっと切り替わらないんですよ。時間がゆっくり落ちていって、それから止まります。ハルさんは、この仕事を1年続けています。あなたは、何場面もつでしょうか。"
+    },
+    {
+      "kind": "outro",
+      "title": "概要欄のリンクから遊べます",
+      "subtitle": "チャンネル登録もお願いします",
+      "narration": "概要欄のリンクから、今すぐ遊べます。無料です。チャンネル登録といいねも、ぜひお願いします。明日も新しいゲームを持ってきます。"
+    }
+  ],
+  "slug": "spotlight-escape",
+  "channel": "Daily Arcade Studio",
+  "events": [
+    "blackout",
+    "fullon",
+    "hunter",
+    "strobe",
+    "lineup"
+  ],
+  "short": [
+    {
+      "mark": "hunter",
+      "lead": -0.3,
+      "dur": 9.0,
+      "headline": "この光は追ってくる"
+    },
+    {
+      "mark": "lineup",
+      "lead": -0.5,
+      "dur": 8.0,
+      "headline": "光が一列に並ぶ"
+    },
+    {
+      "mark": "blackout",
+      "lead": -0.3,
+      "dur": 7.0,
+      "headline": "暗転は3秒だけ"
+    },
+    {
+      "mark": "fullon",
+      "lead": -0.5,
+      "dur": 7.0,
+      "headline": "真ん中が全部埋まる"
+    },
+    {
+      "mark": "death",
+      "lead": -2.0,
+      "dur": 9.0,
+      "headline": "走ると音が出ます"
+    }
+  ],
+  "thumb": {
+    "hook": "光ったら終わり",
+    "sub": "舞台を横切るだけ。ただし照明が探しにきます。ブラウザで無料。",
+    "frame_mark": "hunter",
+    "frame_lead": 1.0
+  },
+  "short_v2": {
+    "cuts": [
+      {
+        "kind": "clip",
+        "mark": "lineup",
+        "lead": -0.5,
+        "dur": 4.5,
+        "headline": "今日のゲーム",
+        "narration": "今日のゲームです。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "runner",
+        "dur": 5.0,
+        "headline": "スポットライト・エスケープ",
+        "narration": "光に見つからずに、舞台を横切る裏方さんです。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "spotlight",
+        "dur": 5.0,
+        "headline": "光は横に振れる",
+        "narration": "丸い光が左右に振れています。入ると、みつかり度が伸びます。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "hunter",
+        "dur": 5.0,
+        "headline": "追ってくる光",
+        "narration": "この1灯だけは違います。あなたを狙って寄ってきます。"
+      },
+      {
+        "kind": "clip",
+        "mark": "death",
+        "lead": -2.0,
+        "dur": 5.0,
+        "headline": "",
+        "narration": "満タンになると、捕まります。"
+      },
+      {
+        "kind": "clip",
+        "mark": "run2",
+        "lead": 1.0,
+        "dur": 4.5,
+        "cta": "概要欄のリンクから遊べます",
+        "narration": "ブラウザで無料で遊べます。リンクは概要欄です。"
+      }
+    ]
+  }
+}

@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>スポットライト・エスケープ</title>
+<style>
+  html,body{margin:0;padding:0;overflow:hidden;background:#07070f;font-family:'Hiragino Kaku Gothic ProN','Helvetica Neue',Arial,sans-serif;}
+  #ui{position:fixed;top:16px;left:0;right:0;text-align:center;color:#fff;z-index:10;pointer-events:none;}
+  #score{font-size:clamp(22px,5.6vw,32px);font-weight:800;text-shadow:0 2px 8px #000;}
+  #msg{font-size:clamp(13px,3.4vw,19px);margin-top:6px;opacity:.9;text-shadow:0 2px 6px #000;}
+  /* 見つかりゲージ: 光に当たっているあいだ伸びる */
+  #heatWrap{margin:10px auto 0;width:min(46vw,260px);height:9px;border-radius:6px;
+    background:rgba(255,255,255,.14);overflow:hidden;box-shadow:0 2px 8px #000;}
+  #heat{height:100%;width:0%;background:linear-gradient(90deg,#ffd23b,#ff5a2b);transition:width .08s linear;}
+  #heatLabel{font-size:clamp(10px,2.6vw,13px);letter-spacing:.14em;opacity:.7;margin-top:4px;}
+  #title{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:rgba(5,5,12,.74);z-index:20;color:#fff;transition:opacity .4s;padding:0 16px;box-sizing:border-box;}
+  #title h1{font-size:clamp(27px,8vw,54px);margin:0 0 8px;letter-spacing:2px;text-align:center;
+    text-shadow:0 4px 18px #ffc93b;}
+  #title p{font-size:clamp(12px,3.2vw,19px);opacity:.85;margin:4px 0;text-align:center;line-height:1.6;}
+  #title .btn{margin-top:26px;padding:14px 44px;font-size:clamp(18px,5vw,22px);font-weight:700;color:#201800;
+    background:linear-gradient(180deg,#ffd757,#e9a411);border:none;border-radius:12px;cursor:pointer;
+    box-shadow:0 6px 24px rgba(255,201,59,.5);}
+  #title .btn:hover{transform:scale(1.05);}
+  .hidden{opacity:0;pointer-events:none;}
+  #back{position:fixed;top:14px;left:14px;z-index:30;text-decoration:none;
+    background:rgba(12,14,24,.72);color:#fff;font:600 clamp(12px,3.2vw,15px)/1 'Hiragino Kaku Gothic ProN',Arial,sans-serif;
+    padding:0 14px;height:44px;display:flex;align-items:center;border-radius:12px;white-space:nowrap;}
+  #back:hover{background:rgba(32,38,58,.9);}
+  #mute{position:fixed;top:14px;right:14px;z-index:30;border:none;cursor:pointer;
+    background:rgba(12,14,24,.72);color:#fff;font-size:20px;line-height:1;
+    width:44px;height:44px;border-radius:12px;}
+  #mute:hover{background:rgba(32,38,58,.9);}
+  /* 端末に合う操作説明だけ出す */
+  .tc{display:none;}
+  @media (pointer:coarse){ .kb{display:none;} .tc{display:block;} }
+  @media (pointer:coarse){ #title .btn{padding:18px 52px;} }
+
+  /* --- イベントバナー: 画面中央に叩きつける --- */
+  #banner{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    z-index:15;pointer-events:none;opacity:0;}
+  #banner .b{font-size:clamp(24px,7vw,62px);font-weight:900;letter-spacing:.06em;color:#fff;
+    padding:10px 4vw;max-width:94vw;text-align:center;transform:scale(2.4);opacity:0;
+    text-shadow:0 0 26px currentColor, 0 6px 20px #000;
+    border-top:5px solid currentColor;border-bottom:5px solid currentColor;}
+  #banner.go .b{animation:slam .62s cubic-bezier(.12,.85,.2,1) forwards;}
+  @keyframes slam{
+    0%  {transform:scale(2.4) rotate(-4deg);opacity:0;}
+    22% {transform:scale(1)   rotate(0deg); opacity:1;}
+    70% {transform:scale(1)   rotate(0deg); opacity:1;}
+    100%{transform:scale(1.12);opacity:0;}
+  }
+
+  /* --- 全画面フラッシュ --- */
+  #flash{position:fixed;inset:0;z-index:14;pointer-events:none;opacity:0;background:#fff;}
+  #vignette{position:fixed;inset:0;z-index:13;pointer-events:none;opacity:0;
+    background:radial-gradient(ellipse at center,rgba(0,0,0,0) 32%,rgba(130,0,12,.85) 100%);}
+
+  /* --- K.O. 画面 --- */
+  #ko{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    z-index:22;pointer-events:none;opacity:0;color:#fff;transition:opacity .3s;}
+  #ko.on{opacity:1;}
+  #ko .koText{font-size:clamp(80px,24vw,180px);font-weight:900;letter-spacing:10px;color:#fff;
+    text-shadow:0 0 40px #ff3b2b,0 0 90px #ff3b2b,0 10px 30px #000;
+    transform:scale(3);opacity:0;}
+  #ko.on .koText{animation:koSlam .8s cubic-bezier(.1,.9,.2,1) forwards;}
+  @keyframes koSlam{
+    0%  {transform:scale(3) rotate(-8deg);opacity:0;}
+    30% {transform:scale(1) rotate(0deg);opacity:1;}
+    36% {transform:scale(1.06);}
+    100%{transform:scale(1);opacity:1;}
+  }
+  #ko .finalLabel{font-size:clamp(14px,3.8vw,20px);letter-spacing:4px;opacity:0;margin-top:6px;text-shadow:0 2px 8px #000;}
+  #ko .finalScore{font-size:clamp(42px,13vw,78px);font-weight:800;opacity:0;text-shadow:0 4px 20px #000;}
+  #ko.on .finalLabel{animation:fadeUp .5s .75s forwards;}
+  #ko.on .finalScore{animation:fadeUp .5s .9s forwards;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+
+  /* --- ルール説明 (?) --- */
+  #helpBtn{position:fixed;top:14px;right:66px;z-index:30;border:none;cursor:pointer;
+    background:rgba(12,14,24,.72);color:#fff;font:700 20px/1 'Helvetica Neue',Arial,sans-serif;
+    width:44px;height:44px;border-radius:12px;}
+  #helpBtn:hover{background:rgba(32,38,58,.9);}
+  #help{position:fixed;inset:0;z-index:40;display:none;align-items:center;
+    justify-content:center;background:rgba(4,5,11,.86);padding:20px;}
+  #help.on{display:flex;}
+  #help .box{background:#121624;border:1px solid #2b3550;border-radius:18px;
+    max-width:560px;width:100%;max-height:86vh;overflow:auto;padding:24px 24px 20px;
+    color:#e6edf3;font-family:'Hiragino Kaku Gothic ProN',Arial,sans-serif;}
+  #help h2{margin:0 0 4px;font-size:clamp(18px,5vw,25px);}
+  #help .sub{color:#8b949e;font-size:clamp(11px,3vw,14px);margin:0 0 16px;}
+  #help h3{font-size:clamp(12px,3.4vw,15px);color:#ffd23b;margin:16px 0 6px;letter-spacing:.04em;}
+  #help ul{margin:0;padding-left:20px;}
+  #help li{font-size:clamp(12px,3.4vw,15px);line-height:1.7;margin:3px 0;}
+  #help b{color:#ffd23b;font-weight:700;}
+  #help .close{margin-top:18px;width:100%;padding:12px;border:none;border-radius:10px;
+    background:#2b3550;color:#fff;font-size:16px;font-weight:700;cursor:pointer;}
+  #help .close:hover{background:#3a4668;}
+</style>
+</head>
+<body>
+<div id="ui">
+  <div id="score">0</div>
+  <div id="msg"></div>
+  <div id="heatWrap"><div id="heat"></div></div>
+  <div id="heatLabel">みつかり度</div>
+</div>
+<button id="helpBtn" title="遊び方">?</button>
+<div id="help"><div class="box">
+  <h2>スポットライト・エスケープ</h2>
+  <p class="sub">舞台を横切るだけ。ただし照明が探しにきます。ブラウザで無料。</p>
+    <h3>逃げる人</h3>
+    <ul><li>舞台の<b>奥の出口</b>を目指して歩いています</li><li>スティックを倒した向きに<b>そのまま進む</b>だけ</li><li>止まることもできますが、点数は増えません</li></ul>
+    <h3>スポットライト</h3>
+    <ul><li>丸い光が舞台を<b>左右に振れつづける</b></li><li>光の輪に入ると<b>みつかり度</b>が伸びます</li><li>影に戻れば、ゆっくり下がります</li></ul>
+    <h3>みつかり度</h3>
+    <ul><li>満タンになった瞬間に<b>捕まります</b></li><li>照らされたまま横切るのは、まず無理です</li><li><b>光の切れ目を待つ</b>のが仕事です</li></ul>
+    <h3>出口のライン</h3>
+    <ul><li>奥まで届くと<b>次の場面</b>に切り替わります</li><li>場面が進むほど照明は増え、速くなります</li><li>戻ってもよいですが、誰も褒めません</li></ul>
+    <h3>照明さんの気分</h3>
+    <ul><li>ときどき<b>暗転</b>したり、<b>全灯</b>になったりします</li><li>追尾ライトは<b>あなたを狙って</b>寄ってきます</li><li>合図は画面に大きく出ます</li></ul>
+  <button class="close">わかった</button>
+</div></div>
+<a id="back" href="../../" title="ゲーム一覧にもどる">‹ ゲーム一覧</a>
+<button id="mute" title="音のオン / オフ">🔊</button>
+<div id="vignette"></div>
+<div id="flash"></div>
+<div id="banner"><div class="b"></div></div>
+<div id="ko">
+  <div class="koText">K.O.</div>
+  <div class="finalLabel">さいしゅうスコア</div>
+  <div class="finalScore">0</div>
+</div>
+<div id="title">
+  <h1>スポットライト・エスケープ</h1>
+  <p>光に照らされず、舞台の奥へ抜ける。</p>
+  <p class="kb">← → ↑ ↓ / WASD : 歩く（押しているあいだ）</p>
+  <p class="tc">画面をなぞった向きに歩く（指を離すと止まる）</p>
+  <button class="btn" id="startBtn">スタート</button>
+</div>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+// ---------- url flags (declared first: sound and camera both read them) ----------
+const QS = new URLSearchParams(location.search);
+const AUTO = QS.get('auto')==='1';
+const SHOWCASE_Q = QS.get('showcase');
+// Recording must produce clean footage, so every automated mode is muted.
+const REC = QS.get('rec')==='1';   // 録音モード: 音を鳴らして拾う
+const SILENT = (AUTO || !!SHOWCASE_Q || QS.get('mute')==='1') && !REC;
+// 録画・showcase では「?」と「ゲーム一覧」を出さない（動画の邪魔になる）
+const NOCHROME = AUTO || !!SHOWCASE_Q || QS.get('nochrome')==='1';
+
+// ---------- renderer / scene ----------
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.shadowMap.enabled = true;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const SKY = new THREE.Color(0x06060e);
+scene.background = SKY.clone();
+scene.fog = new THREE.Fog(0x06060e, 26, 64);
+
+const camera = new THREE.PerspectiveCamera(58, innerWidth/innerHeight, .1, 200);
+
+// 舞台の広さ。プレイヤーはこの矩形のなかだけを歩く。
+const STAGE_W = 15;     // 左右 (±STAGE_W/2)
+const STAGE_D = 32;     // 手前 z=+13 → 奥 z=-19
+const Z_START = 13, Z_EXIT = -19;
+
+// Portrait と landscape の両方で成立させる。縦持ちの画面は 16:9 より
+// ずっと狭いので、FOV を固定すると舞台が枠から出てしまう。
+// 画面が縦長になるほど垂直 FOV を広げて、横方向の見え方を保つ。
+const BASE_FOV = 58;
+function fitCamera(){
+  const aspect = innerWidth / innerHeight;
+  camera.aspect = aspect;
+  if(typeof SHOWCASE !== 'undefined' && SHOWCASE){
+    camera.fov = aspect < 1 ? 62 : 46;
+  } else {
+    const ref = 16/9;
+    camera.fov = aspect >= ref ? BASE_FOV
+      : Math.min(98, THREE.MathUtils.radToDeg(
+          2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(BASE_FOV)/2) * (ref/aspect))));
+  }
+  camera.__base = camera.fov;    // イベントのズームはここへ戻る
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+}
+addEventListener('resize', fitCamera);
+addEventListener('orientationchange', ()=>setTimeout(fitCamera, 120));
+
+// ---------- lights ----------
+// 舞台は基本まっ暗。明るいのはスポットライトの円だけ、という絵作り。
+const hemi = new THREE.HemisphereLight(0x3a4a80, 0x0a0a14, .55);
+scene.add(hemi);
+const keyLight = new THREE.DirectionalLight(0x8899dd, .35);
+keyLight.position.set(4, 14, 10);
+scene.add(keyLight);
+
+// ---------- 舞台の床 ----------
+const floorMat = new THREE.MeshStandardMaterial({color:0x16182a, roughness:.92});
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(STAGE_W, STAGE_D), floorMat);
+floor.rotation.x = -Math.PI/2;
+floor.position.set(0, 0, (Z_START+Z_EXIT)/2);
+floor.receiveShadow = true;
+scene.add(floor);
+
+// 床の板目（奥行きが読めるように薄い線を並べる）
+const planks = [];
+for(let i=1;i<13;i++){
+  const l = new THREE.Mesh(new THREE.PlaneGeometry(STAGE_W, .04),
+    new THREE.MeshBasicMaterial({color:0x2c3152, transparent:true, opacity:.5}));
+  l.rotation.x = -Math.PI/2;
+  l.position.set(0, .012, Z_START - i*(STAGE_D/13));
+  scene.add(l); planks.push(l);
+}
+
+// 袖（そで）の壁。左右の端がどこか分かるように立てる。
+const wings = [];
+const wingMat = new THREE.MeshStandardMaterial({color:0x101426, roughness:.8});
+for(const sx of [-1, 1]){
+  const w = new THREE.Mesh(new THREE.BoxGeometry(.6, 7, STAGE_D), wingMat);
+  w.position.set(sx*(STAGE_W/2 + .3), 3.5, (Z_START+Z_EXIT)/2);
+  scene.add(w); wings.push(w);
+}
+
+// 出口のライン（奥）。ここに触れると場面が進む。
+const exitLine = new THREE.Mesh(new THREE.PlaneGeometry(STAGE_W, .9),
+  new THREE.MeshBasicMaterial({color:0x55f0c0, transparent:true, opacity:.55}));
+exitLine.rotation.x = -Math.PI/2;
+exitLine.position.set(0, .02, Z_EXIT + .45);
+scene.add(exitLine);
+// 出口の上に光る門を立てて、目標が遠目にも分かるようにする
+const exitArch = new THREE.Group();
+for(const sx of [-1,1]){
+  const p = new THREE.Mesh(new THREE.BoxGeometry(.3, 4.2, .3),
+    new THREE.MeshStandardMaterial({color:0x1d6b58, emissive:0x1d6b58, emissiveIntensity:.8, roughness:.5}));
+  p.position.set(sx*(STAGE_W/2 - .6), 2.1, Z_EXIT + .4);
+  exitArch.add(p);
+}
+const archTop = new THREE.Mesh(new THREE.BoxGeometry(STAGE_W - .9, .3, .3),
+  new THREE.MeshStandardMaterial({color:0x55f0c0, emissive:0x55f0c0, emissiveIntensity:1.1, roughness:.4}));
+archTop.position.set(0, 4.2, Z_EXIT + .4);
+exitArch.add(archTop);
+scene.add(exitArch);
+
+// 客席側（手前）の暗いざわめき。ただの箱の並びだが奥行きが出る。
+const seats = [];
+const seatMat = new THREE.MeshStandardMaterial({color:0x0d1020, roughness:.9});
+for(let r=0;r<4;r++){
+  for(let c=-4;c<=4;c++){
+    const s = new THREE.Mesh(new THREE.BoxGeometry(1.2, .7, 1.0), seatMat);
+    s.position.set(c*1.6, .35 + r*.35, Z_START + 3 + r*2.1);
+    scene.add(s); seats.push(s);
+  }
+}
+
+// ---------- プレイヤー（逃げる人） ----------
+function buildRunner(){
+  const g = new THREE.Group();
+  const cloth = new THREE.MeshStandardMaterial({color:0x2a2f50, roughness:.75});
+  const skin  = new THREE.MeshStandardMaterial({color:0xe8bd97, roughness:.6});
+  const accent= new THREE.MeshStandardMaterial({color:0xffc93b, roughness:.45,
+                  emissive:0x3a2a00, emissiveIntensity:1});
+  const torso = new THREE.Mesh(new THREE.CapsuleGeometry(.26, .5, 6, 14), cloth);
+  torso.position.y = .95; g.add(torso);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(.24, 20, 16), skin);
+  head.position.y = 1.52; g.add(head);
+  // 帽子。上から見下ろすカメラなので、頭の色がいちばん目に入る
+  const hat = new THREE.Mesh(new THREE.CylinderGeometry(.27, .27, .12, 18), accent);
+  hat.position.y = 1.7; g.add(hat);
+  const brim = new THREE.Mesh(new THREE.CylinderGeometry(.4, .4, .04, 20), accent);
+  brim.position.y = 1.64; g.add(brim);
+  const scarf = new THREE.Mesh(new THREE.BoxGeometry(.5, .1, .3), accent);
+  scarf.position.y = 1.26; g.add(scarf);
+  const mkLimb=(x,y,len,mat)=>{
+    const m=new THREE.Mesh(new THREE.CapsuleGeometry(.075, len, 6, 10), mat);
+    m.position.set(x,y,0); return m;
+  };
+  const armL=mkLimb( .34,1.02,.34,cloth), armR=mkLimb(-.34,1.02,.34,cloth);
+  const legL=mkLimb( .13,.34,.36,cloth),  legR=mkLimb(-.13,.34,.36,cloth);
+  g.add(armL,armR,legL,legR);
+  g.traverse(o=>{ if(o.isMesh) o.castShadow=true; });
+  return {group:g, armL, armR, legL, legR};
+}
+const runner = buildRunner();
+scene.add(runner.group);
+
+// 足元のうっすらした自前ライト。暗転してもシルエットは残す。
+const heroLight = new THREE.PointLight(0xffd9a0, 5, 7);
+heroLight.position.set(0, 2.2, 0);
+scene.add(heroLight);
+
+// ---------- スポットライト ----------
+// 1 灯 = 「床の光る円」+「上から降りる光の円錐」の組。
+// 当たり判定は円だけを見るので、見た目と判定が必ず一致する。
+const RIG_Y = 9;          // 照明バトンの高さ
+function buildSpot(color){
+  const g = new THREE.Group();
+  // 床の輪。フラグメントでふちを落として、硬い円板に見えないようにする
+  const disc = new THREE.Mesh(new THREE.CircleGeometry(1, 48), new THREE.ShaderMaterial({
+    transparent:true, depthWrite:false, blending:THREE.AdditiveBlending,
+    uniforms:{c:{value:new THREE.Color(color)}, k:{value:1.0}},
+    vertexShader:`varying vec2 vUv; void main(){ vUv=uv;
+      gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }`,
+    fragmentShader:`uniform vec3 c; uniform float k; varying vec2 vUv;
+      void main(){ float d=distance(vUv,vec2(.5))*2.;
+        // 中心は明るく、ふちは急に落として「輪」を読ませる
+        float a=(smoothstep(1.02,.82,d)*.62 + pow(max(0.,1.-d),3.)*.5)*k;
+        gl_FragColor=vec4(c,a); }`,
+  }));
+  disc.rotation.x = -Math.PI/2; disc.position.y = .03;
+  g.add(disc);
+  // 光の柱。側面だけの円錐なので、中を歩くと包まれて見える
+  const cone = new THREE.Mesh(new THREE.ConeGeometry(1, RIG_Y, 28, 1, true),
+    new THREE.MeshBasicMaterial({color, transparent:true, opacity:.10,
+      side:THREE.DoubleSide, depthWrite:false, blending:THREE.AdditiveBlending}));
+  cone.position.y = RIG_Y/2;
+  cone.rotation.x = Math.PI;      // 頂点を上、開口を床へ
+  g.add(cone);
+  // 照明器具そのもの（バトンに吊られた箱）
+  const can = new THREE.Mesh(new THREE.CylinderGeometry(.34, .5, 1.0, 14),
+    new THREE.MeshStandardMaterial({color:0x22273c, roughness:.6,
+      emissive:new THREE.Color(color), emissiveIntensity:.35}));
+  can.position.y = RIG_Y + .5;
+  g.add(can);
+  const light = new THREE.PointLight(color, 0, 12);
+  light.position.y = 2.2;
+  g.add(light);
+  scene.add(g);
+  return {group:g, disc, cone, can, light};
+}
+
+const SPOT_COLORS = [0xfff0b0, 0xffd23b, 0xffa8d8, 0x9fe0ff];
+const spots = [];       // {vis, r, x, z, mode, phase, speed, amp, cx, ...}
+function newSpot(i){
+  const vis = buildSpot(SPOT_COLORS[i % SPOT_COLORS.length]);
+  const s = {vis, r:2.0, x:0, z:0, phase:Math.random()*Math.PI*2,
+             speed:1, amp:5, cx:0, cz:0, mode:'sweep', chase:0, gain:1};
+  spots.push(s);
+  return s;
+}
+function setSpotCount(n){
+  while(spots.length < n) newSpot(spots.length);
+  spots.forEach((s,i)=>{ s.vis.group.visible = i < n; });
+}
+// 場面ごとの照明の配置を決める。奥に行くほど関門が増える。
+// 3灯から始めて 3場面ごとに 1灯ずつ、6灯まで。
+// いきなり増やすと数場面で上限に達して、難度の変化が見えなくなる。
+function spotCountFor(sceneNo){ return Math.min(6, 3 + Math.floor((sceneNo-1)/3)); }
+function layoutSpots(sceneNo){
+  const n = spotCountFor(sceneNo);
+  setSpotCount(n);
+  for(let i=0;i<n;i++){
+    const s = spots[i];
+    // 舞台の奥行きを等分して 1 灯ずつ配置 → 必ず「くぐる順番」ができる
+    const f = (i + .5) / n;
+    s.cz = Z_START - 3.0 - f * (STAGE_D - 7);
+    s.cx = 0;
+    s.r = 2.3 - Math.min(.55, (sceneNo-1)*.05);          // 進むほど輪は小さく鋭く
+    // 振り幅は舞台の半幅より必ず狭く保つ。こうすると左右どちらかに
+    // 「影の帯」が残り、待てば必ず抜ける隙間ができる（運ではなく判断になる）
+    s.amp = Math.min(STAGE_W/2 - s.r - .6, 3.6 + (sceneNo-1)*.30);
+    s.speed = (.5 + Math.random()*.3) * (1 + (sceneNo-1)*.055) * (i%2 ? -1 : 1);
+    s.phase = Math.random()*Math.PI*2;
+    s.mode = 'sweep';
+    s.chase = 0;
+    s.gain = 1;
+  }
+}
+
+// ---------- 追尾ライト（イベント専用） ----------
+const hunter = (()=>{
+  const vis = buildSpot(0xff4a5a);
+  vis.group.visible = false;
+  return {vis, x:0, z:0, r:2.2, active:false};
+})();
+
+// ---------- 客席のフラッシュ（ただの飾り） ----------
+const camFlashes = [];
+for(let i=0;i<10;i++){
+  const m = new THREE.Mesh(new THREE.SphereGeometry(.2, 8, 6),
+    new THREE.MeshBasicMaterial({color:0xffffff, transparent:true, opacity:0}));
+  m.position.set((Math.random()-.5)*14, 1.2+Math.random()*2.4, Z_START + 4 + Math.random()*6);
+  scene.add(m); camFlashes.push({mesh:m, t:0});
+}
+
+// ---------- game state ----------
+let running=false, dead=false, t=0, score=0;
+let px=0, pz=Z_START-1.2;          // プレイヤー位置（床座標）
+let inx=0, inz=0;                  // 入力方向（-1..1）。キーとタッチで共用
+let heat=0;                        // みつかり度 0..1
+let sceneNo=1;                     // 場面（奥へ抜けるたび +1）
+let litT=0;                        // 連続で照らされている秒数（演出用）
+let timeScale=1, deadAt=0, shake=0;
+let camHeight=15, camHeightTarget=15;   // 死亡時に寄る
+let blackout=0;                    // >0 のあいだ暗転
+let fullOn=0;                      // >0 のあいだ全灯（輪が巨大化）
+let strobe=0;                      // >0 のあいだ点滅
+let nextEventAt=9;
+let eventQueue=[];
+let walkCycle=0;
+
+const scoreEl = document.getElementById('score');
+const msgEl = document.getElementById('msg');
+const heatEl = document.getElementById('heat');
+const heatWrapEl = document.getElementById('heatWrap');
+const heatLabelEl = document.getElementById('heatLabel');
+const titleEl = document.getElementById('title');
+const bannerEl = document.getElementById('banner');
+const bannerText = bannerEl.querySelector('.b');
+const flashEl = document.getElementById('flash');
+const vignetteEl = document.getElementById('vignette');
+const koEl = document.getElementById('ko');
+const koScoreEl = koEl.querySelector('.finalScore');
+
+// ---------- presentation helpers ----------
+function banner(text, color){
+  bannerText.textContent = text;
+  bannerText.style.color = color;
+  bannerEl.classList.remove('go');
+  void bannerEl.offsetWidth;      // CSS アニメを再生し直す
+  bannerEl.style.opacity = 1;
+  bannerEl.classList.add('go');
+}
+function flash(color, strength, ms){
+  flashEl.style.background = color;
+  flashEl.style.transition = 'none';
+  flashEl.style.opacity = strength;
+  requestAnimationFrame(()=>{
+    flashEl.style.transition = `opacity ${ms}ms ease-out`;
+    flashEl.style.opacity = 0;
+  });
+}
+
+// ---------- events ----------
+// どれも「照明の振る舞い」を変えるが、要求される指の動きが毎回違う:
+// 暗転=走り抜ける / 全灯=端に寄る / 追尾=引き離す / 点滅=止まって待つ / 整列=縦の隙間を抜く
+const EVENTS = {
+  blackout(){                       // 暗転: 数秒だけ見つからない。走れ
+    banner('暗転', '#9b6bff');
+    blackout = 3.2;
+    flash('#120a22', .7, 500);
+    return 4.2;
+  },
+  fullon(){                         // 全灯: 輪が広がって舞台の中央が埋まる
+    banner('全灯', '#fff0b0');
+    fullOn = 4.5;
+    flash('#fff4c8', .55, 420);
+    shake = Math.max(shake, .18);
+    return 5.5;
+  },
+  hunter(){                         // 追尾ライト: プレイヤーを追ってくる 1 灯
+    banner('追尾ライト', '#ff4a5a');
+    hunter.active = true;
+    hunter.vis.group.visible = true;
+    // 舞台の外から入ってくる
+    hunter.x = px + (px > 0 ? -1 : 1) * 9;
+    hunter.z = Z_START + 2;
+    shake = Math.max(shake, .22);
+    return 8.5;
+  },
+  strobe(){                         // 点滅: 輪が消えたり出たりする。動くと危ない
+    banner('ストロボ', '#9fe0ff');
+    strobe = 5.5;
+    return 6.5;
+  },
+  lineup(){                         // 整列: 全灯が一列に並んで左右へ同時に振れる
+    banner('一斉サーチ', '#ffd23b');
+    const dir = Math.random()<.5 ? 1 : -1;
+    spots.forEach((s,i)=>{
+      if(!s.vis.group.visible) return;
+      s.speed = Math.abs(s.speed) * dir * 1.15;
+      s.phase = 0;                  // 位相を揃えると、壁のように横切る
+      s.amp = STAGE_W/2 - s.r*.4;
+    });
+    return 6;
+  },
+};
+const EVENT_NAMES = Object.keys(EVENTS);
+// recording/debug hook: 指定のイベントを任意のタイミングで撃つ
+// run が終わっていれば false を返す（撮影側が次の run を待てるように）
+window.__ev = name => {
+  if(!running || dead || !EVENTS[name]) return false;
+  const busy = EVENTS[name]();
+  if(!SILENT) SND.event();
+  nextEventAt = t + busy + 5;
+  return true;
+};
+window.__alive = () => running && !dead;
+window.__kill = () => { if(running && !dead){ dead=true; gameOver(); } };
+window.__recStop = () => SND.recStop();
+window.__snd = () => ({enabled: SND.enabled, silent: SILENT});
+window.__events = EVENT_NAMES.slice();
+window.__probe = () => ({t:+t.toFixed(2), heat:+heat.toFixed(3), scene:sceneNo,
+  px:+px.toFixed(2), pz:+pz.toFixed(2), next:+nextEventAt.toFixed(2),
+  spots:spots.filter(s=>s.vis.group.visible).length, hunter:hunter.active});
+
+function refillEventQueue(){
+  eventQueue = EVENT_NAMES.slice();
+  for(let i=eventQueue.length-1;i>0;i--){        // run ごとに順番が変わるようシャッフル
+    const j = Math.floor(Math.random()*(i+1));
+    [eventQueue[i],eventQueue[j]]=[eventQueue[j],eventQueue[i]];
+  }
+}
+function triggerEvent(){
+  if(!eventQueue.length) refillEventQueue();
+  const name = eventQueue.pop();
+  const busy = EVENTS[name]();
+  if(!SILENT) SND.event();
+  nextEventAt = t + busy + 5 + Math.random()*4;  // イベントの間に息をつかせる
+}
+
+// ---------- reset ----------
+function reset(){
+  px = 0; pz = Z_START - 1.2;
+  runner.group.position.set(px, 0, pz);
+  runner.group.rotation.set(0,0,0);
+  runner.group.scale.set(1,1,1);
+  inx = 0; inz = 0;
+  t=0; score=0; dead=false; heat=0; litT=0; sceneNo=1;
+  timeScale=1; shake=0; camHeight=15; camHeightTarget=15;
+  blackout=0; fullOn=0; strobe=0;
+  hunter.active=false; hunter.vis.group.visible=false;
+  setSpotCount(3);
+  layoutSpots(1);
+  nextEventAt = 9;
+  refillEventQueue();
+  msgEl.textContent='';
+  heatEl.style.width='0%';
+  koEl.classList.remove('on');
+  vignetteEl.style.transition='opacity .3s'; vignetteEl.style.opacity=0;
+}
+
+const startBtn = document.getElementById('startBtn');
+
+// ---------- sound: everything synthesised, no audio files ----------
+// Keeps the single-HTML rule (nothing to download) and lets the music
+// react to play: the bass line speeds up with the game, events drop a
+// stinger, and the whole thing ducks out on a game over.
+const SND = (() => {
+  let ctx = null, master = null, musicGain = null, on = true, started = false;
+  let step = 0, timer = null, tempo = 0.25;
+
+  // A pentatonic scale never sounds wrong against itself, which matters
+  // when the tempo drifts with the player's speed.
+  // minor pentatonic, driving — a chase that never lets up
+  const SCALE = [0, 3, 5, 7, 10];
+  const ROOT = 196;
+  const BASS = 'square', LEAD = 'sawtooth';
+  const hz = (deg, oct = 0) =>
+    ROOT * Math.pow(2, oct + Math.floor(deg / SCALE.length)) *
+    Math.pow(2, SCALE[((deg % SCALE.length) + SCALE.length) % SCALE.length] / 12);
+
+  function ensure() {
+    if (ctx) return ctx;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    ctx = new AC();
+    master = ctx.createGain();
+    master.gain.value = 0.32;
+    master.connect(ctx.destination);
+    musicGain = ctx.createGain();
+    musicGain.gain.value = 1;
+    musicGain.connect(master);
+    return ctx;
+  }
+
+
+  // ---- 録音用の分岐（?rec=1）----
+  // Playwright の録画には音声が入らないので、ゲーム自身に master バスを
+  // 録らせる。鳴っているものそのものなので映像と必ず同期する。
+  let recDest = null, recorder = null, recChunks = [];
+  function recStart() {
+    if (!ctx || recorder) return;
+    recDest = ctx.createMediaStreamDestination();
+    master.connect(recDest);
+    recorder = new MediaRecorder(recDest.stream, {mimeType: 'audio/webm'});
+    recorder.ondataavailable = e => { if (e.data.size) recChunks.push(e.data); };
+    recorder.start();
+  }
+  function recStop() {
+    return new Promise(res => {
+      if (!recorder) return res(null);
+      recorder.onstop = async () => {
+        const blob = new Blob(recChunks, {type: 'audio/webm'});
+        const buf = await blob.arrayBuffer();
+        res(Array.from(new Uint8Array(buf)));
+      };
+      recorder.stop();
+    });
+  }
+
+  function blip(freq, dur, type = 'square', vol = 0.25, dest = null, slideTo = null) {
+    if (!ctx || !on) return;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, ctx.currentTime);
+    if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, ctx.currentTime + dur);
+    // a short attack stops every note from clicking
+    g.gain.setValueAtTime(0, ctx.currentTime);
+    g.gain.linearRampToValueAtTime(vol, ctx.currentTime + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
+    o.connect(g); g.connect(dest || master);
+    o.start(); o.stop(ctx.currentTime + dur + 0.02);
+  }
+
+  function noise(dur, vol = 0.2, hp = 800) {
+    if (!ctx || !on) return;
+    const n = Math.floor(ctx.sampleRate * dur);
+    const buf = ctx.createBuffer(1, n, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    const f = ctx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = hp;
+    const g = ctx.createGain(); g.gain.value = vol;
+    src.connect(f); f.connect(g); g.connect(master);
+    src.start();
+  }
+
+  // --- the loop: a walking bass plus an offbeat blip ---
+  function tick() {
+    if (!ctx || !on) return;
+    const bar = step % 16;
+    // straight driving pulse: bass on every beat, lead stabs offbeat
+    if (bar % 2 === 0) blip(hz(bar % 8 === 0 ? 0 : 1, -1), tempo * 1.1, BASS, 0.30, musicGain);
+    if (bar % 8 === 5) blip(hz(4, 0), tempo * 0.6, LEAD, 0.09, musicGain);
+    if (bar % 4 === 2) noise(0.04, 0.05, 5000);
+    step++;
+    timer = setTimeout(tick, tempo * 1000);
+  }
+
+  return {
+    // must be called from a user gesture — browsers block audio otherwise
+    start() {
+      if (!ensure() || started) return;
+      if (ctx.state === 'suspended') ctx.resume();
+      started = true; step = 0; tick();
+    },
+    stop() { if (timer) { clearTimeout(timer); timer = null; } started = false; },
+    /** speed the music up with the game; 1 = starting pace */
+    setPace(mult) { tempo = Math.max(0.11, 0.25 / Math.max(0.2, mult)); },
+    duck(sec = 1.6) {                                      // for game over
+      if (!ctx) return;
+      musicGain.gain.cancelScheduledValues(ctx.currentTime);
+      musicGain.gain.setValueAtTime(musicGain.gain.value, ctx.currentTime);
+      musicGain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + sec);
+    },
+    unduck() {
+      if (!ctx) return;
+      musicGain.gain.cancelScheduledValues(ctx.currentTime);
+      musicGain.gain.setValueAtTime(0.0001, ctx.currentTime);
+      musicGain.gain.exponentialRampToValueAtTime(1, ctx.currentTime + 0.4);
+    },
+    // --- one-shots ---
+    // 短く、音程がはっきりした音だけ。ナレーションの下に混ざっても聞き分けられる。
+    move()  { ensure(); blip(hz(3, 1), 0.07, LEAD, 0.12); },
+    step2() { ensure(); noise(0.045, 0.07, 1400); },              // 足音
+    lit()   { ensure(); blip(hz(4, 1), 0.13, 'triangle', 0.17, null, hz(2, 1)); },  // 光に入った
+    safe()  { ensure(); blip(hz(0, 1), 0.10, 'triangle', 0.13, null, hz(3, 1)); },  // 影に戻った
+    clear() { ensure(); [0, 100, 200].forEach((ms, i) =>
+                setTimeout(() => blip(hz(i * 2, 1), 0.22, 'triangle', 0.22), ms)); }, // 場面クリア
+    event() { ensure(); [0, 90, 180].forEach((ms, i) =>
+                setTimeout(() => blip(hz(2 + i, 0), 0.18, 'sawtooth', 0.20), ms)); },
+    hit()   { ensure(); noise(0.35, 0.30, 200);
+              blip(180, 0.5, 'sawtooth', 0.28, null, 40); },
+    over()  { ensure(); [0, 140, 280, 460].forEach((ms, i) =>
+                setTimeout(() => blip(hz(-i, -1), 0.42, 'triangle', 0.26), ms)); },
+    recStart() { ensure(); recStart(); },
+    recStop() { return recStop(); },
+    toggle() { on = !on; if (!on) { this.stop(); } else { this.start(); } return on; },
+    get enabled() { return on; },
+  };
+})();
+
+// --- one place for every action, so touch and keyboard stay in step ---
+function startRun(){
+  titleEl.classList.add('hidden'); reset(); running=true;
+  if(!SILENT){ SND.unduck(); SND.start(); if(REC) SND.recStart(); }
+}
+// 移動は「向きをセットする」だけ。キーもタッチも必ずここを通る。
+function setDir(x, z){
+  const wasIdle = (inx===0 && inz===0);
+  inx = THREE.MathUtils.clamp(x, -1, 1);
+  inz = THREE.MathUtils.clamp(z, -1, 1);
+  // 歩き出しの瞬間だけ鳴らす（押しっぱなしで鳴り続けないように）
+  if(wasIdle && (inx!==0 || inz!==0) && !SILENT) SND.move();
+}
+function stopDir(){ inx = 0; inz = 0; }
+
+const muteBtn = document.getElementById('mute');
+function toggleMute(){ muteBtn.textContent = SND.toggle() ? '🔊' : '🔇'; }
+muteBtn.addEventListener('click', toggleMute);
+muteBtn.addEventListener('touchend', e=>{ e.preventDefault(); toggleMute(); },
+                         {passive:false});
+if(SILENT) muteBtn.style.display='none';   // automated modes have no audio
+addEventListener('keydown', e=>{ if(e.code==='KeyM') toggleMute(); });
+
+startBtn.addEventListener('click', startRun);
+// タッチでもスタートできること（click だけでは取りこぼす）
+startBtn.addEventListener('touchend', e=>{ e.preventDefault(); startRun(); },
+                          {passive:false});
+
+// --- keyboard: 押しているキーの集合から向きを作る ---
+const keys = new Set();
+function applyKeys(){
+  const x = (keys.has('ArrowRight')||keys.has('KeyD') ? 1 : 0)
+          - (keys.has('ArrowLeft') ||keys.has('KeyA') ? 1 : 0);
+  const z = (keys.has('ArrowDown') ||keys.has('KeyS') ? 1 : 0)
+          - (keys.has('ArrowUp')   ||keys.has('KeyW') ? 1 : 0);   // 奥 = -z
+  if(x===0 && z===0) stopDir(); else setDir(x, z);
+}
+addEventListener('keydown', e=>{
+  if(!running || dead){
+    if(e.code==='Space'||e.code==='Enter'){
+      // K.O. のアニメを読む時間を置いてから再開できるように
+      if(!dead || Date.now()-deadAt > 1200) startRun();
+    }
+    return;
+  }
+  keys.add(e.code); applyKeys();
+});
+addEventListener('keyup', e=>{ keys.delete(e.code); applyKeys(); });
+addEventListener('blur', ()=>{ keys.clear(); stopDir(); });
+
+// --- touch: 指を置いた点を中心にした仮想スティック ---
+// 携帯から来る人がほとんどなので、キーボード無しで完全に遊べること。
+// なぞった向きへ歩き、離せば止まる。キーと同じ setDir / stopDir を通す。
+(function(){
+  let ox=0, oy=0, active=false;
+  const DEAD = 12;            // これ以下は「止まっている」扱い
+  const FULL = 52;            // ここまで倒せば最大速
+  const canvas = renderer.domElement;
+
+  function fromTouch(tch){
+    const dx = tch.clientX - ox, dy = tch.clientY - oy;
+    const len = Math.hypot(dx, dy);
+    if(len < DEAD){ stopDir(); return; }
+    const k = Math.min(1, len / FULL) / len;   // 正規化しつつ倒し量を効かせる
+    setDir(dx*k, dy*k);                        // 画面の下方向 = 手前(+z)
+  }
+
+  canvas.addEventListener('touchstart', e=>{
+    const tch = e.changedTouches[0];
+    if(dead){
+      // K.O. のあと、少し待ってからタップで再挑戦
+      if(!AUTO && Date.now()-deadAt > 1500) startRun();
+      return;
+    }
+    if(!running){ startRun(); return; }
+    ox = tch.clientX; oy = tch.clientY; active = true;
+    fromTouch(tch);
+  }, {passive:true});
+
+  canvas.addEventListener('touchmove', e=>{
+    if(!active || !running || dead) return;
+    fromTouch(e.changedTouches[0]);
+  }, {passive:true});
+
+  const end = ()=>{ active=false; stopDir(); };
+  canvas.addEventListener('touchend', end, {passive:true});
+  canvas.addEventListener('touchcancel', end, {passive:true});
+
+  // タイトル画面はキャンバスの上に重なるので、こちらでもスタートを拾う
+  titleEl.addEventListener('touchend', e=>{
+    if(!running){ e.preventDefault(); startRun(); }
+  }, {passive:false});
+  titleEl.addEventListener('click', ()=>{ if(!running) startRun(); });
+
+  // ゲーム中のスワイプでページがスクロール・ズームしないように
+  canvas.addEventListener('touchmove', e=>e.preventDefault(), {passive:false});
+})();
+
+// autoplay mode for recording: ?auto=1
+// 録画では K.O. を長く見せたいので: ?hold=9000
+const RETRY_MS = Math.max(1200, parseInt(QS.get('hold')||'4200', 10));
+// ?noev=1 はイベント無しの落ち着いた run（ナレーション用）
+const NOEV = QS.get('noev')==='1';
+if(AUTO){ setTimeout(startRun, 1200); }   // startRun 経由にする（音/録音も始まる）
+
+// ---------- autopilot ----------
+// 「いまの位置から少し先」を何通りか試し、いちばん光に当たらず
+// かつ出口に近づける向きを選ぶ。判定は本体と同じ関数を使う。
+function autoPilot(dt){
+  const CAND = 20;
+  let best = null;
+  const lookahead = 1.5;                  // 先読み距離（歩幅より少し長め）
+  for(let i=0;i<=CAND;i++){
+    // 候補 0 は「止まる」。挟まれたときは待つのが正解になることがある
+    const stay = (i===0);
+    const ang = (i-1)/CAND * Math.PI*2;
+    const dx = stay ? 0 : Math.cos(ang), dz = stay ? 0 : Math.sin(ang);
+    const nx = THREE.MathUtils.clamp(px + dx*lookahead, -STAGE_W/2+.5, STAGE_W/2-.5);
+    const nz = THREE.MathUtils.clamp(pz + dz*lookahead, Z_EXIT, Z_START);
+    // 今その先が光か。現在＋0.5秒後＋1秒後を見て、輪が寄ってくる先を避ける
+    const danger = lightAt(nx, nz, 0) * 1.0
+                 + lightAt(nx, nz, .5) * 1.6
+                 + lightAt(nx, nz, 1.0) * 0.8;
+    // 出口（-z 方向）へ進めたご褒美。危険の重みのほうがずっと大きい
+    const progress = (pz - nz);
+    // 舞台の端に張りつくと逃げ場が無くなるので、軽く中央へ寄せる
+    const edge = Math.max(0, Math.abs(nx) - (STAGE_W/2 - 2.2)) * .35;
+    const scoreV = -danger*9 + progress*1.0 - edge - (stay ? .35 : 0);
+    if(!best || scoreV > best.v) best = {v:scoreV, dx, dz, stay};
+  }
+  if(best.stay) stopDir(); else setDir(best.dx, best.dz);
+}
+
+// 座標 (x,z) がどれだけ照らされているかを 0..1 で返す。
+// ahead>0 なら「ahead 秒後の輪の位置」で判定する（AI の先読み用）。
+function lightAt(x, z, ahead){
+  let worst = 0;
+  for(const s of spots){
+    if(!s.vis.group.visible || s.gain <= .02) continue;
+    const sx = spotX(s, t + ahead);
+    const d = Math.hypot(x - sx, z - s.cz);
+    const r = s.r * radiusMul();
+    if(d < r) worst = Math.max(worst, (1 - d/r) * s.gain);
+  }
+  if(hunter.active){
+    const d = Math.hypot(x - hunter.x, z - hunter.z);
+    if(d < hunter.r) worst = Math.max(worst, (1 - d/hunter.r) * lightGain());
+  }
+  return worst;
+}
+// 輪の横位置。時間から求める純関数なので、AI の先読みと本体で必ず一致する。
+function spotX(s, time){
+  return THREE.MathUtils.clamp(s.cx + Math.sin(time*s.speed + s.phase) * s.amp,
+                               -STAGE_W/2, STAGE_W/2);
+}
+// 全灯中は輪が広がる
+function radiusMul(){ return fullOn>0 ? 1.85 : 1; }
+// 暗転・ストロボで明るさ（＝当たり判定の強さ）が変わる
+function lightGain(){
+  if(blackout>0) return 0;
+  if(strobe>0)   return (Math.sin(t*16) > 0) ? 1 : 0;   // 消えている間は安全
+  return 1;
+}
+
+// ---------- showcase mode ----------
+// 被写体をひとつだけターンテーブルに乗せて、空の舞台で回す。
+// ゲーム本体と同じメッシュを使うので、ナレーションで語る物と出荷物が一致する。
+const SHOWCASE = QS.get('showcase');
+const SUBJECTS = ['runner','spotlight','hunter','exit','stage'];
+window.__subjects = SUBJECTS.slice();
+const showcase = {group:null, spin:.55, label:''};
+
+function buildShowcase(name){
+  const g = new THREE.Group();
+  let label = '', spin = .55;
+  if(name==='runner'){
+    const r = buildRunner();
+    r.group.scale.set(1.6,1.6,1.6);
+    g.add(r.group); label = '逃げる人'; spin = .5;
+    // 歩いている姿勢で止める（手足が棒に見えないように）
+    r.armL.rotation.x = .7; r.armR.rotation.x = -.7;
+    r.legL.rotation.x = -.6; r.legR.rotation.x = .6;
+  } else if(name==='spotlight'){
+    // 光そのものは showcase の暗い背景では写らないので、
+    // 照明器具と短い光柱、それに床の輪を組んで見せる。
+    const can = new THREE.Mesh(new THREE.CylinderGeometry(.34, .5, 1.0, 14),
+      new THREE.MeshStandardMaterial({color:0x22273c, roughness:.6,
+        emissive:0xffd23b, emissiveIntensity:.5}));
+    can.position.y = 2.0; g.add(can);
+    const cone = new THREE.Mesh(new THREE.ConeGeometry(1.5, 3.4, 28, 1, true),
+      new THREE.MeshBasicMaterial({color:0xffd23b, transparent:true, opacity:.22,
+        side:THREE.DoubleSide, depthWrite:false, blending:THREE.AdditiveBlending}));
+    cone.position.y = .1; cone.rotation.x = Math.PI; g.add(cone);
+    const ring = new THREE.Mesh(new THREE.RingGeometry(1.2, 1.5, 44),
+      new THREE.MeshBasicMaterial({color:0xffd23b, transparent:true, opacity:.8,
+        side:THREE.DoubleSide}));
+    ring.rotation.x = -Math.PI/2; ring.position.y = -1.6; g.add(ring);
+    label = 'スポットライト'; spin = .8;
+  } else if(name==='hunter'){
+    const can = new THREE.Mesh(new THREE.CylinderGeometry(.34, .5, 1.0, 14),
+      new THREE.MeshStandardMaterial({color:0x2a1a20, roughness:.5,
+        emissive:0xff4a5a, emissiveIntensity:1.0}));
+    can.position.y = 2.0; g.add(can);
+    const cone = new THREE.Mesh(new THREE.ConeGeometry(1.2, 3.4, 28, 1, true),
+      new THREE.MeshBasicMaterial({color:0xff4a5a, transparent:true, opacity:.26,
+        side:THREE.DoubleSide, depthWrite:false, blending:THREE.AdditiveBlending}));
+    cone.position.y = .1; cone.rotation.x = Math.PI; g.add(cone);
+    const ring = new THREE.Mesh(new THREE.RingGeometry(1.0, 1.25, 44),
+      new THREE.MeshBasicMaterial({color:0xff4a5a, transparent:true, opacity:.9,
+        side:THREE.DoubleSide}));
+    ring.rotation.x = -Math.PI/2; ring.position.y = -1.6; g.add(ring);
+    label = '追尾ライト'; spin = 1.25;
+  } else if(name==='exit'){
+    for(const sx of [-1,1]){
+      const p = new THREE.Mesh(new THREE.BoxGeometry(.3, 4.2, .3),
+        new THREE.MeshStandardMaterial({color:0x1d6b58, emissive:0x1d6b58,
+          emissiveIntensity:.9, roughness:.5}));
+      p.position.set(sx*2.4, 2.1, 0); g.add(p);
+    }
+    const top = new THREE.Mesh(new THREE.BoxGeometry(5.1, .3, .3),
+      new THREE.MeshStandardMaterial({color:0x55f0c0, emissive:0x55f0c0,
+        emissiveIntensity:1.2, roughness:.4}));
+    top.position.set(0, 4.2, 0); g.add(top);
+    const sill = new THREE.Mesh(new THREE.PlaneGeometry(5.1, .9),
+      new THREE.MeshBasicMaterial({color:0x55f0c0, transparent:true, opacity:.6}));
+    sill.rotation.x = -Math.PI/2; sill.position.y = .02; g.add(sill);
+    label = '出口のライン'; spin = .42;
+  } else if(name==='stage'){
+    // 舞台まるごとの縮小模型。床・袖・客席の関係が一目で分かる
+    const fl = new THREE.Mesh(new THREE.BoxGeometry(STAGE_W*.34, .2, STAGE_D*.34),
+      new THREE.MeshStandardMaterial({color:0x1b1e34, roughness:.9}));
+    g.add(fl);
+    for(const sx of [-1,1]){
+      const w = new THREE.Mesh(new THREE.BoxGeometry(.24, 2.2, STAGE_D*.34),
+        new THREE.MeshStandardMaterial({color:0x131728, roughness:.8}));
+      w.position.set(sx*(STAGE_W*.17 + .12), 1.2, 0); g.add(w);
+    }
+    const line = new THREE.Mesh(new THREE.PlaneGeometry(STAGE_W*.34, .3),
+      new THREE.MeshBasicMaterial({color:0x55f0c0, transparent:true, opacity:.7}));
+    line.rotation.x = -Math.PI/2; line.position.set(0, .11, -STAGE_D*.17 + .2);
+    g.add(line);
+    for(let i=0;i<3;i++){
+      const ring = new THREE.Mesh(new THREE.CircleGeometry(.85, 32),
+        new THREE.MeshBasicMaterial({color:SPOT_COLORS[i], transparent:true, opacity:.4}));
+      ring.rotation.x = -Math.PI/2;
+      ring.position.set((i-1)*1.9, .12, (i-1)*2.4);
+      g.add(ring);
+    }
+    label = '舞台'; spin = .38;
+  }
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  scene.add(g);
+
+  // 被写体を原点に揃え、バウンディングボックスに合わせてカメラを引く。
+  // 大きさが違っても同じ画角で収まる。
+  const box = new THREE.Box3().setFromObject(g);
+  const size = box.getSize(new THREE.Vector3());
+  const mid = box.getCenter(new THREE.Vector3());
+  g.position.sub(mid);
+  const reach = Math.max(size.x, size.y) * 0.5;
+  const fov = THREE.MathUtils.degToRad(camera.fov);
+  const dist = (reach / Math.tan(fov/2)) * 1.75 + 1.0;   // 1.75 = 余白
+  camera.position.set(0, size.y*0.10, dist);
+
+  // 文字パネルの場所を空けるため、被写体を横にずらす。
+  // ずらしは親に持たせる（ずれた group をまわすと公転してしまう）。
+  const bias = parseFloat(QS.get('sx') || '0');
+  const pivot = new THREE.Group();
+  pivot.position.x = -bias * reach * 1.15;
+  scene.add(pivot);
+  pivot.add(g);
+  showcase.group = g; showcase.pivot = pivot;
+  showcase.spin = spin; showcase.label = label;
+}
+
+fitCamera();          // ここで SHOWCASE は確定している
+if(SHOWCASE){
+  titleEl.classList.add('hidden');
+  buildShowcase(SHOWCASE);
+  scoreEl.textContent = '';
+  heatWrapEl.style.display = 'none';
+  heatLabelEl.style.display = 'none';
+  msgEl.textContent = QS.get('nolabel')==='1' ? '' : showcase.label;
+  msgEl.style.fontSize = 'clamp(18px,5vw,30px)';
+  msgEl.style.letterSpacing = '5px';
+  // まっさらな暗い舞台: 画面には被写体だけ
+  floor.visible = false; exitLine.visible = false; exitArch.visible = false;
+  runner.group.visible = false;      // 遊べる本体とは別オブジェクト
+  for(const w of wings) w.visible = false;
+  for(const p of planks) p.visible = false;
+  for(const s of seats) s.visible = false;
+  for(const f of camFlashes) f.mesh.visible = false;
+  for(const s of spots) s.vis.group.visible = false;
+  hunter.vis.group.visible = false;
+  scene.fog = null;
+  scene.background = new THREE.Color(0x0a0c14);
+  heroLight.position.set(2.6, 3.2, 4.2);
+  heroLight.intensity = 120; heroLight.distance = 26;
+  hemi.intensity = 3.0;
+  keyLight.intensity = 3.6; keyLight.position.set(2.5, 6, 6);
+  // 反対側からの補助光。奥の面がまっ黒にならないように
+  const fill = new THREE.PointLight(0x88aaff, 45, 26);
+  fill.position.set(-4.5, 2.4, 3.6); scene.add(fill);
+}
+// 撮影スクリプトが被写体を差し替えられるように
+window.__showcase = name => {
+  if(showcase.pivot) scene.remove(showcase.pivot);   // pivot が group を持っている
+  buildShowcase(name);
+  msgEl.textContent = showcase.label;
+};
+
+// ---------- 場面クリア ----------
+function nextScene(){
+  sceneNo++;
+  score += 250;                        // 抜けるとボーナス
+  banner('第' + sceneNo + 'ばめん', '#55f0c0');
+  if(!SILENT) SND.clear();
+  flash('#55f0c0', .45, 420);
+  heat = Math.max(0, heat - .30);       // ごほうびに少し冷ます
+  px = THREE.MathUtils.clamp(px, -STAGE_W/2+1, STAGE_W/2-1);
+  pz = Z_START - 1.2;                  // また手前から
+  layoutSpots(sceneNo);
+  hunter.active = false; hunter.vis.group.visible = false;
+}
+
+// ---------- loop ----------
+const clock = new THREE.Clock();
+const WALK = 4.6;             // 歩く速さ (units/sec) — 光の走りより遅い
+
+function tick(){
+  requestAnimationFrame(tick);
+  const raw = Math.min(clock.getDelta(), .05);
+  const dt = raw * timeScale;
+
+  if(SHOWCASE){
+    if(showcase.group) showcase.group.rotation.y += raw*showcase.spin;
+    camera.lookAt(0, 0, 0);        // 被写体はずれていても、カメラは軸上
+    renderer.render(scene, camera);
+    return;
+  }
+
+  if(running && !dead){
+    t += dt;
+    if(AUTO) autoPilot(dt);
+
+    // --- スコア: 生きているあいだ増え、奥にいるほど速く増える ---
+    const depth = (Z_START - pz) / (Z_START - Z_EXIT);      // 0(手前)..1(出口)
+    score += dt * (14 + depth*36 + sceneNo*6);
+    scoreEl.textContent = Math.floor(score);
+    if(!SILENT) SND.setPace(1 + sceneNo*.14);
+
+    // --- イベント ---
+    if(t > nextEventAt && !NOEV) triggerEvent();
+    if(blackout>0) blackout -= dt;
+    if(fullOn>0)   fullOn   -= dt;
+    if(strobe>0)   strobe   -= dt;
+
+    // --- 移動: 入力の向きへそのまま進む。壁で止まる ---
+    const mag = Math.hypot(inx, inz);
+    if(mag > .02){
+      const k = Math.min(1, mag);            // スティックの倒し量で速さが変わる
+      px += (inx/mag) * WALK * k * dt;
+      pz += (inz/mag) * WALK * k * dt;
+      px = THREE.MathUtils.clamp(px, -STAGE_W/2 + .5, STAGE_W/2 - .5);
+      pz = Math.min(pz, Z_START);            // 手前には出られない
+      walkCycle += dt * 13 * k;
+      // 進む向きへ体を向ける
+      runner.group.rotation.y = Math.atan2(inx, inz) + Math.PI;
+      // 足音は歩幅に合わせて（連打にならないよう周期でしきる）
+      if(!SILENT && Math.floor(walkCycle/Math.PI) !== Math.floor((walkCycle - dt*13*k)/Math.PI)){
+        SND.step2();
+      }
+    }
+    runner.group.position.set(px, 0, pz);
+    // 歩きの手足。止まっていれば徐々に立ち姿へ戻す
+    const sw = mag > .02 ? Math.sin(walkCycle) : 0;
+    const damp = mag > .02 ? 1 : 0;
+    runner.armL.rotation.x =  sw*.85*damp; runner.armR.rotation.x = -sw*.85*damp;
+    runner.legL.rotation.x = -sw*.75*damp; runner.legR.rotation.x =  sw*.75*damp;
+
+    // --- 出口 ---
+    if(pz <= Z_EXIT + 1.0) nextScene();
+
+    // --- スポットライトを動かす ---
+    const gain = lightGain();
+    const rMul = radiusMul();
+    for(const s of spots){
+      if(!s.vis.group.visible) continue;
+      s.gain = gain;
+      s.x = spotX(s, t);
+      s.z = s.cz;
+      const r = s.r * rMul;
+      s.vis.group.position.set(s.x, 0, s.z);
+      s.vis.disc.scale.set(r, r, 1);
+      s.vis.disc.material.uniforms.k.value = gain;
+      s.vis.cone.scale.set(r, 1, r);
+      s.vis.cone.material.opacity = .10 * gain;
+      s.vis.light.intensity = 9 * gain;
+      s.vis.can.material.emissiveIntensity = .2 + .5*gain;
+      // 器具を輪の真上に吊り、床を狙って傾ける
+      s.vis.can.position.set(0, RIG_Y + .5, 0);
+    }
+
+    // --- 追尾ライト: プレイヤーへ寄る。歩いて逃げれば引き離せる速さ ---
+    if(hunter.active){
+      const sp = 3.6 + sceneNo*.28;
+      const dx = px - hunter.x, dz = pz - hunter.z;
+      const d = Math.hypot(dx, dz) || 1;
+      hunter.x += (dx/d) * sp * dt;
+      hunter.z += (dz/d) * sp * dt;
+      const r = hunter.r * rMul;
+      hunter.vis.group.position.set(hunter.x, 0, hunter.z);
+      hunter.vis.disc.scale.set(r, r, 1);
+      hunter.vis.disc.material.uniforms.k.value = gain;
+      hunter.vis.cone.scale.set(r, 1, r);
+      hunter.vis.cone.material.opacity = .13 * gain;
+      hunter.vis.light.intensity = 11 * gain;
+      if(t > nextEventAt - 4.5){          // 次のイベントの前に引っこむ
+        hunter.z += 9*dt;
+        if(hunter.z > Z_START + 8){ hunter.active=false; hunter.vis.group.visible=false; }
+      }
+    }
+
+    // --- みつかり度 ---
+    const lit = lightAt(px, pz, 0);
+    if(lit > .02){
+      // 輪の中心に近いほど速く溜まる
+      heat += dt * (0.62 + lit*1.30) * (1 + (sceneNo-1)*.05);
+      if(litT === 0 && !SILENT) SND.lit();
+      litT += dt;
+      shake = Math.max(shake, lit*.10);
+    } else {
+      if(litT > .35 && !SILENT) SND.safe();
+      litT = 0;
+      heat -= dt * 0.36;                  // 影では冷める（当たるより遅い）
+    }
+    heat = THREE.MathUtils.clamp(heat, 0, 1);
+    heatEl.style.width = (heat*100).toFixed(1) + '%';
+    if(heat >= 1){ dead=true; gameOver(); }
+
+    // --- 演出まわり ---
+    heroLight.position.set(px, 2.2, pz);
+    heroLight.intensity = blackout>0 ? 9 : 5;      // 暗転中は本人だけ薄く見える
+    hemi.intensity = blackout>0 ? .18 : .55;
+    keyLight.intensity = blackout>0 ? .08 : .35;
+    exitLine.material.opacity = .4 + Math.sin(t*3)*.15;
+    archTop.material.emissiveIntensity = 1.0 + Math.sin(t*3)*.35;
+    // 客席のフラッシュ（全灯中に増える。ただの飾り）
+    for(const f of camFlashes){
+      f.t -= raw;
+      if(f.t <= 0){
+        f.t = (fullOn>0 ? .25 : 1.6) + Math.random()*1.4;
+        f.mesh.material.opacity = .85;
+      }
+      f.mesh.material.opacity = Math.max(0, f.mesh.material.opacity - raw*4);
+    }
+  }
+
+  // --- 死亡シーケンス: スローが止まり、カメラが寄り、本人が崩れる ---
+  if(dead){
+    timeScale += (0 - timeScale)*Math.min(1, raw*1.1);
+    runner.group.rotation.y += raw*1.6;
+    runner.group.scale.y = Math.max(.35, runner.group.scale.y - raw*.5);
+    runner.group.rotation.z += raw*.7;
+  }
+
+  // --- カメラ（死亡中も動く。ズームと揺れを見せるため）---
+  camHeight += (camHeightTarget - camHeight)*Math.min(1, raw*2.2);
+  // 舞台全体が入る俯瞰。プレイヤーに少しだけ引っぱられる
+  camera.position.x = px*.30;
+  camera.position.y = camHeight;
+  camera.position.z = pz*.22 + (Z_START + 13) - (15-camHeight)*.5;
+  if(shake>0){
+    shake = Math.max(0, shake - raw*.9);
+    camera.position.x += (Math.random()-.5)*shake;
+    camera.position.y += (Math.random()-.5)*shake;
+  }
+  camera.lookAt(px*.18, 0, (Z_START+Z_EXIT)/2 + pz*.12);
+
+  renderer.render(scene, camera);
+}
+
+function gameOver(){
+  running=false; deadAt=Date.now();
+  if(!SILENT){ SND.hit(); SND.duck(1.6); setTimeout(()=>SND.over(), 700); }
+  // 捕まった合図: 赤いフラッシュ、赤いビネット、強い揺れ、カメラが寄る
+  flash('#ff2b3a', .8, 500);
+  vignetteEl.style.transition='opacity .5s'; vignetteEl.style.opacity=1;
+  shake = .9;
+  camHeightTarget = 7.5;
+  heatEl.style.width = '100%';
+  const finalScore = Math.floor(score);
+  koScoreEl.textContent = finalScore;
+  msgEl.textContent = '';
+  setTimeout(()=>{ koEl.classList.add('on'); }, 620);   // スローが終わってから K.O.
+  if(AUTO){ setTimeout(()=>{ reset(); running=true;
+                             if(!SILENT) SND.unduck(); }, RETRY_MS); }
+  else setTimeout(()=>{
+    msgEl.textContent = matchMedia('(pointer:coarse)').matches
+      ? 'タップでもう一度' : 'スペースでもう一度';
+  }, 1800);
+}
+if(!SHOWCASE) reset();      // タイトル画面でも舞台が見えるように組んでおく
+tick();
+
+// --- ルール説明 (?) : 録画中は出さない ---
+(function(){
+  const btn = document.getElementById('helpBtn');
+  const panel = document.getElementById('help');
+  if(!btn || !panel) return;
+  if(NOCHROME){                      // 録画・showcase では画面から消す
+    btn.style.display = 'none';
+    const back = document.getElementById('back');
+    if(back) back.style.display = 'none';
+    return;
+  }
+  const open = () => { panel.classList.add('on'); };
+  const close = () => { panel.classList.remove('on'); };
+  btn.addEventListener('click', open);
+  btn.addEventListener('touchend', e => { e.preventDefault(); open(); }, {passive:false});
+  panel.addEventListener('click', e => { if(e.target === panel) close(); });
+  panel.querySelector('.close').addEventListener('click', close);
+  panel.querySelector('.close').addEventListener('touchend',
+    e => { e.preventDefault(); close(); }, {passive:false});
+  addEventListener('keydown', e => {
+    if(e.code === 'Escape') close();
+    else if(e.key === '?' || (e.code === 'Slash' && e.shiftKey)) open();
+  });
+})();
+</script>
+</body>
+</html>
