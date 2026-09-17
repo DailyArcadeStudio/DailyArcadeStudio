@@ -1,0 +1,1524 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>グラビティ・ウェル</title>
+<style>
+  html,body{margin:0;padding:0;overflow:hidden;background:#05060f;font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Helvetica Neue',Arial,sans-serif;}
+  #ui{position:fixed;top:16px;left:0;right:0;text-align:center;color:#fff;z-index:10;pointer-events:none;}
+  #score{font-size:clamp(24px,5.6vw,34px);font-weight:800;text-shadow:0 2px 8px #000;}
+  #msg{font-size:clamp(14px,3.6vw,20px);margin-top:6px;opacity:.9;text-shadow:0 2px 6px #000;}
+  #title{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:rgba(4,5,14,.76);z-index:20;color:#fff;transition:opacity .4s;padding:0 16px;box-sizing:border-box;}
+  #title h1{font-size:clamp(30px,8.4vw,60px);margin:0 0 10px;letter-spacing:2px;text-align:center;
+    text-shadow:0 4px 18px #35d0ff;}
+  #title p{font-size:clamp(13px,3.4vw,19px);opacity:.86;margin:4px 0;text-align:center;line-height:1.6;}
+  #title .btn{margin-top:26px;padding:14px 44px;font-size:clamp(18px,4.6vw,22px);font-weight:700;color:#04121a;
+    background:linear-gradient(180deg,#5fe6ff,#17a2cc);border:none;border-radius:12px;cursor:pointer;
+    box-shadow:0 6px 24px rgba(53,208,255,.45);}
+  #title .btn:hover{transform:scale(1.05);}
+  .hidden{opacity:0;pointer-events:none;}
+  #back{position:fixed;top:14px;left:14px;z-index:30;text-decoration:none;
+    background:rgba(12,16,26,.72);color:#fff;font:600 clamp(13px,3.2vw,15px)/1 'Hiragino Sans','Helvetica Neue',Arial,sans-serif;
+    padding:0 16px;height:44px;display:flex;align-items:center;border-radius:12px;}
+  #back:hover{background:rgba(30,38,56,.9);}
+  #mute{position:fixed;top:14px;right:14px;z-index:30;border:none;cursor:pointer;
+    background:rgba(12,16,26,.72);color:#fff;font-size:20px;line-height:1;
+    width:44px;height:44px;border-radius:12px;}
+  #mute:hover{background:rgba(30,38,56,.9);}
+  /* show the hint that matches the device */
+  .tc{display:none;}
+  @media (pointer:coarse){ .kb{display:none;} .tc{display:block;} }
+  /* a finger-sized START button on touch devices */
+  @media (pointer:coarse){ #title .btn{padding:18px 52px;} }
+
+  /* --- event banner: slams into the middle of the screen --- */
+  #banner{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    z-index:15;pointer-events:none;opacity:0;}
+  #banner .b{font-size:clamp(26px,7.4vw,64px);font-weight:900;letter-spacing:.06em;color:#fff;
+    padding:10px 4vw;max-width:94vw;text-align:center;transform:scale(2.4);opacity:0;
+    text-shadow:0 0 26px currentColor, 0 6px 20px #000;
+    border-top:5px solid currentColor;border-bottom:5px solid currentColor;}
+  #banner.go .b{animation:slam .62s cubic-bezier(.12,.85,.2,1) forwards;}
+  @keyframes slam{
+    0%  {transform:scale(2.4) rotate(-4deg);opacity:0;}
+    22% {transform:scale(1)   rotate(0deg); opacity:1;}
+    70% {transform:scale(1)   rotate(0deg); opacity:1;}
+    100%{transform:scale(1.12);opacity:0;}
+  }
+
+  /* --- full-screen colour flashes --- */
+  #flash{position:fixed;inset:0;z-index:14;pointer-events:none;opacity:0;background:#fff;}
+  #vignette{position:fixed;inset:0;z-index:13;pointer-events:none;opacity:0;
+    background:radial-gradient(ellipse at center,rgba(0,0,0,0) 32%,rgba(120,0,10,.85) 100%);}
+
+  /* --- K.O. screen --- */
+  #ko{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    z-index:22;pointer-events:none;opacity:0;color:#fff;transition:opacity .3s;}
+  #ko.on{opacity:1;}
+  #ko .koText{font-size:clamp(84px,22vw,180px);font-weight:900;letter-spacing:10px;color:#fff;
+    text-shadow:0 0 40px #ff3b4a,0 0 90px #ff3b4a,0 10px 30px #000;
+    transform:scale(3);opacity:0;}
+  #ko.on .koText{animation:koSlam .8s cubic-bezier(.1,.9,.2,1) forwards;}
+  @keyframes koSlam{
+    0%  {transform:scale(3) rotate(-8deg);opacity:0;}
+    30% {transform:scale(1) rotate(0deg);opacity:1;}
+    36% {transform:scale(1.06);}
+    100%{transform:scale(1);opacity:1;}
+  }
+  #ko .finalLabel{font-size:clamp(15px,4vw,22px);letter-spacing:4px;opacity:0;margin-top:6px;text-shadow:0 2px 8px #000;}
+  #ko .finalScore{font-size:clamp(44px,12vw,78px);font-weight:800;opacity:0;text-shadow:0 4px 20px #000;}
+  #ko.on .finalLabel{animation:fadeUp .5s .75s forwards;}
+  #ko.on .finalScore{animation:fadeUp .5s .9s forwards;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+
+  /* --- help (?) --- */
+  #helpBtn{position:fixed;top:14px;right:66px;z-index:30;border:none;cursor:pointer;
+    background:rgba(12,16,26,.72);color:#fff;font:700 20px/1 'Helvetica Neue',Arial,sans-serif;
+    width:44px;height:44px;border-radius:12px;}
+  #helpBtn:hover{background:rgba(30,38,56,.9);}
+  #help{position:fixed;inset:0;z-index:40;display:none;align-items:center;
+    justify-content:center;background:rgba(4,6,12,.86);padding:20px;}
+  #help.on{display:flex;}
+  #help .box{background:#0d1322;border:1px solid #23375a;border-radius:18px;
+    max-width:560px;width:100%;max-height:86vh;overflow:auto;padding:24px 24px 20px;
+    color:#e6edf3;font-family:'Hiragino Sans','Helvetica Neue',Arial,sans-serif;}
+  #help h2{margin:0 0 4px;font-size:clamp(20px,5vw,26px);}
+  #help .sub{color:#8b949e;font-size:clamp(12px,3.2vw,14px);margin:0 0 18px;}
+  #help h3{font-size:clamp(13px,3.4vw,15px);color:#5fe6ff;margin:18px 0 6px;letter-spacing:.04em;}
+  #help ul{margin:0;padding-left:20px;}
+  #help li{font-size:clamp(13px,3.4vw,15px);line-height:1.7;margin:3px 0;}
+  #help b{color:#5fe6ff;font-weight:700;}
+  #help .close{margin-top:20px;width:100%;padding:12px;border:none;border-radius:10px;
+    background:#23375a;color:#fff;font-size:16px;font-weight:700;cursor:pointer;}
+  #help .close:hover{background:#31497a;}
+</style>
+</head>
+<body>
+<div id="ui"><div id="score">0</div><div id="msg"></div></div>
+<button id="helpBtn" title="あそびかた">?</button>
+<div id="help"><div class="box">
+  <h2>グラビティ・ウェル</h2>
+  <p class="sub">引いて、離す。あとは重力にまかせる。ブラウザで無料。</p>
+    <h3>探査機</h3>
+    <ul><li>エンジンは<b>打ち出しの一瞬だけ</b>。あとは慣性で飛ぶ</li><li>引っぱった<b>向きと長さ</b>が、そのまま初速になる</li><li>燃料はない。やり直しもない</li></ul>
+    <h3>惑星</h3>
+    <ul><li>ゆっくり漂いながら、探査機を<b>引き寄せる</b></li><li>近いほど強く曲がる。<b>まっすぐは飛ばない</b></li><li>本体にぶつかれば、そこで終わり</li></ul>
+    <h3>出口ゲート</h3>
+    <ul><li>リングを<b>くぐり抜ければ次の宙域</b>へ</li><li>惑星の重力を使って回り込むほうが早い</li><li>通るたびにスコアが伸びる</li></ul>
+    <h3>ブラックホール</h3>
+    <ul><li>引力が惑星の比ではない。<b>かすめただけで持っていかれる</b></li><li>出るときだけ現れて、少しすると消える</li></ul>
+    <h3>境界</h3>
+    <ul><li>宙域の外へ出ると<b>信号が途切れる</b></li><li>重力で戻ってこられるなら、外周ぎりぎりも手</li></ul>
+  <button class="close">とじる</button>
+</div></div>
+<a id="back" href="../../" title="ゲーム一覧へ">‹ ゲーム一覧</a>
+<button id="mute" title="音のオン／オフ">🔊</button>
+<div id="vignette"></div>
+<div id="flash"></div>
+<div id="banner"><div class="b"></div></div>
+<div id="ko">
+  <div class="koText">K.O.</div>
+  <div class="finalLabel">さいしゅうスコア</div>
+  <div class="finalScore">0</div>
+</div>
+<div id="title">
+  <h1>グラビティ・ウェル</h1>
+  <p>惑星の重力で曲げて、出口ゲートへ。</p>
+  <p class="kb">← → : 狙う &nbsp;&nbsp; ↑ ↓ : 強さ &nbsp;&nbsp; スペース : 発射</p>
+  <p class="tc">画面を引っぱって離す : 発射</p>
+  <button class="btn" id="startBtn">スタート</button>
+</div>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+// ---------- url flags (declared first: sound and camera both read them) ----------
+const QS = new URLSearchParams(location.search);
+const AUTO = QS.get('auto')==='1';
+const SHOWCASE_Q = QS.get('showcase');
+// Recording must produce clean footage, so every automated mode is muted.
+const REC = QS.get('rec')==='1';   // 録音モード: 音を鳴らして拾う
+const SILENT = (AUTO || !!SHOWCASE_Q || QS.get('mute')==='1') && !REC;
+// 録画・showcase では「?」と「ゲーム一覧」を出さない（動画の邪魔になる）
+const NOCHROME = AUTO || !!SHOWCASE_Q || QS.get('nochrome')==='1';
+
+// ---------- renderer / scene ----------
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const SKY = new THREE.Color(0x05060f);
+scene.background = SKY.clone();
+
+// The whole game is played on the z=0 plane, seen straight down the z axis.
+// That keeps the aim drag a 1:1 map from screen space to world space.
+const camera = new THREE.PerspectiveCamera(50, innerWidth/innerHeight, .1, 400);
+camera.position.set(0, 0, 60);
+camera.lookAt(0, 0, 0);
+
+// Half-height of the playfield in world units. Everything else is derived
+// from it, so the arena is the same size no matter the screen shape.
+const FIELD_H = 26;
+let FIELD_W = 36;             // recomputed per aspect in fitCamera()
+
+// Portrait and landscape both have to work. A phone held upright is far
+// narrower than 16:9, so a fixed FOV would push the arena out of frame:
+// widen the vertical FOV as the screen gets taller.
+const BASE_FOV = 50;
+let CAM_Z = 60;
+function fitCamera(){
+  const aspect = innerWidth / innerHeight;
+  camera.aspect = aspect;
+  if(typeof SHOWCASE !== 'undefined' && SHOWCASE){
+    camera.fov = aspect < 1 ? 62 : 46;
+  } else {
+    // keep the horizontal field roughly constant across aspect ratios
+    const ref = 16/9;
+    camera.fov = aspect >= ref ? BASE_FOV
+      : Math.min(96, THREE.MathUtils.radToDeg(
+          2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(BASE_FOV)/2) * (ref/aspect))));
+    // pull the camera to exactly frame FIELD_H vertically
+    CAM_Z = FIELD_H / Math.tan(THREE.MathUtils.degToRad(camera.fov)/2);
+    camera.position.z = CAM_Z;
+    FIELD_W = FIELD_H * aspect;
+    if(typeof onFieldResize === 'function') onFieldResize();
+  }
+  camera.__base = camera.fov;    // ワープ演出がここに戻る
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+}
+addEventListener('resize', fitCamera);
+addEventListener('orientationchange', ()=>setTimeout(fitCamera, 120));
+
+// ---------- lights ----------
+const hemi = new THREE.HemisphereLight(0x7799ff, 0x120a20, 1.4);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xffffff, 2.2);
+sun.position.set(8, 10, 22);
+scene.add(sun);
+
+// ---------- starfield: three parallax layers of points ----------
+const starLayers = [];
+for(let layer=0; layer<3; layer++){
+  const n = 220 - layer*50;
+  const pos = new Float32Array(n*3);
+  for(let i=0;i<n;i++){
+    pos[i*3+0] = (Math.random()-.5)*180;
+    pos[i*3+1] = (Math.random()-.5)*140;
+    pos[i*3+2] = -20 - layer*26;
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos,3));
+  const mat = new THREE.PointsMaterial({
+    color: [0xffffff, 0xaad4ff, 0x7f9fdd][layer],
+    size: [0.62,0.44,0.3][layer], transparent:true, opacity:[.95,.7,.5][layer]});
+  const pts = new THREE.Points(geo, mat);
+  scene.add(pts);
+  starLayers.push({pts, mat, speed:(layer+1)*0.5});
+}
+
+// ---------- the arena border: a dashed rectangle of small cubes ----------
+// Leaving it ends the run, so it has to be unmistakably visible.
+const borderMat = new THREE.MeshBasicMaterial({color:0x2c4a7a, transparent:true, opacity:.75});
+const borderGroup = new THREE.Group();
+scene.add(borderGroup);
+function rebuildBorder(){
+  while(borderGroup.children.length) borderGroup.remove(borderGroup.children[0]);
+  const step = 2.4, tick = new THREE.BoxGeometry(1.1, .22, .22);
+  for(let x=-FIELD_W; x<=FIELD_W; x+=step){
+    for(const sy of [-1,1]){
+      const m = new THREE.Mesh(tick, borderMat);
+      m.position.set(x, sy*FIELD_H, 0); borderGroup.add(m);
+    }
+  }
+  const tickV = new THREE.BoxGeometry(.22, 1.1, .22);
+  for(let y=-FIELD_H; y<=FIELD_H; y+=step){
+    for(const sx of [-1,1]){
+      const m = new THREE.Mesh(tickV, borderMat);
+      m.position.set(sx*FIELD_W, y, 0); borderGroup.add(m);
+    }
+  }
+}
+
+// ---------- probe (the player) ----------
+const PROBE_ACCENT = 0x5fe6ff;
+function buildProbe(){
+  const g = new THREE.Group();
+  const shell = new THREE.MeshStandardMaterial({color:0xe8eef7, metalness:.5, roughness:.35});
+  const glass = new THREE.MeshStandardMaterial({color:0x123044, metalness:.2, roughness:.1,
+    emissive:0x0a2c3e});
+  const accent = new THREE.MeshStandardMaterial({color:PROBE_ACCENT, emissive:0x1d7d9a,
+    metalness:.3, roughness:.4});
+  // fuselage: a capsule lying along +x, which is the nose direction
+  const body = new THREE.Mesh(new THREE.CapsuleGeometry(.5, 1.25, 6, 16), shell);
+  body.rotation.z = Math.PI/2; g.add(body);
+  const nose = new THREE.Mesh(new THREE.ConeGeometry(.5, .95, 16), accent);
+  nose.rotation.z = -Math.PI/2; nose.position.x = 1.35; g.add(nose);
+  const dome = new THREE.Mesh(new THREE.SphereGeometry(.34, 16, 12), glass);
+  dome.position.set(.25,.30,.30); g.add(dome);
+  // Two solar panels. The camera looks straight down -z, so a panel extending
+  // in z would present as a featureless slab; they span y instead, which is
+  // the axis actually visible from the play camera.
+  for(const s of [1,-1]){
+    const panel = new THREE.Mesh(new THREE.BoxGeometry(1.0, 1.5, .07),
+      new THREE.MeshStandardMaterial({color:0x1b3a6b, metalness:.6, roughness:.3,
+        emissive:0x0a1730}));
+    panel.position.set(-.25, s*1.35, 0); panel.rotation.y = s*.22; g.add(panel);
+    const spar = new THREE.Mesh(new THREE.BoxGeometry(.1,.75,.1), shell);
+    spar.position.set(-.25, s*.7, 0); g.add(spar);
+  }
+  // dish on the tail
+  const dish = new THREE.Mesh(new THREE.CylinderGeometry(.46,.1,.22,16,1,true), accent);
+  dish.rotation.z = Math.PI/2; dish.position.x = -1.05; g.add(dish);
+  return g;
+}
+const probe = buildProbe();
+scene.add(probe);
+// Engine flare: only lit for a moment after the launch. A bare SpriteMaterial
+// with no texture draws a hard opaque square, so fade it radially in the
+// shader instead — same trick as the gravity halos.
+const flareMat = new THREE.ShaderMaterial({
+  transparent:true, depthWrite:false, blending:THREE.AdditiveBlending,
+  uniforms:{c:{value:new THREE.Color(0xffd27a)}, o:{value:0}},
+  vertexShader:`varying vec2 vUv; void main(){ vUv=uv;
+    gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }`,
+  fragmentShader:`uniform vec3 c; uniform float o; varying vec2 vUv;
+    void main(){ float d=distance(vUv,vec2(.5))*2.;
+      float a=pow(max(0.,1.-d),2.0)*o;
+      gl_FragColor=vec4(c,a); }`,
+});
+// give it the same .opacity surface the rest of the code already uses
+Object.defineProperty(flareMat, 'opacity', {
+  get(){ return this.uniforms.o.value; },
+  set(v){ this.uniforms.o.value = v; },
+});
+const flare = new THREE.Mesh(new THREE.CircleGeometry(1.7, 24), flareMat);
+probe.add(flare); flare.position.x = -1.9;
+
+// ---------- planet / gate / hazard materials ----------
+const PLANET_COLORS = [0xc4693b, 0x3f7fc4, 0x7a52c6, 0x3fa87a, 0xc4a33b];
+const planetMats = PLANET_COLORS.map(c => new THREE.MeshStandardMaterial({
+  color:c, roughness:.82, metalness:.05, flatShading:true}));
+const ringMat = new THREE.MeshStandardMaterial({color:0xd8c9a8, roughness:.7,
+  side:THREE.DoubleSide});
+const gateMat = new THREE.MeshStandardMaterial({color:0x5fe6ff, emissive:0x1d8fb0,
+  roughness:.3, metalness:.4});
+const holeMat = new THREE.MeshBasicMaterial({color:0x05060f});
+
+// The gravity halo around each body: a soft additive disc, so the player
+// can see how far the pull reaches without reading any numbers.
+function makeHalo(color, radius, strength){
+  return new THREE.Mesh(new THREE.CircleGeometry(radius, 48), new THREE.ShaderMaterial({
+    transparent:true, depthWrite:false, blending:THREE.AdditiveBlending,
+    uniforms:{c:{value:new THREE.Color(color)}, s:{value:strength}},
+    vertexShader:`varying vec2 vUv; void main(){ vUv=uv;
+      gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }`,
+    fragmentShader:`uniform vec3 c; uniform float s; varying vec2 vUv;
+      void main(){ float d=distance(vUv,vec2(.5))*2.;
+        float a=pow(max(0.,1.-d),2.4)*s;
+        gl_FragColor=vec4(c,a); }`,
+  }));
+}
+
+// ---------- planets ----------
+// Each planet is a body + a halo showing its reach. They drift slowly, so
+// the same shot never works twice.
+const planets = [];
+function buildPlanet(radius, colorIdx, ringed){
+  const g = new THREE.Group();
+  const mat = planetMats[colorIdx % planetMats.length];
+  const ball = new THREE.Mesh(new THREE.IcosahedronGeometry(radius, 2), mat);
+  g.add(ball);
+  if(ringed){
+    const ring = new THREE.Mesh(new THREE.RingGeometry(radius*1.5, radius*2.3, 48), ringMat);
+    ring.rotation.x = 1.15; ring.rotation.y = .35; g.add(ring);
+  }
+  const halo = makeHalo(mat.color.getHex(), radius*4.2, .5);
+  halo.position.z = -.3; g.add(halo);
+  return {group:g, ball, halo};
+}
+function spawnPlanet(x, y, radius, colorIdx, ringed){
+  const p = buildPlanet(radius, colorIdx, ringed);
+  p.group.position.set(x, y, 0);
+  scene.add(p.group);
+  const ang = Math.random()*Math.PI*2, sp = .8 + Math.random()*1.4;
+  const rec = {...p, r:radius, mass:radius*radius*1.35,
+    vx:Math.cos(ang)*sp, vy:Math.sin(ang)*sp, spin:(Math.random()-.5)*.6, frozen:0};
+  planets.push(rec);
+  return rec;
+}
+
+// ---------- exit gate: a torus the probe must pass through ----------
+const gate = (()=>{
+  const g = new THREE.Group();
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(2.6, .42, 12, 40), gateMat);
+  g.add(ring);
+  // three markers orbiting the ring so it reads as "active" at a glance
+  const pips = [];
+  for(let i=0;i<3;i++){
+    const m = new THREE.Mesh(new THREE.OctahedronGeometry(.42),
+      new THREE.MeshStandardMaterial({color:0xffffff, emissive:0x66d8ff}));
+    g.add(m); pips.push(m);
+  }
+  const halo = makeHalo(0x5fe6ff, 7.5, .42);
+  halo.position.z = -.5; g.add(halo);
+  scene.add(g);
+  return {group:g, ring, pips, halo, r:2.6, vx:0, vy:0};
+})();
+
+// ---------- black hole (event hazard) ----------
+const blackhole = (()=>{
+  const g = new THREE.Group();
+  const core = new THREE.Mesh(new THREE.SphereGeometry(1.5, 24, 18), holeMat);
+  g.add(core);
+  // accretion disc: a bright ring seen almost edge-on
+  const disc = new THREE.Mesh(new THREE.TorusGeometry(2.5, .34, 10, 44),
+    new THREE.MeshBasicMaterial({color:0xff9a3b}));
+  disc.rotation.x = 1.25; g.add(disc);
+  const disc2 = new THREE.Mesh(new THREE.TorusGeometry(3.6, .16, 8, 48),
+    new THREE.MeshBasicMaterial({color:0xff5ba8, transparent:true, opacity:.75}));
+  disc2.rotation.x = 1.25; g.add(disc2);
+  const halo = makeHalo(0xb14bff, 22, .55);
+  halo.position.z = -.6; g.add(halo);
+  g.visible = false;
+  scene.add(g);
+  return {group:g, disc, disc2, halo, r:1.5, active:false, x:0, y:0, life:0};
+})();
+
+// ---------- debris field (event hazard): small tumbling rocks ----------
+const debrisMat = new THREE.MeshStandardMaterial({color:0x6b6152, roughness:.95,
+  flatShading:true});
+function buildDebris(){
+  const m = new THREE.Mesh(new THREE.DodecahedronGeometry(.85, 0), debrisMat);
+  return m;
+}
+const debris = [];
+
+// ---------- comet (event hazard): a fast body on a straight line ----------
+function buildComet(){
+  const g = new THREE.Group();
+  const head = new THREE.Mesh(new THREE.IcosahedronGeometry(1.0, 1),
+    new THREE.MeshStandardMaterial({color:0xdff3ff, emissive:0x3a8fc0, flatShading:true}));
+  g.add(head);
+  // tail: a stack of shrinking translucent spheres trailing behind -x
+  const tail = [];
+  for(let i=0;i<9;i++){
+    const s = new THREE.Mesh(new THREE.SphereGeometry(.85 - i*.08, 10, 8),
+      new THREE.MeshBasicMaterial({color:0x8fd8ff, transparent:true, opacity:.5 - i*.05}));
+    s.position.x = -1.3 - i*1.15; g.add(s); tail.push(s);
+  }
+  return {group:g, head, tail};
+}
+const comet = (()=>{
+  const c = buildComet();
+  c.group.visible = false; scene.add(c.group);
+  return {...c, active:false, x:0, y:0, vx:0, vy:0};
+})();
+
+// ---------- aim trail: dots showing the predicted first stretch of flight ----------
+const TRAIL_N = 26;
+const trailDots = [];
+const trailMat = new THREE.MeshBasicMaterial({color:0x5fe6ff, transparent:true, opacity:.8});
+for(let i=0;i<TRAIL_N;i++){
+  const d = new THREE.Mesh(new THREE.SphereGeometry(.16, 8, 6), trailMat.clone());
+  d.visible = false; scene.add(d); trailDots.push(d);
+}
+
+// ---------- flight trail: where the probe has actually been ----------
+const PATH_N = 90;
+const pathDots = [];
+for(let i=0;i<PATH_N;i++){
+  const d = new THREE.Mesh(new THREE.SphereGeometry(.12, 6, 5),
+    new THREE.MeshBasicMaterial({color:0xff9a3b, transparent:true, opacity:.6}));
+  d.visible = false; scene.add(d); pathDots.push(d);
+}
+let pathIdx = 0;
+
+// ---------- game state ----------
+const AIMING = 0, FLYING = 1;       // the two phases of every shot
+let running=false, dead=false, t=0, score=0, phase=AIMING;
+let aimAngle = 0.5;                  // radians, where the probe will go
+let aimPower = 0.55;                 // 0..1 of MAX_SPEED
+let launches = 0, gates = 0;         // how many shots / how many gates cleared
+let px=0, py=0, vx=0, vy=0;          // probe position and velocity
+let flightT = 0;                     // seconds since launch (used for the timeout)
+let timeScale=1;                     // slow-motion multiplier
+let deadAt=0;                        // when the run ended (touch retry gate)
+let shake=0;                         // camera shake amount
+let camZoom=1, camZoomTarget=1;      // death zoom pulls the camera in
+let gravityMul=1;                    // MASS SPIKE multiplies this
+let gravityFx=0;                     // >0 while the spike is on
+let nextEventAt=9;                   // seconds until the first event
+let eventQueue=[];                   // event names not yet used in this run
+let warpFx=0;                        // >0 right after a gate pass
+let probesLeft=3;                    // spare probes; running out ends the run
+const MAX_SPEED = 26;                // world units/sec at full power
+const G = 62;                        // gravity constant, tuned by feel
+const FLIGHT_LIMIT = 16;             // seconds before a shot is declared lost
+
+const scoreEl = document.getElementById('score');
+const msgEl = document.getElementById('msg');
+const titleEl = document.getElementById('title');
+const bannerEl = document.getElementById('banner');
+const bannerText = bannerEl.querySelector('.b');
+const flashEl = document.getElementById('flash');
+const vignetteEl = document.getElementById('vignette');
+const koEl = document.getElementById('ko');
+const koScoreEl = koEl.querySelector('.finalScore');
+
+// ---------- presentation helpers ----------
+function banner(text, color){
+  bannerText.textContent = text;
+  bannerText.style.color = color;
+  bannerEl.classList.remove('go');
+  void bannerEl.offsetWidth;      // restart the CSS animation
+  bannerEl.style.opacity = 1;
+  bannerEl.classList.add('go');
+}
+function flash(color, strength, ms){
+  flashEl.style.background = color;
+  flashEl.style.transition = 'none';
+  flashEl.style.opacity = strength;
+  requestAnimationFrame(()=>{
+    flashEl.style.transition = `opacity ${ms}ms ease-out`;
+    flashEl.style.opacity = 0;
+  });
+}
+
+// ---------- gravity ----------
+// The single rule the whole game runs on: every massive body pulls the
+// probe with 1/r², softened near the centre so the numbers stay sane.
+function gravityAt(x, y, out){
+  out.x = 0; out.y = 0;
+  for(const p of planets){
+    const dx = p.group.position.x - x, dy = p.group.position.y - y;
+    const d2 = Math.max(dx*dx + dy*dy, p.r*p.r*0.7);
+    const f = G * p.mass * gravityMul / (d2 * Math.sqrt(d2));
+    out.x += dx*f; out.y += dy*f;
+  }
+  if(blackhole.active){
+    const dx = blackhole.x - x, dy = blackhole.y - y;
+    const d2 = Math.max(dx*dx + dy*dy, 9);
+    const f = G * 190 * gravityMul / (d2 * Math.sqrt(d2));
+    out.x += dx*f; out.y += dy*f;
+  }
+  return out;
+}
+
+// Simulate the shot forward so the aim dots show where it actually goes.
+// Only the first stretch is drawn — the player still has to read the rest.
+const _g = new THREE.Vector2();
+function predict(angle, power, steps, dtStep){
+  const out = [];
+  let x = px, y = py;
+  let sx = Math.cos(angle)*power*MAX_SPEED, sy = Math.sin(angle)*power*MAX_SPEED;
+  for(let i=0;i<steps;i++){
+    for(let k=0;k<3;k++){                    // substeps keep the curve honest
+      gravityAt(x, y, _g);
+      sx += _g.x*dtStep/3; sy += _g.y*dtStep/3;
+      x += sx*dtStep/3;    y += sy*dtStep/3;
+    }
+    out.push([x,y]);
+    // stop drawing once the path has clearly left the arena or hit something
+    if(Math.abs(x) > FIELD_W+6 || Math.abs(y) > FIELD_H+6) break;
+    let hit = false;
+    for(const p of planets){
+      const dx = p.group.position.x-x, dy = p.group.position.y-y;
+      if(dx*dx+dy*dy < p.r*p.r){ hit = true; break; }
+    }
+    if(hit) break;
+  }
+  return out;
+}
+
+// ---------- layout: a fresh set of planets and a gate for each "宙域" ----------
+function clearPlanets(){
+  for(const p of planets) scene.remove(p.group);
+  planets.length = 0;
+}
+function layoutField(){
+  clearPlanets();
+  // The probe always launches from the left edge, the gate always sits on
+  // the right, so the shot reads the same way on any screen shape.
+  px = -FIELD_W*0.78; py = (Math.random()-.5)*FIELD_H*0.6;
+  probe.position.set(px, py, 0);
+  const n = Math.min(4, 2 + Math.floor(gates/3));     // more planets as it goes
+  for(let i=0;i<n;i++){
+    // spread them across the middle band, away from the launch point
+    const fx = -0.25 + (i+0.5)/n * 1.1;
+    const x = fx*FIELD_W + (Math.random()-.5)*FIELD_W*0.16;
+    const y = (Math.random()-.5)*FIELD_H*1.35;
+    const r = 2.2 + Math.random()*2.4;
+    spawnPlanet(x, y, r, i + gates, Math.random()<.35);
+  }
+  // gate on the right, drifting gently up and down
+  gate.group.position.set(FIELD_W*0.8, (Math.random()-.5)*FIELD_H*1.1, 0);
+  gate.vy = (Math.random()<.5?-1:1) * (1.4 + Math.min(3, gates*0.25));
+  gate.vx = 0;
+  // push any planet that spawned on top of the probe or the gate away
+  for(const p of planets){
+    for(const [cx,cy,cr] of [[px,py,7],[gate.group.position.x,gate.group.position.y,8]]){
+      const dx = p.group.position.x-cx, dy = p.group.position.y-cy;
+      const d = Math.hypot(dx,dy), need = p.r + cr;
+      if(d < need){
+        const k = (need-d)/(d||1);
+        p.group.position.x += dx*k; p.group.position.y += dy*k;
+      }
+    }
+  }
+}
+// the arena changes size when the window does, so rebuild what depends on it
+function onFieldResize(){
+  rebuildBorder();
+  if(!running && !SHOWCASE_Q) { /* title screen: nothing to re-place */ }
+}
+
+// ---------- events ----------
+const EVENTS = {
+  // A black hole opens near the gate — the shot has to swing wide around it.
+  blackhole(){
+    banner('ブラックホール', '#b14bff');
+    blackhole.active = true; blackhole.life = 11;
+    // place it between the probe and the gate, offset so there is still a way past
+    blackhole.x = FIELD_W*0.22 + (Math.random()-.5)*FIELD_W*0.2;
+    blackhole.y = (Math.random()-.5)*FIELD_H*1.0;
+    blackhole.group.position.set(blackhole.x, blackhole.y, 0);
+    blackhole.group.visible = true;
+    blackhole.group.scale.setScalar(0.01);
+    shake = Math.max(shake, .4);
+    return 11;
+  },
+  // Every planet pulls harder for a while. Same layout, different physics.
+  massspike(){
+    banner('重力増大', '#ff9a3b');
+    gravityMul = 2.1; gravityFx = 8;
+    flash('#ff9a3b', .3, 420);
+    shake = Math.max(shake, .25);
+    return 8;
+  },
+  // A slab of rock drifts across the middle of the field.
+  debrisfield(){
+    banner('デブリ帯', '#c9b98f');
+    const cx = (Math.random()-.5)*FIELD_W*0.5;
+    for(let i=0;i<11;i++){
+      const m = buildDebris();
+      m.position.set(cx + (Math.random()-.5)*10,
+                     -FIELD_H + (i/11)*FIELD_H*2 + (Math.random()-.5)*3, 0);
+      m.scale.setScalar(.7 + Math.random()*.9);
+      scene.add(m);
+      debris.push({mesh:m, vx:(Math.random()-.5)*2.4, vy:(Math.random()-.5)*2.4,
+        sx:(Math.random()-.5)*2, sy:(Math.random()-.5)*2, life:13,
+        r:.85*(m.scale.x)});
+    }
+    return 13;
+  },
+  // A comet crosses the field fast. It ignores gravity; you just avoid it.
+  comet(){
+    banner('彗星接近', '#8fd8ff');
+    const fromTop = Math.random()<.5;
+    comet.x = (Math.random()-.5)*FIELD_W*1.2;
+    comet.y = fromTop ? FIELD_H+8 : -FIELD_H-8;
+    const tx = (Math.random()-.5)*FIELD_W*1.2, ty = -comet.y;
+    const d = Math.hypot(tx-comet.x, ty-comet.y);
+    const sp = 20;
+    comet.vx = (tx-comet.x)/d*sp; comet.vy = (ty-comet.y)/d*sp;
+    comet.active = true; comet.group.visible = true;
+    return 7;
+  },
+  // Every planet stops dead for a few seconds: the one calm window per run.
+  freeze(){
+    banner('惑星停止', '#5fe6ff');
+    for(const p of planets) p.frozen = 5.5;
+    flash('#9ff0ff', .28, 380);
+    return 6;
+  },
+};
+const EVENT_NAMES = Object.keys(EVENTS);
+// recording/debug hook: fire a named event on cue (used by the capture script)
+// returns false if the run is already over, so a capture script can wait
+// for the next run instead of firing an event onto the K.O. screen
+window.__ev = name => {
+  if(!running || dead || !EVENTS[name]) return false;
+  const busy = EVENTS[name]();
+  if(!SILENT) SND.event(); nextEventAt = t + busy + 5; return true;
+};
+window.__alive = () => running && !dead;
+window.__kill = () => { if(running && !dead){ dead=true; gameOver(); } };
+window.__recStop = () => SND.recStop();
+window.__snd = () => ({enabled: SND.enabled, silent: SILENT});
+window.__events = EVENT_NAMES.slice();
+window.__probe = () => ({t:+t.toFixed(2), phase, gates, launches,
+  x:+px.toFixed(2), y:+py.toFixed(2), next:+nextEventAt.toFixed(2)});
+
+function refillEventQueue(){
+  eventQueue = EVENT_NAMES.slice();
+  for(let i=eventQueue.length-1;i>0;i--){        // shuffle so the order varies per run
+    const j = Math.floor(Math.random()*(i+1));
+    [eventQueue[i],eventQueue[j]]=[eventQueue[j],eventQueue[i]];
+  }
+}
+
+function triggerEvent(){
+  if(!eventQueue.length) refillEventQueue();
+  const name = eventQueue.pop();
+  const busy = EVENTS[name]();
+  if(!SILENT) SND.event();
+  nextEventAt = t + busy + 5 + Math.random()*4;  // breathing room between events
+}
+
+// ---------- reset ----------
+function clearHazards(){
+  for(const d of debris) scene.remove(d.mesh);
+  debris.length = 0;
+  blackhole.active = false; blackhole.group.visible = false;
+  comet.active = false; comet.group.visible = false;
+  gravityMul = 1; gravityFx = 0;
+}
+function reset(){
+  clearHazards();
+  rebuildBorder();
+  t=0; score=0; dead=false; gates=0; launches=0; probesLeft=3;
+  timeScale=1; shake=0; camZoom=1; camZoomTarget=1; warpFx=0;
+  aimAngle=0.35; aimPower=0.55;
+  vx=0; vy=0; flightT=0;
+  phase = AIMING;
+  probe.rotation.set(0,0,0);
+  probe.scale.setScalar(1);
+  flareMat.opacity = 0;
+  layoutField();
+  for(const d of pathDots) d.visible = false;
+  pathIdx = 0;
+  nextEventAt = 9;
+  refillEventQueue();
+  msgEl.textContent = '';
+  koEl.classList.remove('on');
+  vignetteEl.style.transition='opacity .3s'; vignetteEl.style.opacity=0;
+  camera.fov = camera.__base || BASE_FOV; camera.updateProjectionMatrix();
+}
+
+const startBtn = document.getElementById('startBtn');
+
+// ---------- sound: everything synthesised, no audio files ----------
+// Keeps the single-HTML rule (nothing to download) and lets the music
+// react to play: the bass line speeds up with the game, events drop a
+// stinger, and the whole thing ducks out on a game over.
+const SND = (() => {
+  let ctx = null, master = null, musicGain = null, on = true, started = false;
+  let step = 0, timer = null, tempo = 0.25;
+
+  // A pentatonic scale never sounds wrong against itself, which matters
+  // when the tempo drifts with the player's speed.
+  // minor pentatonic, driving — a chase that never lets up
+  const SCALE = [0, 3, 5, 7, 10];
+  const ROOT = 196;
+  const BASS = 'square', LEAD = 'sawtooth';
+  const hz = (deg, oct = 0) =>
+    ROOT * Math.pow(2, oct + Math.floor(deg / SCALE.length)) *
+    Math.pow(2, SCALE[((deg % SCALE.length) + SCALE.length) % SCALE.length] / 12);
+
+  function ensure() {
+    if (ctx) return ctx;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    ctx = new AC();
+    master = ctx.createGain();
+    master.gain.value = 0.32;
+    master.connect(ctx.destination);
+    musicGain = ctx.createGain();
+    musicGain.gain.value = 1;
+    musicGain.connect(master);
+    return ctx;
+  }
+
+
+  // ---- 録音用の分岐（?rec=1）----
+  // Playwright の録画には音声が入らないので、ゲーム自身に master バスを
+  // 録らせる。鳴っているものそのものなので映像と必ず同期する。
+  let recDest = null, recorder = null, recChunks = [];
+  function recStart() {
+    if (!ctx || recorder) return;
+    recDest = ctx.createMediaStreamDestination();
+    master.connect(recDest);
+    recorder = new MediaRecorder(recDest.stream, {mimeType: 'audio/webm'});
+    recorder.ondataavailable = e => { if (e.data.size) recChunks.push(e.data); };
+    recorder.start();
+  }
+  function recStop() {
+    return new Promise(res => {
+      if (!recorder) return res(null);
+      recorder.onstop = async () => {
+        const blob = new Blob(recChunks, {type: 'audio/webm'});
+        const buf = await blob.arrayBuffer();
+        res(Array.from(new Uint8Array(buf)));
+      };
+      recorder.stop();
+    });
+  }
+
+  function blip(freq, dur, type = 'square', vol = 0.25, dest = null, slideTo = null) {
+    if (!ctx || !on) return;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, ctx.currentTime);
+    if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, ctx.currentTime + dur);
+    // a short attack stops every note from clicking
+    g.gain.setValueAtTime(0, ctx.currentTime);
+    g.gain.linearRampToValueAtTime(vol, ctx.currentTime + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
+    o.connect(g); g.connect(dest || master);
+    o.start(); o.stop(ctx.currentTime + dur + 0.02);
+  }
+
+  function noise(dur, vol = 0.2, hp = 800) {
+    if (!ctx || !on) return;
+    const n = Math.floor(ctx.sampleRate * dur);
+    const buf = ctx.createBuffer(1, n, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    const f = ctx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = hp;
+    const g = ctx.createGain(); g.gain.value = vol;
+    src.connect(f); f.connect(g); g.connect(master);
+    src.start();
+  }
+
+  // --- the loop: a walking bass plus an offbeat blip ---
+  function tick() {
+    if (!ctx || !on) return;
+    const bar = step % 16;
+    // straight driving pulse: bass on every beat, lead stabs offbeat
+    if (bar % 2 === 0) blip(hz(bar % 8 === 0 ? 0 : 1, -1), tempo * 1.1, BASS, 0.30, musicGain);
+    if (bar % 8 === 5) blip(hz(4, 0), tempo * 0.6, LEAD, 0.09, musicGain);
+    if (bar % 4 === 2) noise(0.04, 0.05, 5000);
+    step++;
+    timer = setTimeout(tick, tempo * 1000);
+  }
+
+  return {
+    // must be called from a user gesture — browsers block audio otherwise
+    start() {
+      if (!ensure() || started) return;
+      if (ctx.state === 'suspended') ctx.resume();
+      started = true; step = 0; tick();
+    },
+    stop() { if (timer) { clearTimeout(timer); timer = null; } started = false; },
+    /** speed the music up with the game; 1 = starting pace */
+    setPace(mult) { tempo = Math.max(0.11, 0.25 / Math.max(0.2, mult)); },
+    duck(sec = 1.6) {                                      // for game over
+      if (!ctx) return;
+      musicGain.gain.cancelScheduledValues(ctx.currentTime);
+      musicGain.gain.setValueAtTime(musicGain.gain.value, ctx.currentTime);
+      musicGain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + sec);
+    },
+    unduck() {
+      if (!ctx) return;
+      musicGain.gain.cancelScheduledValues(ctx.currentTime);
+      musicGain.gain.setValueAtTime(0.0001, ctx.currentTime);
+      musicGain.gain.exponentialRampToValueAtTime(1, ctx.currentTime + 0.4);
+    },
+    // --- one-shots ---
+    // 照準を動かすたびの小さな点。連打されるので短く、音量も控えめ。
+    aim()   { ensure(); blip(hz(3, 1), 0.05, LEAD, 0.09); },
+    // 発射: 低い音から高い音へ跳ね上がる、いちばん目立つ音
+    launch(){ ensure(); blip(hz(0, -1), 0.30, 'sawtooth', 0.26, null, hz(2, 1));
+              noise(0.12, 0.10, 300); },
+    // スイングバイ: 惑星をかすめた瞬間の上がる三度
+    swing() { ensure(); blip(hz(2, 0), 0.10, 'triangle', 0.16, null, hz(4, 0)); },
+    // ゲート通過: 明るい三音の上行アルペジオ
+    gate()  { ensure(); [0, 70, 140].forEach((ms, i) =>
+                setTimeout(() => blip(hz(2 + i * 2, 1), 0.20, 'triangle', 0.22), ms)); },
+    event() { ensure(); [0, 90, 180].forEach((ms, i) =>
+                setTimeout(() => blip(hz(2 + i, 0), 0.18, 'sawtooth', 0.20), ms)); },
+    hit()   { ensure(); noise(0.35, 0.30, 200);
+              blip(180, 0.5, 'sawtooth', 0.28, null, 40); },
+    over()  { ensure(); [0, 140, 280, 460].forEach((ms, i) =>
+                setTimeout(() => blip(hz(-i, -1), 0.42, 'triangle', 0.26), ms)); },
+    recStart() { ensure(); recStart(); },
+    recStop() { return recStop(); },
+    toggle() { on = !on; if (!on) { this.stop(); } else { this.start(); } return on; },
+    get enabled() { return on; },
+  };
+})();
+
+// --- one place for every action, so touch and keyboard stay in step ---
+function startRun(){
+  titleEl.classList.add('hidden'); reset(); running=true;
+  if(!SILENT){ SND.unduck(); SND.start(); if(REC) SND.recStart(); }
+}
+// aim: turn the nose. dir is -1 / +1, scaled by how long the key is held.
+function aimBy(d){
+  if(phase!==AIMING) return;
+  aimAngle += d;
+  if(!SILENT) SND.aim();
+}
+function powerBy(d){
+  if(phase!==AIMING) return;
+  aimPower = THREE.MathUtils.clamp(aimPower + d, .18, 1);
+  if(!SILENT) SND.aim();
+}
+// the one thing the player actually commits to
+function launch(){
+  if(phase!==AIMING || !running || dead) return;
+  vx = Math.cos(aimAngle)*aimPower*MAX_SPEED;
+  vy = Math.sin(aimAngle)*aimPower*MAX_SPEED;
+  phase = FLYING; flightT = 0; launches++;
+  flareMat.opacity = 1;
+  for(const d of trailDots) d.visible = false;
+  for(const d of pathDots) d.visible = false;
+  pathIdx = 0;
+  if(!SILENT) SND.launch();
+}
+
+const muteBtn = document.getElementById('mute');
+function toggleMute(){ muteBtn.textContent = SND.toggle() ? '🔊' : '🔇'; }
+muteBtn.addEventListener('click', toggleMute);
+muteBtn.addEventListener('touchend', e=>{ e.preventDefault(); toggleMute(); },
+                         {passive:false});
+if(SILENT) muteBtn.style.display='none';   // automated modes have no audio
+addEventListener('keydown', e=>{ if(e.code==='KeyM') toggleMute(); });
+
+startBtn.addEventListener('click', startRun);
+// a touch on the button must start too — click alone is unreliable on touch
+startBtn.addEventListener('touchend', e=>{ e.preventDefault(); startRun(); },
+                          {passive:false});
+
+// --- keyboard: arrows aim and set power, space fires ---
+// Held keys are applied per frame in the loop so the aim moves smoothly.
+const keys = {};
+addEventListener('keydown', e=>{
+  if(!running){
+    if(e.code==='Space'||e.code==='Enter') startRun();
+    return;
+  }
+  if(dead){
+    if(e.code==='Space'||e.code==='Enter'){ if(Date.now()-deadAt>1200) startRun(); }
+    return;
+  }
+  keys[e.code] = true;
+  if(e.code==='Space'||e.code==='Enter'){ e.preventDefault(); launch(); }
+});
+addEventListener('keyup', e=>{ keys[e.code] = false; });
+function applyHeldKeys(dt){
+  if(phase!==AIMING) return;
+  const turn = 1.5*dt;
+  if(keys['ArrowLeft']||keys['KeyA'])  { aimAngle += turn; }
+  if(keys['ArrowRight']||keys['KeyD']) { aimAngle -= turn; }
+  if(keys['ArrowUp']||keys['KeyW'])    { aimPower = Math.min(1, aimPower + .9*dt); }
+  if(keys['ArrowDown']||keys['KeyS'])  { aimPower = Math.max(.18, aimPower - .9*dt); }
+}
+
+// --- touch / mouse: pull back and release, like a catapult ---
+// Drag away from the probe and let go: the direction from the drag point
+// to the probe is the aim, the length is the power. This is a different
+// finger motion from tapping or swiping — you hold, adjust, and release.
+(function(){
+  const canvas = renderer.domElement;
+  let dragging = false, dsx = 0, dsy = 0, dx = 0, dy = 0, downAt = 0;
+  const PULL_MAX = 0.28;        // fraction of the screen's short side = full power
+
+  function screenScale(){ return Math.min(innerWidth, innerHeight); }
+
+  function begin(x, y){
+    if(!running || dead || phase!==AIMING) return;
+    dragging = true; dsx = x; dsy = y; dx = x; dy = y; downAt = Date.now();
+  }
+  function move(x, y){
+    if(!dragging) return;
+    dx = x; dy = y;
+    // pull vector points from the current finger back to where it started;
+    // the probe flies the opposite way, exactly like a slingshot
+    const pxs = dsx - dx, pys = dsy - dy;
+    const len = Math.hypot(pxs, pys);
+    if(len < 6) return;                       // ignore jitter before a real pull
+    // screen y grows downward, world y grows upward
+    aimAngle = Math.atan2(-pys, pxs);
+    aimPower = THREE.MathUtils.clamp(len / (screenScale()*PULL_MAX), .18, 1);
+  }
+  function end(){
+    if(!dragging) return;
+    dragging = false;
+    const len = Math.hypot(dsx-dx, dsy-dy);
+    // a bare tap (no pull) still fires, using whatever aim is already set —
+    // otherwise a mis-registered drag would feel like a dead screen
+    if(len < 6 && Date.now()-downAt > 400) return;
+    launch();
+  }
+
+  canvas.addEventListener('touchstart', e=>{
+    const tt = e.changedTouches[0]; begin(tt.clientX, tt.clientY);
+  }, {passive:true});
+  canvas.addEventListener('touchmove', e=>{
+    const tt = e.changedTouches[0]; move(tt.clientX, tt.clientY);
+  }, {passive:true});
+  canvas.addEventListener('touchend', e=>{
+    if(dead){
+      // give the K.O. animation time to read, then a tap retries
+      if(!AUTO && Date.now()-deadAt > 1500) startRun();
+      return;
+    }
+    if(!running){ startRun(); return; }
+    end();
+  }, {passive:true});
+  canvas.addEventListener('touchcancel', ()=>{ dragging = false; }, {passive:true});
+
+  // the same three handlers for a mouse, so desktop can drag too
+  canvas.addEventListener('mousedown', e=>{
+    if(dead){ if(!AUTO && Date.now()-deadAt > 1200) startRun(); return; }
+    if(!running){ startRun(); return; }
+    begin(e.clientX, e.clientY);
+  });
+  addEventListener('mousemove', e=>move(e.clientX, e.clientY));
+  addEventListener('mouseup', end);
+
+  // The title overlay sits above the canvas, so a tap anywhere on it never
+  // reaches the canvas handler. Start from the overlay itself.
+  titleEl.addEventListener('touchend', e=>{
+    if(!running){ e.preventDefault(); startRun(); }
+  }, {passive:false});
+
+  // stop the browser treating game drags as scroll / double-tap zoom
+  canvas.addEventListener('touchmove', e=>e.preventDefault(), {passive:false});
+})();
+
+// autoplay mode for recording: ?auto=1
+// recording holds the K.O. longer than play does: ?hold=9000
+const RETRY_MS = Math.max(1200, parseInt(QS.get('hold')||'4200', 10));
+// ?noev=1 records a calm run with no events, for narration beds
+const NOEV = QS.get('noev')==='1';
+if(AUTO){ setTimeout(startRun, 1200); }   // startRun 経由にする（音/録音も始まる）
+
+// ---------- autopilot ----------
+// Searches for a shot that reaches the gate: it runs the same predictor the
+// aim dots use over a fan of angles and powers, and picks the one that ends
+// up closest to the gate without hitting anything. Not a cheat — it only
+// knows what the player can see.
+let autoWait = 0;
+function scoreShot(angle, power){
+  let x = px, y = py;
+  let sx = Math.cos(angle)*power*MAX_SPEED, sy = Math.sin(angle)*power*MAX_SPEED;
+  const dt = 1/24;
+  let best = Infinity;
+  // The planets keep drifting for the whole flight, so a predictor frozen at
+  // t=0 plans near-misses that have become crashes by the time the probe
+  // arrives. Step a copy of the layout forward alongside the trajectory.
+  const sim = planets.map(p => ({x:p.group.position.x, y:p.group.position.y,
+    vx:p.frozen>0?0:p.vx, vy:p.frozen>0?0:p.vy, r:p.r, mass:p.mass}));
+  // gate drifts, so aim a little ahead of where it is right now
+  for(let i=0;i<220;i++){
+    // advance the simulated planets, bouncing them off the walls as the real ones do
+    for(const q of sim){
+      q.x += q.vx*dt; q.y += q.vy*dt;
+      const lx = FIELD_W - q.r - 1, ly = FIELD_H - q.r - 1;
+      if(q.x >  lx){ q.x =  lx; q.vx = -Math.abs(q.vx); }
+      if(q.x < -lx){ q.x = -lx; q.vx =  Math.abs(q.vx); }
+      if(q.y >  ly){ q.y =  ly; q.vy = -Math.abs(q.vy); }
+      if(q.y < -ly){ q.y = -ly; q.vy =  Math.abs(q.vy); }
+    }
+    // gravity from the simulated (moving) planets, not the frozen live ones
+    let ax = 0, ay = 0;
+    for(const q of sim){
+      const ddx = q.x-x, ddy = q.y-y;
+      const d2 = Math.max(ddx*ddx + ddy*ddy, q.r*q.r*0.7);
+      const f = G * q.mass * gravityMul / (d2 * Math.sqrt(d2));
+      ax += ddx*f; ay += ddy*f;
+    }
+    if(blackhole.active){
+      const ddx = blackhole.x-x, ddy = blackhole.y-y;
+      const d2 = Math.max(ddx*ddx + ddy*ddy, 9);
+      const f = G * 190 * gravityMul / (d2 * Math.sqrt(d2));
+      ax += ddx*f; ay += ddy*f;
+    }
+    sx += ax*dt; sy += ay*dt;
+    x += sx*dt; y += sy*dt;
+    const gx = gate.group.position.x + gate.vx*(i*dt);
+    let gy = gate.group.position.y + gate.vy*(i*dt);
+    // the gate bounces off the top and bottom, so fold the prediction back in
+    const lim = FIELD_H*0.82;
+    while(Math.abs(gy) > lim) gy = Math.sign(gy)*(2*lim) - gy;
+    const d = Math.hypot(x-gx, y-gy);
+    if(d < best) best = d;
+    if(d < gate.r) return -1000 + i*0.1;          // a clean hit, sooner is better
+    for(const q of sim){
+      const ddx = q.x-x, ddy = q.y-y;
+      // margin is wider than the lethal radius (r+0.5): the autopilot should
+      // refuse shots that only just clear, because drift eats the slack
+      if(ddx*ddx+ddy*ddy < (q.r+1.3)*(q.r+1.3)) return 9000;   // crashes: reject
+    }
+    if(blackhole.active){
+      const ddx = blackhole.x-x, ddy = blackhole.y-y;
+      if(ddx*ddx+ddy*ddy < 64) return 9000;       // lethal at 5, planned at 8
+    }
+    for(const d2 of debris){
+      const ddx = d2.mesh.position.x + d2.vx*(i*dt) - x;
+      const ddy = d2.mesh.position.y + d2.vy*(i*dt) - y;
+      if(ddx*ddx+ddy*ddy < (d2.r+1.2)*(d2.r+1.2)) return 9000;
+    }
+    if(Math.abs(x) > FIELD_W+1.5 || Math.abs(y) > FIELD_H+1.5) return best + 400;
+  }
+  return best;
+}
+function autoPilot(dt){
+  if(phase!==AIMING) return;
+  autoWait -= dt;
+  if(autoWait > 0) return;
+  let bestScore = Infinity, bestA = aimAngle, bestP = aimPower;
+  // coarse sweep over the half-plane facing the gate, then a local refine
+  for(let a=-1.35; a<=1.35; a+=0.055){
+    for(let p=0.35; p<=1.0; p+=0.09){
+      const s = scoreShot(a, p);
+      if(s < bestScore){ bestScore = s; bestA = a; bestP = p; }
+    }
+  }
+  for(let a=bestA-0.05; a<=bestA+0.05; a+=0.012){
+    for(let p=Math.max(.2,bestP-0.08); p<=Math.min(1,bestP+0.08); p+=0.02){
+      const s = scoreShot(a, p);
+      if(s < bestScore){ bestScore = s; bestA = a; bestP = p; }
+    }
+  }
+  aimAngle = bestA; aimPower = bestP;
+  // hold the aim on screen for a beat so the viewer sees the plan, then fire
+  autoWait = 0;
+  launch();
+}
+
+// ---------- showcase mode ----------
+// Puts one object on a turntable against an empty stage so the video can
+// talk about it while the real thing is on screen. Uses the game's own
+// meshes, so what the narration describes is exactly what ships.
+const SHOWCASE = QS.get('showcase');
+const showcase = {group:null, spin:.55, label:''};
+// every valid ?showcase= name — the recording tool reads this
+window.__subjects = ['probe','planet','gate','blackhole','debris','comet'];
+
+function buildShowcase(name){
+  const g = new THREE.Group();
+  let label = '', spin = .55, flat = false;
+  if(name==='probe'){
+    const p = buildProbe();
+    p.scale.setScalar(1.5);
+    p.rotation.z = .25;               // a slight nose-up so it reads as flying
+    g.add(p); label = '探査機'; spin = .5;
+  } else if(name==='planet'){
+    const p = buildPlanet(3.2, 1, true);
+    p.halo.visible = false;           // the halo would just wash the frame out
+    g.add(p.group); label = '惑星'; spin = .45;
+  } else if(name==='gate'){
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(2.6, .42, 12, 40), gateMat);
+    g.add(ring);
+    for(let i=0;i<3;i++){
+      const m = new THREE.Mesh(new THREE.OctahedronGeometry(.42),
+        new THREE.MeshStandardMaterial({color:0xffffff, emissive:0x66d8ff}));
+      // radius must clear the tube (2.6 centreline + .42 tube), or the marker
+      // renders inside the torus and is invisible
+      const a = i/3*Math.PI*2, rr = 2.6 + .42 + .34;
+      m.position.set(Math.cos(a)*rr, Math.sin(a)*rr, 0); g.add(m);
+    }
+    g.rotation.x = -.5;               // tilt so the ring reads as a ring
+    label = '出口ゲート'; spin = .6; flat = true;
+  } else if(name==='blackhole'){
+    const core = new THREE.Mesh(new THREE.SphereGeometry(1.5, 24, 18),
+      new THREE.MeshBasicMaterial({color:0x0a0a14}));
+    const d1 = new THREE.Mesh(new THREE.TorusGeometry(2.5, .34, 10, 44),
+      new THREE.MeshBasicMaterial({color:0xff9a3b}));
+    const d2 = new THREE.Mesh(new THREE.TorusGeometry(3.6, .16, 8, 48),
+      new THREE.MeshBasicMaterial({color:0xff5ba8, transparent:true, opacity:.8}));
+    d1.rotation.x = 1.25; d2.rotation.x = 1.25;
+    g.add(core, d1, d2); label = 'ブラックホール'; spin = .8;
+  } else if(name==='debris'){
+    // a small cluster, because one rock alone does not read as a field
+    for(let i=0;i<5;i++){
+      const m = buildDebris();
+      const a = i/5*Math.PI*2;
+      m.position.set(Math.cos(a)*1.9, Math.sin(a)*1.9, (Math.random()-.5)*1.4);
+      m.rotation.set(Math.random()*3, Math.random()*3, Math.random()*3);
+      m.scale.setScalar(.8 + Math.random()*.6);
+      g.add(m);
+    }
+    label = 'デブリ'; spin = .55;
+  } else if(name==='comet'){
+    const c = buildComet();
+    c.group.rotation.z = .12;
+    g.add(c.group); label = '彗星'; spin = .4;
+  }
+  scene.add(g);
+
+  // Centre the subject on the origin and pull the camera back to fit it,
+  // so every object is framed the same way regardless of its size.
+  const box = new THREE.Box3().setFromObject(g);
+  const size = box.getSize(new THREE.Vector3());
+  const mid = box.getCenter(new THREE.Vector3());
+  g.position.sub(mid);                       // sit centred at the origin
+  // Fit the box on both axes: vertical FOV bounds the height directly, while
+  // the width is bounded by the horizontal FOV (vertical scaled by aspect).
+  // Taking the larger required distance guarantees the whole subject is in
+  // frame — fitting on width alone left flat subjects tiny in a tall viewport.
+  const vfov = THREE.MathUtils.degToRad(camera.fov);
+  const hfov = 2 * Math.atan(Math.tan(vfov/2) * camera.aspect);
+  const distV = (size.y*0.5) / Math.tan(vfov/2);
+  const distH = (size.x*0.5) / Math.tan(hfov/2);
+  const reach = Math.max(size.x, size.y) * 0.5;
+  const dist = Math.max(distV, distH) * 1.45 + 1.0;   // 1.45 = breathing room
+  camera.position.set(0, size.y*0.10, dist);
+
+  // Slide the subject sideways so a text panel can own the other half.
+  // The offset lives on a parent so the turntable still spins in place —
+  // rotating an offset group would make it orbit instead.
+  const bias = parseFloat(QS.get('sx') || '0');
+  const pivot = new THREE.Group();
+  pivot.position.x = -bias * reach * 1.15;
+  scene.add(pivot);
+  pivot.add(g);
+  showcase.group = g; showcase.pivot = pivot;
+  showcase.spin = spin; showcase.label = label; showcase.flat = flat;
+}
+
+fitCamera();          // SHOWCASE is known by here
+rebuildBorder();
+if(SHOWCASE){
+  titleEl.classList.add('hidden');
+  buildShowcase(SHOWCASE);
+  scoreEl.textContent = '';
+  msgEl.textContent = QS.get('nolabel')==='1' ? '' : showcase.label;
+  msgEl.style.fontSize = 'clamp(18px,5vw,30px)';
+  msgEl.style.letterSpacing = '4px';
+  // a plain dark stage: nothing on screen but the subject
+  probe.visible = false;             // the playable probe is a separate object
+  gate.group.visible = false;
+  borderGroup.visible = false;
+  for(const s of starLayers) s.pts.visible = false;
+  for(const d of trailDots) d.visible = false;
+  for(const d of pathDots) d.visible = false;
+  scene.background = new THREE.Color(0x0b0d16);
+  hemi.intensity = 3.0;
+  sun.intensity = 3.6; sun.position.set(2.5, 6, 10);
+  // a second light from the other side so the far face is not pure black
+  const fill = new THREE.PointLight(0x88aaff, 130, 40);
+  fill.position.set(-6, 3.4, 8); scene.add(fill);
+  const key = new THREE.PointLight(0xfff0dd, 180, 44);
+  key.position.set(5, 4.5, 9); scene.add(key);
+}
+// let the capture script drive the turntable and swap subjects
+window.__showcase = name => {
+  if(showcase.pivot) scene.remove(showcase.pivot);   // pivot owns the group
+  buildShowcase(name);
+  msgEl.textContent = showcase.label;
+};
+
+// ---------- per-shot outcomes ----------
+function passGate(){
+  gates++;
+  score += 100 + gates*25;
+  warpFx = .9;
+  flash('#5fe6ff', .45, 420);
+  shake = Math.max(shake, .3);
+  if(!SILENT) SND.gate();
+  banner('通過 ' + gates, '#5fe6ff');
+  // straight into the next 宙域: new planets, new gate, back to aiming
+  phase = AIMING;
+  vx = 0; vy = 0;
+  layoutField();
+  for(const d of pathDots) d.visible = false;
+  pathIdx = 0;
+}
+// A shot that misses is not fatal — you just lose the probe and get another.
+// Running out of probes ends the run.
+function loseProbe(reason){
+  probesLeft--;
+  shake = Math.max(shake, .5);
+  flash('#ff7a3a', .4, 380);
+  if(probesLeft <= 0){ dead = true; gameOver(); return; }
+  if(!SILENT) SND.hit();
+  banner(reason, '#ff7a3a');
+  phase = AIMING; vx = 0; vy = 0;
+  // put the probe back at the launch point, keep the field as it is
+  px = -FIELD_W*0.78; py = (Math.random()-.5)*FIELD_H*0.6;
+  probe.position.set(px, py, 0);
+  for(const d of pathDots) d.visible = false;
+  pathIdx = 0;
+}
+
+// ---------- loop ----------
+const clock = new THREE.Clock();
+const gv = new THREE.Vector2();
+function tick(){
+  requestAnimationFrame(tick);
+  const raw = Math.min(clock.getDelta(), .05);
+  const dt = raw * timeScale;
+
+  if(SHOWCASE){
+    if(showcase.group){
+      if(showcase.flat) showcase.group.rotation.z += raw*showcase.spin;
+      else showcase.group.rotation.y += raw*showcase.spin;
+    }
+    camera.lookAt(0, 0, 0);        // subject is offset, camera stays on axis
+    renderer.render(scene, camera);
+    return;
+  }
+
+  // stars drift always, so even the title screen is alive
+  for(const s of starLayers){
+    s.pts.rotation.z += raw*0.004*s.speed;
+  }
+
+  if(running && !dead){
+    t += dt;
+    score += dt*6;                       // a slow tick just for staying alive
+    scoreEl.textContent = Math.floor(score);
+    if(!SILENT) SND.setPace(1 + gates*0.12);
+    applyHeldKeys(dt);
+    if(AUTO) autoPilot(dt);
+
+    // --- events ---
+    if(t > nextEventAt && !NOEV) triggerEvent();
+
+    // 重力増大 fades back to normal on its own
+    if(gravityFx > 0){
+      gravityFx -= dt;
+      if(gravityFx <= 0){ gravityMul = 1; }
+      else gravityMul = 1 + 1.1*Math.min(1, gravityFx/1.2);   // ease out at the end
+    }
+
+    // --- planets drift and bounce off the arena walls ---
+    for(const p of planets){
+      if(p.frozen > 0){ p.frozen -= dt; }
+      else {
+        p.group.position.x += p.vx*dt;
+        p.group.position.y += p.vy*dt;
+        const lx = FIELD_W - p.r - 1, ly = FIELD_H - p.r - 1;
+        if(p.group.position.x >  lx){ p.group.position.x =  lx; p.vx = -Math.abs(p.vx); }
+        if(p.group.position.x < -lx){ p.group.position.x = -lx; p.vx =  Math.abs(p.vx); }
+        if(p.group.position.y >  ly){ p.group.position.y =  ly; p.vy = -Math.abs(p.vy); }
+        if(p.group.position.y < -ly){ p.group.position.y = -ly; p.vy =  Math.abs(p.vy); }
+      }
+      p.ball.rotation.y += raw*p.spin;
+      p.ball.rotation.x += raw*p.spin*.4;
+      // a frozen planet is visibly frozen: the halo goes pale and still
+      p.halo.material.uniforms.s.value = p.frozen > 0 ? .85 : .5;
+    }
+
+    // --- the gate drifts up and down, bouncing inside the field ---
+    gate.group.position.y += gate.vy*dt;
+    const glim = FIELD_H*0.82;
+    if(gate.group.position.y >  glim){ gate.group.position.y =  glim; gate.vy = -Math.abs(gate.vy); }
+    if(gate.group.position.y < -glim){ gate.group.position.y = -glim; gate.vy =  Math.abs(gate.vy); }
+    gate.group.position.x = FIELD_W*0.8;
+    gate.ring.rotation.z += raw*.7;
+    gate.pips.forEach((m,i)=>{
+      const a = t*1.6 + i/3*Math.PI*2;
+      m.position.set(Math.cos(a)*gate.r, Math.sin(a)*gate.r, 0);
+      m.rotation.x += raw*2; m.rotation.y += raw*2.4;
+    });
+
+    // --- black hole grows in, lives, shrinks out ---
+    if(blackhole.active){
+      blackhole.life -= dt;
+      const k = blackhole.life > 1.2 ? 1 : Math.max(0, blackhole.life/1.2);
+      const grow = Math.min(1, blackhole.group.scale.x + raw*2.2);
+      blackhole.group.scale.setScalar(Math.min(grow, 1) * (k<1 ? k : 1));
+      blackhole.disc.rotation.z += raw*3.2;
+      blackhole.disc2.rotation.z -= raw*2.1;
+      if(blackhole.life <= 0){ blackhole.active=false; blackhole.group.visible=false; }
+    }
+
+    // --- debris tumbles and expires ---
+    for(let i=debris.length-1;i>=0;i--){
+      const d = debris[i];
+      d.life -= dt;
+      d.mesh.position.x += d.vx*dt; d.mesh.position.y += d.vy*dt;
+      d.mesh.rotation.x += raw*d.sx; d.mesh.rotation.y += raw*d.sy;
+      if(d.life <= 0){ scene.remove(d.mesh); debris.splice(i,1); }
+    }
+
+    // --- comet crosses and leaves ---
+    if(comet.active){
+      comet.x += comet.vx*dt; comet.y += comet.vy*dt;
+      comet.group.position.set(comet.x, comet.y, 0);
+      // point the tail back along the direction of travel
+      comet.group.rotation.z = Math.atan2(comet.vy, comet.vx);
+      comet.head.rotation.x += raw*2; comet.head.rotation.y += raw*1.6;
+      if(Math.abs(comet.x) > FIELD_W+16 || Math.abs(comet.y) > FIELD_H+16){
+        comet.active = false; comet.group.visible = false;
+      }
+    }
+
+    // --- aiming: draw the predicted path, point the nose ---
+    if(phase===AIMING){
+      probe.position.set(px, py, 0);
+      probe.rotation.z = aimAngle;
+      // gentle idle bob so a still frame does not look frozen
+      probe.position.y = py + Math.sin(t*2.4)*0.18;
+      const path = predict(aimAngle, aimPower, TRAIL_N, 0.055);
+      for(let i=0;i<TRAIL_N;i++){
+        const d = trailDots[i];
+        if(i < path.length){
+          d.visible = true;
+          d.position.set(path[i][0], path[i][1], 0);
+          // dots fade and shrink along the path: near = certain, far = a guess
+          const k = 1 - i/TRAIL_N;
+          d.material.opacity = .25 + k*.6;
+          d.scale.setScalar(.6 + k*.9);
+        } else d.visible = false;
+      }
+      flareMat.opacity = Math.max(0, flareMat.opacity - raw*3);
+      msgEl.textContent = '探査機 ' + probesLeft + ' ／ 引いて離す';
+    }
+
+    // --- flying: integrate gravity, then test everything it could hit ---
+    if(phase===FLYING){
+      flightT += dt;
+      // fixed substeps, so a slow frame cannot tunnel the probe through a planet
+      const SUB = 4, sdt = dt/SUB;
+      let swung = false;
+      for(let s=0;s<SUB;s++){
+        gravityAt(px, py, gv);
+        vx += gv.x*sdt; vy += gv.y*sdt;
+        px += vx*sdt;   py += vy*sdt;
+
+        // planet surface = death
+        for(const p of planets){
+          const ddx = p.group.position.x-px, ddy = p.group.position.y-py;
+          const dist = Math.hypot(ddx, ddy);
+          if(dist < p.r + .5){ loseProbe('惑星に衝突'); return renderFrame(raw); }
+          // a near miss is the good outcome: reward it and make a noise
+          if(dist < p.r + 2.6 && !p.swungThisShot){ p.swungThisShot = true; swung = true; }
+        }
+        if(blackhole.active){
+          const ddx = blackhole.x-px, ddy = blackhole.y-py;
+          if(ddx*ddx+ddy*ddy < 25){ loseProbe('ブラックホールに捕捉'); return renderFrame(raw); }
+        }
+        for(const d of debris){
+          const ddx = d.mesh.position.x-px, ddy = d.mesh.position.y-py;
+          if(ddx*ddx+ddy*ddy < (d.r+.5)*(d.r+.5)){ loseProbe('デブリに衝突'); return renderFrame(raw); }
+        }
+        if(comet.active){
+          const ddx = comet.x-px, ddy = comet.y-py;
+          if(ddx*ddx+ddy*ddy < 3.2*3.2){ loseProbe('彗星に接触'); return renderFrame(raw); }
+        }
+        // gate: pass within the ring's radius to clear the 宙域
+        const gdx = gate.group.position.x-px, gdy = gate.group.position.y-py;
+        if(gdx*gdx+gdy*gdy < gate.r*gate.r){
+          for(const p of planets) p.swungThisShot = false;
+          passGate();
+          return renderFrame(raw);
+        }
+      }
+      if(swung){
+        score += 30;
+        if(!SILENT) SND.swing();
+      }
+      probe.position.set(px, py, 0);
+      probe.rotation.z = Math.atan2(vy, vx);      // nose follows the velocity
+      flareMat.opacity = Math.max(0, flareMat.opacity - raw*1.6);
+
+      // breadcrumb trail of where it has been
+      if(pathIdx < PATH_N && flightT*40 > pathIdx){
+        const d = pathDots[pathIdx++];
+        d.visible = true; d.position.set(px, py, 0);
+      }
+
+      // left the arena, or drifted forever: lose this probe
+      if(Math.abs(px) > FIELD_W+2 || Math.abs(py) > FIELD_H+2){
+        for(const p of planets) p.swungThisShot = false;
+        loseProbe('圏外へ離脱'); return renderFrame(raw);
+      }
+      if(flightT > FLIGHT_LIMIT){
+        for(const p of planets) p.swungThisShot = false;
+        loseProbe('信号ロスト'); return renderFrame(raw);
+      }
+    }
+  }
+
+  // --- death sequence: slow-mo unwinds, the probe tumbles ---
+  if(dead){
+    timeScale += (0 - timeScale)*Math.min(1, raw*1.1);   // ease down to a near-freeze
+    probe.rotation.z += raw*2.4;
+    probe.rotation.x -= raw*1.2;
+    probe.scale.multiplyScalar(1 - raw*.22);
+  }
+
+  renderFrame(raw);
+}
+
+// The camera work lives in its own function because the flying loop bails out
+// early on a collision and still has to draw the frame that shows it.
+function renderFrame(raw){
+  // ワープ演出: the FOV punches out and settles after a gate pass
+  if(warpFx > 0){
+    warpFx = Math.max(0, warpFx - raw*1.6);
+    camera.fov = (camera.__base||BASE_FOV) * (1 + warpFx*0.14);
+    camera.updateProjectionMatrix();
+  } else if(Math.abs(camera.fov - (camera.__base||BASE_FOV)) > 0.05){
+    camera.fov += ((camera.__base||BASE_FOV) - camera.fov)*Math.min(1, raw*4);
+    camera.updateProjectionMatrix();
+  }
+
+  camZoom += (camZoomTarget - camZoom)*Math.min(1, raw*2.2);
+  camera.position.z = CAM_Z * camZoom;
+  // the view leans a little toward the probe, which sells the distance
+  const lookX = THREE.MathUtils.clamp(px*0.10, -FIELD_W*0.12, FIELD_W*0.12);
+  const lookY = THREE.MathUtils.clamp(py*0.10, -FIELD_H*0.12, FIELD_H*0.12);
+  camera.position.x += (lookX - camera.position.x)*Math.min(1, raw*3);
+  camera.position.y += (lookY - camera.position.y)*Math.min(1, raw*3);
+  if(shake>0){
+    shake = Math.max(0, shake - raw*.9);
+    camera.position.x += (Math.random()-.5)*shake*3;
+    camera.position.y += (Math.random()-.5)*shake*3;
+  }
+  camera.lookAt(camera.position.x*0.6, camera.position.y*0.6, 0);
+  renderer.render(scene, camera);
+}
+
+function gameOver(){
+  running=false; deadAt=Date.now();
+  if(!SILENT){ SND.hit(); SND.duck(1.6); setTimeout(()=>SND.over(), 700); }
+  // hit feedback: red flash, red vignette, hard shake, camera punches in
+  flash('#ff2b3a', .8, 500);
+  vignetteEl.style.transition='opacity .5s'; vignetteEl.style.opacity=1;
+  shake = .9;
+  camZoomTarget = .48;                 // push in on the wreck
+  const finalScore = Math.floor(score);
+  koScoreEl.textContent = finalScore;
+  msgEl.textContent = '';
+  setTimeout(()=>{ koEl.classList.add('on'); }, 620);   // K.O. lands after the slow-mo
+  if(AUTO){ setTimeout(()=>{ reset(); running=true;
+                             if(!SILENT) SND.unduck(); }, RETRY_MS); }
+  else setTimeout(()=>{
+    msgEl.textContent = matchMedia('(pointer:coarse)').matches
+      ? 'タップでもう一度' : 'スペースでもう一度';
+  }, 1800);
+}
+tick();
+
+// --- help (?) : ルールを見せる。録画中は出さない ---
+(function(){
+  const btn = document.getElementById('helpBtn');
+  const panel = document.getElementById('help');
+  if(!btn || !panel) return;
+  if(NOCHROME){                      // 録画・showcase では画面から消す
+    btn.style.display = 'none';
+    const back = document.getElementById('back');
+    if(back) back.style.display = 'none';
+    return;
+  }
+  const open = () => { panel.classList.add('on'); };
+  const close = () => { panel.classList.remove('on'); };
+  btn.addEventListener('click', open);
+  btn.addEventListener('touchend', e => { e.preventDefault(); open(); }, {passive:false});
+  panel.addEventListener('click', e => { if(e.target === panel) close(); });
+  panel.querySelector('.close').addEventListener('click', close);
+  panel.querySelector('.close').addEventListener('touchend',
+    e => { e.preventDefault(); close(); }, {passive:false});
+  addEventListener('keydown', e => {
+    if(e.code === 'Escape') close();
+    else if(e.key === '?' || (e.code === 'Slash' && e.shiftKey)) open();
+  });
+})();
+</script>
+</body>
+</html>

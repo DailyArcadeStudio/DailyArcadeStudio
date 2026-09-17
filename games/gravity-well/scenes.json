@@ -1,0 +1,227 @@
+{
+  "id": "0021_gravity_well",
+  "title": "グラビティ・ウェル",
+  "lang": "python",
+  "voice": "am_adam",
+  "video_title": "一回押したら、あとは何もできません",
+  "scenes": [
+    {
+      "kind": "hook",
+      "clip": "blackhole",
+      "narration": "このゲーム、操作は一回だけです。あとは見ているしかありません。"
+    },
+    {
+      "kind": "image",
+      "prompt": "a small satellite operations room at night, two old CRT monitors showing orbital plots, a man in a worn cardigan sitting alone at the console, cold blue screen glow, coffee cup, cinematic, photorealistic, shallow depth of field",
+      "narration": "ある衛星の管制室に、たった一人で夜勤をする人がいます。名前はマルコさん。仕事は、小さな探査機を目的地まで届けることです。"
+    },
+    {
+      "kind": "image",
+      "prompt": "close-up of a hand hovering over a single large illuminated button on an aging control console, other switches taped over and labeled with faded tape, warm amber indicator light, photorealistic, cinematic, shallow depth of field",
+      "narration": "ところが、この探査機には燃料がほとんど積まれていません。エンジンが使えるのは、飛び出す一瞬だけ。つまり、マルコさんが押せるボタンは一個です。"
+    },
+    {
+      "kind": "image",
+      "prompt": "a printed orbital trajectory chart on a desk, hand-drawn pencil curves looping around circles, eraser marks everywhere, a ruler and a cold cup of coffee, desk lamp light, photorealistic, cinematic, top-down view",
+      "narration": "予算を増やしてくれと、何度も頼みました。答えは、重力があるでしょう、でした。そうなんです。だから今夜も、角度だけ決めて、押します。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "probe",
+      "kicker": "あなたが飛ばすもの",
+      "title": "探査機",
+      "bullets": [
+        "エンジンは**打ち出しの一瞬だけ**",
+        "向きと強さが、そのまま初速になる",
+        "**3機まで**。使い切ったら終わり"
+      ],
+      "narration": "これが探査機です。エンジンが動くのは、打ち出しの一瞬だけ。あとは慣性で飛んでいきます。向きと強さを決めて、離す。それだけです。手持ちは3機。使い切ったら、その夜は終わりです。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "planet",
+      "kicker": "道を曲げるもの",
+      "title": "惑星",
+      "bullets": [
+        "ゆっくり漂いながら**引き寄せる**",
+        "近いほど強く曲がる",
+        "ぶつかれば、そこで終わり"
+      ],
+      "narration": "そして惑星です。見てください、じっとしていません。ゆっくり漂いながら、探査機を引っぱります。近づくほど、大きく曲がります。だから、まっすぐは飛びません。一度も。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "gate",
+      "kicker": "目的地",
+      "title": "出口ゲート",
+      "bullets": [
+        "**くぐり抜ければ**次の宙域へ",
+        "ゲート自身も上下に動く",
+        "進むほど速く動く"
+      ],
+      "narration": "目的地はこのリングです。くぐり抜ければ、次の宙域に進めます。ここが面白いところです。このゲート、上下に動いています。しかも、先に進むほど速くなります。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "blackhole",
+      "kicker": "近づいてはいけないもの",
+      "title": "ブラックホール",
+      "bullets": [
+        "引力が惑星の比ではない",
+        "**かすめただけで**持っていかれる",
+        "しばらくすると消える"
+      ],
+      "narration": "たまに、これが出ます。引力が惑星の比ではありません。かすめただけで、持っていかれます。うれしいことに、少し待つと消えます。もちろん、探査機はもう飛んだあとです。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "debris",
+      "kicker": "じゃまなもの",
+      "title": "デブリ",
+      "bullets": [
+        "岩の帯が**横切ってくる**",
+        "重力では曲がらない。ただ流れる",
+        "当たれば1機失う"
+      ],
+      "narration": "デブリも流れてきます。岩の帯です。これは重力で曲がりません。ただ、まっすぐ流れてくるだけ。でも、当たれば1機失います。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "comet",
+      "kicker": "速いほう",
+      "title": "彗星",
+      "bullets": [
+        "画面の端から端まで**一直線**",
+        "重力を完全に無視する",
+        "避けるしかない"
+      ],
+      "narration": "彗星は、もっと速いです。画面の端から端まで、一直線に走ります。重力を完全に無視します。曲げる方法はありません。避けるだけです。"
+    },
+    {
+      "kind": "events",
+      "clip": "events",
+      "kicker": "宙域のイベント",
+      "title": "静かな夜はありません",
+      "bullets": [
+        "**重力増大** — 惑星の引力が2倍になる",
+        "**惑星停止** — 全部止まる、5秒だけ",
+        "**ブラックホール** — 道のまん中に穴が開く"
+      ],
+      "narration": "宙域は、静かにしていてくれません。突然、惑星の引力が2倍になります。逆に、全部止まる時間もあります。5秒だけです。この5秒が、一晩でいちばん狙いやすい瞬間になります。そして、道のまん中に穴が開く日もあります。"
+    },
+    {
+      "kind": "death",
+      "clip": "death",
+      "kicker": "打ち切り",
+      "title": "3機で終わり",
+      "bullets": [
+        "外に出ると**信号が途切れる**",
+        "時間がゆっくり止まる",
+        "カメラが寄って、スコアが出る"
+      ],
+      "narration": "終わり方は3つあります。惑星に落ちる。何かに当たる。それから、宙域の外に出て、信号が途切れる。どれでも1機です。3機なくなると、時間がゆっくり止まって、カメラが寄ります。マルコさんは、これを何年も続けています。あなたは、たぶん3投で終わります。"
+    },
+    {
+      "kind": "outro",
+      "title": "概要欄のリンクから遊べます",
+      "subtitle": "チャンネル登録おねがいします",
+      "narration": "今すぐ遊べます。概要欄のリンクからどうぞ。毎日1本出しているので、チャンネル登録もおねがいします。"
+    }
+  ],
+  "slug": "gravity-well",
+  "channel": "Daily Arcade Studio",
+  "events": [
+    "blackhole",
+    "massspike",
+    "debrisfield",
+    "comet",
+    "freeze"
+  ],
+  "short": [
+    {
+      "mark": "blackhole",
+      "lead": -0.3,
+      "dur": 9.0,
+      "headline": "かすめたら終わり"
+    },
+    {
+      "mark": "freeze",
+      "lead": -0.5,
+      "dur": 7.0,
+      "headline": "5秒だけ止まる"
+    },
+    {
+      "mark": "comet",
+      "lead": -0.5,
+      "dur": 7.0,
+      "headline": "重力を無視する"
+    },
+    {
+      "mark": "massspike",
+      "lead": -0.5,
+      "dur": 7.0,
+      "headline": "引力が2倍"
+    },
+    {
+      "mark": "death",
+      "lead": -2.0,
+      "dur": 9.0,
+      "headline": "手持ちは3機"
+    }
+  ],
+  "thumb": {
+    "hook": "押せるのは一回だけ",
+    "sub": "あとは重力にまかせる。ブラウザで無料。",
+    "frame_mark": "blackhole",
+    "frame_lead": 1.0
+  },
+  "short_v2": {
+    "cuts": [
+      {
+        "kind": "clip",
+        "mark": "blackhole",
+        "lead": -0.3,
+        "dur": 4.5,
+        "headline": "今日のゲーム",
+        "narration": "今日のゲームです。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "probe",
+        "dur": 5.0,
+        "headline": "グラビティ・ウェル",
+        "narration": "燃料のない探査機を、目的地まで届ける人になります。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "planet",
+        "dur": 5.0,
+        "headline": "惑星",
+        "narration": "惑星が引っぱります。だから、まっすぐは飛びません。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "gate",
+        "dur": 5.0,
+        "headline": "出口",
+        "narration": "このリングをくぐれば次へ。ゲートも動いています。"
+      },
+      {
+        "kind": "clip",
+        "mark": "death",
+        "lead": -2.0,
+        "dur": 5.5,
+        "narration": "押したあとは、何もできません。",
+        "headline": ""
+      },
+      {
+        "kind": "clip",
+        "mark": "run2",
+        "lead": 1.0,
+        "dur": 4.5,
+        "cta": "概要欄のリンクから遊べます",
+        "narration": "ブラウザで無料で遊べます。リンクは概要欄です。"
+      }
+    ]
+  }
+}
