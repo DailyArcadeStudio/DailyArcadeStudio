@@ -1,0 +1,230 @@
+{
+  "id": "0021_conveyor_panic",
+  "title": "コンベア・パニック",
+  "video_title": "ベルトの速度は、下げられないそうです。",
+  "lang": "ja",
+  "voice": "jp_male",
+  "scenes": [
+    {
+      "kind": "hook",
+      "clip": "surge",
+      "narration": "このベルト、速度を下げる設定がありません。そうなんです。"
+    },
+    {
+      "kind": "image",
+      "prompt": "a small parcel depot at night, an old conveyor belt running through a cramped concrete room, cardboard boxes stacked along the walls, three metal sorting chutes at the end of the belt, cold fluorescent light, photorealistic, cinematic, highly detailed",
+      "narration": "町はずれに、小さな配送所があります。荷物を色で三つに仕分けする、それだけの場所です。長いあいだ、それで回っていました。"
+    },
+    {
+      "kind": "image",
+      "prompt": "a brand new industrial high speed conveyor belt installed inside an old small warehouse, the machine looks far too large for the room, plastic wrap still on part of the frame, workers standing at a distance, harsh overhead light, photorealistic, cinematic, highly detailed",
+      "narration": "去年、ベルトが新しくなりました。大きな倉庫向けの機種です。ここには、大きすぎました。"
+    },
+    {
+      "kind": "image",
+      "prompt": "close up of an industrial machine control panel with a single speed dial, a small handwritten paper note taped beside it, worn buttons, dim warm light from above, photorealistic, cinematic, shallow depth of field, highly detailed",
+      "narration": "速度を落としたい、と申請が出ました。返事はこうです。その機種は、速度を変えられません。だから今日も、手で叩き落とします。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "belt",
+      "kicker": "現場",
+      "title": "ベルト",
+      "bullets": [
+        "荷物は**左から右へ**流れていく",
+        "時間とともに**ずっと速くなる**",
+        "遅くする方法は、ありません"
+      ],
+      "narration": "これがベルトです。荷物は左から右へ流れます。そして時間が経つほど、速くなります。遅くする方法は、ありません。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "parcelBlue",
+      "kicker": "荷物",
+      "title": "色のついた荷物",
+      "bullets": [
+        "青、黄、赤の**三色**",
+        "色と同じシュートに落とせば正解",
+        "違う色に落とすと、ミス"
+      ],
+      "narration": "流れてくるのは、色のついた荷物です。青、黄、赤の三色。色と同じ場所に落とせば正解です。違う色に落とすと、ミスになります。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "chute",
+      "kicker": "仕分け先",
+      "title": "シュート",
+      "bullets": [
+        "ベルトの手前に**三つ**並ぶ",
+        "**1、2、3キー**か、その位置をタップ",
+        "押す場所は、色ではなく**位置**で覚える"
+      ],
+      "narration": "ベルトの手前に、シュートが三つ並んでいます。1、2、3のキーか、画面のその位置を押してください。ここ、大事です。覚えるのは色ではなく、位置です。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "arm",
+      "kicker": "操作",
+      "title": "アーム",
+      "bullets": [
+        "押すとアームが**振り下ろされる**",
+        "真下に荷物があれば、落ちる",
+        "なければ**空振り**。その間は押せない"
+      ],
+      "narration": "押すと、アームが振り下ろされます。真下に荷物があれば、落ちます。なければ空振りです。振っている間は、次が押せません。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "parcelPlain",
+      "kicker": "例外",
+      "title": "無地の箱",
+      "bullets": [
+        "色がない。**どのシュートも正解じゃない**",
+        "落としたら、それだけでミス",
+        "**何もしない**のが仕事"
+      ],
+      "narration": "ときどき、無地の箱が混ざります。色がありません。どのシュートに落としてもミスです。見てください。正解は、何もしないことです。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "dropMouth",
+      "kicker": "右の端",
+      "title": "取りこぼし口",
+      "bullets": [
+        "叩かずに流すと、ここへ落ちる",
+        "色つきが落ちたら**ミス**",
+        "無地だけは、流し切って**加点**"
+      ],
+      "narration": "ベルトの右の端です。叩かなかった荷物は、ここへ落ちます。色つきならミス。無地なら、そのまま加点です。"
+    },
+    {
+      "kind": "events",
+      "clip": "events",
+      "kicker": "邪魔",
+      "title": "現場は静かになりません",
+      "bullets": [
+        "**早送り** — ベルトが一気に加速する",
+        "**停電** — 暗くなって色が読めない",
+        "**まとめ搬入** — 荷物がびっしり詰まって来る",
+        "**逆送** — 荷物が左へ戻ってくる",
+        "**シュート入れ替え** — 三色の並びが変わる"
+      ],
+      "narration": "現場は静かになりません。早送りで、ベルトが一気に加速します。停電で、色が読めなくなります。まとめ搬入では、荷物がびっしり詰まって流れてきます。逆送では、荷物が左へ戻ります。そしてここからが本題です。シュート入れ替えでは、三色の並びが勝手に変わります。覚えた位置が、全部うそになります。"
+    },
+    {
+      "kind": "death",
+      "clip": "death",
+      "kicker": "終わり方",
+      "title": "ミス3回で終わり",
+      "bullets": [
+        "残りは画面上の**♦**で分かる",
+        "連続正解で**ボーナスが積み上がる**",
+        "最後に、どこまで持ったかが出る"
+      ],
+      "narration": "ミス3回で終わりです。残りは画面の上のマークで分かります。連続で正解すると、ボーナスが積み上がります。時間がゆっくり止まって、どこまで持ったかが出ます。あの配送所の人は、これを毎日やっています。あなたは、たぶん1分持ちません。"
+    },
+    {
+      "kind": "outro",
+      "title": "概要欄のリンクから遊べます",
+      "subtitle": "チャンネル登録もお願いします",
+      "narration": "概要欄のリンクから遊べます。ブラウザで無料です。毎日1本出しているので、チャンネル登録もお願いします。"
+    }
+  ],
+  "slug": "conveyor-panic",
+  "channel": "Daily Arcade Studio",
+  "events": [
+    "surge",
+    "blackout",
+    "flood",
+    "shuffle",
+    "reverse",
+    "plain"
+  ],
+  "short": [
+    {
+      "mark": "shuffle",
+      "lead": -0.5,
+      "dur": 9.0,
+      "headline": "色の並びが変わる"
+    },
+    {
+      "mark": "flood",
+      "lead": -0.5,
+      "dur": 8.0,
+      "headline": "まとめて来ます"
+    },
+    {
+      "mark": "surge",
+      "lead": -0.5,
+      "dur": 7.0,
+      "headline": "速度は下げられない"
+    },
+    {
+      "mark": "blackout",
+      "lead": -0.3,
+      "dur": 7.0,
+      "headline": "色が読めない"
+    },
+    {
+      "mark": "death",
+      "lead": -2.0,
+      "dur": 9.0,
+      "headline": "ミス3回で終わり"
+    }
+  ],
+  "thumb": {
+    "hook": "速度は下げられない",
+    "sub": "色で仕分けるだけ。ブラウザで無料。",
+    "frame_mark": "flood",
+    "frame_lead": 1.0
+  },
+  "short_v2": {
+    "cuts": [
+      {
+        "kind": "clip",
+        "mark": "flood",
+        "lead": -0.5,
+        "dur": 4.5,
+        "headline": "今日のゲーム",
+        "narration": "今日のゲームです。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "parcelBlue",
+        "dur": 5.0,
+        "headline": "コンベア・パニック",
+        "narration": "あなたは、荷物を色で仕分ける人です。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "chute",
+        "dur": 5.0,
+        "headline": "三色",
+        "narration": "同じ色のシュートの真上で、叩き落としてください。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "parcelPlain",
+        "dur": 5.0,
+        "headline": "無地は流す",
+        "narration": "無地の箱だけは、触らずに流すのが正解です。"
+      },
+      {
+        "kind": "clip",
+        "mark": "death",
+        "lead": -2.0,
+        "dur": 5.5,
+        "headline": "",
+        "narration": "ベルトは、速くなる一方です。"
+      },
+      {
+        "kind": "clip",
+        "mark": "run2",
+        "lead": 1.0,
+        "dur": 4.5,
+        "cta": "概要欄のリンクから遊べます",
+        "narration": "ブラウザで無料で遊べます。リンクは概要欄です。"
+      }
+    ]
+  }
+}

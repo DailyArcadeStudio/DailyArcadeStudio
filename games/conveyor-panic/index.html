@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>コンベア・パニック</title>
+<style>
+  html,body{margin:0;padding:0;overflow:hidden;background:#0b0d14;font-family:'Helvetica Neue',Arial,sans-serif;}
+  #ui{position:fixed;top:16px;left:0;right:0;text-align:center;color:#fff;z-index:10;pointer-events:none;}
+  #score{font-size:clamp(26px,6vw,34px);font-weight:800;text-shadow:0 2px 8px #000;}
+  #msg{font-size:clamp(14px,4vw,20px);margin-top:6px;opacity:.9;text-shadow:0 2px 6px #000;}
+  /* 残りミス（♦）。スコアの下に並べる */
+  #lives{margin-top:4px;font-size:clamp(16px,4.4vw,22px);letter-spacing:6px;color:#ff9f2e;
+    text-shadow:0 2px 8px #000;}
+  #title{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:rgba(5,7,14,.76);z-index:20;color:#fff;transition:opacity .4s;padding:16px;box-sizing:border-box;}
+  #title h1{font-size:clamp(30px,9vw,60px);margin:0 0 10px;letter-spacing:2px;text-align:center;
+    text-shadow:0 4px 18px #ff9f2e;}
+  #title p{font-size:clamp(13px,3.4vw,19px);opacity:.88;margin:4px 0;text-align:center;line-height:1.6;}
+  #title .btn{margin-top:26px;padding:14px 44px;font-size:clamp(18px,5vw,22px);font-weight:700;color:#12100a;
+    background:linear-gradient(180deg,#ffc24a,#f08a12);border:none;border-radius:12px;cursor:pointer;
+    box-shadow:0 6px 24px rgba(255,159,46,.5);}
+  #title .btn:hover{transform:scale(1.05);}
+  .hidden{opacity:0;pointer-events:none;}
+  #back{position:fixed;top:14px;left:14px;z-index:30;text-decoration:none;
+    background:rgba(14,18,28,.72);color:#fff;font:600 clamp(12px,3.4vw,15px)/1 'Helvetica Neue',Arial,sans-serif;
+    padding:0 14px;height:44px;display:flex;align-items:center;border-radius:12px;}
+  #back:hover{background:rgba(32,40,58,.9);}
+  #mute{position:fixed;top:14px;right:14px;z-index:30;border:none;cursor:pointer;
+    background:rgba(14,18,28,.72);color:#fff;font-size:20px;line-height:1;
+    width:44px;height:44px;border-radius:12px;}
+  #mute:hover{background:rgba(32,40,58,.9);}
+  /* 端末に合う操作説明だけを出す */
+  .tc{display:none;}
+  @media (pointer:coarse){ .kb{display:none;} .tc{display:block;} }
+  @media (pointer:coarse){ #title .btn{padding:18px 52px;} }
+
+  /* --- イベントのバナー：画面中央に叩きつける --- */
+  #banner{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    z-index:15;pointer-events:none;opacity:0;}
+  #banner .b{font-size:clamp(26px,7.4vw,66px);font-weight:900;letter-spacing:.06em;color:#fff;
+    padding:10px 4vw;max-width:94vw;text-align:center;transform:scale(2.4);opacity:0;
+    text-shadow:0 0 26px currentColor, 0 6px 20px #000;
+    border-top:5px solid currentColor;border-bottom:5px solid currentColor;}
+  #banner.go .b{animation:slam .62s cubic-bezier(.12,.85,.2,1) forwards;}
+  @keyframes slam{
+    0%  {transform:scale(2.4) rotate(-4deg);opacity:0;}
+    22% {transform:scale(1)   rotate(0deg); opacity:1;}
+    70% {transform:scale(1)   rotate(0deg); opacity:1;}
+    100%{transform:scale(1.12);opacity:0;}
+  }
+
+  /* --- 全画面のフラッシュ --- */
+  #flash{position:fixed;inset:0;z-index:14;pointer-events:none;opacity:0;background:#fff;}
+  #vignette{position:fixed;inset:0;z-index:13;pointer-events:none;opacity:0;
+    background:radial-gradient(ellipse at center,rgba(0,0,0,0) 32%,rgba(130,0,12,.85) 100%);}
+
+  /* --- K.O. 画面 --- */
+  #ko{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    z-index:22;pointer-events:none;opacity:0;color:#fff;transition:opacity .3s;}
+  #ko.on{opacity:1;}
+  #ko .koText{font-size:clamp(84px,24vw,180px);font-weight:900;letter-spacing:10px;color:#fff;
+    text-shadow:0 0 40px #ff3b2e,0 0 90px #ff3b2e,0 10px 30px #000;
+    transform:scale(3);opacity:0;}
+  #ko.on .koText{animation:koSlam .8s cubic-bezier(.1,.9,.2,1) forwards;}
+  @keyframes koSlam{
+    0%  {transform:scale(3) rotate(-8deg);opacity:0;}
+    30% {transform:scale(1) rotate(0deg);opacity:1;}
+    36% {transform:scale(1.06);}
+    100%{transform:scale(1);opacity:1;}
+  }
+  #ko .finalLabel{font-size:clamp(14px,3.8vw,20px);letter-spacing:5px;opacity:0;margin-top:6px;
+    text-shadow:0 2px 8px #000;}
+  #ko .finalScore{font-size:clamp(46px,13vw,78px);font-weight:800;opacity:0;text-shadow:0 4px 20px #000;}
+  #ko.on .finalLabel{animation:fadeUp .5s .75s forwards;}
+  #ko.on .finalScore{animation:fadeUp .5s .9s forwards;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+
+  /* --- あそびかた (?) --- */
+  #helpBtn{position:fixed;top:14px;right:66px;z-index:30;border:none;cursor:pointer;
+    background:rgba(14,18,28,.72);color:#fff;font:700 20px/1 'Helvetica Neue',Arial,sans-serif;
+    width:44px;height:44px;border-radius:12px;}
+  #helpBtn:hover{background:rgba(32,40,58,.9);}
+  #help{position:fixed;inset:0;z-index:40;display:none;align-items:center;
+    justify-content:center;background:rgba(3,5,11,.86);padding:20px;}
+  #help.on{display:flex;}
+  #help .box{background:#121828;border:1px solid #2c3a55;border-radius:18px;
+    max-width:560px;width:100%;max-height:86vh;overflow:auto;padding:24px 24px 20px;
+    color:#e6edf3;box-sizing:border-box;}
+  #help h2{margin:0 0 4px;font-size:clamp(19px,5vw,25px);}
+  #help .sub{color:#8b98ab;font-size:clamp(12px,3.2vw,14px);margin:0 0 16px;line-height:1.6;}
+  #help h3{font-size:clamp(13px,3.4vw,15px);color:#ffb340;margin:16px 0 6px;letter-spacing:.04em;}
+  #help ul{margin:0;padding-left:20px;}
+  #help li{font-size:clamp(12.5px,3.3vw,15px);line-height:1.7;margin:3px 0;}
+  #help b{color:#ffb340;font-weight:700;}
+  #help .close{margin-top:20px;width:100%;padding:12px;border:none;border-radius:10px;
+    background:#2c3a55;color:#fff;font-size:clamp(14px,3.8vw,16px);font-weight:700;cursor:pointer;}
+  #help .close:hover{background:#3c5074;}
+</style>
+</head>
+<body>
+<div id="ui"><div id="score">0</div><div id="lives"></div><div id="msg"></div></div>
+<button id="helpBtn" title="あそびかた">?</button>
+<div id="help"><div class="box">
+  <h2>コンベア・パニック</h2>
+  <p class="sub">流れてくる荷物を、色の合うシュートへ叩き落とす。ベルトはどんどん速くなる。ブラウザで無料。</p>
+    <h3>やること</h3>
+    <ul><li>ベルトの上を、<b>色のついた荷物</b>が左から右へ流れていきます</li>
+        <li>ベルトの手前に <b>3つのシュート</b>（青・黄・赤）が並んでいます</li>
+        <li>荷物が<b>正しい色のシュートの真上</b>に来たところで叩き落としてください</li></ul>
+    <h3>操作</h3>
+    <ul><li><b>シュートそのものを狙って</b>押します。1 / 2 / 3 キー、または画面のその位置をタップ</li>
+        <li>押すとそのシュートの<b>アームが振り下ろされます</b></li>
+        <li>アームの真下に荷物があれば、そこへ落ちます。なければ空振りです</li></ul>
+    <h3>しくじると</h3>
+    <ul><li><b>ちがう色</b>のシュートに落とすとミス</li>
+        <li>叩かずに<b>右端まで流してしまう</b>とミス</li>
+        <li><b>3回</b>ミスで終わりです。残りは画面上の<b>♦</b>で分かります</li>
+        <li>連続で正解するとボーナスが積み上がります</li></ul>
+    <h3>じゃま</h3>
+    <ul><li><b>早送り</b>：ベルトが一気に加速します</li>
+        <li><b>停電</b>：明かりが落ちて、色が読みにくくなります</li>
+        <li><b>まとめ搬入</b>：荷物がびっしり詰まって流れてきます</li>
+        <li><b>シュート入れ替え</b>：3つのシュートの色が並べ替わります</li>
+        <li><b>逆送</b>：しばらくベルトが逆回転して、荷物が左へ戻ります</li>
+        <li><b>無地の箱</b>：色のない箱が混ざります。落とさず流すのが正解です</li></ul>
+  <button class="close">とじる</button>
+</div></div>
+<a id="back" href="../../" title="ゲーム一覧にもどる">‹ ゲーム一覧</a>
+<button id="mute" title="音の オン / オフ">🔊</button>
+<div id="vignette"></div>
+<div id="flash"></div>
+<div id="banner"><div class="b"></div></div>
+<div id="ko">
+  <div class="koText">K.O.</div>
+  <div class="finalLabel">さいしゅうスコア</div>
+  <div class="finalScore">0</div>
+</div>
+<div id="title">
+  <h1>コンベア・パニック</h1>
+  <p>色の合うシュートへ、荷物を叩き落とせ。</p>
+  <p>ベルトは止まらない。どんどん速くなる。</p>
+  <p class="kb">1 / 2 / 3 キー : そのシュートのアームを振る</p>
+  <p class="tc">シュートの位置をタップ : アームを振る</p>
+  <button class="btn" id="startBtn">スタート</button>
+</div>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+// ---------- url flags (declared first: sound and camera both read them) ----------
+const QS = new URLSearchParams(location.search);
+const AUTO = QS.get('auto')==='1';
+const SHOWCASE_Q = QS.get('showcase');
+// Recording must produce clean footage, so every automated mode is muted.
+const REC = QS.get('rec')==='1';   // 録音モード: 音を鳴らして拾う
+const SILENT = (AUTO || !!SHOWCASE_Q || QS.get('mute')==='1') && !REC;
+// 録画・showcase では「?」と「ゲーム一覧」を出さない（動画の邪魔になる）
+const NOCHROME = AUTO || !!SHOWCASE_Q || QS.get('nochrome')==='1';
+// 録画は K.O. を長めに見せる: ?hold=9000
+const RETRY_MS = Math.max(1200, parseInt(QS.get('hold')||'4200', 10));
+// ?noev=1 はイベント無しの穏やかな走り（ナレーション用の素材）
+const NOEV = QS.get('noev')==='1';
+
+// ---------- renderer / scene ----------
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.shadowMap.enabled = true;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const SKY = new THREE.Color(0x0b0d14);
+scene.background = SKY.clone();
+scene.fog = new THREE.Fog(0x0b0d14, 26, 70);
+
+const camera = new THREE.PerspectiveCamera(50, innerWidth/innerHeight, .1, 200);
+
+// ---------- layout ----------
+// The belt runs along X. Parcels enter at BELT_L and leave at BELT_R.
+// Three chutes sit under the belt at fixed X positions; the arm above each
+// chute knocks whatever is directly beneath it down into that chute.
+const BELT_L = -13, BELT_R = 13;
+const CHUTE_X = [-5.2, 0, 5.2];
+const BELT_Y = 1.4;            // top surface of the belt
+const KNOCK_HALF = 1.5;        // how wide an arm's strike zone is, in X
+// 荷物どうしの最小間隔。判定幅の2倍より狭く並べると1回の判定に2個入り、
+// 「狙っていない箱が落ちる」= 直しようのないミスになる
+const MIN_PITCH = KNOCK_HALF * 2.2;
+
+// 色は3種。荷物の色とシュートの色が合えば正解。
+const COLORS = [0x3aa0ff, 0xffc83a, 0xff4a3a];     // 青 / 黄 / 赤
+const COLOR_NAMES = ['青','黄','赤'];
+
+// Portrait and landscape both have to work. A phone held upright is far
+// narrower than 16:9, and with a fixed FOV the whole belt falls outside the
+// frame — so widen the vertical FOV as the screen gets taller.
+const BASE_FOV = 50;
+// カメラの置き場所。縦持ちと横持ちで変える必要があるので、fitCamera が決めて
+// ここに入れ、毎フレームこれを読む
+const camFit = {dist:15.5, height:7.4, look:BELT_Y - 0.4};
+// 画面に必ず収めたい横幅。ベルトは ±13 あるが、遊びに要るのは3つのシュートと
+// その手前の助走だけ。端から端まで入れようとすると、縦持ちでカメラが遠のき
+// 荷物が豆粒になる。必要な範囲だけを framing の対象にする
+const NEED_WIDTH = (CHUTE_X[2] - CHUTE_X[0]) + 7.0;
+
+function fitCamera(){
+  const aspect = innerWidth / innerHeight;
+  camera.aspect = aspect;
+  if(typeof SHOWCASE !== 'undefined' && SHOWCASE){
+    camera.fov = aspect < 1 ? 62 : 46;
+  } else {
+    // 縦長画面では FOV を広げても効くのは縦方向だけで、横は広がらない。
+    // 上限を控えめにして、足りない分はカメラを引いて稼ぐ（下の dist）
+    const ref = 16/9;
+    camera.fov = aspect >= ref ? BASE_FOV
+      : Math.min(74, THREE.MathUtils.radToDeg(
+          2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(BASE_FOV)/2) * (ref/aspect))));
+  }
+  camera.__base = camera.fov;    // 早送りの寄りはここへ戻る
+  camera.updateProjectionMatrix();
+
+  if(!(typeof SHOWCASE !== 'undefined' && SHOWCASE)){
+    // ベルト全幅が入る距離を、横方向の画角から逆算する
+    const vFov = THREE.MathUtils.degToRad(camera.fov);
+    const hFov = 2 * Math.atan(Math.tan(vFov/2) * aspect);
+    const need = (NEED_WIDTH/2) / Math.tan(hFov/2);
+    camFit.dist = Math.max(15.5, need);
+    // 引いた分だけ見下ろしが浅くなるので、高さと注視点を持ち上げて
+    // ベルトを画面の中ほどに置く
+    // 引いた分だけ見下ろしが浅くなるので高さを足す。ただし上げすぎると
+    // 真上から見た絵になって奥行きが消えるので控えめに。
+    const k = THREE.MathUtils.clamp((camFit.dist - 15.5) / 14, 0, 1);
+    camFit.height = 7.4 + k * 3.2;
+    // 縦長画面では上下に余白が大きく余る。注視点を下げて（＝画面上では上へ）
+    // ベルトを中央寄りに持ち上げ、遊ぶ所を大きく見せる
+    camFit.look = (BELT_Y - 0.4) - k * 2.6;
+  }
+  renderer.setSize(innerWidth, innerHeight);
+}
+addEventListener('resize', fitCamera);
+addEventListener('orientationchange', ()=>setTimeout(fitCamera, 120));
+
+// ---------- lights ----------
+const hemi = new THREE.HemisphereLight(0x8fa8d8, 0x2a1f16, 1.4);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xfff0d8, 2.3);
+sun.position.set(5, 14, 9); sun.castShadow = true;
+sun.shadow.camera.left=-18; sun.shadow.camera.right=18;
+sun.shadow.camera.top=16; sun.shadow.camera.bottom=-16;
+scene.add(sun);
+// 工場のオレンジ灯。ベルト中央を照らす
+const workLight = new THREE.PointLight(0xffb45a, 90, 40);
+workLight.position.set(0, 9, 6);
+scene.add(workLight);
+
+// ---------- factory floor ----------
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(90, 90),
+  new THREE.MeshStandardMaterial({color:0x1a1f2e, roughness:.95}));
+floor.rotation.x = -Math.PI/2; floor.position.y = -4.2; floor.receiveShadow = true;
+scene.add(floor);
+
+// ---------- the belt ----------
+const beltMat = new THREE.MeshStandardMaterial({color:0x2e3446, roughness:.85});
+const belt = new THREE.Mesh(new THREE.BoxGeometry(BELT_R-BELT_L+6, .5, 3.4), beltMat);
+belt.position.set(0, BELT_Y-.25, 0); belt.receiveShadow = true;
+scene.add(belt);
+// ベルトの動きを見せる横桟。ベルト速度でスクロールする
+const slats = [];
+const slatMat = new THREE.MeshStandardMaterial({color:0x4a5570, roughness:.6, emissive:0x0a1018});
+const SLAT_SPAN = BELT_R - BELT_L + 6;
+for(let i=0;i<34;i++){
+  const s = new THREE.Mesh(new THREE.BoxGeometry(.22, .1, 3.3), slatMat);
+  s.position.set(BELT_L-3 + i*(SLAT_SPAN/34), BELT_Y+.02, 0);
+  scene.add(s); slats.push(s);
+}
+// ベルトの脚
+for(const x of [-11, -5.5, 0, 5.5, 11]){
+  const leg = new THREE.Mesh(new THREE.BoxGeometry(.5, 3.6, .5),
+    new THREE.MeshStandardMaterial({color:0x232838, roughness:.8}));
+  leg.position.set(x, BELT_Y-2.3, -1.3); leg.castShadow = true; scene.add(leg);
+}
+
+// ベルト右端の「落ちたら終わり」口
+const dropMouth = new THREE.Mesh(new THREE.BoxGeometry(.4, 2.6, 3.8),
+  new THREE.MeshStandardMaterial({color:0x6a1414, roughness:.7, emissive:0x3a0808}));
+dropMouth.position.set(BELT_R+.6, BELT_Y-.6, 0);
+scene.add(dropMouth);
+
+// ---------- chutes + arms ----------
+// A chute is the coloured bin in front of the belt; the arm is the hammer
+// above it. Pressing a chute swings its arm down through the belt line.
+function buildChute(color){
+  const g = new THREE.Group();
+  const mat = new THREE.MeshStandardMaterial({color, roughness:.45, metalness:.15,
+                                              emissive:new THREE.Color(color).multiplyScalar(.18)});
+  const dark = new THREE.MeshStandardMaterial({color:0x1d2230, roughness:.8});
+  // 傾いた滑り台
+  const ramp = new THREE.Mesh(new THREE.BoxGeometry(2.6, .18, 3.2), mat);
+  ramp.position.set(0, -.5, 1.9); ramp.rotation.x = .42; g.add(ramp);
+  for(const s of [1,-1]){
+    const side = new THREE.Mesh(new THREE.BoxGeometry(.16, .9, 3.2), dark);
+    side.position.set(1.3*s, -.3, 1.9); side.rotation.x = .42; g.add(side);
+  }
+  // 受け箱
+  const bin = new THREE.Mesh(new THREE.BoxGeometry(2.8, 1.5, 2.0), dark);
+  bin.position.set(0, -1.7, 3.6); g.add(bin);
+  const lip = new THREE.Mesh(new THREE.BoxGeometry(3.0, .22, 2.2), mat);
+  lip.position.set(0, -.95, 3.6); g.add(lip);
+  g.traverse(o=>{ if(o.isMesh){ o.castShadow=true; o.receiveShadow=true; } });
+  return {group:g, mat, lip};
+}
+
+function buildArm(color){
+  // pivot at the top; the whole arm rotates about Z so the head sweeps down
+  const pivot = new THREE.Group();
+  const mat = new THREE.MeshStandardMaterial({color:0x8d97ad, roughness:.4, metalness:.6});
+  const headMat = new THREE.MeshStandardMaterial({color, roughness:.35, metalness:.2,
+                                                  emissive:new THREE.Color(color).multiplyScalar(.3)});
+  const shaft = new THREE.Mesh(new THREE.BoxGeometry(.34, 2.6, .34), mat);
+  shaft.position.y = -1.3; pivot.add(shaft);
+  const head = new THREE.Mesh(new THREE.BoxGeometry(1.5, .55, 1.5), headMat);
+  head.position.y = -2.7; pivot.add(head);
+  pivot.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  return {pivot, headMat, head};
+}
+
+// chutes[i] holds the visual + its current colour index; the colour index is
+// what the parcel must match, and SHUFFLE reorders it during a run.
+const chutes = [];
+for(let i=0;i<3;i++){
+  const c = buildChute(COLORS[i]);
+  c.group.position.set(CHUTE_X[i], BELT_Y, 1.9);
+  scene.add(c.group);
+  const a = buildArm(COLORS[i]);
+  a.pivot.position.set(CHUTE_X[i], BELT_Y + 3.4, 0);
+  a.pivot.rotation.z = -0.5;                  // resting, tilted back
+  scene.add(a.pivot);
+  // 支柱
+  const post = new THREE.Mesh(new THREE.BoxGeometry(.4, 4.2, .4),
+    new THREE.MeshStandardMaterial({color:0x2a3144, roughness:.8}));
+  post.position.set(CHUTE_X[i], BELT_Y+3.4-2.1+2.1, -1.5);
+  post.position.y = BELT_Y + 2.0; post.castShadow = true; scene.add(post);
+  chutes.push({...c, arm:a, colorIdx:i, swing:0, flashT:0});
+}
+
+// シュート色を並べ替える（シュート入れ替えイベント用）
+function applyChuteColors(){
+  for(const ch of chutes){
+    const col = COLORS[ch.colorIdx];
+    ch.mat.color.setHex(col);
+    ch.mat.emissive.setHex(col); ch.mat.emissive.multiplyScalar(.18);
+    ch.arm.headMat.color.setHex(col);
+    ch.arm.headMat.emissive.setHex(col); ch.arm.headMat.emissive.multiplyScalar(.3);
+  }
+}
+
+// ---------- parcels ----------
+// colorIdx -1 = 無地の箱（落としてはいけない）
+const parcelGeo = new THREE.BoxGeometry(1.2, 1.2, 1.2);
+const tapeGeo   = new THREE.BoxGeometry(1.26, .16, 1.26);
+function buildParcel(colorIdx){
+  const g = new THREE.Group();
+  const plain = colorIdx < 0;
+  const base = plain ? 0xb9a184 : 0xc9b08c;
+  const box = new THREE.Mesh(parcelGeo,
+    new THREE.MeshStandardMaterial({color:base, roughness:.85}));
+  g.add(box);
+  if(!plain){
+    // 色のテープを十字に巻く。これが行き先の色
+    const col = COLORS[colorIdx];
+    const tm = new THREE.MeshStandardMaterial({color:col, roughness:.4,
+      emissive:new THREE.Color(col).multiplyScalar(.35)});
+    const t1 = new THREE.Mesh(tapeGeo, tm); g.add(t1);
+    const t2 = new THREE.Mesh(tapeGeo, tm); t2.rotation.x = Math.PI/2; g.add(t2);
+    const t3 = new THREE.Mesh(tapeGeo, tm); t3.rotation.z = Math.PI/2; g.add(t3);
+  } else {
+    // 無地は黒いバツ印だけ。色がないことが読めればいい
+    const xm = new THREE.MeshStandardMaterial({color:0x3a3228, roughness:.9});
+    for(const r of [0.7, -0.7]){
+      const bar = new THREE.Mesh(new THREE.BoxGeometry(1.5, .14, .14), xm);
+      bar.rotation.z = r; bar.position.z = .62; g.add(bar);
+    }
+  }
+  g.traverse(o=>{ if(o.isMesh){ o.castShadow=true; o.receiveShadow=true; } });
+  return {group:g, plain};
+}
+
+const parcels = [];
+function spawnParcel(x, colorIdx){
+  const p = buildParcel(colorIdx);
+  p.group.position.set(x, BELT_Y + .6, 0);
+  scene.add(p.group);
+  // vy/fall are used once it has been knocked off the belt
+  parcels.push({mesh:p.group, colorIdx, state:'belt', vy:0, vx:0, vz:0, spin:0, life:0});
+  return parcels[parcels.length-1];
+}
+
+// ---------- game state ----------
+let running=false, dead=false, t=0, score=0, lives=3;
+let beltSpeed=3.2;               // units/sec along +X
+let streak=0;                    // 連続正解
+let nextSpawnX = BELT_L;         // where the next parcel will enter
+let spawnGap = 5.0;              // X distance between parcels
+let timeScale=1;
+let deadAt=0;
+let shake=0;
+let camPush=0, camPushTarget=0;  // 死亡時の寄り
+let blackout=0;
+let surge=0;                     // 早送り
+let reverse=0;                   // 逆送（ベルトが逆回転）
+let plainChance=0;               // 無地の箱の出る確率（イベントで上がる）
+let nextEventAt=9;
+let eventQueue=[];
+
+const scoreEl = document.getElementById('score');
+const livesEl = document.getElementById('lives');
+const msgEl = document.getElementById('msg');
+const titleEl = document.getElementById('title');
+const bannerEl = document.getElementById('banner');
+const bannerText = bannerEl.querySelector('.b');
+const flashEl = document.getElementById('flash');
+const vignetteEl = document.getElementById('vignette');
+const koEl = document.getElementById('ko');
+const koScoreEl = koEl.querySelector('.finalScore');
+
+// ---------- presentation helpers ----------
+function banner(text, color){
+  bannerText.textContent = text;
+  bannerText.style.color = color;
+  bannerEl.classList.remove('go');
+  void bannerEl.offsetWidth;      // CSS アニメーションを最初から流し直す
+  bannerEl.style.opacity = 1;
+  bannerEl.classList.add('go');
+}
+function flash(color, strength, ms){
+  flashEl.style.background = color;
+  flashEl.style.transition = 'none';
+  flashEl.style.opacity = strength;
+  requestAnimationFrame(()=>{
+    flashEl.style.transition = `opacity ${ms}ms ease-out`;
+    flashEl.style.opacity = 0;
+  });
+}
+function drawLives(){
+  livesEl.textContent = '♦'.repeat(Math.max(0, lives)) + '♢'.repeat(Math.max(0, 3-lives));
+}
+
+// ---------- events ----------
+const EVENTS = {
+  surge(){
+    banner('早送り', '#ffc83a');
+    surge = 6;
+    flash('#ffd98a', .34, 420);
+    shake = Math.max(shake, .22);
+    return 7;
+  },
+  blackout(){
+    banner('停電', '#9b6bff');
+    blackout = 3.2;
+    return 4.5;
+  },
+  flood(){
+    banner('まとめ搬入', '#3aa0ff');
+    // ベルトの左側に詰めて並べる。既に乗っているものより後ろから始める：
+    // 前に割り込ませると同じ位置に二重に置いてしまう
+    const leftMost = parcels.reduce((m,p)=>
+      p.state==='belt' ? Math.min(m, p.mesh.position.x) : m, BELT_L);
+    let x = Math.min(nextSpawnX, leftMost - MIN_PITCH);
+    for(let i=0;i<6;i++){
+      spawnParcel(x, Math.floor(Math.random()*3));
+      x -= MIN_PITCH;
+    }
+    nextSpawnX = x;
+    return 8;
+  },
+  shuffle(){
+    banner('シュート入れ替え', '#ff4a3a');
+    // 3色の並びを回転させる。押す場所の意味が変わる
+    const shift = 1 + Math.floor(Math.random()*2);
+    const cur = chutes.map(c=>c.colorIdx);
+    for(let i=0;i<3;i++) chutes[i].colorIdx = cur[(i+shift)%3];
+    applyChuteColors();
+    flash('#ff4a3a', .3, 380);
+    return 6;
+  },
+  reverse(){
+    banner('逆送', '#7cffc4');
+    reverse = 3.0;               // しばらく荷物が左へ戻る
+    flash('#7cffc4', .28, 400);
+    return 6;
+  },
+  plain(){
+    banner('無地の箱', '#e8e0d0');
+    plainChance = 0.45;          // しばらく無地が混ざる
+    return 8;
+  },
+};
+const EVENT_NAMES = Object.keys(EVENTS);
+window.__events = EVENT_NAMES.slice();
+
+// recording/debug hook: fire a named event on cue (used by the capture script)
+// returns false if the run is already over, so a capture script can wait
+// for the next run instead of firing an event onto the K.O. screen
+window.__ev = name => {
+  if(!running || dead || !EVENTS[name]) return false;
+  const busy = EVENTS[name]();
+  if(!SILENT) SND.event();
+  nextEventAt = t + busy + 5;
+  return true;
+};
+window.__alive = () => running && !dead;
+window.__kill = () => { if(running && !dead){ dead=true; gameOver(); } };
+window.__recStop = () => SND.recStop();
+window.__snd = () => ({enabled: SND.enabled, silent: SILENT});
+window.__fov = () => +camera.fov.toFixed(1);
+window.__probe = () => ({t:+t.toFixed(2), speed:+beltSpeed.toFixed(2), lives,
+  parcels:parcels.length, next:+nextEventAt.toFixed(2),
+  chutes:chutes.map(c=>c.colorIdx)});
+
+function refillEventQueue(){
+  eventQueue = EVENT_NAMES.slice();
+  for(let i=eventQueue.length-1;i>0;i--){        // 毎回ちがう順に混ぜる
+    const j = Math.floor(Math.random()*(i+1));
+    [eventQueue[i],eventQueue[j]]=[eventQueue[j],eventQueue[i]];
+  }
+}
+
+function triggerEvent(){
+  if(!eventQueue.length) refillEventQueue();
+  const name = eventQueue.pop();
+  const busy = EVENTS[name]();
+  if(!SILENT) SND.event();
+  nextEventAt = t + busy + 5 + Math.random()*4;  // イベントの間に息をつかせる
+}
+
+// ---------- reset ----------
+function reset(){
+  for(const p of parcels) scene.remove(p.mesh);
+  parcels.length = 0;
+  t=0; score=0; lives=3; dead=false; streak=0;
+  beltSpeed=3.2; spawnGap=5.0;
+  timeScale=1; shake=0; camPush=0; camPushTarget=0;
+  blackout=0; surge=0; reverse=0; plainChance=0;
+  nextEventAt = 9;
+  refillEventQueue();
+  for(let i=0;i<3;i++) chutes[i].colorIdx = i;
+  applyChuteColors();
+  for(const ch of chutes){ ch.swing=0; ch.flashT=0; ch.arm.pivot.rotation.z=-0.5; }
+  // 最初の何個かを並べておく
+  nextSpawnX = BELT_L;
+  for(let i=0;i<3;i++){ spawnParcel(nextSpawnX, Math.floor(Math.random()*3)); nextSpawnX -= spawnGap; }
+  // 明かりを戻す
+  hemi.intensity=1.4; sun.intensity=2.3; workLight.intensity=90;
+  scene.background.copy(SKY); scene.fog.color.copy(SKY);
+  scoreEl.textContent = '0';
+  drawLives();
+  msgEl.textContent='';
+  koEl.classList.remove('on');
+  vignetteEl.style.transition='opacity .3s'; vignetteEl.style.opacity=0;
+}
+
+const startBtn = document.getElementById('startBtn');
+
+// ---------- sound: everything synthesised, no audio files ----------
+// Keeps the single-HTML rule (nothing to download) and lets the music
+// react to play: the bass line speeds up with the game, events drop a
+// stinger, and the whole thing ducks out on a game over.
+const SND = (() => {
+  let ctx = null, master = null, musicGain = null, on = true, started = false;
+  let step = 0, timer = null, tempo = 0.25;
+
+  // A pentatonic scale never sounds wrong against itself, which matters
+  // when the tempo drifts with the player's speed.
+  // minor pentatonic, driving — a chase that never lets up
+  const SCALE = [0, 3, 5, 7, 10];
+  const ROOT = 196;
+  const BASS = 'square', LEAD = 'sawtooth';
+  const hz = (deg, oct = 0) =>
+    ROOT * Math.pow(2, oct + Math.floor(deg / SCALE.length)) *
+    Math.pow(2, SCALE[((deg % SCALE.length) + SCALE.length) % SCALE.length] / 12);
+
+  function ensure() {
+    if (ctx) return ctx;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    ctx = new AC();
+    master = ctx.createGain();
+    master.gain.value = 0.32;
+    master.connect(ctx.destination);
+    musicGain = ctx.createGain();
+    musicGain.gain.value = 1;
+    musicGain.connect(master);
+    return ctx;
+  }
+
+
+  // ---- 録音用の分岐（?rec=1）----
+  // Playwright の録画には音声が入らないので、ゲーム自身に master バスを
+  // 録らせる。鳴っているものそのものなので映像と必ず同期する。
+  let recDest = null, recorder = null, recChunks = [];
+  function recStart() {
+    if (!ctx || recorder) return;
+    recDest = ctx.createMediaStreamDestination();
+    master.connect(recDest);
+    recorder = new MediaRecorder(recDest.stream, {mimeType: 'audio/webm'});
+    recorder.ondataavailable = e => { if (e.data.size) recChunks.push(e.data); };
+    recorder.start();
+  }
+  function recStop() {
+    return new Promise(res => {
+      if (!recorder) return res(null);
+      recorder.onstop = async () => {
+        const blob = new Blob(recChunks, {type: 'audio/webm'});
+        const buf = await blob.arrayBuffer();
+        res(Array.from(new Uint8Array(buf)));
+      };
+      recorder.stop();
+    });
+  }
+
+  function blip(freq, dur, type = 'square', vol = 0.25, dest = null, slideTo = null) {
+    if (!ctx || !on) return;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, ctx.currentTime);
+    if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, ctx.currentTime + dur);
+    // a short attack stops every note from clicking
+    g.gain.setValueAtTime(0, ctx.currentTime);
+    g.gain.linearRampToValueAtTime(vol, ctx.currentTime + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
+    o.connect(g); g.connect(dest || master);
+    o.start(); o.stop(ctx.currentTime + dur + 0.02);
+  }
+
+  function noise(dur, vol = 0.2, hp = 800) {
+    if (!ctx || !on) return;
+    const n = Math.floor(ctx.sampleRate * dur);
+    const buf = ctx.createBuffer(1, n, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    const f = ctx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = hp;
+    const g = ctx.createGain(); g.gain.value = vol;
+    src.connect(f); f.connect(g); g.connect(master);
+    src.start();
+  }
+
+  // --- the loop: a walking bass plus an offbeat blip ---
+  function tick() {
+    if (!ctx || !on) return;
+    const bar = step % 16;
+    // straight driving pulse: bass on every beat, lead stabs offbeat
+    if (bar % 2 === 0) blip(hz(bar % 8 === 0 ? 0 : 1, -1), tempo * 1.1, BASS, 0.30, musicGain);
+    if (bar % 8 === 5) blip(hz(4, 0), tempo * 0.6, LEAD, 0.09, musicGain);
+    if (bar % 4 === 2) noise(0.04, 0.05, 5000);
+    step++;
+    timer = setTimeout(tick, tempo * 1000);
+  }
+
+  return {
+    // must be called from a user gesture — browsers block audio otherwise
+    start() {
+      if (!ensure() || started) return;
+      if (ctx.state === 'suspended') ctx.resume();
+      started = true; step = 0; tick();
+    },
+    stop() { if (timer) { clearTimeout(timer); timer = null; } started = false; },
+    /** speed the music up with the game; 1 = starting pace */
+    setPace(mult) { tempo = Math.max(0.11, 0.25 / Math.max(0.2, mult)); },
+    duck(sec = 1.6) {                                      // for game over
+      if (!ctx) return;
+      musicGain.gain.cancelScheduledValues(ctx.currentTime);
+      musicGain.gain.setValueAtTime(musicGain.gain.value, ctx.currentTime);
+      musicGain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + sec);
+    },
+    unduck() {
+      if (!ctx) return;
+      musicGain.gain.cancelScheduledValues(ctx.currentTime);
+      musicGain.gain.setValueAtTime(0.0001, ctx.currentTime);
+      musicGain.gain.exponentialRampToValueAtTime(1, ctx.currentTime + 0.4);
+    },
+    // --- one-shots ---
+    // 入力（アームを振る）: 短い木質の打音。1/2/3 でピッチが変わるので
+    // どのシュートを叩いたかが音だけでも分かる
+    swing(i) { ensure(); blip(hz(1 + i, 0), 0.06, LEAD, 0.14, null, hz(i, -1)); },
+    // 正解: 上がる二音。ナレーションの下でも抜ける
+    good(n)  { ensure(); const s = Math.min(n, 5);
+               blip(hz(2 + s, 0), 0.09, 'triangle', 0.24);
+               setTimeout(() => blip(hz(4 + s, 1), 0.14, 'triangle', 0.20), 70); },
+    // ミス: 低く下がるブザー
+    bad()    { ensure(); blip(hz(1, -1), 0.30, 'square', 0.26, null, hz(0, -2));
+               noise(0.10, 0.12, 300); },
+    // 空振り: ごく短い当たらない音
+    whiff()  { ensure(); noise(0.05, 0.07, 2200); },
+    event()  { ensure(); [0, 90, 180].forEach((ms, i) =>
+                 setTimeout(() => blip(hz(2 + i, 0), 0.18, 'sawtooth', 0.20), ms)); },
+    hit()    { ensure(); noise(0.35, 0.30, 200);
+               blip(180, 0.5, 'sawtooth', 0.28, null, 40); },
+    over()   { ensure(); [0, 140, 280, 460].forEach((ms, i) =>
+                 setTimeout(() => blip(hz(-i, -1), 0.42, 'triangle', 0.26), ms)); },
+    recStart() { ensure(); recStart(); },
+    recStop() { return recStop(); },
+    toggle() { on = !on; if (!on) { this.stop(); } else { this.start(); } return on; },
+    get enabled() { return on; },
+  };
+})();
+
+// --- one place for every action, so touch and keyboard stay in step ---
+function startRun(){
+  titleEl.classList.add('hidden'); reset(); running=true;
+  if(!SILENT){ SND.unduck(); SND.start(); if(REC) SND.recStart(); }
+}
+
+// The single verb of the game: swing chute i's arm. Whatever parcel is
+// directly under the head gets knocked into that chute.
+function swingArm(i){
+  if(!running || dead) return;
+  const ch = chutes[i];
+  if(ch.swing > 0) return;            // 振っている最中は受け付けない
+  ch.swing = 1;                       // 1 → 0 へ落ちる。0.5 前後で当たり判定
+  if(!SILENT) SND.swing(i);
+
+  // 当たり判定は振り下ろした瞬間に取る（見た目の遅れは演出だけ）
+  let target = null, best = 1e9;
+  for(const p of parcels){
+    if(p.state !== 'belt') continue;
+    const d = Math.abs(p.mesh.position.x - CHUTE_X[i]);
+    if(d < KNOCK_HALF && d < best){ best = d; target = p; }
+  }
+  if(!target){ if(!SILENT) SND.whiff(); return; }
+
+  target.state = 'fall';
+  target.vx = 0.4; target.vz = 3.4; target.vy = 1.2;   // シュートへ向かって前に落ちる
+  target.spin = (Math.random()-.5)*6;
+
+  if(target.colorIdx === ch.colorIdx){
+    // 正解
+    streak++;
+    const bonus = 10 + Math.min(streak, 10) * 3;
+    score += bonus;
+    ch.flashT = .45;
+    if(!SILENT) SND.good(streak);
+  } else {
+    // 無地も含め、色が合わなければミス
+    loseLife(target.colorIdx < 0 ? '無地は流す' : 'ちがう色');
+  }
+}
+
+function loseLife(reason){
+  streak = 0;
+  lives--;
+  drawLives();
+  shake = Math.max(shake, .45);
+  flash('#ff3b2e', .38, 420);
+  if(!SILENT) SND.bad();
+  if(lives <= 0){ dead = true; gameOver(); }
+  else msgEl.textContent = reason;
+}
+
+const muteBtn = document.getElementById('mute');
+function toggleMute(){ muteBtn.textContent = SND.toggle() ? '🔊' : '🔇'; }
+muteBtn.addEventListener('click', toggleMute);
+muteBtn.addEventListener('touchend', e=>{ e.preventDefault(); toggleMute(); },
+                         {passive:false});
+if(SILENT) muteBtn.style.display='none';   // automated modes have no audio
+addEventListener('keydown', e=>{ if(e.code==='KeyM') toggleMute(); });
+
+startBtn.addEventListener('click', startRun);
+// a touch on the button must start too — click alone is unreliable on touch
+startBtn.addEventListener('touchend', e=>{ e.preventDefault(); startRun(); },
+                          {passive:false});
+
+addEventListener('keydown', e=>{
+  if(!running){
+    if(e.code==='Space'||e.code==='Enter') startRun();
+    return;
+  }
+  if(e.code==='Digit1'||e.code==='KeyA'||e.code==='ArrowLeft')  swingArm(0);
+  if(e.code==='Digit2'||e.code==='KeyS'||e.code==='ArrowDown')  swingArm(1);
+  if(e.code==='Digit3'||e.code==='KeyD'||e.code==='ArrowRight') swingArm(2);
+});
+
+// --- touch: tap the chute you want ---
+// 3D なので「押した場所がどのシュートか」は、各シュートの中心を画面座標へ
+// 投影して、いちばん近いものを選ぶ。画面の3分割より正確で、縦持ちでも合う。
+function chuteAtScreen(px, py){
+  const v = new THREE.Vector3();
+  let best = -1, bestD = 1e9;
+  for(let i=0;i<3;i++){
+    v.set(CHUTE_X[i], BELT_Y, 0.6).project(camera);
+    const sx = (v.x*0.5+0.5)*innerWidth;
+    const sy = (-v.y*0.5+0.5)*innerHeight;
+    // 横の距離を重く見る。縦は誤差を許す（指はだいたい上下にずれる）
+    const d = Math.abs(px-sx) + Math.abs(py-sy)*0.25;
+    if(d < bestD){ bestD = d; best = i; }
+  }
+  return best;
+}
+
+(function(){
+  const canvas = renderer.domElement;
+  let st = 0;
+
+  canvas.addEventListener('touchstart', e=>{ st = Date.now(); }, {passive:true});
+
+  canvas.addEventListener('touchend', e=>{
+    if(dead){
+      // K.O. のアニメーションを読ませてから、タップで再挑戦
+      if(!AUTO && Date.now()-deadAt > 1500) startRun();
+      return;
+    }
+    if(!running){ startRun(); return; }
+    const tc = e.changedTouches[0];
+    swingArm(chuteAtScreen(tc.clientX, tc.clientY));
+  }, {passive:true});
+
+  // マウスでも同じ経路を通す（PC で触ってみる人向け）
+  canvas.addEventListener('mousedown', e=>{
+    if(dead || !running) return;
+    swingArm(chuteAtScreen(e.clientX, e.clientY));
+  });
+
+  // タイトルは canvas の上に乗っているので、そこから直接始める
+  titleEl.addEventListener('touchend', e=>{
+    if(!running){ e.preventDefault(); startRun(); }
+  }, {passive:false});
+
+  // ゲームのタップをスクロールやダブルタップ拡大に取られない
+  canvas.addEventListener('touchmove', e=>e.preventDefault(), {passive:false});
+})();
+
+// autoplay mode for recording: ?auto=1
+if(AUTO){ setTimeout(startRun, 1200); }   // startRun 経由にする（音/録音も始まる）
+
+// ---------- autopilot ----------
+// 方針: 各荷物を「その色を今担当しているシュート」の判定幅に入った瞬間に叩く。
+// 判定はアームを振った瞬間に取るので、中心まで待つ必要はない。無地は叩かない。
+function autoPilot(dt){
+  const vx = beltSpeed * (reverse > 0 ? -1 : 1);
+  // 早送りでは1フレームの移動が判定幅に迫るので、その分だけ早めに振る
+  const lead = Math.min(KNOCK_HALF*0.8, Math.abs(vx)*dt*1.5);
+  // いちばん右（=取りこぼしに近い）荷物から順に見る
+  const belted = parcels.filter(p => p.state==='belt' && p.colorIdx >= 0)
+                        .sort((a,b) => b.mesh.position.x - a.mesh.position.x);
+  // 3本のアームは独立なので、1フレームに複数振ってよい。1本ずつに絞ると
+  // まとめ搬入のときに手が足りず、取りこぼす
+  for(const p of belted){
+    const ci = chutes.findIndex(c => c.colorIdx === p.colorIdx);
+    if(ci < 0 || chutes[ci].swing > 0) continue; // そのアームはまだ戻っていない
+    const dx = p.mesh.position.x - CHUTE_X[ci];
+    if(dx > -(KNOCK_HALF - lead) && dx < KNOCK_HALF) swingArm(ci);
+  }
+}
+
+// ---------- showcase mode ----------
+// Puts one object on a turntable against an empty stage so the video can talk
+// about it while the real thing is on screen. Uses the game's own meshes, so
+// what the narration describes is exactly what ships.
+const SHOWCASE = QS.get('showcase');
+const showcase = {group:null, spin:.55, label:''};
+window.__subjects = ['parcelBlue','parcelYellow','parcelRed','parcelPlain',
+                     'chute','arm','belt','dropMouth'];
+
+function buildShowcase(name){
+  const g = new THREE.Group();
+  let label = '', spin = .55;
+  if(name==='parcelBlue'){
+    g.add(buildParcel(0).group); label = '青の荷物'; spin = .7;
+  } else if(name==='parcelYellow'){
+    g.add(buildParcel(1).group); label = '黄の荷物'; spin = .7;
+  } else if(name==='parcelRed'){
+    g.add(buildParcel(2).group); label = '赤の荷物'; spin = .7;
+  } else if(name==='parcelPlain'){
+    g.add(buildParcel(-1).group); label = '無地の箱'; spin = .7;
+  } else if(name==='chute'){
+    const c = buildChute(COLORS[1]);
+    g.add(c.group); label = 'シュート'; spin = .5;
+  } else if(name==='arm'){
+    const a = buildArm(COLORS[2]);
+    a.pivot.rotation.z = -0.35;
+    g.add(a.pivot); label = 'アーム'; spin = .5;
+  } else if(name==='belt'){
+    // ベルトの一区画だけを切り出して見せる
+    const seg = new THREE.Mesh(new THREE.BoxGeometry(6, .5, 3.4), beltMat.clone());
+    seg.position.y = -.25; g.add(seg);
+    for(let i=0;i<9;i++){
+      const s = new THREE.Mesh(new THREE.BoxGeometry(.22, .1, 3.3), slatMat.clone());
+      s.position.set(-2.7 + i*.68, .02, 0); g.add(s);
+    }
+    const leg = new THREE.Mesh(new THREE.BoxGeometry(.5, 2.4, .5),
+      new THREE.MeshStandardMaterial({color:0x232838, roughness:.8}));
+    leg.position.set(0, -1.7, -1.3); g.add(leg);
+    label = 'ベルト'; spin = .45;
+  } else if(name==='dropMouth'){
+    const m = new THREE.Mesh(new THREE.BoxGeometry(.4, 2.6, 3.8),
+      new THREE.MeshStandardMaterial({color:0x6a1414, roughness:.7, emissive:0x3a0808}));
+    m.scale.set(2.2,1,1); g.add(m); label = '取りこぼし口'; spin = .5;
+  }
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  scene.add(g);
+
+  // Centre the subject on the origin and pull the camera back to fit it,
+  // so every object is framed the same way regardless of its size.
+  const box = new THREE.Box3().setFromObject(g);
+  const size = box.getSize(new THREE.Vector3());
+  const mid = box.getCenter(new THREE.Vector3());
+  g.position.sub(mid);                       // sit centred at the origin
+  const reach = Math.max(size.x, size.y) * 0.5;
+  const fov = THREE.MathUtils.degToRad(camera.fov);
+  const dist = (reach / Math.tan(fov/2)) * 1.75 + 1.0;   // 1.75 = 余白
+  camera.position.set(0, size.y*0.10, dist);
+
+  // Slide the subject sideways so a text panel can own the other half.
+  // The offset lives on a parent so the turntable still spins in place —
+  // rotating an offset group would make it orbit instead.
+  const bias = parseFloat(QS.get('sx') || '0');
+  const pivot = new THREE.Group();
+  pivot.position.x = -bias * reach * 1.15;
+  scene.add(pivot);
+  pivot.add(g);
+  showcase.group = g; showcase.pivot = pivot;
+  showcase.spin = spin; showcase.label = label;
+}
+
+fitCamera();          // SHOWCASE is known by here
+if(SHOWCASE){
+  titleEl.classList.add('hidden');
+  buildShowcase(SHOWCASE);
+  scoreEl.textContent = '';
+  livesEl.textContent = '';
+  msgEl.textContent = QS.get('nolabel')==='1' ? '' : showcase.label;
+  msgEl.style.fontSize = 'clamp(20px,5vw,30px)';
+  msgEl.style.letterSpacing = '6px';
+  // 何もない暗いステージ：被写体だけを残す
+  floor.visible = false; belt.visible = false; dropMouth.visible = false;
+  for(const s of slats) s.visible = false;
+  for(const ch of chutes){ ch.group.visible = false; ch.arm.pivot.visible = false; }
+  scene.traverse(o=>{ if(o.isMesh && o.geometry && o.geometry.type==='BoxGeometry'
+                        && o.position.y < BELT_Y && o.parent===scene) o.visible=false; });
+  scene.fog = null;
+  scene.background = new THREE.Color(0x0b0d16);
+  hemi.intensity = 3.2;
+  sun.intensity = 3.6; sun.position.set(2.5, 6, 6);
+  workLight.position.set(3.0, 3.4, 4.4);
+  workLight.intensity = 130;
+  // 反対側からの補助光。裏面が真っ黒にならないように
+  const fill = new THREE.PointLight(0x88aaff, 50, 26);
+  fill.position.set(-4.5, 2.4, 3.6); scene.add(fill);
+}
+// let the capture script drive the turntable and swap subjects
+window.__showcase = name => {
+  if(showcase.pivot) scene.remove(showcase.pivot);   // pivot owns the group
+  buildShowcase(name);
+  msgEl.textContent = showcase.label;
+};
+
+// ---------- loop ----------
+const clock = new THREE.Clock();
+function tick(){
+  requestAnimationFrame(tick);
+  const raw = Math.min(clock.getDelta(), .05);
+  const dt = raw * timeScale;
+
+  if(SHOWCASE){
+    if(showcase.group) showcase.group.rotation.y += raw*showcase.spin;
+    camera.lookAt(0, 0, 0);        // subject is offset, camera stays on axis
+    renderer.render(scene, camera);
+    return;
+  }
+
+  if(running && !dead){
+    t += dt;
+    // ベルトは時間とともに速くなる。これがゲームの圧力そのもの
+    const surgeBoost = surge>0 ? 3.4 : 0;
+    beltSpeed = 3.2 + t*0.085 + surgeBoost;
+    // 速くなるほど荷物の間隔も詰める（ただし下限あり）
+    spawnGap = Math.max(MIN_PITCH, 5.0 - t*0.03);
+    score += dt * 2;                        // 生きているだけでも伸びる
+    scoreEl.textContent = Math.floor(score);
+    if(!SILENT) SND.setPace(beltSpeed/3.2);
+    if(AUTO) autoPilot(dt);
+
+    // --- events ---
+    if(t > nextEventAt && !NOEV) triggerEvent();
+
+    // 早送り: 画面も少し広角に引いて速さを見せる
+    if(surge>0){
+      surge -= dt;
+      camera.fov += (camera.__base*1.10 - camera.fov)*Math.min(1,dt*4);
+      camera.updateProjectionMatrix();
+    } else if(camera.fov > camera.__base + 0.05){
+      camera.fov += (camera.__base - camera.fov)*Math.min(1,dt*3);
+      camera.updateProjectionMatrix();
+    }
+
+    // 停電: 明かりを落として、終わりぎわに戻す
+    if(blackout>0){
+      blackout -= dt;
+      const k = blackout > .45 ? 0.06 : 1 - blackout/.45;   // 最後にフェードイン
+      hemi.intensity = 1.4*k; sun.intensity = 2.3*k; workLight.intensity = 90*k;
+      scene.background.copy(SKY).multiplyScalar(Math.max(.15, k));
+      scene.fog.color.copy(scene.background);
+      if(blackout<=0){
+        hemi.intensity=1.4; sun.intensity=2.3; workLight.intensity=90;
+        scene.background.copy(SKY); scene.fog.color.copy(SKY);
+      }
+    }
+
+    // 逆送のあいだはベルトが逆回転する
+    if(reverse>0) reverse -= dt;
+    const dir = reverse>0 ? -1 : 1;
+    const vx = beltSpeed * dir;
+
+    // 無地の箱は時間で薄れていく
+    if(plainChance>0) plainChance = Math.max(0, plainChance - dt*0.06);
+
+    // ベルトの桟をスクロールさせる（動いて見えないと速さが伝わらない）
+    for(const s of slats){
+      s.position.x += vx*dt;
+      if(s.position.x > BELT_R+3) s.position.x -= SLAT_SPAN;
+      if(s.position.x < BELT_L-3) s.position.x += SLAT_SPAN;
+    }
+
+    // --- 荷物の供給 ---
+    // 一番左の荷物が十分入ってきたら、その後ろに次を置く。
+    // 逆送のあいだは供給カーソルを止める：一緒に巻き戻すと、逆送が明けてから
+    // 数秒ベルトが空になってしまう（見ていて何も起きない時間ができる）
+    if(dir > 0) nextSpawnX += vx*dt;
+    if(nextSpawnX > BELT_L){
+      // 入口のすぐ先に荷物が残っていたら見送る。まとめ搬入の直後など、
+      // 詰まっている所へ足すと同じ位置に重なり、アームがどちらを叩いたのか
+      // 決まらなくなる（＝直しようのないミスになる）
+      const crowded = parcels.some(p =>
+        p.state==='belt' && p.mesh.position.x < BELT_L + MIN_PITCH);
+      if(!crowded){
+        const plain = Math.random() < plainChance;
+        spawnParcel(BELT_L, plain ? -1 : Math.floor(Math.random()*3));
+        nextSpawnX = BELT_L - spawnGap;
+      }
+    }
+
+    // --- 荷物の更新 ---
+    for(let i=parcels.length-1;i>=0;i--){
+      const p = parcels[i];
+      if(p.state === 'belt'){
+        p.mesh.position.x += vx*dt;
+        p.mesh.position.y = BELT_Y + .6;
+        // 右端まで流したらミス（無地だけは正解＝流すのが仕事）
+        if(p.mesh.position.x > BELT_R){
+          if(p.colorIdx >= 0){
+            loseLife('流してしまった');
+          } else {
+            streak++;                        // 無地を流し切ったら加点
+            score += 8;
+            if(!SILENT) SND.good(streak);
+          }
+          scene.remove(p.mesh); parcels.splice(i,1);
+          if(dead) break;
+          continue;
+        }
+        // 逆送で左へ押し戻されたものは入口で止める。消してしまうと「逆送に
+        // 乗せれば失敗を帳消しにできる」抜け道になる
+        if(p.mesh.position.x < BELT_L) p.mesh.position.x = BELT_L;
+      } else {
+        // シュートへ落ちていく
+        p.life += dt;
+        p.vy -= 18*dt;
+        p.mesh.position.x += p.vx*dt;
+        p.mesh.position.y += p.vy*dt;
+        p.mesh.position.z += p.vz*dt;
+        p.mesh.rotation.x += p.spin*dt;
+        p.mesh.rotation.z += p.spin*0.6*dt;
+        if(p.life > 1.2){ scene.remove(p.mesh); parcels.splice(i,1); }
+      }
+    }
+
+    // 詰まりすぎた荷物を引き離す。判定幅に2個入ると、アームがどちらを叩いた
+    // のか決まらず「狙っていない箱が落ちる」= 直しようのないミスになる。
+    // 左から順に、前の荷物との間隔が足りなければ左へ押し戻す。
+    const onBelt = parcels.filter(p => p.state==='belt')
+                          .sort((a,b) => a.mesh.position.x - b.mesh.position.x);
+    for(let i=1;i<onBelt.length;i++){
+      const gap = onBelt[i].mesh.position.x - onBelt[i-1].mesh.position.x;
+      if(gap < MIN_PITCH) onBelt[i-1].mesh.position.x -= (MIN_PITCH - gap);
+    }
+
+    // --- アーム ---
+    for(const ch of chutes){
+      if(ch.swing > 0){
+        ch.swing = Math.max(0, ch.swing - dt*4.2);
+        // 1 → 0 を「振り下ろし → 戻り」に写す
+        const s = 1 - ch.swing;                 // 0..1
+        const k = s < .35 ? s/.35 : 1 - (s-.35)/.65;
+        ch.arm.pivot.rotation.z = -0.5 + k*1.42;
+      }
+      if(ch.flashT > 0){
+        ch.flashT = Math.max(0, ch.flashT - dt);
+        const g = ch.flashT/.45;
+        ch.mat.emissive.setHex(COLORS[ch.colorIdx]).multiplyScalar(.18 + g*.9);
+      }
+    }
+  }
+
+  // --- 死亡演出: スローモーション、寄り、赤い画面 ---
+  if(dead){
+    timeScale += (0 - timeScale)*Math.min(1, raw*1.1);
+  }
+
+  // --- camera (dead でも動くので、寄りと揺れが最後まで見える) ---
+  camPush += (camPushTarget - camPush)*Math.min(1, raw*2.4);
+  // 縦持ちでは横の視野が足りず、ベルトの両端が切れる。FOV を広げるだけでは
+  // 縦方向にしか効かないので、カメラ自体を引いて上げる（camFit で決める）
+  const camZ = camFit.dist - camPush;
+  camera.position.set(0, camFit.height - camPush*1.4, camZ);
+  if(shake>0){
+    shake = Math.max(0, shake - raw*1.1);
+    camera.position.x += (Math.random()-.5)*shake;
+    camera.position.y += (Math.random()-.5)*shake;
+  }
+  camera.lookAt(0, camFit.look, 0.8);
+
+  renderer.render(scene, camera);
+}
+
+function gameOver(hitBy){
+  running=false; deadAt=Date.now();
+  if(!SILENT){ SND.hit(); SND.duck(1.6); setTimeout(()=>SND.over(), 700); }
+  // hit feedback: red flash, red vignette, hard shake, camera punches in
+  flash('#ff2b3a', .8, 500);
+  vignetteEl.style.transition='opacity .5s'; vignetteEl.style.opacity=1;
+  shake = .9;
+  camPushTarget = 5.4;
+  drawLives();
+  const finalScore = Math.floor(score);
+  koScoreEl.textContent = finalScore;
+  msgEl.textContent = '';
+  setTimeout(()=>{ koEl.classList.add('on'); }, 620);   // スローモーションの後に K.O.
+  if(AUTO){ setTimeout(()=>{ reset(); running=true;
+                             if(!SILENT) SND.unduck(); }, RETRY_MS); }
+  else setTimeout(()=>{
+    msgEl.textContent = matchMedia('(pointer:coarse)').matches
+      ? 'タップでもう一度' : 'スペースでもう一度';
+  }, 1800);
+}
+tick();
+
+// --- あそびかた (?) : 録画中は出さない ---
+(function(){
+  const btn = document.getElementById('helpBtn');
+  const panel = document.getElementById('help');
+  if(!btn || !panel) return;
+  if(NOCHROME){                      // 録画・showcase では画面から消す
+    btn.style.display = 'none';
+    const back = document.getElementById('back');
+    if(back) back.style.display = 'none';
+    return;
+  }
+  const open = () => { panel.classList.add('on'); };
+  const close = () => { panel.classList.remove('on'); };
+  btn.addEventListener('click', open);
+  btn.addEventListener('touchend', e => { e.preventDefault(); open(); }, {passive:false});
+  panel.addEventListener('click', e => { if(e.target === panel) close(); });
+  panel.querySelector('.close').addEventListener('click', close);
+  panel.querySelector('.close').addEventListener('touchend',
+    e => { e.preventDefault(); close(); }, {passive:false});
+  addEventListener('keydown', e => {
+    if(e.code === 'Escape') close();
+    else if(e.key === '?' || (e.code === 'Slash' && e.shiftKey)) open();
+  });
+})();
+</script>
+</body>
+</html>
