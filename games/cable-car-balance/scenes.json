@@ -1,0 +1,227 @@
+{
+  "id": "0012_cable_car_balance",
+  "title": "ケーブルカー・バランス",
+  "lang": "javascript",
+  "voice": "ja_female",
+  "scenes": [
+    {
+      "kind": "hook",
+      "clip": "gust",
+      "narration": "このゲームは、修理されなかった部品ひとつから生まれました。"
+    },
+    {
+      "kind": "image",
+      "prompt": "a small old aerial cable car hanging from a single steel rope over a deep alpine valley at dusk, red painted cabin, weathered paint, distant ridgelines fading into haze, photorealistic, cinematic wide shot, highly detailed",
+      "narration": "山あいの村に、小さなロープウェーがあります。谷を渡るだけの、一本のロープです。乗るのは、毎日おなじ顔ぶれです。"
+    },
+    {
+      "kind": "image",
+      "prompt": "close-up of a rusted broken counterweight mechanism on a cable car cabin roof, bolts missing, faded hand-written maintenance tag tied with wire, warm evening light, photorealistic, shallow depth of field, highly detailed",
+      "narration": "この客車には、重さを自動でつりあわせる部品が付いていました。十年前に、壊れました。部品がもう作られていないそうです。"
+    },
+    {
+      "kind": "image",
+      "prompt": "an elderly cable car operator in a worn uniform standing inside a tilted red cabin, guiding a passenger to one side with an outstretched hand, other passengers seated along both benches, warm interior lamp light, photorealistic, documentary style, highly detailed",
+      "narration": "だから今は、人間がやっています。案内係のマツダさんです。お客さんが乗るたび、左か右へ座らせる。それだけで、客車は水平になります。そうなんです。手動です。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "car",
+      "kicker": "あなたの持ち場",
+      "title": "客車",
+      "bullets": [
+        "ロープの**一点でぶら下がる**やじろべえ",
+        "左右の重さが違えば、そのぶん**かたむく**",
+        "水平に近いほど**スコアが速く**増える"
+      ],
+      "narration": "これがあなたの持ち場です。客車は、ロープの一点でぶら下がっています。つまり、やじろべえです。左右の重さが違えば、そのぶんかたむきます。水平に近いほど、スコアは速く増えます。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "chute",
+      "kicker": "仕事が来る場所",
+      "title": "乗車口",
+      "bullets": [
+        "天井の口から**ひとりずつ**落ちてくる",
+        "着地する前に**左か右**を決める",
+        "決めないと、そのまま**真ん中に居座る**"
+      ],
+      "narration": "お客さんは、天井の口から落ちてきます。ひとりずつです。着地する前に、左か右を決めてください。ここが面白いところです。決めないと、その人は真ん中に居座ります。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "passenger",
+      "kicker": "見た目で決める",
+      "title": "お客さん",
+      "bullets": [
+        "**大きさが、そのまま重さ**",
+        "大きい人ひとりは、**小さい人三人ぶん**",
+        "色は情報を持たない。**見た目で判断**する"
+      ],
+      "narration": "お客さんは三種類です。大きさが、そのまま重さです。大きい人ひとりで、小さい人三人ぶん。色は関係ありません。見た目だけで決めてください。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "heavy",
+      "kicker": "一発で崩れる",
+      "title": "大物のお客さん",
+      "bullets": [
+        "**いちばん重い**お客さん",
+        "**続けて三人**まとめて来ることがある",
+        "外側に座るほど**効きが強くなる**"
+      ],
+      "narration": "そして、この人です。いちばん重いお客さんです。ときどき、続けて三人まとめて来ます。もう一つ。同じ側に人が増えると、外側に座ります。腕が長くなるので、効きも強くなります。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "gust",
+      "kicker": "外から来る力",
+      "title": "突風",
+      "bullets": [
+        "谷から横向きに**押し続ける**",
+        "お客さんでは止められない",
+        "**逆側に積んで**耐えるしかない"
+      ],
+      "narration": "谷からは、風が吹きます。突風は、横からずっと押し続けます。お客さんを止めることはできません。逆側に積んで、耐えるしかありません。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "tower",
+      "kicker": "進んでいる印",
+      "title": "支柱",
+      "bullets": [
+        "谷に等間隔で立っている",
+        "流れていく速さが**進行の目安**",
+        "ぶつかりはしない。**景色として効く**"
+      ],
+      "narration": "谷には支柱が並んでいます。これがどんどん後ろへ流れていきます。ぶつかることはありません。でも、速さが目で分かるので、焦ります。"
+    },
+    {
+      "kind": "events",
+      "clip": "events",
+      "kicker": "途中で起きること",
+      "title": "静かには渡らせてくれない",
+      "bullets": [
+        "**相席ラッシュ** — 客が一気に来て判断が続く",
+        "**濃霧** — メーターも客車も霞む",
+        "**検札です** — 乗客全員が片側に寄る"
+      ],
+      "narration": "静かには渡らせてくれません。相席ラッシュでは、お客さんが一気に来ます。濃霧が出ると、メーターも客車も霞みます。そしてここからが本題です。検札。車掌が来ると、乗っている全員が片側に寄ります。そうです、あなたが整えた並びが、一瞬で崩れます。"
+    },
+    {
+      "kind": "death",
+      "clip": "death",
+      "kicker": "一本の終わり",
+      "title": "客車はロープから外れる",
+      "bullets": [
+        "メーターを**振り切ったら終わり**",
+        "赤くなった時点で、もう猶予はない",
+        "時間がゆっくり止まって、スコアが出る"
+      ],
+      "narration": "かたむきメーターを振り切ると、客車はロープから外れます。赤くなった時点で、もう猶予はありません。時間がゆっくり止まって、最終スコアが出ます。マツダさんは、これを十年続けています。あなたは、たぶん三十秒です。"
+    },
+    {
+      "kind": "outro",
+      "title": "概要欄のリンクから遊べます",
+      "subtitle": "チャンネル登録で、毎日ひとつ新しいゲーム",
+      "narration": "今すぐ遊べます。概要欄のリンクからどうぞ。チャンネル登録もお願いします。明日も新しいゲームを出します。"
+    }
+  ],
+  "slug": "cable-car-balance",
+  "channel": "Daily Arcade Studio",
+  "video_title": "壊れた部品ひとつのせいで、この仕事は手動になった",
+  "events": [
+    "gust",
+    "rush",
+    "heavy",
+    "fog",
+    "check"
+  ],
+  "short": [
+    {
+      "mark": "check",
+      "lead": -0.5,
+      "dur": 9.0,
+      "headline": "全員が片側に寄る"
+    },
+    {
+      "mark": "gust",
+      "lead": -0.3,
+      "dur": 7.0,
+      "headline": "風は止められない"
+    },
+    {
+      "mark": "heavy",
+      "lead": -0.5,
+      "dur": 7.0,
+      "headline": "大物が三人続く"
+    },
+    {
+      "mark": "fog",
+      "lead": -0.5,
+      "dur": 7.0,
+      "headline": "メーターが霞む"
+    },
+    {
+      "mark": "death",
+      "lead": -2.0,
+      "dur": 9.0,
+      "headline": "たぶん30秒"
+    }
+  ],
+  "thumb": {
+    "hook": "傾いたら終わり",
+    "sub": "左か右か。水平を保つだけの仕事。ブラウザで無料。",
+    "frame_mark": "check",
+    "frame_lead": 1.0
+  },
+  "short_v2": {
+    "cuts": [
+      {
+        "kind": "clip",
+        "mark": "check",
+        "lead": -0.5,
+        "dur": 4.5,
+        "headline": "今日のゲーム",
+        "narration": "今日のゲームです。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "car",
+        "dur": 5.0,
+        "headline": "ケーブルカー・バランス",
+        "narration": "あなたは、お客さんを左右に座らせる案内係です。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "passenger",
+        "dur": 5.0,
+        "headline": "大きさ＝重さ",
+        "narration": "お客さんは大きさがそのまま重さです。色は関係ありません。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "chute",
+        "dur": 5.0,
+        "headline": "落ちてくる",
+        "narration": "天井の口から、ひとりずつ落ちてきます。着く前に決めてください。"
+      },
+      {
+        "kind": "clip",
+        "mark": "death",
+        "lead": -2.0,
+        "dur": 5.5,
+        "headline": "",
+        "narration": "振り切ると、ロープから外れます。"
+      },
+      {
+        "kind": "clip",
+        "mark": "run2",
+        "lead": 1.0,
+        "dur": 4.5,
+        "cta": "概要欄のリンクから遊べます",
+        "narration": "ブラウザで無料で遊べます。リンクは概要欄です。"
+      }
+    ]
+  }
+}
