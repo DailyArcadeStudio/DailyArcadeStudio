@@ -1,0 +1,193 @@
+{
+  "title": "あなたの「場所と居場所」診断",
+  "lead": "土地に根を張るか、身軽に動くか。あなたの場所との付き合い方は、どの国のタイプに近いでしょうか。",
+  "story": "モンゴルの草原には、住所が無い場所があります。道も、看板もありません。人口密度は1平方キロメートルにおよそ2人と言われていて、世界でもっとも低いほうです。日本は同じ広さに300人以上います。住所が無い理由は、はっきりしています。家が動くからです。遊牧の人たちは季節ごとに引っ越します。草を食べ終わったら、次の場所へ行く。道が無ければ、通りの名前も付けられませんね。近所の人どうしなら、あの丘の裏、で通じます。困るのは外から来る人です。郵便と、救急車と、宅配便。そこでモンゴルは、変わった仕組みを採用しました。世界の地面を3メートル四方に区切って、1つ1つのマスに単語を3つ割り当てるんです。りんご、つくえ、かわ。こんな並びが住所になります。郵便が正式に使い始めたのは2016年とされ、国全体で採用したのは世界で最初と言われています。日本の住所は土地に付いていますよね。あちらは、人がそのつど住所を選びます。動いたら、選び直すだけ。住所が無いから困ったのではなく、無いから先に進めた、という話でした。あなたはどちらに近いでしょうか。10問で見てみましょう。",
+  "axes": [
+    {
+      "label": "動いて暮らすか、根を張って暮らすか",
+      "pos": "N",
+      "neg": "S"
+    },
+    {
+      "label": "番号で決めるか、目印で伝えるか",
+      "pos": "G",
+      "neg": "L"
+    },
+    {
+      "label": "新しいやり方を試すか、今のやり方を続けるか",
+      "pos": "A",
+      "neg": "K"
+    },
+    {
+      "label": "人が少ない広さか、人が多い近さか",
+      "pos": "W",
+      "neg": "D"
+    }
+  ],
+  "questions": [
+    {
+      "text": "住む場所は、何年かごとに変わってもかまわない。",
+      "axis": 0,
+      "sign": 1
+    },
+    {
+      "text": "同じ土地に長く住んで、そこを自分の場所にしたい。",
+      "axis": 0,
+      "sign": -1
+    },
+    {
+      "text": "荷物が少ないほうが、気持ちが軽くなる。",
+      "axis": 0,
+      "sign": 1
+    },
+    {
+      "text": "待ち合わせは、番地や番号できっちり伝えたい。",
+      "axis": 1,
+      "sign": 1
+    },
+    {
+      "text": "あの角のパン屋の裏、という言い方のほうが伝わると思う。",
+      "axis": 1,
+      "sign": -1
+    },
+    {
+      "text": "地図の番号より、目に見える景色のほうが覚えやすい。",
+      "axis": 1,
+      "sign": -1
+    },
+    {
+      "text": "うまくいかない決まりは、思いきってやめてしまえばいい。",
+      "axis": 2,
+      "sign": 1
+    },
+    {
+      "text": "前から使われている方法には、それなりの理由があると思う。",
+      "axis": 2,
+      "sign": -1
+    },
+    {
+      "text": "まわりに家が無くても、平気で暮らせそうだ。",
+      "axis": 3,
+      "sign": 1
+    },
+    {
+      "text": "近くに人やお店がたくさんあるほうが、安心する。",
+      "axis": 3,
+      "sign": -1
+    }
+  ],
+  "results": {
+    "NGAW": {
+      "name": "モンゴル型",
+      "name_en": "Mongolia",
+      "body": "動いて暮らし、位置はきちんと決めたい。新しいやり方も試すし、広い場所が平気。動画に出てきたモンゴルそのものです。家が動くなら、住所も動けばいい。地面を3メートル四方に区切って、単語3つで場所を指す。この仕組みを郵便が正式に使い始めたのは2016年と言われています。住所を土地ではなく、人が持ち歩く感じですね。",
+      "image_prompt": "photorealistic wide view of a single white felt ger tent alone on vast green Mongolian steppe, horses grazing, low horizon, huge blue sky with scattered clouds, no roads, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/NGAW.jpg"
+    },
+    "NGAD": {
+      "name": "ドバイ型",
+      "name_en": "Dubai",
+      "body": "身軽に動きたいけれど、位置はきっちり決めたい。新しい仕組みも歓迎で、人の多い場所が好き。砂漠の上に新しい街を短い期間で建てていったドバイに近いタイプです。世界中から人が来て、出ていって、また来る。土地に縛られない人たちのために、街のほうを作り変えていく感じですね。",
+      "image_prompt": "photorealistic dense modern desert city skyline at golden hour, glass towers, wide highways, distant sand dunes behind the buildings, aerial view, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/NGAD.jpg"
+    },
+    "NGKW": {
+      "name": "カザフスタン型",
+      "name_en": "Kazakhstan",
+      "body": "動く暮らしに抵抗はなく、位置は番号で決めたい。ただ、やり方は今までのものを大事にする。そして広い場所が平気。草原の国カザフスタンに近いタイプです。遊牧の記憶を残しながら、役所の書類はきっちり番号で管理する。ふたつを同時にやっているところが、このタイプらしさです。",
+      "image_prompt": "photorealistic endless flat steppe under a huge pale sky, a straight dirt road running to the horizon, a few low concrete buildings far away, dry golden grass, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/NGKW.jpg"
+    },
+    "NGKD": {
+      "name": "シンガポール型",
+      "name_en": "Singapore",
+      "body": "人は動いてもいいけれど、番号はきっちり。やり方は決めたものを守り、人の多い場所が好き。小さな島に大勢が暮らすシンガポールに近いタイプです。住所も区画も細かく決まっていて、そのぶん迷いません。決めたことをきちんと続けるのが得意なタイプ、と言えそうです。",
+      "image_prompt": "photorealistic view of tightly packed colorful high rise apartment blocks in a tropical city, palm trees below, humid hazy afternoon light, orderly layout seen from a nearby rooftop, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/NGKD.jpg"
+    },
+    "NLAW": {
+      "name": "サーミ型",
+      "name_en": "Sami",
+      "body": "動いて暮らし、場所は目印で伝える。新しいやり方も試して、広い場所が平気。北欧の北のほう、トナカイと一緒に季節ごとに移動してきたサーミの人たちに近いタイプです。あの川の上流、あの山の向こう。景色そのものが地図の役目をしていたと言われています。",
+      "image_prompt": "photorealistic herd of reindeer crossing a wide snowy tundra plain at dusk, low blue light, distant rounded fells, a single figure in a warm coat walking behind them, no buildings, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/NLAW.jpg"
+    },
+    "NLAD": {
+      "name": "ベネチア型",
+      "name_en": "Venice",
+      "body": "身軽で、場所は目印で伝えるほう。新しい工夫は好きで、人の多い近さが心地いい。水の上の街ベネチアに近いタイプです。あの橋を渡って、教会の角を左。番号よりも、こういう言い方のほうが早い街だと言われています。狭くて、入り組んでいて、それが楽しい。",
+      "image_prompt": "photorealistic narrow canal between old stone buildings, a small wooden bridge, boats moored along the water, laundry hanging above, warm late afternoon light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/NLAD.jpg"
+    },
+    "NLKW": {
+      "name": "アイスランド型",
+      "name_en": "Iceland",
+      "body": "動くことに抵抗はなく、場所は目印で伝える。やり方は昔のものを続けて、広い場所が平気。人が少なくて景色が目印になるアイスランドに近いタイプです。あの滝の先、あの岩の手前。人の数より土地の広さが勝っている場所では、これで十分だったりします。",
+      "image_prompt": "photorealistic volcanic landscape with black lava fields, green moss, a distant waterfall and low clouds over flat mountains, one small isolated farmhouse, overcast northern light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/NLKW.jpg"
+    },
+    "NLKD": {
+      "name": "モロッコ旧市街型",
+      "name_en": "Morocco Medina",
+      "body": "身軽だけれど、場所は目印で伝え、やり方は昔のまま。人の多い近さが好き。モロッコの旧市街に近いタイプです。細い路地が迷路のように続いていて、番地はあってないようなもの。香辛料屋の先を右、と教えてもらって進む街だと言われています。",
+      "image_prompt": "photorealistic narrow winding alley in an old walled north african town, earth colored walls, hanging rugs and baskets, a cat in the shade, shafts of sunlight from above, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/NLKD.jpg"
+    },
+    "SGAW": {
+      "name": "カナダ型",
+      "name_en": "Canada",
+      "body": "腰を落ち着けて暮らし、番号できっちり決める。新しいやり方も試して、広い場所が平気。森と湖が続くカナダに近いタイプです。人が少ない土地でも、区画と番号はきちんと引く。そして便利な仕組みが出てきたら、わりとすんなり取り入れるほうです。",
+      "image_prompt": "photorealistic wooden lakeside house surrounded by tall pine forest, calm lake reflecting the trees, a wooden dock, early morning mist, no neighbors in sight, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/SGAW.jpg"
+    },
+    "SGAD": {
+      "name": "日本型",
+      "name_en": "Japan",
+      "body": "同じ土地に長く住み、番号できっちり決める。新しい仕組みも取り入れて、人の近さが心地いい。動画でモンゴルと比べられた日本に近いタイプです。何丁目、何番地。住所は土地に付いていて、引っ越しても前の住所はその土地に残ります。決めておけば迷わない、という考え方ですね。",
+      "image_prompt": "photorealistic quiet japanese residential street, low houses with tiled roofs, utility poles, potted plants by the doors, narrow road, soft overcast afternoon light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/SGAD.jpg"
+    },
+    "SGKW": {
+      "name": "アメリカ中西部型",
+      "name_en": "American Midwest",
+      "body": "土地に根を張って、番号で場所を決める。やり方は今までのものを続けて、広い場所が平気。まっすぐな道が地平線まで続くアメリカ中西部に近いタイプです。土地をきれいな四角に区切って番号をふる。長く続いてきたやり方を、そのまま使っています。",
+      "image_prompt": "photorealistic aerial view of vast square farm fields divided by straight roads, a red barn and a white farmhouse, endless flat horizon, summer afternoon, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/SGKW.jpg"
+    },
+    "SGKD": {
+      "name": "ドイツ型",
+      "name_en": "Germany",
+      "body": "腰を落ち着けて、番号できっちり。やり方は決まったものを守り、人の近さが心地いい。通りの名前と番号が整っているドイツに近いタイプです。どこに何があるか、決まりを見れば分かる。そういう安心感を大事にするタイプ、と言えそうです。",
+      "image_prompt": "photorealistic old european town street with row houses, stone pavement, bicycles leaning against a wall, trees lining the road, calm morning light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/SGKD.jpg"
+    },
+    "SLAW": {
+      "name": "ニュージーランド型",
+      "name_en": "New Zealand",
+      "body": "土地に根を張るけれど、場所は目印で伝える。新しいやり方は試して、広い場所が平気。羊と丘が続くニュージーランドに近いタイプです。あの丘を越えた先、で話が通じる土地。人が少ないぶん、身軽に決められるところがあります。",
+      "image_prompt": "photorealistic rolling green hills with grazing sheep, a winding gravel road, scattered trees, distant snow capped mountains, clear afternoon light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/SLAW.jpg"
+    },
+    "SLAD": {
+      "name": "香港型",
+      "name_en": "Hong Kong",
+      "body": "落ち着いて暮らしつつ、場所は目印で伝える。新しいものはすぐ試して、人の多い近さが好き。坂と路地が重なる香港に近いタイプです。あの階段の上、あの看板の裏。縦にも横にも入り組んだ街では、番地より景色のほうが早いことがあります。",
+      "image_prompt": "photorealistic steep narrow street between tall old apartment buildings, outdoor staircases, air conditioners on the walls, market stalls below, humid evening light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/SLAD.jpg"
+    },
+    "SLKW": {
+      "name": "アイルランド田舎型",
+      "name_en": "Rural Ireland",
+      "body": "同じ土地に長く住み、場所は目印で伝え、やり方は昔のまま。広い場所が平気。石垣と牧草地が続くアイルランドの田舎に近いタイプです。番地よりも、家の名前や、あの教会の先、という言い方が長く使われてきたと言われています。",
+      "image_prompt": "photorealistic green fields divided by old dry stone walls, a small whitewashed cottage with a slate roof, narrow country lane, grey cloudy sky, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/SLKW.jpg"
+    },
+    "SLKD": {
+      "name": "京都型",
+      "name_en": "Kyoto",
+      "body": "土地に根を張り、場所は目印で伝え、やり方は昔から続くものを守る。人の近さが心地いい。碁盤の目の通りの名前で場所を言い表してきた京都に近いタイプです。何通りを上がった先、という伝え方が、今も生きていると言われています。",
+      "image_prompt": "photorealistic old japanese townhouse street with wooden lattice facades, stone paving, a narrow lane crossing it, lanterns unlit in daylight, soft cloudy light, cinematic, ultra detailed, no text, no letters, no words, no writing, no signage",
+      "image": "img/SLKD.jpg"
+    }
+  }
+}
