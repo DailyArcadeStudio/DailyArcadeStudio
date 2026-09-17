@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>マグネット・ソート</title>
+<style>
+  html,body{margin:0;padding:0;overflow:hidden;background:#07090f;font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',sans-serif;}
+  #ui{position:fixed;top:16px;left:0;right:0;text-align:center;color:#fff;z-index:10;pointer-events:none;}
+  #score{font-size:clamp(24px,5.6vw,34px);font-weight:800;text-shadow:0 2px 8px #000;}
+  #msg{font-size:clamp(13px,3.4vw,19px);margin-top:6px;opacity:.9;text-shadow:0 2px 6px #000;}
+  /* The playfield is a vertical column, so in landscape the middle of the top
+     edge is exactly where the scrap falls. Park the HUD off to the side there
+     instead of letting the score sit behind the drop. It goes below the
+     back link on the left, clear of the mute/help buttons on the right. */
+  @media (orientation:landscape){
+    #ui{top:70px;left:18px;right:auto;width:min(32vw,260px);text-align:left;}
+    #score{font-size:clamp(22px,4vw,32px);}
+    #msg{font-size:clamp(12px,2.2vw,17px);}
+  }
+  #title{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:rgba(4,6,12,.76);z-index:20;color:#fff;transition:opacity .4s;padding:0 16px;box-sizing:border-box;}
+  #title h1{font-size:clamp(30px,8.4vw,58px);margin:0 0 8px;letter-spacing:2px;text-shadow:0 4px 18px #3bd7ff;text-align:center;}
+  #title p{font-size:clamp(12.5px,3.3vw,19px);opacity:.88;margin:4px 0;text-align:center;line-height:1.6;}
+  #title .btn{margin-top:26px;padding:14px 44px;font-size:clamp(19px,5vw,23px);font-weight:700;color:#04121a;
+    background:linear-gradient(180deg,#5fe6ff,#12a7cf);border:none;border-radius:12px;cursor:pointer;
+    box-shadow:0 6px 24px rgba(59,215,255,.45);}
+  #title .btn:hover{transform:scale(1.05);}
+  .hidden{opacity:0;pointer-events:none;}
+  #back{position:fixed;top:14px;left:14px;z-index:30;text-decoration:none;
+    background:rgba(12,16,26,.72);color:#fff;font:600 14px/1 'Hiragino Sans',sans-serif;
+    padding:0 14px;height:44px;display:flex;align-items:center;border-radius:12px;}
+  #back:hover{background:rgba(30,38,56,.9);}
+  #mute{position:fixed;top:14px;right:14px;z-index:30;border:none;cursor:pointer;
+    background:rgba(12,16,26,.72);color:#fff;font-size:20px;line-height:1;
+    width:44px;height:44px;border-radius:12px;}
+  #mute:hover{background:rgba(30,38,56,.9);}
+  /* show the hint that matches the device */
+  .tc{display:none;}
+  @media (pointer:coarse){ .kb{display:none;} .tc{display:block;} }
+  /* a finger-sized START button on touch devices */
+  @media (pointer:coarse){ #title .btn{padding:18px 52px;} }
+
+  /* --- event banner: slams into the middle of the screen --- */
+  #banner{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    z-index:15;pointer-events:none;opacity:0;}
+  #banner .b{font-size:clamp(26px,7.2vw,64px);font-weight:900;letter-spacing:.06em;color:#fff;
+    padding:10px 4vw;max-width:94vw;text-align:center;transform:scale(2.4);opacity:0;
+    text-shadow:0 0 26px currentColor, 0 6px 20px #000;
+    border-top:5px solid currentColor;border-bottom:5px solid currentColor;}
+  #banner.go .b{animation:slam .62s cubic-bezier(.12,.85,.2,1) forwards;}
+  @keyframes slam{
+    0%  {transform:scale(2.4) rotate(-4deg);opacity:0;}
+    22% {transform:scale(1)   rotate(0deg); opacity:1;}
+    70% {transform:scale(1)   rotate(0deg); opacity:1;}
+    100%{transform:scale(1.12);opacity:0;}
+  }
+
+  /* --- full-screen colour flashes --- */
+  #flash{position:fixed;inset:0;z-index:14;pointer-events:none;opacity:0;background:#fff;}
+  #vignette{position:fixed;inset:0;z-index:13;pointer-events:none;opacity:0;
+    background:radial-gradient(ellipse at center,rgba(0,0,0,0) 32%,rgba(120,0,10,.85) 100%);}
+
+  /* --- K.O. screen --- */
+  #ko{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    z-index:22;pointer-events:none;opacity:0;color:#fff;transition:opacity .3s;}
+  #ko.on{opacity:1;}
+  #ko .koText{font-size:clamp(88px,24vw,180px);font-weight:900;letter-spacing:10px;color:#fff;
+    text-shadow:0 0 40px #ff3b4a,0 0 90px #ff3b4a,0 10px 30px #000;
+    transform:scale(3);opacity:0;}
+  #ko.on .koText{animation:koSlam .8s cubic-bezier(.1,.9,.2,1) forwards;}
+  @keyframes koSlam{
+    0%  {transform:scale(3) rotate(-8deg);opacity:0;}
+    30% {transform:scale(1) rotate(0deg);opacity:1;}
+    36% {transform:scale(1.06);}
+    100%{transform:scale(1);opacity:1;}
+  }
+  #ko .finalLabel{font-size:clamp(15px,4vw,21px);letter-spacing:4px;opacity:0;margin-top:6px;text-shadow:0 2px 8px #000;}
+  #ko .finalScore{font-size:clamp(46px,13vw,80px);font-weight:800;opacity:0;text-shadow:0 4px 20px #000;}
+  #ko.on .finalLabel{animation:fadeUp .5s .75s forwards;}
+  #ko.on .finalScore{animation:fadeUp .5s .9s forwards;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+
+  /* --- help (?) --- */
+  #helpBtn{position:fixed;top:14px;right:66px;z-index:30;border:none;cursor:pointer;
+    background:rgba(12,16,26,.72);color:#fff;font:700 20px/1 'Hiragino Sans',sans-serif;
+    width:44px;height:44px;border-radius:12px;}
+  #helpBtn:hover{background:rgba(30,38,56,.9);}
+  #help{position:fixed;inset:0;z-index:40;display:none;align-items:center;
+    justify-content:center;background:rgba(3,5,10,.85);padding:20px;}
+  #help.on{display:flex;}
+  #help .box{background:#0f1622;border:1px solid #23405a;border-radius:18px;
+    max-width:560px;width:100%;max-height:86vh;overflow:auto;padding:24px 24px 20px;
+    color:#e6edf3;box-sizing:border-box;}
+  #help h2{margin:0 0 4px;font-size:clamp(19px,5vw,25px);}
+  #help .sub{color:#7f8fa3;font-size:clamp(12px,3.2vw,14px);margin:0 0 16px;}
+  #help h3{font-size:clamp(13px,3.4vw,15px);color:#5fe6ff;margin:16px 0 6px;letter-spacing:.04em;}
+  #help ul{margin:0;padding-left:20px;}
+  #help li{font-size:clamp(12.5px,3.3vw,15px);line-height:1.7;margin:3px 0;}
+  #help b{color:#5fe6ff;font-weight:700;}
+  #help .close{margin-top:20px;width:100%;padding:12px;border:none;border-radius:10px;
+    background:#23405a;color:#fff;font-size:16px;font-weight:700;cursor:pointer;}
+  #help .close:hover{background:#31587b;}
+</style>
+</head>
+<body>
+<div id="ui"><div id="score">0</div><div id="msg"></div></div>
+<button id="helpBtn" title="あそびかた">?</button>
+<div id="help"><div class="box">
+  <h2>マグネット・ソート</h2>
+  <p class="sub">落ちてくる鉄くずを、正しい箱へ。</p>
+    <h3>やること</h3>
+    <ul><li>上から<b>鉄くず</b>が落ちてきます</li>
+        <li>途中にある<b>電磁石</b>が、それを左右どちらかへ押します</li>
+        <li>下には <b>青の箱（左）</b> と <b>赤の箱（右）</b>。色の合う箱へ入れてください</li></ul>
+    <h3>操作はひとつだけ</h3>
+    <ul><li>押すたびに電磁石の<b>極が反転</b>します（青 ⇄ 赤）</li>
+        <li>電磁石と<b>同じ色</b>の鉄くずは<b>反発して逆側へ</b></li>
+        <li>電磁石と<b>ちがう色</b>の鉄くずは<b>引かれて同じ側へ</b></li>
+        <li>つまり、落ちてくる色を見て<b>反転するかしないか</b>を決めるだけです</li></ul>
+    <h3>しくじると</h3>
+    <ul><li>ちがう箱に入れると<b>ミス</b>。<b>3回</b>で終わりです</li>
+        <li>残りは画面上の<b>♦</b>で分かります</li>
+        <li>合っていれば連続ボーナスがのびていきます</li></ul>
+    <h3>じゃま</h3>
+    <ul><li><b>停電</b>：明かりが落ちて、色が読みにくくなります</li>
+        <li><b>二個落ち</b>：ちがう色が二つ、続けて落ちてきます</li>
+        <li><b>箱の入れ替え</b>：左右の箱が入れ替わります</li>
+        <li><b>過負荷</b>：電磁石が勝手に反転しはじめます</li>
+        <li><b>早送り</b>：しばらく落下が速くなります</li></ul>
+  <button class="close">とじる</button>
+</div></div>
+<a id="back" href="../../" title="ゲーム一覧にもどる">‹ ゲーム一覧</a>
+<button id="mute" title="音の オン / オフ">🔊</button>
+<div id="vignette"></div>
+<div id="flash"></div>
+<div id="banner"><div class="b"></div></div>
+<div id="ko">
+  <div class="koText">K.O.</div>
+  <div class="finalLabel">最終スコア</div>
+  <div class="finalScore">0</div>
+</div>
+<div id="title">
+  <h1>マグネット・ソート</h1>
+  <p>落ちてくる鉄くずを、色の合う箱へ。</p>
+  <p class="kb">スペース / ↑ / ↓ / ← / → : 極を反転</p>
+  <p class="tc">画面をタップ : 極を反転</p>
+  <button class="btn" id="startBtn">スタート</button>
+</div>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+// ---------- url flags (declared first: sound and camera both read them) ----------
+const QS = new URLSearchParams(location.search);
+const AUTO = QS.get('auto')==='1';
+const SHOWCASE_Q = QS.get('showcase');
+// Recording must produce clean footage, so every automated mode is muted.
+const REC = QS.get('rec')==='1';   // 録音モード: 音を鳴らして拾う
+const SILENT = (AUTO || !!SHOWCASE_Q || QS.get('mute')==='1') && !REC;
+// 録画・showcase では「?」と「ゲーム一覧」を出さない（動画の邪魔になる）
+const NOCHROME = AUTO || !!SHOWCASE_Q || QS.get('nochrome')==='1';
+
+// ---------- renderer / scene ----------
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.shadowMap.enabled = true;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const SKY = new THREE.Color(0x070910);
+scene.background = SKY.clone();
+scene.fog = new THREE.Fog(0x070910, 26, 64);
+
+const camera = new THREE.PerspectiveCamera(50, innerWidth/innerHeight, .1, 200);
+
+// 二極の色。青 = N極 / 赤 = S極。ゲーム中ずっとこの二色しか使わない。
+const BLUE = 0x3bd7ff, RED = 0xff3b5c;
+const BLUE_S = '#3bd7ff', RED_S = '#ff3b5c';
+
+// ---------- camera fit ----------
+// The playfield is a tall narrow column: ~PLAY_H units of height and
+// ~PLAY_W of width, so its own aspect is well under 1. Portrait and landscape
+// bind on opposite axes — a tall phone has height to spare and runs out of
+// width, a landscape screen is the reverse. So work out the vertical FOV each
+// axis needs and take whichever is larger; that one frame always contains the
+// whole column with a margin, on any shape of screen.
+const PLAY_H = 24;        // world height that must stay on screen
+const PLAY_W = 15;        // world width that must stay on screen
+const CAM_DIST = 30;      // camera sits this far back in play
+function fitCamera(){
+  const aspect = innerWidth / innerHeight;
+  camera.aspect = aspect;
+  if(typeof SHOWCASE !== 'undefined' && SHOWCASE){
+    camera.fov = aspect < 1 ? 60 : 44;
+  } else {
+    // vertical FOV that fits the full height
+    const byH = 2*Math.atan((PLAY_H*0.5)/CAM_DIST);
+    // vertical FOV that fits the full width: the horizontal half-extent is
+    // (half-width / aspect) once converted back into vertical terms
+    const byW = 2*Math.atan((PLAY_W*0.5/aspect)/CAM_DIST);
+    camera.fov = Math.min(100, THREE.MathUtils.radToDeg(Math.max(byH, byW)));
+  }
+  camera.__base = camera.fov;    // 早送りイベントがここへ戻る
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+}
+addEventListener('resize', fitCamera);
+addEventListener('orientationchange', ()=>setTimeout(fitCamera, 120));
+
+// ---------- lights ----------
+// No shadow maps here: the back wall sits close behind the action, so cast
+// shadows land on it as large dark blotches that fight the colour reading.
+// The scene is lit flat and bright instead, with the colour coming from the
+// emissive caps and bin lips.
+const hemi = new THREE.HemisphereLight(0xbcd6ff, 0x3a2c48, 2.0);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xfff2dd, 1.9);
+sun.position.set(6, 14, 16);
+scene.add(sun);
+// a cool rim from the opposite side so the metal has two readable faces
+const rim = new THREE.DirectionalLight(0x6fa8ff, 0.9);
+rim.position.set(-9, -4, 10);
+scene.add(rim);
+
+// ---------- the chute (static scenery) ----------
+// 落下は x-y 平面だけで起きる。奥行きは見栄えのためだけに使う。
+const SPAWN_Y = 10.0;      // 鉄くずが現れる高さ
+const MAGNET_Y = 1.6;      // 電磁石の高さ（ここで左右に押される）
+const BIN_Y = -7.4;        // 箱の口の高さ
+const BIN_X = 4.6;         // 箱の中心の左右位置
+
+// Deliberately oversized: at a wide aspect the frame is much broader than the
+// playfield, and a wall that only covered the column would leave black bars.
+const backWall = new THREE.Mesh(new THREE.PlaneGeometry(140, 80),
+  new THREE.MeshStandardMaterial({color:0x141a2b, roughness:.95}));
+backWall.position.set(0, 0, -6);
+scene.add(backWall);
+
+// 縦のガイドレール。落下の軌道を目で追いやすくする。
+const rails = [];
+for(const sx of [-6.9, 6.9]){
+  const r = new THREE.Mesh(new THREE.BoxGeometry(.3, 30, .6),
+    new THREE.MeshStandardMaterial({color:0x334060, roughness:.6, metalness:.3}));
+  r.position.set(sx, 0, -1.4);
+  scene.add(r); rails.push(r);
+}
+// 背景の点々（工場の灯り）。奥行きが出る。
+const dustMat = new THREE.MeshBasicMaterial({color:0x2b3f66});
+const dust = [];
+for(let i=0;i<70;i++){
+  const d = new THREE.Mesh(new THREE.SphereGeometry(.09, 6, 5), dustMat);
+  d.position.set((Math.random()-.5)*30, (Math.random()-.5)*30, -5.4 - Math.random()*8);
+  scene.add(d); dust.push(d);
+}
+
+// ---------- scrap (the falling metal) ----------
+// 形は極ごとに変える。色が読めない停電中でも形で判別できるようにするため。
+const scrapGeoN = new THREE.IcosahedronGeometry(.62, 0);    // 青 = ごつごつ
+const scrapGeoS = new THREE.BoxGeometry(1.0, 1.0, 1.0);     // 赤 = 四角
+function scrapMat(pole){
+  return new THREE.MeshStandardMaterial({
+    color: pole==='N' ? BLUE : RED, metalness:.7, roughness:.28,
+    emissive: pole==='N' ? 0x0b3f57 : 0x5a1020});
+}
+function buildScrap(pole){
+  const g = new THREE.Group();
+  const core = new THREE.Mesh(pole==='N' ? scrapGeoN : scrapGeoS, scrapMat(pole));
+  g.add(core);
+  // 極を示す帯。白い帯が1本 = N、2本 = S。形と合わせて二重の手がかり。
+  const bandMat = new THREE.MeshBasicMaterial({color:0xf2f7ff});
+  const bands = pole==='N' ? [0] : [-.26, .26];
+  for(const by of bands){
+    const b = new THREE.Mesh(new THREE.BoxGeometry(1.24, .13, 1.24), bandMat);
+    b.position.y = by; g.add(b);
+  }
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  return {group:g, core};
+}
+
+// ---------- the electromagnet (the player) ----------
+// 画面中央に固定。動かない。変わるのは極だけ。
+function buildMagnet(){
+  const g = new THREE.Group();
+  const steel = new THREE.MeshStandardMaterial({color:0x8b95ad, metalness:.85, roughness:.3});
+  // コの字の鉄心。左右の脚がそれぞれ N / S になる。
+  const yoke = new THREE.Mesh(new THREE.BoxGeometry(5.2, .8, 1.4), steel);
+  yoke.position.y = 1.15; g.add(yoke);
+  const legL = new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.9, 1.4), steel);
+  legL.position.set(-2.05, -.2, 0); g.add(legL);
+  const legR = new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.9, 1.4), steel);
+  legR.position.set( 2.05, -.2, 0); g.add(legR);
+  // 極のキャップ。ここが色で光る — 画面でいちばん目立つ必要があるので大きく。
+  // MeshBasic なので明かりが落ちても（停電イベント）色は沈まない。
+  const capL = new THREE.Mesh(new THREE.BoxGeometry(1.9, 1.15, 1.9),
+    new THREE.MeshBasicMaterial({color:BLUE}));
+  capL.position.set(-2.05, -1.55, 0); g.add(capL);
+  const capR = new THREE.Mesh(new THREE.BoxGeometry(1.9, 1.15, 1.9),
+    new THREE.MeshBasicMaterial({color:RED}));
+  capR.position.set( 2.05, -1.55, 0); g.add(capR);
+  // コイルの巻き線
+  const coilMat = new THREE.MeshStandardMaterial({color:0xc4813a, metalness:.6, roughness:.4});
+  for(const sx of [-2.05, 2.05]){
+    for(let i=0;i<3;i++){
+      const c = new THREE.Mesh(new THREE.TorusGeometry(.78, .14, 8, 18), coilMat);
+      c.rotation.x = Math.PI/2;
+      c.position.set(sx, .25 - i*.5, 0); g.add(c);
+    }
+  }
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  return {group:g, capL, capR};
+}
+const magnet = buildMagnet();
+magnet.group.position.set(0, MAGNET_Y, 0);
+scene.add(magnet.group);
+
+// 電磁石を照らす光。反転のたびに色が切り替わる。
+const coreLight = new THREE.PointLight(BLUE, 26, 20);
+coreLight.position.set(0, MAGNET_Y, 3.4);
+scene.add(coreLight);
+
+// 磁力のアーク（反転した瞬間に脚のあいだで弾ける）
+const arc = new THREE.Mesh(new THREE.BoxGeometry(3.0, .18, .18),
+  new THREE.MeshBasicMaterial({color:0xffffff, transparent:true, opacity:0}));
+arc.position.set(0, MAGNET_Y - 1.3, .4);
+scene.add(arc);
+
+// ---------- bins ----------
+function buildBin(pole){
+  const g = new THREE.Group();
+  const col = pole==='N' ? BLUE : RED;
+  const wallMat = new THREE.MeshStandardMaterial({color:0x27324a, roughness:.75, metalness:.25});
+  // unlit, so the bin colour survives the blackout event — that event should
+  // make the *scrap* hard to read, not remove the targets you are aiming at
+  const glowMat = new THREE.MeshBasicMaterial({color:col});
+  const W = 3.2, H = 2.6, D = 2.6;
+  for(const sx of [-1, 1]){     // 左右の壁
+    const w = new THREE.Mesh(new THREE.BoxGeometry(.28, H, D), wallMat);
+    w.position.set(sx*W/2, 0, 0); g.add(w);
+  }
+  const back = new THREE.Mesh(new THREE.BoxGeometry(W, H, .28), wallMat);
+  back.position.z = -D/2; g.add(back);
+  const floor = new THREE.Mesh(new THREE.BoxGeometry(W, .3, D), wallMat);
+  floor.position.y = -H/2; g.add(floor);
+  // 口のふち。これが色。
+  const lip = new THREE.Mesh(new THREE.BoxGeometry(W + .4, .3, D + .4), glowMat);
+  lip.position.y = H/2; g.add(lip);
+  g.traverse(o=>{ if(o.isMesh){ o.castShadow = true; o.receiveShadow = true; } });
+  return {group:g, lip, glowMat, pole};
+}
+const binL = buildBin('N'), binR = buildBin('S');
+binL.group.position.set(-BIN_X, BIN_Y, 0);
+binR.group.position.set( BIN_X, BIN_Y, 0);
+scene.add(binL.group, binR.group);
+
+// 箱の上の色マーカー（遠目にも左右が分かる板）
+function buildTag(pole){
+  const col = pole==='N' ? BLUE : RED;
+  const m = new THREE.Mesh(new THREE.BoxGeometry(2.2, .5, .3),
+    new THREE.MeshBasicMaterial({color:col}));
+  return m;
+}
+const tagL = buildTag('N'), tagR = buildTag('S');
+tagL.position.set(-BIN_X, BIN_Y + 2.4, 1.6);
+tagR.position.set( BIN_X, BIN_Y + 2.4, 1.6);
+scene.add(tagL, tagR);
+
+// 残機（♦）。左上ではなく箱のあいだ、視線の行き先に置く。
+const lifeDots = [];
+for(let i=0;i<3;i++){
+  const d = new THREE.Mesh(new THREE.OctahedronGeometry(.34),
+    new THREE.MeshStandardMaterial({color:0xffd23b, emissive:0x6a5300, emissiveIntensity:.8}));
+  d.position.set((i-1)*1.0, BIN_Y + 1.1, 1.4);
+  scene.add(d); lifeDots.push(d);
+}
+
+// ---------- sparks (a small burst on every landing) ----------
+const sparks = [];
+const sparkGeo = new THREE.SphereGeometry(.12, 6, 5);
+function burst(x, y, color, n=16){
+  for(let i=0;i<n;i++){
+    const s = new THREE.Mesh(sparkGeo, new THREE.MeshBasicMaterial({color, transparent:true}));
+    s.position.set(x, y, 1.2 + Math.random());
+    const a = Math.random()*Math.PI*2, sp = 3 + Math.random()*7;
+    sparks.push({mesh:s, vx:Math.cos(a)*sp, vy:Math.sin(a)*sp + 3, life:.7});
+    scene.add(s);
+  }
+}
+
+// ---------- game state ----------
+let running=false, dead=false, t=0, score=0;
+let pole='N';                    // 電磁石の向き。左の脚がこの極。
+let fallSpeed=5.2;               // 落下の基本速度
+let pieces=[];                   // 落下中の鉄くず
+let spawnTimer=0, spawnGap=2.2;
+let misses=0;                    // 3 で終了
+let streak=0;                    // 連続成功
+let swapped=false;               // 箱の入れ替えイベント中か
+let swapSpin=0;                  // >0 のあいだ箱が回って色替えを見せる
+let overload=0;                  // >0 のあいだ勝手に反転する
+let overloadTick=0;
+let blackout=0;                  // >0 のあいだ暗い
+let rush=0;                      // >0 のあいだ落下が速い
+let queuedPair=null;             // 二個落ちイベントの二つ目
+let timeScale=1;                 // スローモーション
+let deadAt=0;
+let shake=0;
+let camZ=30, camZTarget=30;      // 死亡時にカメラが寄る
+let nextEventAt=9;
+let eventQueue=[];
+let flipCool=0;                  // 連打を音の洪水にしない
+const MISS_MAX = 3;
+
+const scoreEl = document.getElementById('score');
+const msgEl = document.getElementById('msg');
+const titleEl = document.getElementById('title');
+const bannerEl = document.getElementById('banner');
+const bannerText = bannerEl.querySelector('.b');
+const flashEl = document.getElementById('flash');
+const vignetteEl = document.getElementById('vignette');
+const koEl = document.getElementById('ko');
+const koScoreEl = koEl.querySelector('.finalScore');
+
+// ---------- presentation helpers ----------
+function banner(text, color){
+  bannerText.textContent = text;
+  bannerText.style.color = color;
+  bannerEl.classList.remove('go');
+  void bannerEl.offsetWidth;      // restart the CSS animation
+  bannerEl.style.opacity = 1;
+  bannerEl.classList.add('go');
+}
+function flash(color, strength, ms){
+  flashEl.style.background = color;
+  flashEl.style.transition = 'none';
+  flashEl.style.opacity = strength;
+  requestAnimationFrame(()=>{
+    flashEl.style.transition = `opacity ${ms}ms ease-out`;
+    flashEl.style.opacity = 0;
+  });
+}
+
+// ---------- core rule ----------
+// 同極は反発、異極は引き合う。電磁石の「左の脚」が pole。
+// だから: 鉄くずが pole と同じ = 左の脚に反発 = 右へ。
+//         鉄くずが pole と違う = 左の脚に引かれる = 左へ。
+function pushDir(piecePole){ return piecePole === pole ? +1 : -1; }
+// その方向の箱に入ったとき正解になるか（入れ替えイベントで左右が変わる）
+// sw を渡すと、その時点の並びで判定する（飛行中の鉄くずの救済に使う）
+function binPoleAt(dir, sw){   // dir: -1 = 左, +1 = 右
+  const s = sw === undefined ? swapped : sw;
+  const leftPole  = s ? 'S' : 'N';
+  const rightPole = s ? 'N' : 'S';
+  return dir < 0 ? leftPole : rightPole;
+}
+
+function applyBinColors(){
+  const lp = binPoleAt(-1), rp = binPoleAt(+1);
+  binL.glowMat.color.setHex(lp==='N'?BLUE:RED);
+  binR.glowMat.color.setHex(rp==='N'?BLUE:RED);
+  tagL.material.color.setHex(lp==='N'?BLUE:RED);
+  tagR.material.color.setHex(rp==='N'?BLUE:RED);
+}
+
+function applyPoleColors(){
+  // 左の脚が pole、右の脚が逆。キャップは MeshBasic なので色だけ差し替える。
+  const l = pole==='N'?BLUE:RED, r = pole==='N'?RED:BLUE;
+  magnet.capL.material.color.setHex(l);
+  magnet.capR.material.color.setHex(r);
+  coreLight.color.setHex(l);
+}
+
+// ---------- spawn ----------
+function spawnPiece(forcePole){
+  const p = forcePole || (Math.random()<.5 ? 'N' : 'S');
+  const s = buildScrap(p);
+  s.group.position.set(0, SPAWN_Y, 0);
+  s.group.rotation.set(Math.random()*3, Math.random()*3, Math.random()*3);
+  scene.add(s.group);
+  pieces.push({...s, pole:p, vx:0, pushed:false, settled:false, spin:(Math.random()-.5)*2.4});
+}
+
+// ---------- scoring ----------
+function land(piece, dir){
+  // judge against the layout that was showing when the piece was committed
+  const want = binPoleAt(dir, piece.swappedAtPush);
+  const ok = want === piece.pole;
+  const bx = dir<0 ? -BIN_X : BIN_X;
+  if(ok){
+    streak++;
+    const gain = 10 + Math.min(40, streak*2);
+    score += gain;
+    burst(bx, BIN_Y + 1.4, piece.pole==='N'?BLUE:RED, 14);
+    if(!SILENT) SND.good(streak);
+    if(streak % 5 === 0){
+      msgEl.textContent = `${streak} 連続`;
+      flash(piece.pole==='N'?BLUE_S:RED_S, .18, 260);
+    }
+  } else {
+    streak = 0;
+    misses++;
+    burst(bx, BIN_Y + 1.4, 0xffffff, 22);
+    flash('#ff2b3a', .45, 380);
+    shake = Math.max(shake, .5);
+    if(!SILENT) SND.bad();
+    msgEl.textContent = `ミス ${misses} / ${MISS_MAX}`;
+    if(misses >= MISS_MAX){ dead = true; gameOver(); }
+  }
+  updateLives();
+  scene.remove(piece.group);
+}
+function updateLives(){
+  for(let i=0;i<lifeDots.length;i++){
+    const alive = i < (MISS_MAX - misses);
+    lifeDots[i].material.color.setHex(alive ? 0xffd23b : 0x33302a);
+    lifeDots[i].material.emissiveIntensity = alive ? .8 : 0;
+  }
+}
+
+// ---------- events ----------
+const EVENTS = {
+  blackout(){
+    banner('停電', '#9b6bff');
+    blackout = 4.2;
+    return 5;
+  },
+  // 色ちがいを二つ続けて落とす。反転のタイミングが要る。
+  pair(){
+    banner('二個落ち', '#ffd23b');
+    const a = Math.random()<.5 ? 'N' : 'S';
+    spawnPiece(a);
+    queuedPair = (a==='N' ? 'S' : 'N');     // 少し遅れて逆の極が落ちる
+    spawnTimer = 0;
+    return 4;
+  },
+  // 左右の箱が入れ替わる。今まで正しかった判断が全部逆になる。
+  // 色が入れ替わったことを見逃されると理不尽になるので、箱をぐるりと
+  // 回してから新しい色を見せる。
+  swap(){
+    banner('箱の入れ替え', '#5fe6ff');
+    swapped = !swapped;
+    applyBinColors();
+    swapSpin = 1;               // 1 → 0 で一回転する
+    flash('#5fe6ff', .3, 420);
+    shake = Math.max(shake, .3);
+    return 4;
+  },
+  // 電磁石が勝手に反転しはじめる。押して直す以外にない。
+  overload(){
+    banner('過負荷', '#ff7a1f');
+    overload = 5.0; overloadTick = 0;
+    return 6;
+  },
+  // しばらく落下が速くなる。判断の猶予が消える。
+  rush(){
+    banner('早送り', '#ff3b5c');
+    rush = 5.0;
+    flash('#ff9aab', .25, 380);
+    return 6;
+  },
+};
+const EVENT_NAMES = Object.keys(EVENTS);
+
+// recording/debug hook: fire a named event on cue (used by the capture script)
+// returns false if the run is already over, so a capture script can wait
+// for the next run instead of firing an event onto the K.O. screen
+window.__ev = name => {
+  if(!running || dead || !EVENTS[name]) return false;
+  const busy = EVENTS[name]();
+  if(!SILENT) SND.event(); nextEventAt = t + busy + 5; return true;
+};
+window.__alive = () => running && !dead;
+window.__kill = () => { if(running && !dead){ dead=true; gameOver(); } };
+window.__recStop = () => SND.recStop();
+window.__snd = () => ({enabled: SND.enabled, silent: SILENT});
+window.__pole = () => pole;
+window.__fov = () => +camera.fov.toFixed(1);
+window.__probe = () => ({t:+t.toFixed(2), score:Math.floor(score), misses, streak,
+  pieces:pieces.length, swapped, next:+nextEventAt.toFixed(2)});
+// ツールが名前で引くので、必ずこの二つを公開しておく
+window.__events = EVENT_NAMES.slice();
+
+function refillEventQueue(){
+  eventQueue = EVENT_NAMES.slice();
+  for(let i=eventQueue.length-1;i>0;i--){        // shuffle so the order varies per run
+    const j = Math.floor(Math.random()*(i+1));
+    [eventQueue[i],eventQueue[j]]=[eventQueue[j],eventQueue[i]];
+  }
+}
+function triggerEvent(){
+  if(!eventQueue.length) refillEventQueue();
+  const name = eventQueue.pop();
+  const busy = EVENTS[name]();
+  if(!SILENT) SND.event();
+  nextEventAt = t + busy + 5 + Math.random()*4;  // breathing room between events
+}
+
+// ---------- reset ----------
+function reset(){
+  for(const p of pieces) scene.remove(p.group);
+  pieces.length = 0;
+  for(const s of sparks) scene.remove(s.mesh);
+  sparks.length = 0;
+  t=0; score=0; dead=false; misses=0; streak=0;
+  pole='N'; fallSpeed=5.2; spawnTimer=.6; spawnGap=2.2;
+  swapped=false; swapSpin=0; overload=0; blackout=0; rush=0; queuedPair=null;
+  binL.group.rotation.y = binR.group.rotation.y = 0;
+  tagL.rotation.y = tagR.rotation.y = 0;
+  magnet.group.rotation.z = 0;
+  magnet.group.position.set(0, MAGNET_Y, 0);
+  timeScale=1; shake=0; camZ=30; camZTarget=30;
+  nextEventAt=9;
+  flipCool=0;
+  refillEventQueue();
+  applyPoleColors(); applyBinColors(); updateLives();
+  hemi.intensity=1.15; sun.intensity=2.0; coreLight.intensity=26;
+  scene.background.copy(SKY); if(scene.fog) scene.fog.color.copy(SKY);
+  scoreEl.textContent = '0';
+  msgEl.textContent='';
+  koEl.classList.remove('on');
+  vignetteEl.style.transition='opacity .3s'; vignetteEl.style.opacity=0;
+  camera.fov = camera.__base; camera.updateProjectionMatrix();
+}
+
+const startBtn = document.getElementById('startBtn');
+
+// ---------- sound: everything synthesised, no audio files ----------
+// Keeps the single-HTML rule (nothing to download) and lets the music
+// react to play: the bass line speeds up with the game, events drop a
+// stinger, and the whole thing ducks out on a game over.
+const SND = (() => {
+  let ctx = null, master = null, musicGain = null, on = true, started = false;
+  let step = 0, timer = null, tempo = 0.25;
+
+  // A pentatonic scale never sounds wrong against itself, which matters
+  // when the tempo drifts with the player's speed.
+  // minor pentatonic, driving — a chase that never lets up
+  const SCALE = [0, 3, 5, 7, 10];
+  const ROOT = 196;
+  const BASS = 'square', LEAD = 'sawtooth';
+  const hz = (deg, oct = 0) =>
+    ROOT * Math.pow(2, oct + Math.floor(deg / SCALE.length)) *
+    Math.pow(2, SCALE[((deg % SCALE.length) + SCALE.length) % SCALE.length] / 12);
+
+  function ensure() {
+    if (ctx) return ctx;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    ctx = new AC();
+    master = ctx.createGain();
+    master.gain.value = 0.32;
+    master.connect(ctx.destination);
+    musicGain = ctx.createGain();
+    musicGain.gain.value = 1;
+    musicGain.connect(master);
+    return ctx;
+  }
+
+
+  // ---- 録音用の分岐（?rec=1）----
+  // Playwright の録画には音声が入らないので、ゲーム自身に master バスを
+  // 録らせる。鳴っているものそのものなので映像と必ず同期する。
+  let recDest = null, recorder = null, recChunks = [];
+  function recStart() {
+    if (!ctx || recorder) return;
+    recDest = ctx.createMediaStreamDestination();
+    master.connect(recDest);
+    recorder = new MediaRecorder(recDest.stream, {mimeType: 'audio/webm'});
+    recorder.ondataavailable = e => { if (e.data.size) recChunks.push(e.data); };
+    recorder.start();
+  }
+  function recStop() {
+    return new Promise(res => {
+      if (!recorder) return res(null);
+      recorder.onstop = async () => {
+        const blob = new Blob(recChunks, {type: 'audio/webm'});
+        const buf = await blob.arrayBuffer();
+        res(Array.from(new Uint8Array(buf)));
+      };
+      recorder.stop();
+    });
+  }
+
+  function blip(freq, dur, type = 'square', vol = 0.25, dest = null, slideTo = null) {
+    if (!ctx || !on) return;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, ctx.currentTime);
+    if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, ctx.currentTime + dur);
+    // a short attack stops every note from clicking
+    g.gain.setValueAtTime(0, ctx.currentTime);
+    g.gain.linearRampToValueAtTime(vol, ctx.currentTime + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
+    o.connect(g); g.connect(dest || master);
+    o.start(); o.stop(ctx.currentTime + dur + 0.02);
+  }
+
+  function noise(dur, vol = 0.2, hp = 800) {
+    if (!ctx || !on) return;
+    const n = Math.floor(ctx.sampleRate * dur);
+    const buf = ctx.createBuffer(1, n, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    const f = ctx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = hp;
+    const g = ctx.createGain(); g.gain.value = vol;
+    src.connect(f); f.connect(g); g.connect(master);
+    src.start();
+  }
+
+  // --- the loop: a walking bass plus an offbeat blip ---
+  function tick() {
+    if (!ctx || !on) return;
+    const bar = step % 16;
+    // straight driving pulse: bass on every beat, lead stabs offbeat
+    if (bar % 2 === 0) blip(hz(bar % 8 === 0 ? 0 : 1, -1), tempo * 1.1, BASS, 0.30, musicGain);
+    if (bar % 8 === 5) blip(hz(4, 0), tempo * 0.6, LEAD, 0.09, musicGain);
+    if (bar % 4 === 2) noise(0.04, 0.05, 5000);
+    step++;
+    timer = setTimeout(tick, tempo * 1000);
+  }
+
+  return {
+    // must be called from a user gesture — browsers block audio otherwise
+    start() {
+      if (!ensure() || started) return;
+      if (ctx.state === 'suspended') ctx.resume();
+      started = true; step = 0; tick();
+    },
+    stop() { if (timer) { clearTimeout(timer); timer = null; } started = false; },
+    /** speed the music up with the game; 1 = starting pace */
+    setPace(mult) { tempo = Math.max(0.11, 0.25 / Math.max(0.2, mult)); },
+    duck(sec = 1.6) {                                      // for game over
+      if (!ctx) return;
+      musicGain.gain.cancelScheduledValues(ctx.currentTime);
+      musicGain.gain.setValueAtTime(musicGain.gain.value, ctx.currentTime);
+      musicGain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + sec);
+    },
+    unduck() {
+      if (!ctx) return;
+      musicGain.gain.cancelScheduledValues(ctx.currentTime);
+      musicGain.gain.setValueAtTime(0.0001, ctx.currentTime);
+      musicGain.gain.exponentialRampToValueAtTime(1, ctx.currentTime + 0.4);
+    },
+    // --- one-shots ---
+    // 入力の blip。極によって音程を変えるので、耳でも今の極が分かる。
+    flip(up) { ensure(); blip(hz(up ? 2 : 0, 0), 0.09, LEAD, 0.16, null, hz(up ? 5 : -1, 0)); },
+    // 正解。連続数で音程が上がっていく、短いチャイム。
+    good(n) { ensure(); const d = Math.min(6, (n - 1) % 7);
+              blip(hz(2 + d, 1), 0.13, 'triangle', 0.24);
+              setTimeout(() => blip(hz(4 + d, 1), 0.11, 'triangle', 0.16), 70); },
+    // 不正解。鈍い一発。
+    bad()   { ensure(); noise(0.18, 0.22, 300);
+              blip(140, 0.34, 'square', 0.24, null, 62); },
+    event() { ensure(); [0, 90, 180].forEach((ms, i) =>
+                setTimeout(() => blip(hz(2 + i, 0), 0.18, 'sawtooth', 0.20), ms)); },
+    hit()   { ensure(); noise(0.35, 0.30, 200);
+              blip(180, 0.5, 'sawtooth', 0.28, null, 40); },
+    over()  { ensure(); [0, 140, 280, 460].forEach((ms, i) =>
+                setTimeout(() => blip(hz(-i, -1), 0.42, 'triangle', 0.26), ms)); },
+    recStart() { ensure(); recStart(); },
+    recStop() { return recStop(); },
+    toggle() { on = !on; if (!on) { this.stop(); } else { this.start(); } return on; },
+    get enabled() { return on; },
+  };
+})();
+
+// --- one place for every action, so touch and keyboard stay in step ---
+function startRun(){
+  titleEl.classList.add('hidden'); reset(); running=true;
+  if(!SILENT){ SND.unduck(); SND.start(); if(REC) SND.recStart(); }
+}
+// 唯一の操作。極を反転する。
+function flipPole(silent){
+  pole = pole==='N' ? 'S' : 'N';
+  applyPoleColors();
+  arc.material.opacity = 1;           // 脚のあいだに白いアークが弾ける
+  arc.material.color.setHex(pole==='N'?BLUE:RED);
+  if(!silent && !SILENT && flipCool<=0){ SND.flip(pole==='N'); flipCool = .06; }
+}
+
+const muteBtn = document.getElementById('mute');
+function toggleMute(){ muteBtn.textContent = SND.toggle() ? '🔊' : '🔇'; }
+muteBtn.addEventListener('click', toggleMute);
+muteBtn.addEventListener('touchend', e=>{ e.preventDefault(); toggleMute(); },
+                         {passive:false});
+if(SILENT) muteBtn.style.display='none';   // automated modes have no audio
+addEventListener('keydown', e=>{ if(e.code==='KeyM') toggleMute(); });
+
+startBtn.addEventListener('click', startRun);
+// a touch on the button must start too — click alone is unreliable on touch
+startBtn.addEventListener('touchend', e=>{ e.preventDefault(); startRun(); },
+                          {passive:false});
+
+addEventListener('keydown', e=>{
+  if(!running){
+    if(e.code==='Space'||e.code==='Enter') startRun();
+    return;
+  }
+  if(dead) return;
+  // 操作はひとつだけなので、押しやすいキーは全部ここへ流す
+  if(e.code==='Space'||e.code==='Enter'||e.code==='ArrowLeft'||e.code==='ArrowRight'||
+     e.code==='ArrowUp'||e.code==='ArrowDown'||e.code==='KeyA'||e.code==='KeyD'||
+     e.code==='KeyF'||e.code==='KeyJ'){
+    e.preventDefault();
+    flipPole();
+  }
+});
+
+// --- touch: any tap flips the polarity ---
+// Most viewers arrive from a phone, so the game has to be playable without
+// a keyboard. There is only one action, so a tap anywhere does it.
+(function(){
+  let st=0, sx=0, sy=0, moved=false;
+  const canvas = renderer.domElement;
+
+  canvas.addEventListener('touchstart', e=>{
+    const p = e.changedTouches[0];
+    sx=p.clientX; sy=p.clientY; st=Date.now(); moved=false;
+  }, {passive:true});
+
+  canvas.addEventListener('touchmove', e=>{
+    const p = e.changedTouches[0];
+    if(Math.abs(p.clientX-sx) > 26 || Math.abs(p.clientY-sy) > 26) moved = true;
+  }, {passive:true});
+
+  canvas.addEventListener('touchend', e=>{
+    if(dead){
+      // give the K.O. animation time to read, then a tap retries
+      if(!AUTO && Date.now()-deadAt > 1500) startRun();
+      return;
+    }
+    if(!running){ startRun(); return; }
+    // 短いタップも、指をすべらせても、やることはひとつ
+    if(!moved || Date.now()-st < 500) flipPole();
+  }, {passive:true});
+
+  // The title overlay sits above the canvas, so a tap anywhere on it never
+  // reaches the canvas handler. Start from the overlay itself.
+  titleEl.addEventListener('touchend', e=>{
+    if(!running){ e.preventDefault(); startRun(); }
+  }, {passive:false});
+
+  // stop the browser treating game taps as scroll / double-tap zoom
+  canvas.addEventListener('touchmove', e=>e.preventDefault(), {passive:false});
+})();
+
+// autoplay mode for recording: ?auto=1
+// recording holds the K.O. longer than play does: ?hold=9000
+const RETRY_MS = Math.max(1200, parseInt(QS.get('hold')||'4200', 10));
+// ?noev=1 records a calm run with no events, for narration beds
+const NOEV = QS.get('noev')==='1';
+if(AUTO){ setTimeout(startRun, 1200); }   // startRun 経由にする（音/録音も始まる）
+
+// ---------- autopilot ----------
+// 落ちてくる一番下の（まだ押されていない）鉄くずを見て、正しい側へ行く極に
+// しておく。押されたあとで反転しても意味がないので、押される前だけ動く。
+function autoPilot(){
+  if(overload>0){
+    // 過負荷中は勝手に反転する。狙いの極から外れたら押し戻す。
+    // 下の共通処理でそのまま扱える。
+  }
+  let target=null;
+  for(const p of pieces){
+    if(p.pushed || p.settled) continue;
+    if(!target || p.group.position.y < target.group.position.y) target = p;
+  }
+  if(!target) return;
+  // その鉄くずが入るべき箱は左右どちらか
+  const wantDir = binPoleAt(-1) === target.pole ? -1 : +1;
+  // pushDir(piece) = piece.pole === pole ? +1 : -1
+  // 欲しい dir になる pole を逆算する
+  const wantPole = wantDir > 0 ? target.pole : (target.pole==='N' ? 'S' : 'N');
+  if(pole !== wantPole) flipPole();
+}
+
+// ---------- showcase mode ----------
+// Puts one object on a turntable against an empty stage so the video can talk
+// about it while the real thing is on screen. Uses the game's own meshes, so
+// what the narration describes is exactly what ships.
+const SHOWCASE = QS.get('showcase');
+const showcase = {group:null, pivot:null, spin:.55, label:''};
+// 録画ツールが名前で引くので、必ず全部ここに並べる
+window.__subjects = ['magnet','scrapN','scrapS','binN','binS','life'];
+
+function buildShowcase(name){
+  const g = new THREE.Group();
+  let label = '', spin = .55;
+  if(name==='magnet'){
+    const m = buildMagnet();
+    g.add(m.group); label = '電磁石'; spin = .5;
+  } else if(name==='scrapN'){
+    const s = buildScrap('N');
+    s.group.scale.set(2.4,2.4,2.4); g.add(s.group);
+    label = '青い鉄くず'; spin = .9;
+  } else if(name==='scrapS'){
+    const s = buildScrap('S');
+    s.group.scale.set(2.4,2.4,2.4); g.add(s.group);
+    label = '赤い鉄くず'; spin = .9;
+  } else if(name==='binN'){
+    const b = buildBin('N');
+    b.group.scale.set(1.5,1.5,1.5); g.add(b.group);
+    label = '青の箱'; spin = .5;
+  } else if(name==='binS'){
+    const b = buildBin('S');
+    b.group.scale.set(1.5,1.5,1.5); g.add(b.group);
+    label = '赤の箱'; spin = .5;
+  } else if(name==='life'){
+    const d = new THREE.Mesh(new THREE.OctahedronGeometry(.34),
+      new THREE.MeshStandardMaterial({color:0xffd23b, emissive:0x6a5300, emissiveIntensity:.8}));
+    d.scale.set(3.4,3.4,3.4); g.add(d);
+    label = '残りのしくじり'; spin = 1.1;
+  }
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  scene.add(g);
+
+  // Centre the subject on the origin and pull the camera back to fit it,
+  // so every object is framed the same way regardless of its size.
+  const box = new THREE.Box3().setFromObject(g);
+  const size = box.getSize(new THREE.Vector3());
+  const mid = box.getCenter(new THREE.Vector3());
+  g.position.sub(mid);                       // sit centred at the origin
+  // Fit against BOTH axes. A wide, short subject (the magnet) overflows
+  // sideways on a portrait screen if only the vertical FOV is considered,
+  // so take whichever axis needs the camera further back.
+  // The subject is on a turntable, so as it spins its horizontal silhouette
+  // sweeps out to the diagonal of its x/z footprint — fit against that, not
+  // just the resting width.
+  const fov = THREE.MathUtils.degToRad(camera.fov);
+  const halfH = size.y * 0.5;
+  const halfW = Math.hypot(size.x, size.z) * 0.5;
+  const distV = halfH / Math.tan(fov/2);
+  const distH = halfW / (Math.tan(fov/2) * camera.aspect);
+  const reach = Math.max(halfW, halfH);
+  const dist = Math.max(distV, distH) * 1.55 + 1.0;      // 1.55 = breathing room
+  camera.position.set(0, size.y*0.10, dist);
+
+  // Slide the subject sideways so a text panel can own the other half.
+  // The offset lives on a parent so the turntable still spins in place —
+  // rotating an offset group would make it orbit instead.
+  const bias = parseFloat(QS.get('sx') || '0');
+  const pivot = new THREE.Group();
+  pivot.position.x = -bias * reach * 1.15;
+  scene.add(pivot);
+  pivot.add(g);
+  showcase.group = g; showcase.pivot = pivot;
+  showcase.spin = spin; showcase.label = label;
+}
+
+fitCamera();          // SHOWCASE is known by here
+applyPoleColors(); applyBinColors(); updateLives();
+if(SHOWCASE){
+  titleEl.classList.add('hidden');
+  buildShowcase(SHOWCASE);
+  scoreEl.textContent = '';
+  msgEl.textContent = QS.get('nolabel')==='1' ? '' : showcase.label;
+  msgEl.style.fontSize = 'clamp(20px,5vw,30px)';
+  msgEl.style.letterSpacing = '5px';
+  // a plain dark stage: nothing on screen but the subject
+  backWall.visible = false;
+  magnet.group.visible = false;      // the playable magnet is a separate object
+  binL.group.visible = false; binR.group.visible = false;
+  tagL.visible = false; tagR.visible = false;
+  arc.visible = false;
+  for(const r of rails) r.visible = false;
+  for(const d of dust) d.visible = false;
+  for(const d of lifeDots) d.visible = false;
+  scene.fog = null;
+  scene.background = new THREE.Color(0x0b0d16);
+  coreLight.position.set(2.8, 3.4, 4.4);
+  coreLight.color.setHex(0xffffff);
+  coreLight.intensity = 130;
+  hemi.intensity = 3.0;
+  sun.intensity = 3.6; sun.position.set(2.5, 6, 6);
+  // a second light from the other side so the far face is not pure black
+  const fill = new THREE.PointLight(0x88aaff, 45, 26);
+  fill.position.set(-4.5, 2.4, 3.6); scene.add(fill);
+}
+// let the capture script drive the turntable and swap subjects
+window.__showcase = name => {
+  if(showcase.pivot) scene.remove(showcase.pivot);   // pivot owns the group
+  buildShowcase(name);
+  msgEl.textContent = showcase.label;
+};
+
+// ---------- loop ----------
+const clock = new THREE.Clock();
+function tick(){
+  requestAnimationFrame(tick);
+  const raw = Math.min(clock.getDelta(), .05);
+  const dt = raw * timeScale;
+
+  if(SHOWCASE){
+    if(showcase.group) showcase.group.rotation.y += raw*showcase.spin;
+    camera.lookAt(0, 0, 0);        // subject is offset, camera stays on axis
+    renderer.render(scene, camera);
+    return;
+  }
+
+  if(running && !dead){
+    t += dt;
+    if(flipCool>0) flipCool -= raw;
+    // 落下は時間とともに速く、間隔は詰まっていく
+    const rushBoost = rush>0 ? 3.6 : 0;
+    fallSpeed = 5.2 + t*.09 + rushBoost;
+    spawnGap  = Math.max(1.05, 2.2 - t*.022) / (rush>0 ? 1.5 : 1);
+    scoreEl.textContent = Math.floor(score);
+    if(!SILENT) SND.setPace(fallSpeed/5.2);
+    if(AUTO) autoPilot();
+
+    // --- events ---
+    if(t > nextEventAt && !NOEV) triggerEvent();
+
+    // 停電: 明かりを落とす。形と白帯だけが手がかりになる。
+    if(blackout>0){
+      blackout -= dt;
+      const k = blackout > .6 ? .13 : 1 - (blackout/.6)*.87;  // 最後に戻る
+      hemi.intensity = 1.15*k; sun.intensity = 2.0*k;
+      coreLight.intensity = 26*(0.5+0.5*k);        // 電磁石だけは光り続ける
+      scene.background.copy(SKY).multiplyScalar(.15 + .85*k);
+      if(scene.fog) scene.fog.color.copy(scene.background);
+      if(blackout<=0){
+        hemi.intensity=1.15; sun.intensity=2.0; coreLight.intensity=26;
+        scene.background.copy(SKY); if(scene.fog) scene.fog.color.copy(SKY);
+      }
+    }
+
+    // 過負荷: 一定間隔で勝手に反転する
+    if(overload>0){
+      overload -= dt; overloadTick -= dt;
+      if(overloadTick<=0){ flipPole(true); overloadTick = .85; if(!SILENT) SND.flip(pole==='N'); }
+      magnet.group.rotation.z = Math.sin(t*38)*.035;
+      if(overload<=0) magnet.group.rotation.z = 0;
+    }
+
+    // 早送り: 画角をわずかに広げて速さを見せる
+    if(rush>0){
+      rush -= dt;
+      camera.fov += (camera.__base*1.1 - camera.fov)*Math.min(1, raw*4);
+      camera.updateProjectionMatrix();
+    } else if(camera.fov > camera.__base + .05){
+      camera.fov += (camera.__base - camera.fov)*Math.min(1, raw*3);
+      camera.updateProjectionMatrix();
+    }
+
+    // --- spawn ---
+    spawnTimer -= dt;
+    if(spawnTimer <= 0){
+      if(queuedPair){ spawnPiece(queuedPair); queuedPair = null; spawnTimer = spawnGap; }
+      else { spawnPiece(); spawnTimer = spawnGap; }
+    }
+
+    // --- falling pieces ---
+    for(let i=pieces.length-1;i>=0;i--){
+      const p = pieces[i];
+      const g = p.group;
+      g.position.y -= fallSpeed*dt;
+      g.rotation.x += p.spin*dt; g.rotation.y += p.spin*.7*dt;
+
+      // 電磁石の高さを通過した瞬間に、一度だけ横向きの速度を受け取る。
+      // ここから先は極を変えても軌道は変わらない — 判断はこの一点。
+      if(!p.pushed && g.position.y <= MAGNET_Y){
+        p.pushed = true;
+        const dir = pushDir(p.pole);
+        p.vx = dir * 4.3;
+        p.dir = dir;
+        // Lock in the bin layout this piece was aimed at. If the swap event
+        // fires while it is already falling clear of the magnet, the player
+        // could no longer have done anything about it — so it is judged
+        // against the arrangement that was on screen when they committed.
+        p.swappedAtPush = swapped;
+        burst(0, MAGNET_Y - .6, p.pole==='N'?BLUE:RED, 8);
+        arc.material.opacity = Math.max(arc.material.opacity, .8);
+      }
+      if(p.pushed) g.position.x += p.vx*dt;
+
+      // 箱の高さまで落ちたら、そのとき左右どちらにいるかで判定
+      if(g.position.y <= BIN_Y + 1.3){
+        const dir = g.position.x < 0 ? -1 : +1;
+        land(p, dir);
+        pieces.splice(i,1);
+        continue;
+      }
+      // 何かの拍子に押されないまま落ちた場合の保険（真下は左扱い）
+      if(g.position.y < BIN_Y - 6){ scene.remove(g); pieces.splice(i,1); }
+    }
+    if(dead) { /* land() が終わらせた */ }
+  }
+
+  // --- sparks (run even during the death sequence, so the last burst plays) ---
+  for(let i=sparks.length-1;i>=0;i--){
+    const s = sparks[i];
+    s.life -= raw;
+    s.vy -= 16*raw;
+    s.mesh.position.x += s.vx*raw;
+    s.mesh.position.y += s.vy*raw;
+    s.mesh.material.opacity = Math.max(0, s.life/.7);
+    if(s.life<=0){ scene.remove(s.mesh); sparks.splice(i,1); }
+  }
+  // アークは押されたあと素早く消える
+  if(arc.material.opacity > 0) arc.material.opacity = Math.max(0, arc.material.opacity - raw*4.5);
+  // 箱のふちは常に軽く脈打つ（unlit なので明るさではなく厚みで見せる）
+  const pulse = 1 + Math.sin(performance.now()*.004)*.12;
+  binL.lip.scale.y = pulse;
+  binR.lip.scale.y = pulse;
+  // 入れ替えの一回転。色はもう変わっているので、回転は「見て」もらうため。
+  if(swapSpin > 0){
+    swapSpin = Math.max(0, swapSpin - raw*1.3);
+    const a = swapSpin*Math.PI*2;
+    binL.group.rotation.y = a; binR.group.rotation.y = -a;
+    tagL.rotation.y = a; tagR.rotation.y = -a;
+    if(swapSpin === 0){
+      binL.group.rotation.y = binR.group.rotation.y = 0;
+      tagL.rotation.y = tagR.rotation.y = 0;
+    }
+  }
+  // 背景の点々がゆっくり流れる
+  for(const d of dust){
+    d.position.y -= raw*.55;
+    if(d.position.y < -16) d.position.y = 16;
+  }
+
+  // --- death sequence: slow-mo unwinds, the magnet tips over ---
+  if(dead){
+    timeScale += (0 - timeScale)*Math.min(1, raw*1.1);   // ease down to a near-freeze
+    magnet.group.rotation.z += raw*1.4;
+    magnet.group.position.y -= raw*1.3;
+    coreLight.intensity = Math.max(0, coreLight.intensity - raw*22);
+  }
+
+  // --- camera (runs even while dead, so the zoom and shake still play) ---
+  camZ += (camZTarget - camZ)*Math.min(1, raw*2.2);
+  camera.position.set(0, 0, camZ);
+  camera.position.y = -0.4 + (30 - camZ)*.06;
+  if(shake>0){
+    shake = Math.max(0, shake - raw*1.1);
+    camera.position.x += (Math.random()-.5)*shake;
+    camera.position.y += (Math.random()-.5)*shake;
+  }
+  camera.lookAt(0, dead ? MAGNET_Y - 1 : -0.4, 0);
+
+  renderer.render(scene, camera);
+}
+
+function gameOver(){
+  running=false; deadAt=Date.now();
+  if(!SILENT){ SND.hit(); SND.duck(1.6); setTimeout(()=>SND.over(), 700); }
+  // hit feedback: red flash, red vignette, hard shake, camera punches in
+  flash('#ff2b3a', .8, 500);
+  vignetteEl.style.transition='opacity .5s'; vignetteEl.style.opacity=1;
+  shake = .9;
+  camZTarget = 16;
+  const finalScore = Math.floor(score);
+  koScoreEl.textContent = finalScore;
+  msgEl.textContent = '';
+  setTimeout(()=>{ koEl.classList.add('on'); }, 620);   // K.O. lands after the slow-mo
+  if(AUTO){ setTimeout(()=>{ reset(); running=true;
+                             if(!SILENT) SND.unduck(); }, RETRY_MS); }
+  else setTimeout(()=>{
+    msgEl.textContent = matchMedia('(pointer:coarse)').matches
+      ? 'タップでもう一度' : 'スペースでもう一度';
+  }, 1800);
+}
+tick();
+
+// K.O. のあとキーボードで再開できるように（dead 中は上の handler が抜ける）
+addEventListener('keydown', e=>{
+  if(dead && !AUTO && Date.now()-deadAt > 1500 &&
+     (e.code==='Space'||e.code==='Enter')) startRun();
+});
+
+// --- help (?) : ルールを見せる。録画中は出さない ---
+(function(){
+  const btn = document.getElementById('helpBtn');
+  const panel = document.getElementById('help');
+  if(!btn || !panel) return;
+  if(NOCHROME){                      // 録画・showcase では画面から消す
+    btn.style.display = 'none';
+    const back = document.getElementById('back');
+    if(back) back.style.display = 'none';
+    return;
+  }
+  const open = () => { panel.classList.add('on'); };
+  const close = () => { panel.classList.remove('on'); };
+  btn.addEventListener('click', open);
+  btn.addEventListener('touchend', e => { e.preventDefault(); open(); }, {passive:false});
+  panel.addEventListener('click', e => { if(e.target === panel) close(); });
+  panel.querySelector('.close').addEventListener('click', close);
+  panel.querySelector('.close').addEventListener('touchend',
+    e => { e.preventDefault(); close(); }, {passive:false});
+  addEventListener('keydown', e => {
+    if(e.code === 'Escape') close();
+    else if(e.key === '?' || (e.code === 'Slash' && e.shiftKey)) open();
+  });
+})();
+</script>
+</body>
+</html>

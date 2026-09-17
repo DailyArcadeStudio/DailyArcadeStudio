@@ -1,0 +1,229 @@
+{
+  "id": "0002_magnet_sort",
+  "title": "マグネット・ソート",
+  "video_title": "仕分け機が壊れたので、電磁石ひとつで金属を分けています",
+  "lang": "ja",
+  "voice": "jp_male",
+  "scenes": [
+    {
+      "kind": "hook",
+      "clip": "swap",
+      "narration": "町の小さな金属回収場に、壊れたままの機械があります。"
+    },
+    {
+      "kind": "image",
+      "prompt": "a small scrapyard at dusk, rusted metal sorting conveyor standing broken and still, piles of scrap metal, chain link fence, overcast sky, realistic cinematic photograph, muted cold colors, highly detailed",
+      "narration": "町はずれに、小さな金属回収場があります。そこの仕分け機が、去年の冬に止まりました。修理には新品と変わらない金額がかかります。だから今も、止まったままです。"
+    },
+    {
+      "kind": "image",
+      "prompt": "a tired middle aged worker in a grimy jacket standing alone inside a dim scrapyard shed, holding a control switch on a cable, a large industrial electromagnet hanging above a metal chute, harsh single work lamp, realistic cinematic photograph, gritty, highly detailed",
+      "narration": "働いているのは、ゴウさんという人です。仕分け機の代わりに、天井から吊るした電磁石を使っています。スイッチはひとつだけ。押すと、磁石の向きが入れ替わります。落ちてきた金属を、それで左か右へ押し分けるんです。そうなんです。手作業より、これのほうが速いんですって。"
+    },
+    {
+      "kind": "image",
+      "prompt": "two large steel collection bins side by side in a scrapyard, one bin marked with blue paint, the other marked with red paint, mixed scrap metal inside, industrial floor, realistic cinematic photograph, dramatic side lighting, highly detailed",
+      "narration": "買い取り業者には、決まりがあります。混ざった箱は、引き取ってもらえません。一つでも入れ間違えると、その箱ごと戻ってきます。だからゴウさんは、今日も一つずつ見て、押すか押さないかを決めています。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "magnet",
+      "kicker": "あなたの持ち場",
+      "title": "電磁石",
+      "bullets": [
+        "画面の真ん中に固定。**動きません**",
+        "できるのは**極を反転させること、それだけ**",
+        "同じ色は反発、ちがう色は引き寄せる"
+      ],
+      "narration": "これが電磁石です。画面の真ん中から動きません。できることは、極を反転させることだけ。ルールは単純です。同じ色の金属は、反発して逆側へ飛びます。ちがう色の金属は、引かれて同じ側へ来ます。つまり、落ちてくる色を見て、押すか押さないかを決めるだけ。それだけのゲームです。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "scrapN",
+      "kicker": "落ちてくるもの 1",
+      "title": "青い鉄くず",
+      "bullets": [
+        "ごつごつした**多面体**",
+        "白い帯が**1本**",
+        "行き先は**青の箱**"
+      ],
+      "narration": "落ちてくる金属は、二種類です。まず青いほう。ごつごつした形をしています。白い帯が一本、巻いてあります。行き先は青の箱です。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "scrapS",
+      "kicker": "落ちてくるもの 2",
+      "title": "赤い鉄くず",
+      "bullets": [
+        "きっちりした**四角**",
+        "白い帯が**2本**",
+        "行き先は**赤の箱**"
+      ],
+      "narration": "もう一つが赤いほうです。こちらは四角い形。帯は二本あります。色だけでなく、形と帯でも見分けられます。ここ、大事なところです。あとで明かりが消えますから。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "binN",
+      "kicker": "行き先 1",
+      "title": "青の箱",
+      "bullets": [
+        "口のふちが**色で光る**",
+        "上に**色の板**が立っている",
+        "はじめは**左側**にある"
+      ],
+      "narration": "下で待っているのが箱です。青の箱は、口のふちが青く光っています。上には色の板も立っています。遠くからでも左右が分かるようにです。はじめは左にあります。はじめは、ですよ。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "binS",
+      "kicker": "行き先 2",
+      "title": "赤の箱",
+      "bullets": [
+        "青の箱と**左右で対になる**",
+        "混ざったら**その箱ごと戻される**",
+        "だから**一つも間違えられない**"
+      ],
+      "narration": "赤の箱は、その反対側です。ゲームの上では、間違えた一つが混ざるだけ。でもゴウさんにとっては、箱ごと戻ってくるという意味です。一つも間違えられない。理由は、それだけです。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "life",
+      "kicker": "残り",
+      "title": "しくじれる回数",
+      "bullets": [
+        "画面の下に**♦が3つ**",
+        "入れ間違えるたびに**1つ消える**",
+        "**3回でその日は終わり**"
+      ],
+      "narration": "画面の下に、ひし形が三つ並んでいます。入れ間違えるたびに、一つ消えます。三つ消えたら、その日は終わりです。上ではなく箱のそばに置いてあります。視線がそこにあるからです。"
+    },
+    {
+      "kind": "events",
+      "clip": "events",
+      "kicker": "じゃまが入る",
+      "title": "回収場は静かにしていてくれない",
+      "bullets": [
+        "**停電** — 明かりが落ちて色が読めなくなる",
+        "**二個落ち** — ちがう色が続けて落ちてくる",
+        "**箱の入れ替え** — 左右がそっくり逆になる",
+        "**過負荷** — 磁石が勝手に反転しはじめる",
+        "**早送り** — 落下が速くなって迷う時間が消える"
+      ],
+      "narration": "そしてここからが本題です。回収場は、静かにしていてくれません。まず停電。明かりが落ちて、色が読めなくなります。形と帯だけが頼りです。二個落ちは、ちがう色が続けて落ちてきます。一回の反転では両方さばけません。箱の入れ替えは、いちばんひどいやつです。左右がそっくり逆になります。さっきまで正しかった判断が、全部逆になるんです。過負荷が来ると、磁石が勝手に反転しはじめます。押して直すしかありません。早送りは、落下が速くなるだけ。迷っている時間が、なくなります。"
+    },
+    {
+      "kind": "death",
+      "clip": "death",
+      "kicker": "終わりかた",
+      "title": "終わりはいつも同じです",
+      "bullets": [
+        "時間が**すっと止まる**",
+        "カメラが**ぐっと寄る**",
+        "そして**どこまで行けたか**を教えてくれる"
+      ],
+      "narration": "終わりはいつも同じです。時間がすっと止まって、カメラが寄ってきます。そしてどこまで行けたかを教えてくれます。ゴウさんは、これを毎日やっています。もう一年です。あなたは、たぶん三十秒でひし形を使い切ります。"
+    },
+    {
+      "kind": "outro",
+      "title": "概要欄のリンクから遊べます",
+      "subtitle": "チャンネル登録もお願いします",
+      "narration": "概要欄のリンクから、今すぐ遊べます。ブラウザで無料です。面白かったら、チャンネル登録をお願いします。毎日、新しいゲームを出しています。"
+    }
+  ],
+  "slug": "magnet-sort",
+  "channel": "Daily Arcade Studio",
+  "events": [
+    "blackout",
+    "pair",
+    "swap",
+    "overload",
+    "rush"
+  ],
+  "short": [
+    {
+      "mark": "swap",
+      "lead": -0.5,
+      "dur": 9.0,
+      "headline": "左右が入れ替わる"
+    },
+    {
+      "mark": "blackout",
+      "lead": -0.3,
+      "dur": 8.0,
+      "headline": "色が読めない"
+    },
+    {
+      "mark": "pair",
+      "lead": -0.5,
+      "dur": 7.0,
+      "headline": "ちがう色が2つ"
+    },
+    {
+      "mark": "overload",
+      "lead": -0.3,
+      "dur": 7.0,
+      "headline": "勝手に反転する"
+    },
+    {
+      "mark": "death",
+      "lead": -2.0,
+      "dur": 9.0,
+      "headline": "3回で終わり"
+    }
+  ],
+  "thumb": {
+    "hook": "押すか、押さないか",
+    "sub": "操作はボタン1つ。ブラウザで無料。",
+    "frame_mark": "swap",
+    "frame_lead": 1.0
+  },
+  "short_v2": {
+    "cuts": [
+      {
+        "kind": "clip",
+        "mark": "swap",
+        "lead": -0.5,
+        "dur": 4.5,
+        "headline": "今日のゲーム",
+        "narration": "今日のゲームです。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "magnet",
+        "dur": 5.0,
+        "headline": "マグネット・ソート",
+        "narration": "あなたは、金属を分ける電磁石の係です。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "scrapN",
+        "dur": 4.5,
+        "headline": "青と赤",
+        "narration": "上から鉄くずが落ちてきます。色の合う箱へ入れてください。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "binS",
+        "dur": 5.0,
+        "headline": "操作は1つ",
+        "narration": "できるのは極の反転だけ。同じ色は反発、ちがう色は引き寄せます。"
+      },
+      {
+        "kind": "clip",
+        "mark": "death",
+        "lead": -2.0,
+        "dur": 5.5,
+        "headline": "",
+        "narration": "3回間違えたら、そこで終わりです。"
+      },
+      {
+        "kind": "clip",
+        "mark": "run2",
+        "lead": 1.0,
+        "dur": 4.5,
+        "cta": "概要欄のリンクから遊べます",
+        "narration": "ブラウザで無料で遊べます。リンクは概要欄です。"
+      }
+    ]
+  }
+}
