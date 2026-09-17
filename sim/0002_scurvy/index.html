@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>あなたがジェームズ・リンドだったら</title>
+<meta property="og:title" content="あなたがジェームズ・リンドだったら">
+<meta property="og:description" content="船の上で、原因の分からない病気が人を殺していきます。あなたは軍艦の医者です。答えを見つけて、そして世の中に届けられますか。">
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;background:#0b0e14;color:#e6edf3;
+       font-family:-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;
+       line-height:1.75;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+  .wrap{max-width:600px;margin:0 auto;padding:22px 18px 60px}
+  h1{font-size:clamp(21px,5.6vw,29px);margin:6px 0 8px;line-height:1.4}
+  .lead{color:#8b949e;font-size:14.5px;margin:0 0 20px}
+  .prog{position:sticky;top:0;background:#0b0e14;padding:10px 0 12px;z-index:5}
+  .bar{height:4px;background:#1c2333;border-radius:2px;overflow:hidden}
+  .bar i{display:block;height:100%;background:#d4a544;width:0;transition:width .3s}
+  .count{font-size:12.5px;color:#8b949e;margin-top:6px;letter-spacing:.04em}
+  .scene{background:#121722;border:1px solid #222b3d;border-radius:14px;
+          padding:20px 18px;margin:0 0 16px}
+  .year{color:#d4a544;font-size:12.5px;letter-spacing:.1em;margin:0 0 8px}
+  .sit{font-size:16px;margin:0 0 18px;color:#dbe3ec}
+  .opts{display:grid;gap:10px}
+  .opt{border:1px solid #2b3550;background:#161d2b;color:#e6edf3;border-radius:11px;
+        padding:15px 16px;font-size:15.5px;cursor:pointer;text-align:left;
+        font-family:inherit;line-height:1.6;transition:.15s}
+  .opt:hover{border-color:#d4a544}
+  .opt:active{transform:scale(.985)}
+  .log{margin:0 0 20px}
+  .logi{border-left:2px solid #2b3550;padding:2px 0 2px 14px;margin:0 0 10px;
+         font-size:13.5px;color:#7d8796}
+  .logi b{color:#b3bdcc;font-weight:600}
+  #end{display:none} #end.on{display:block}
+  .eimg{width:100%;border-radius:14px;display:block;margin:0 0 18px;background:#121722}
+  .etag{color:#d4a544;font-size:13px;letter-spacing:.09em;margin:0 0 4px}
+  .ename{font-size:clamp(23px,6.4vw,32px);margin:0 0 14px;line-height:1.35}
+  .ebody{font-size:15.5px;color:#c9d1d9;margin:0 0 20px;white-space:pre-wrap}
+  .fact{background:#121722;border-left:3px solid #58a6ff;border-radius:0 10px 10px 0;
+         padding:14px 16px;margin:0 0 20px;font-size:14.5px;color:#c9d1d9}
+  .fact b{color:#58a6ff;display:block;margin-bottom:5px;font-size:12.5px;
+           letter-spacing:.08em}
+  .warn{color:#6e7681;font-size:12.5px;margin:18px 0 0;padding:12px 14px;
+         border:1px dashed #2b3550;border-radius:10px}
+  .share{display:grid;gap:10px;margin:22px 0}
+  .share a,.share button{display:block;text-align:center;padding:14px;border-radius:12px;
+        text-decoration:none;font-weight:700;font-size:15px;border:1px solid #2b3550;
+        background:#161d2b;color:#e6edf3;cursor:pointer;font-family:inherit}
+  .back{display:inline-block;margin-top:6px;color:#8b949e;font-size:14px}
+  footer{margin-top:32px;color:#6e7681;font-size:12.5px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div id="sim">
+  <h1>あなたがジェームズ・リンドだったら</h1>
+  <p class="lead">船の上で、原因の分からない病気が人を殺していきます。あなたは軍艦の医者です。答えを見つけて、そして世の中に届けられますか。</p>
+  <div class="prog"><div class="bar"><i id="pbar"></i></div>
+    <div class="count"><span id="pnum">1</span> / 8</div></div>
+  <div class="log" id="log"></div>
+  <div class="scene" id="scene"></div>
+</div>
+
+<div id="end">
+  <img class="eimg" id="eimg" alt="">
+  <p class="etag" id="etag"></p>
+  <h1 class="ename" id="ename"></h1>
+  <p class="ebody" id="ebody"></p>
+  <div class="fact" id="fact"></div>
+  <div class="share">
+    <a id="tw" target="_blank" rel="noopener">結果をXに投稿する</a>
+    <button id="again">やり直す</button>
+  </div>
+  <a class="back" href="../">ほかのシミュレータを見る</a>
+  <p class="warn">これはシミュレータです。あなたの選択によっては史実と異なる結末になります。
+  実際に起きたことは上の「史実」の欄をご覧ください。</p>
+</div>
+
+<footer>MosukeStudio</footer>
+</div>
+
+<script>
+const DATA = {"title": "あなたがジェームズ・リンドだったら", "lead": "船の上で、原因の分からない病気が人を殺していきます。あなたは軍艦の医者です。答えを見つけて、そして世の中に届けられますか。", "axes": [{"label": "試して確かめるか、言い伝えに従うか", "pos": "試", "neg": "伝"}, {"label": "まっすぐ広めるか、波風を立てないか", "pos": "広", "neg": "穏"}], "history": "リンドは1747年に船上で12人を6組に分ける実験を行い、オレンジとレモンの組だけが回復しました。ただし報告は400ページの本に埋もれ、本人も果汁を煮つめる方法を勧めます。海軍が採用したのは47年後の1795年だと言われています。", "scenes": [{"year": "1739年", "situation": "あなたは外科医の見習いです。エディンバラの医学校では、病気は体の中の汁の乱れで起きると教わりました。一方で、船乗りたちは「陸に上がって青いものを食えば治る」と言います。どちらを信じますか。", "options": [{"text": "船乗りの話を書きとめ、あとで確かめると決める", "a": 2, "b": 1}, {"text": "学校で教わったとおり、体の汁の乱れとして学ぶ", "a": -2, "b": -1}]}, {"year": "1740年", "situation": "アンソン提督の艦隊が世界一周に出ました。のちに、2000人近い乗組員のうち、戦いではなく壊血病で大半を失ったと伝えられます。この知らせが、イギリス中に届きました。", "options": [{"text": "この惨事を自分の課題にすると決め、記録を集め始める", "a": 2, "b": 2}, {"text": "海の上のことは仕方がない、と受け流して日々の診療を続ける", "a": -1, "b": -2}]}, {"year": "1746年", "situation": "軍艦ソールズベリー号の医者になりました。海に出て2か月、船員の歯ぐきから血が出始めます。船長は「湿った空気と、船員の怠けが原因だ」と言います。あなたの手元には、数種類の食べものと飲みものがあります。", "options": [{"text": "船長の説を受け入れ、甲板の換気と規律の強化を進言する", "a": -2, "b": 0}, {"text": "患者を組に分けて、ちがうものを食べさせて比べる", "a": 2, "b": 1}]}, {"year": "1747年 5月", "situation": "病人12人を6組に分けました。リンゴ酒、硫酸、酢、海水、薬草の練りもの、そしてオレンジとレモンです。同じ部屋、同じ基本の食事にします。数日で、オレンジとレモンの組だけが明らかに回復してきました。", "options": [{"text": "果物が尽きても、ほかの組を最後まで続けて差を確かめる", "a": 2, "b": 1}, {"text": "見てわかったのだから、全員に果物を配って実験を打ち切る", "a": -1, "b": 1}]}, {"year": "1753年", "situation": "『壊血病についての論文』を書きます。400ページを超える大著です。実験の話は、そのうちの数ページに過ぎません。出版社は「これまでの学説を全部載せないと、学者に相手にされない」と言います。", "options": [{"text": "実験の結果だけを短い小冊子にして、まず船に配る", "a": 2, "b": 2}, {"text": "学説を網羅した大著にまとめ、学界の作法に従う", "a": -1, "b": -2}]}, {"year": "1757年", "situation": "レモンは重くて、かさばって、腐ります。船に積むには工夫が要る。あなたは果汁を火にかけて煮つめ、濃縮液にすることを思いつきました。これなら小さな瓶に収まります。ただ、熱を加えたものが効くかどうかは試していません。", "options": [{"text": "煮つめた濃縮液を、便利だから推薦する", "a": -2, "b": 0}, {"text": "濃縮液も船で試し、生の果汁と効きめを比べてから決める", "a": 2, "b": 1}]}, {"year": "1758年", "situation": "ハスラー海軍病院の院長になりました。海軍本部と直接話せる立場です。ただし本部は、艦隊の食料を変えるのは金がかかると考えています。あなたは組織の中の人になりました。", "options": [{"text": "本部に何度も掛け合い、嫌がられても採用を求め続ける", "a": 1, "b": 2}, {"text": "立場をわきまえ、自分の病院の中だけで果物を使う", "a": 0, "b": -2}]}, {"year": "1794年", "situation": "あなたは高齢です。若い軍医ギルバート・ブレーンが、艦隊での実地の記録を集めています。彼は海軍本部に顔がききます。あなたの手元には、40年ぶんの覚え書きがあります。", "options": [{"text": "資料を全部ブレーンに渡し、名前は彼に譲って押してもらう", "a": 1, "b": 2}, {"text": "自分の著書の改訂を静かに続け、後のことは任せない", "a": -1, "b": -2}]}], "endings": {"試広": {"tag": "ENDING 1", "name": "47年を、縮めた人", "body": "あなたは確かめ、そして届けました。煮つめた濃縮液には頼らず、生のレモン汁のまま船に積ませます。短い冊子が艦隊に回り、断られても本部に通い続けました。レモン汁が正式な支給品になるのが、1795年より早まったとしたら。船乗りたちは、あなたの名前を知らないまま助かります。答えを出すことと、届けることは別の仕事でした。あなたは両方をやりました。", "image_prompt": "An elderly 18th century naval physician on a quayside handing a crate of fresh lemons to sailors loading a warship, open ledger under his arm, morning light, busy dockyard, 19th century academic history painting, oil on canvas, warm tones, no text, no letters, no words, no writing, no signage", "image": "img/試広.jpg"}, "試穏": {"tag": "ENDING 2", "name": "答えは出ていた（史実に近い結末）", "body": "あなたは1747年に、確かに答えを出しました。ところが結果は400ページの本に埋もれ、あなた自身は運びやすい濃縮液を勧めます。熱を加えると、効きめは消えていました。海軍がレモン汁を配り始めるのは1795年、実験から47年後です。あなたはその前に亡くなりました。正しさは、それだけでは世の中を動かさないのです。", "image_prompt": "An aging physician alone in a candlelit study at night, surrounded by towering stacks of thick leather books, a small forgotten bowl of oranges and lemons on the desk edge, 19th century academic history painting, oil on canvas, melancholy mood, no text, no letters, no words, no writing, no signage", "image": "img/試穏.jpg"}, "伝広": {"tag": "ENDING 3", "name": "熱心に、間違いを配った人", "body": "あなたは確かめる前に、信じたものを広めました。湿った空気を追い出せ、船員を怠けさせるな、と各地で説きます。演説はうまく、人はよく従いました。甲板はきれいになり、規律は厳しくなり、それでも船員は死に続けます。声の大きさは、中身までは直してくれませんでした。", "image_prompt": "A confident physician lecturing a crowded hall of naval officers, gesturing at a diagram of a ship's ventilation, pale sick sailors visible through an open doorway behind, 18th century, 19th century academic history painting, oil on canvas, no text, no letters, no words, no writing, no signage", "image": "img/伝広.jpg"}, "伝穏": {"tag": "ENDING 4", "name": "誰も困らせなかった医者", "body": "あなたは教わったとおりに治療し、上の言うことに逆らいませんでした。まじめで、評判のいい医者です。船が帰ってくるたび、病人の数を数えて帳面に書きます。数字は減りません。答えは、もっとあとで、別の誰かが見つけることになります。海の上では、それまで人が死に続けました。", "image_prompt": "A quiet naval surgeon writing in a logbook in a dim ship's sick bay, rows of hammocks with pale patients behind him, single lantern, closed porthole, 19th century academic history painting, oil on canvas, subdued muted palette, no text, no letters, no words, no writing, no signage", "image": "img/伝穏.jpg"}}};
+let i = 0;
+const score = [0, 0];
+const picks = [];
+
+const sceneEl = document.getElementById('scene');
+const logEl = document.getElementById('log');
+
+function render() {
+  const s = DATA.scenes[i];
+  document.getElementById('pnum').textContent = i + 1;
+  document.getElementById('pbar').style.width = (i / DATA.scenes.length * 100) + '%';
+  sceneEl.innerHTML = `<p class="year">${s.year}</p><p class="sit">${s.situation}</p>`;
+  const box = document.createElement('div');
+  box.className = 'opts';
+  s.options.forEach(o => {
+    const b = document.createElement('button');
+    b.className = 'opt';
+    b.textContent = o.text;
+    b.onclick = () => choose(o);
+    box.appendChild(b);
+  });
+  sceneEl.appendChild(box);
+}
+
+function choose(o) {
+  score[0] += o.a || 0;
+  score[1] += o.b || 0;
+  picks.push(o.text);
+  const d = document.createElement('div');
+  d.className = 'logi';
+  d.innerHTML = `<b>${DATA.scenes[i].year}</b> ${o.text}`;
+  logEl.appendChild(d);
+  i++;
+  if (i < DATA.scenes.length) { render(); scrollTo(0, 0); }
+  else finish();
+}
+
+function finish() {
+  // 2軸の符号で4象限 → 4つの結末
+  const key = (score[0] >= 0 ? DATA.axes[0].pos : DATA.axes[0].neg)
+            + (score[1] >= 0 ? DATA.axes[1].pos : DATA.axes[1].neg);
+  const e = DATA.endings[key] || DATA.endings[Object.keys(DATA.endings)[0]];
+  document.getElementById('eimg').src = e.image;
+  document.getElementById('eimg').alt = e.name;
+  document.getElementById('etag').textContent = e.tag || 'ENDING';
+  document.getElementById('ename').textContent = e.name;
+  document.getElementById('ebody').textContent = e.body;
+  document.getElementById('fact').innerHTML =
+    `<b>史実では</b>${DATA.history}`;
+  const txt = encodeURIComponent(
+    `${DATA.title}\n私の結末は「${e.name}」でした。\n`);
+  document.getElementById('tw').href =
+    `https://twitter.com/intent/tweet?text=${txt}&url=${encodeURIComponent(location.href)}`;
+  document.getElementById('sim').style.display = 'none';
+  document.getElementById('end').classList.add('on');
+  scrollTo(0, 0);
+}
+
+document.getElementById('again').onclick = () => location.reload();
+render();
+</script>
+</body>
+</html>
