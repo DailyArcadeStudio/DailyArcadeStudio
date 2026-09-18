@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>あなたが林則徐だったら</title>
+<meta property="og:title" content="あなたが林則徐だったら">
+<meta property="og:description" content="紅茶の代金として、麻薬が運びこまれてきます。あなたは清の高官です。密輸を止めながら、戦争を避けられますか。">
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;background:#0b0e14;color:#e6edf3;
+       font-family:-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;
+       line-height:1.75;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+  .wrap{max-width:600px;margin:0 auto;padding:22px 18px 60px}
+  h1{font-size:clamp(21px,5.6vw,29px);margin:6px 0 8px;line-height:1.4}
+  .lead{color:#8b949e;font-size:14.5px;margin:0 0 20px}
+  .prog{position:sticky;top:0;background:#0b0e14;padding:10px 0 12px;z-index:5}
+  .bar{height:4px;background:#1c2333;border-radius:2px;overflow:hidden}
+  .bar i{display:block;height:100%;background:#d4a544;width:0;transition:width .3s}
+  .count{font-size:12.5px;color:#8b949e;margin-top:6px;letter-spacing:.04em}
+  .scene{background:#121722;border:1px solid #222b3d;border-radius:14px;
+          padding:20px 18px;margin:0 0 16px}
+  .year{color:#d4a544;font-size:12.5px;letter-spacing:.1em;margin:0 0 8px}
+  .sit{font-size:16px;margin:0 0 18px;color:#dbe3ec}
+  .opts{display:grid;gap:10px}
+  .opt{border:1px solid #2b3550;background:#161d2b;color:#e6edf3;border-radius:11px;
+        padding:15px 16px;font-size:15.5px;cursor:pointer;text-align:left;
+        font-family:inherit;line-height:1.6;transition:.15s}
+  .opt:hover{border-color:#d4a544}
+  .opt:active{transform:scale(.985)}
+  .log{margin:0 0 20px}
+  .logi{border-left:2px solid #2b3550;padding:2px 0 2px 14px;margin:0 0 10px;
+         font-size:13.5px;color:#7d8796}
+  .logi b{color:#b3bdcc;font-weight:600}
+  #end{display:none} #end.on{display:block}
+  .eimg{width:100%;border-radius:14px;display:block;margin:0 0 18px;background:#121722}
+  .etag{color:#d4a544;font-size:13px;letter-spacing:.09em;margin:0 0 4px}
+  .ename{font-size:clamp(23px,6.4vw,32px);margin:0 0 14px;line-height:1.35}
+  .ebody{font-size:15.5px;color:#c9d1d9;margin:0 0 20px;white-space:pre-wrap}
+  .fact{background:#121722;border-left:3px solid #58a6ff;border-radius:0 10px 10px 0;
+         padding:14px 16px;margin:0 0 20px;font-size:14.5px;color:#c9d1d9}
+  .fact b{color:#58a6ff;display:block;margin-bottom:5px;font-size:12.5px;
+           letter-spacing:.08em}
+  .warn{color:#6e7681;font-size:12.5px;margin:18px 0 0;padding:12px 14px;
+         border:1px dashed #2b3550;border-radius:10px}
+  .share{display:grid;gap:10px;margin:22px 0}
+  .share a,.share button{display:block;text-align:center;padding:14px;border-radius:12px;
+        text-decoration:none;font-weight:700;font-size:15px;border:1px solid #2b3550;
+        background:#161d2b;color:#e6edf3;cursor:pointer;font-family:inherit}
+  .back{display:inline-block;margin-top:6px;color:#8b949e;font-size:14px}
+  footer{margin-top:32px;color:#6e7681;font-size:12.5px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div id="sim">
+  <h1>あなたが林則徐だったら</h1>
+  <p class="lead">紅茶の代金として、麻薬が運びこまれてきます。あなたは清の高官です。密輸を止めながら、戦争を避けられますか。</p>
+  <div class="prog"><div class="bar"><i id="pbar"></i></div>
+    <div class="count"><span id="pnum">1</span> / 8</div></div>
+  <div class="log" id="log"></div>
+  <div class="scene" id="scene"></div>
+</div>
+
+<div id="end">
+  <img class="eimg" id="eimg" alt="">
+  <p class="etag" id="etag"></p>
+  <h1 class="ename" id="ename"></h1>
+  <p class="ebody" id="ebody"></p>
+  <div class="fact" id="fact"></div>
+  <div class="share">
+    <a id="tw" target="_blank" rel="noopener">結果をXに投稿する</a>
+    <button id="again">やり直す</button>
+  </div>
+  <a class="back" href="../">ほかのシミュレータを見る</a>
+  <p class="warn">これはシミュレータです。あなたの選択によっては史実と異なる結末になります。
+  実際に起きたことは上の「史実」の欄をご覧ください。</p>
+</div>
+
+<footer>MosukeStudio</footer>
+</div>
+
+<script>
+const DATA = {"title": "あなたが林則徐だったら", "lead": "紅茶の代金として、麻薬が運びこまれてきます。あなたは清の高官です。密輸を止めながら、戦争を避けられますか。", "axes": [{"label": "厳しく取り締まるか、現実に合わせるか", "pos": "厳", "neg": "現"}, {"label": "相手を突き放すか、話をつなぐか", "pos": "断", "neg": "通"}], "history": "林則徐は1839年に広州でアヘン約1200トンを没収し、23日かけて処分しました。ただし英側は現地責任者の約束を盾に本国へ補償を求め、1840年に議会が9票差で出兵を認めます。1842年、南京条約が結ばれたと言われています。", "scenes": [{"year": "1838年", "situation": "あなたは地方の長官として実績を上げてきました。都では、アヘンをどうするかで意見が割れています。一方は「禁じても止まらないのだから、税をかけて管理しよう」。もう一方は「根こそぎ禁じよう」。皇帝に意見書を出す機会が来ました。", "options": [{"text": "このまま20年たてば戦える兵も集める銀もなくなる、と厳禁を訴える", "a": 2, "b": 1}, {"text": "禁令が守られていない現実を認め、税をかけて表に出す案を推す", "a": -2, "b": -1}]}, {"year": "1838年", "situation": "アヘンが10倍に増えたのは、見逃す役人がいたからです。港の役人には賄賂が渡り、水軍の船が運び役をしていたという話もあります。取り締まりを任されたあなたは、まずどこに手を付けますか。", "options": [{"text": "自国の役人と中毒者から始める。内側を固めてから外へ向かう", "a": 1, "b": -1}, {"text": "内側は後回しにして、外国商人に的をしぼる", "a": 1, "b": 2}]}, {"year": "1839年3月", "situation": "広州に着きました。外国商人が住む区画は、川沿いの狭い一角です。あなたには特別な権限があります。商人たちは、これまで何度も出た禁令をどれも実行されないものとして扱ってきました。", "options": [{"text": "区画を囲み、人の出入りを止めて、全部出すまで解かないと伝える", "a": 2, "b": 2}, {"text": "囲まずに期限を切って通告し、応じた者には取引の継続を認める", "a": -1, "b": -2}]}, {"year": "1839年4月", "situation": "6週間のにらみ合いの末、英側の責任者が動きます。「アヘンを出しなさい。損は我が政府が払う」。商人は政府の名前で補償を約束されました。これでアヘンは出てきますが、請求書はロンドンへ回ることになります。", "options": [{"text": "誰が払うかは相手の事情だ。約束のまま2万箱を受け取る", "a": 2, "b": 1}, {"text": "国の約束では受け取らない。商人本人の違法品として、文書を取り直す", "a": 1, "b": -2}]}, {"year": "1839年6月", "situation": "没収したアヘン約1200トンの処分です。慣例では、都に送って焼きます。しかし運ぶ途中で抜き取られる恐れがあります。海辺に池を掘り、塩と石灰と水で溶かして流す方法も考えられます。", "options": [{"text": "現地で溶かして流す。外国人にも作業を見せ、記録させる", "a": 2, "b": -1}, {"text": "慣例どおり都へ送り、中央の指示を待ってから処分する", "a": -1, "b": 0}]}, {"year": "1839年7月", "situation": "香港の対岸の村で、酔った英国水兵が住民を殺しました。あなたは犯人の引き渡しを求めます。英側は「自国の法で裁く」と言って、船の上で裁判を開きました。相手は港からの食料と水の供給も気にしています。", "options": [{"text": "引き渡すまで食料と水を止め、英国人を退去させる", "a": 2, "b": 2}, {"text": "今回は相手の裁判を認め、裁判の決まりそのものを話し合いの議題にする", "a": -1, "b": -2}]}, {"year": "1840年", "situation": "英艦隊が来ます。清の水軍は木の船で、大砲は台に固定されて向きを変えにくい。あなたは川の守りを厚くし、鎖を張り、砲台を足してきました。一方、海には出ず、陸で迎え撃つ構えです。", "options": [{"text": "沿岸の守りを固め、敵は陸に上がれば勝てると報告する", "a": 2, "b": 1}, {"text": "相手の蒸気船と大砲を認め、船と砲を買って学ぶ許しを願い出る", "a": -1, "b": -1}]}, {"year": "1841年", "situation": "艦隊は広州を素通りして北へ行き、天津の近くに現れました。都が慌てます。責任を問う声が、あなたに向きます。皇帝はあなたを役から外し、遠い新疆へ送ろうとしています。", "options": [{"text": "処分を受け入れて去る。自分の判断は誤っていなかったと書き残す", "a": 1, "b": 1}, {"text": "相手の強さを正直に伝え、条件を出して早く話をつけるよう説く", "a": -2, "b": -2}]}], "endings": {"厳断": {"tag": "ENDING 1", "name": "池に流した1200トン", "body": "これが、史実にいちばん近い道です。あなたは厳しく取り締まり、相手を突き放しました。区画を囲んで2万箱を出させ、23日かけて海に流します。仕事は丁寧でした。見に来たアメリカ人の宣教師も、そう書き残しています。ただ、その約束の裏で、密輸業者の損は英国政府の損に変わっていました。1840年、議会は271対262で艦隊の費用を認めます。差は9票だったと伝わります。艦隊は広州を避けて北へ回り、都の近くに現れました。あなたは役を外され、新疆へ送られます。1842年、鎮江で大運河が止まり、清は交渉に応じました。南京条約に、アヘンという言葉は出てきません。", "image_prompt": "Three large seaside dissolving pits at Humen in June 1839, labourers with long rakes stirring opium with salt and lime in murky water, Qing officials in dark silk robes with peacock feather hats watching from the stone rim and writing in ledgers, opened wooden chests stacked behind, foreign visitors in western coats observing at a distance, sea channel and low hills beyond, overcast summer light, 19th century academic history painting, oil on canvas, cinematic composition, no text, no letters, no words, no writing, no signage", "image": "img/厳断.jpg"}, "厳通": {"tag": "ENDING 2", "name": "本人の名で受け取った証文", "body": "もし、こうしていたら。あなたは取り締まりは緩めず、話の糸だけは切りませんでした。アヘンは国の約束ではなく、商人本人が差し出した違法品として受け取ります。水兵の事件でも、食料を止めるより先に、裁判の決まりを議題にしました。こうなると、ロンドンに回る請求書は「政府が負った損」になりません。国が補償を約束していなければ、議会で9票をひっくり返す余地はあったはずです。密輸は止まり、開戦は遠のいたかもしれません。ただ、相手の船と大砲が強いことは変わりませんでした。次の口実を探されれば、また同じ場面が来ます。", "image_prompt": "A Qing high official in dark blue silk robes seated at a table in a Canton trading hall in 1839, a British merchant signing a document while an interpreter points at the page, chests of opium being carried out through the doorway behind under guard, ledgers and an ink stone on the table, tall shuttered windows with afternoon light, tense but orderly atmosphere, 19th century academic history painting, oil on canvas, no text, no letters, no words, no writing, no signage", "image": "img/厳通.jpg"}, "現断": {"tag": "ENDING 3", "name": "税をかけて、内を削る", "body": "もし、こうしていたら。あなたは現実に合わせつつ、外国とは深く付き合いませんでした。禁じても止まらないなら、税をかけて表に出す。この案は、当時の朝廷にも実際にありました。同時に、賄賂を取る役人と船を運び役にした水軍を、内側から切っていきます。密輸は取引に変わり、銀の流出はいくぶん緩み、税が入ります。銀が高くなって農民の税が重くなる流れも、少しは止まったでしょう。戦争の口実は消えます。ただ、吸う人が減ったわけではありません。合法にすることと、解決することは別のことでした。", "image_prompt": "A Qing customs post on the Canton waterfront in the 1840s, officials weighing chests on large scales and stamping receipts at a wooden counter, foreign merchants queuing with clerks, moored junks and a western merchant ship on the Pearl River behind, soldiers escorting a bound corrupt official away at the side, hazy morning light, 19th century academic history painting, oil on canvas, no text, no letters, no words, no writing, no signage", "image": "img/現断.jpg"}, "現通": {"tag": "ENDING 4", "name": "蒸気船を買った国", "body": "もし、こうしていたら。あなたは急がず、相手と話を続けました。相手の蒸気船と、向きを変えられる大砲を、素直に強いと認めます。船を買い、砲を写し、外国の地理と技術の本を訳させる。林則徐は実際、追放先でも西洋の情報を集め、その資料を友人に託しました。のちの洋務運動は、20年あとに同じ考えから始まります。もし1840年から始めていたら、20年の差が消えたかもしれません。麻薬は残り、屈辱も残ります。ただ、次に来る船には、違う形で向き合えたはずです。", "image_prompt": "A Qing official in silk robes inspecting a western paddle steamer moored at a Chinese dockyard around 1840, Chinese shipwrights measuring the iron hull with rulers and sketching on paper, a dismounted naval cannon on a rotating carriage being examined on the quay, translated foreign books and charts spread on a table under an awning, clear morning light on the river, 19th century academic history painting, oil on canvas, no text, no letters, no words, no writing, no signage", "image": "img/現通.jpg"}}};
+let i = 0;
+const score = [0, 0];
+const picks = [];
+
+const sceneEl = document.getElementById('scene');
+const logEl = document.getElementById('log');
+
+function render() {
+  const s = DATA.scenes[i];
+  document.getElementById('pnum').textContent = i + 1;
+  document.getElementById('pbar').style.width = (i / DATA.scenes.length * 100) + '%';
+  sceneEl.innerHTML = `<p class="year">${s.year}</p><p class="sit">${s.situation}</p>`;
+  const box = document.createElement('div');
+  box.className = 'opts';
+  s.options.forEach(o => {
+    const b = document.createElement('button');
+    b.className = 'opt';
+    b.textContent = o.text;
+    b.onclick = () => choose(o);
+    box.appendChild(b);
+  });
+  sceneEl.appendChild(box);
+}
+
+function choose(o) {
+  score[0] += o.a || 0;
+  score[1] += o.b || 0;
+  picks.push(o.text);
+  const d = document.createElement('div');
+  d.className = 'logi';
+  d.innerHTML = `<b>${DATA.scenes[i].year}</b> ${o.text}`;
+  logEl.appendChild(d);
+  i++;
+  if (i < DATA.scenes.length) { render(); scrollTo(0, 0); }
+  else finish();
+}
+
+function finish() {
+  // 2軸の符号で4象限 → 4つの結末
+  const key = (score[0] >= 0 ? DATA.axes[0].pos : DATA.axes[0].neg)
+            + (score[1] >= 0 ? DATA.axes[1].pos : DATA.axes[1].neg);
+  const e = DATA.endings[key] || DATA.endings[Object.keys(DATA.endings)[0]];
+  document.getElementById('eimg').src = e.image;
+  document.getElementById('eimg').alt = e.name;
+  document.getElementById('etag').textContent = e.tag || 'ENDING';
+  document.getElementById('ename').textContent = e.name;
+  document.getElementById('ebody').textContent = e.body;
+  document.getElementById('fact').innerHTML =
+    `<b>史実では</b>${DATA.history}`;
+  const txt = encodeURIComponent(
+    `${DATA.title}\n私の結末は「${e.name}」でした。\n`);
+  document.getElementById('tw').href =
+    `https://twitter.com/intent/tweet?text=${txt}&url=${encodeURIComponent(location.href)}`;
+  document.getElementById('sim').style.display = 'none';
+  document.getElementById('end').classList.add('on');
+  scrollTo(0, 0);
+}
+
+document.getElementById('again').onclick = () => location.reload();
+render();
+</script>
+</body>
+</html>

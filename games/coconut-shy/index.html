@@ -1,0 +1,1304 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ココナッツ・シャイ</title>
+<style>
+  html,body{margin:0;padding:0;overflow:hidden;background:#0a0a12;font-family:'Hiragino Kaku Gothic ProN','Helvetica Neue',Arial,sans-serif;}
+  #ui{position:fixed;top:16px;left:0;right:0;text-align:center;color:#fff;z-index:10;pointer-events:none;}
+  #score{font-size:clamp(24px,5.6vw,34px);font-weight:800;text-shadow:0 2px 8px #000;}
+  #msg{font-size:clamp(14px,3.6vw,20px);margin-top:6px;opacity:.9;text-shadow:0 2px 6px #000;}
+  #title{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:rgba(6,6,14,.72);z-index:20;color:#fff;transition:opacity .4s;padding:0 16px;box-sizing:border-box;}
+  #title h1{font-size:clamp(30px,8.6vw,58px);margin:0 0 8px;letter-spacing:2px;text-shadow:0 4px 18px #ff9a2e;text-align:center;}
+  #title p{font-size:clamp(13px,3.4vw,19px);opacity:.85;margin:4px 0;text-align:center;line-height:1.5;}
+  #title .btn{margin-top:26px;padding:14px 44px;font-size:clamp(19px,5vw,22px);font-weight:700;color:#fff;
+    background:linear-gradient(180deg,#ff9a2e,#c05a08);border:none;border-radius:12px;cursor:pointer;
+    box-shadow:0 6px 24px rgba(255,154,46,.5);font-family:inherit;}
+  #title .btn:hover{transform:scale(1.05);}
+  .hidden{opacity:0;pointer-events:none;}
+  #back{position:fixed;top:14px;left:14px;z-index:30;text-decoration:none;
+    background:rgba(12,16,26,.72);color:#fff;font:600 15px/1 'Hiragino Kaku Gothic ProN','Helvetica Neue',Arial,sans-serif;
+    padding:0 16px;height:44px;display:flex;align-items:center;border-radius:12px;}
+  #back:hover{background:rgba(30,38,56,.9);}
+  #mute{position:fixed;top:14px;right:14px;z-index:30;border:none;cursor:pointer;
+    background:rgba(12,16,26,.72);color:#fff;font-size:20px;line-height:1;
+    width:44px;height:44px;border-radius:12px;}
+  #mute:hover{background:rgba(30,38,56,.9);}
+  /* 端末に合う操作説明だけを出す */
+  .tc{display:none;}
+  @media (pointer:coarse){ .kb{display:none;} .tc{display:block;} }
+  @media (pointer:coarse){ #title .btn{padding:18px 48px;} }
+
+  /* --- イベントのバナー: 画面中央に叩きつける --- */
+  #banner{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    z-index:15;pointer-events:none;opacity:0;}
+  #banner .b{font-size:clamp(26px,7vw,64px);font-weight:900;letter-spacing:.06em;color:#fff;
+    padding:10px 4vw;max-width:94vw;text-align:center;transform:scale(2.4);opacity:0;
+    text-shadow:0 0 26px currentColor, 0 6px 20px #000;
+    border-top:5px solid currentColor;border-bottom:5px solid currentColor;}
+  #banner.go .b{animation:slam .62s cubic-bezier(.12,.85,.2,1) forwards;}
+  @keyframes slam{
+    0%  {transform:scale(2.4) rotate(-4deg);opacity:0;}
+    22% {transform:scale(1)   rotate(0deg); opacity:1;}
+    70% {transform:scale(1)   rotate(0deg); opacity:1;}
+    100%{transform:scale(1.12);opacity:0;}
+  }
+
+  /* --- 画面全体のフラッシュ --- */
+  #flash{position:fixed;inset:0;z-index:14;pointer-events:none;opacity:0;background:#fff;}
+  #vignette{position:fixed;inset:0;z-index:13;pointer-events:none;opacity:0;
+    background:radial-gradient(ellipse at center,rgba(0,0,0,0) 32%,rgba(120,0,10,.85) 100%);}
+
+  /* --- K.O. 画面 --- */
+  #ko{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    z-index:22;pointer-events:none;opacity:0;color:#fff;transition:opacity .3s;}
+  #ko.on{opacity:1;}
+  #ko .koText{font-size:clamp(88px,24vw,190px);font-weight:900;letter-spacing:10px;color:#fff;
+    text-shadow:0 0 40px #ff9a2e,0 0 90px #ff5a2e,0 10px 30px #000;
+    transform:scale(3);opacity:0;}
+  #ko.on .koText{animation:koSlam .8s cubic-bezier(.1,.9,.2,1) forwards;}
+  @keyframes koSlam{
+    0%  {transform:scale(3) rotate(-8deg);opacity:0;}
+    30% {transform:scale(1) rotate(0deg);opacity:1;}
+    36% {transform:scale(1.06);}
+    100%{transform:scale(1);opacity:1;}
+  }
+  #ko .finalLabel{font-size:clamp(15px,4vw,22px);letter-spacing:4px;opacity:0;margin-top:6px;text-shadow:0 2px 8px #000;}
+  #ko .finalScore{font-size:clamp(46px,13vw,82px);font-weight:800;opacity:0;text-shadow:0 4px 20px #000;}
+  #ko.on .finalLabel{animation:fadeUp .5s .75s forwards;}
+  #ko.on .finalScore{animation:fadeUp .5s .9s forwards;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+
+  /* --- ルール説明 (?) --- */
+  #helpBtn{position:fixed;top:14px;right:66px;z-index:30;border:none;cursor:pointer;
+    background:rgba(12,16,26,.72);color:#fff;font:700 20px/1 'Helvetica Neue',Arial,sans-serif;
+    width:44px;height:44px;border-radius:12px;}
+  #helpBtn:hover{background:rgba(30,38,56,.9);}
+  #help{position:fixed;inset:0;z-index:40;display:none;align-items:center;
+    justify-content:center;background:rgba(4,6,12,.82);padding:20px;}
+  #help.on{display:flex;}
+  #help .box{background:#141019;border:1px solid #3b2f22;border-radius:18px;
+    max-width:560px;width:100%;max-height:86vh;overflow:auto;padding:26px 28px 22px;
+    color:#e6edf3;font-family:inherit;}
+  #help h2{margin:0 0 4px;font-size:clamp(20px,5vw,26px);}
+  #help .sub{color:#8b949e;font-size:clamp(12px,3.2vw,14px);margin:0 0 18px;}
+  #help h3{font-size:clamp(14px,3.6vw,15px);color:#ffcb3b;margin:18px 0 6px;letter-spacing:.04em;}
+  #help ul{margin:0;padding-left:20px;}
+  #help li{font-size:clamp(13px,3.4vw,15px);line-height:1.7;margin:3px 0;}
+  #help b{color:#ffcb3b;font-weight:700;}
+  #help .close{margin-top:20px;width:100%;padding:12px;border:none;border-radius:10px;
+    background:#3b2f22;color:#fff;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;}
+  #help .close:hover{background:#544031;}
+</style>
+</head>
+<body>
+<div id="ui"><div id="score">0</div><div id="msg"></div></div>
+<button id="helpBtn" title="あそびかた">?</button>
+<div id="help"><div class="box">
+  <h2>ココナッツ・シャイ</h2>
+  <p class="sub">止まる場所が狙い。放す瞬間が強さ。</p>
+    <h3>ボール</h3>
+    <ul><li>押している間だけ<b>力がたまる</b>。放すと飛ぶ</li><li>弱いと<b>手前に落ち</b>、強すぎると<b>台をこえる</b></li><li>メーターの黄色い線が、台に届く強さ</li></ul>
+    <h3>ココナッツ</h3>
+    <ul><li>台の上にのっている。<b>落とせば得点</b></li><li>当たらなければ玉が減るだけ</li><li>台は毎回ちがう位置に立つ</li></ul>
+    <h3>立ち位置</h3>
+    <ul><li>投げ手は<b>ひとりでに左右に歩く</b></li><li>押すと<b>その場で止まる</b>。止まった場所が狙い</li><li>投げるのは、止めるのと同じ一回の操作</li></ul>
+    <h3>風</h3>
+    <ul><li>投げるたびに<b>向きと強さが変わる</b></li><li>旗の傾きが今の風。強いほど赤くなる</li><li>風下に立つのではなく、<b>風上に立って流してもらう</b></li></ul>
+    <h3>カモメ</h3>
+    <ul><li>台の前を横切る。<b>当たると玉が死ぬ</b></li><li>避けるのではなく、通りすぎるのを待つ</li></ul>
+    <h3>玉切れ</h3>
+    <ul><li>玉が<b>ゼロになった時点で終わり</b></li><li>外し続けられる回数には限りがある</li></ul>
+  <button class="close">とじる</button>
+</div></div>
+<a id="back" href="../../" title="ゲーム一覧にもどる">‹ ゲーム一覧</a>
+<button id="mute" title="音のオン/オフ">🔊</button>
+<div id="vignette"></div>
+<div id="flash"></div>
+<div id="banner"><div class="b"></div></div>
+<div id="ko">
+  <div class="koText">K.O.</div>
+  <div class="finalLabel">さいしゅうスコア</div>
+  <div class="finalScore">0</div>
+</div>
+<div id="title">
+  <h1>ココナッツ・シャイ</h1>
+  <p>歩いて位置を決め、ためて放つ。風は毎回変わる。</p>
+  <p class="kb">スペース長押し : その場で止まって力をためる<br>はなす : 投げる</p>
+  <p class="tc">長押し : その場で止まって力をためる<br>はなす : 投げる</p>
+  <button class="btn" id="startBtn">スタート</button>
+</div>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+// ---------- url flags (declared first: sound and camera both read them) ----------
+const QS = new URLSearchParams(location.search);
+const AUTO = QS.get('auto')==='1';
+const SHOWCASE_Q = QS.get('showcase');
+// Recording must produce clean footage, so every automated mode is muted.
+const REC = QS.get('rec')==='1';   // 録音モード: 音を鳴らして拾う
+const SILENT = (AUTO || !!SHOWCASE_Q || QS.get('mute')==='1') && !REC;
+// 録画・showcase では「?」と「ゲーム一覧」を出さない（動画の邪魔になる）
+const NOCHROME = AUTO || !!SHOWCASE_Q || QS.get('nochrome')==='1';
+
+// ---------- renderer / scene ----------
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.shadowMap.enabled = true;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const SKY = new THREE.Color(0x10101e);
+scene.background = SKY.clone();
+scene.fog = new THREE.Fog(0x10101e, 34, 86);
+
+const camera = new THREE.PerspectiveCamera(54, innerWidth/innerHeight, .1, 220);
+
+// Portrait and landscape both have to work. A phone held upright is far
+// narrower than 16:9, and with a fixed FOV the stall falls outside the
+// frame — so widen the vertical FOV as the screen gets taller.
+const BASE_FOV = 54;
+// On a tall screen the playfield's WIDTH is what has to fit, so rather than
+// widening the FOV until the frame fills with sky, keep the lens tighter and
+// pull the camera back. camDolly() is how much further back to stand.
+function camDolly(){
+  const aspect = innerWidth / innerHeight;
+  return aspect >= 16/9 ? 0 : Math.min(15, (16/9/aspect - 1) * 13);
+}
+function fitCamera(){
+  const aspect = innerWidth / innerHeight;
+  camera.aspect = aspect;
+  if(typeof SHOWCASE !== 'undefined' && SHOWCASE){
+    camera.fov = aspect < 1 ? 62 : 46;
+  } else {
+    // keep the horizontal field roughly constant across aspect ratios
+    const ref = 16/9;
+    // widen a little, but stop well short of a fisheye — camDolly() does the rest
+    camera.fov = aspect >= ref ? BASE_FOV
+      : Math.min(70, THREE.MathUtils.radToDeg(
+          2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(BASE_FOV)/2) * (ref/aspect))));
+  }
+  camera.__base = camera.fov;    // ズームするイベントがここへ戻る
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+}
+addEventListener('resize', fitCamera);
+addEventListener('orientationchange', ()=>setTimeout(fitCamera, 120));
+
+// ---------- lights ----------
+const hemi = new THREE.HemisphereLight(0x9fb0ee, 0x4a3426, 2.1);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xffdca8, 3.0);
+sun.position.set(-8, 16, 10); sun.castShadow = true;
+sun.shadow.camera.left=-22; sun.shadow.camera.right=22;
+sun.shadow.camera.top=22; sun.shadow.camera.bottom=-22;
+sun.shadow.mapSize.set(1024,1024);
+scene.add(sun);
+
+// ---------- ground / fairground dressing ----------
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(120, 160),
+  new THREE.MeshStandardMaterial({color:0x2a2436, roughness:.95}));
+ground.rotation.x = -Math.PI/2; ground.position.z = -40; ground.receiveShadow = true;
+scene.add(ground);
+
+// the throwing line the player stands behind
+const throwLine = new THREE.Mesh(new THREE.PlaneGeometry(25, .18),
+  new THREE.MeshBasicMaterial({color:0xff9a2e, transparent:true, opacity:.45}));
+throwLine.rotation.x = -Math.PI/2; throwLine.position.set(0, .015, 0);
+scene.add(throwLine);
+
+// bunting posts down both sides — parallax and a sense of a fairground
+const posts = [];
+const postMat = new THREE.MeshStandardMaterial({color:0x7a4b8c, roughness:.6});
+for(let i=0;i<10;i++){
+  for(const sx of [-13.5, 13.5]){
+    const p = new THREE.Mesh(new THREE.CylinderGeometry(.18,.22,4.4,10), postMat);
+    p.position.set(sx, 2.2, 2 - i*8); p.castShadow = true;
+    scene.add(p); posts.push(p);
+    const lamp = new THREE.Mesh(new THREE.SphereGeometry(.22, 12, 10),
+      new THREE.MeshBasicMaterial({color:0xffcb6b}));
+    lamp.position.set(sx, 4.5, 2 - i*8); scene.add(lamp); posts.push(lamp);
+  }
+}
+// a big moon behind the stall
+const moon = new THREE.Mesh(new THREE.CircleGeometry(5.2, 40),
+  new THREE.MeshBasicMaterial({color:0xfff0cf}));
+moon.position.set(10, 16, -78); scene.add(moon);
+
+// ---------- the stall (posts holding the coconut cups) ----------
+const woodMat = new THREE.MeshStandardMaterial({color:0x6b4426, roughness:.85});
+const clothMat = new THREE.MeshStandardMaterial({color:0xc02a4a, roughness:.7});
+function buildStall(){
+  const g = new THREE.Group();
+  // back board — gives the coconut something to read against
+  const board = new THREE.Mesh(new THREE.BoxGeometry(13, 5.2, .4), clothMat);
+  board.position.set(0, 4.2, -1.6); g.add(board);
+  // striped awning
+  for(let i=0;i<9;i++){
+    const s = new THREE.Mesh(new THREE.BoxGeometry(1.44, .3, 3.2),
+      new THREE.MeshStandardMaterial({color: i%2 ? 0xf3e6d4 : 0xc02a4a, roughness:.7}));
+    s.position.set(-5.76 + i*1.44, 7.1, -.4); s.rotation.x = -.2; g.add(s);
+  }
+  // legs
+  for(const sx of [-6.2, 6.2]){
+    const leg = new THREE.Mesh(new THREE.BoxGeometry(.4, 7.2, .4), woodMat);
+    leg.position.set(sx, 3.6, -1.4); g.add(leg);
+  }
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  return g;
+}
+const stall = buildStall();
+stall.position.z = -30;
+scene.add(stall);
+// a warm lamp over the stall: the coconut has to read against the back board
+const stallLamp = new THREE.PointLight(0xffd39a, 260, 40);
+stallLamp.position.set(0, 7.5, -26.5);
+scene.add(stallLamp);
+
+// ---------- the coconut and its cup ----------
+const huskMat = new THREE.MeshStandardMaterial({color:0x6b4222, roughness:.95});
+// near-black and unlit-looking, so the eyes stay dark under the showcase key
+const faceMat = new THREE.MeshStandardMaterial({color:0x140c06, roughness:1});
+const cupMat  = new THREE.MeshStandardMaterial({color:0xd8cdb6, roughness:.7});
+function buildCoconut(){
+  const g = new THREE.Group();
+  const nut = new THREE.Mesh(new THREE.IcosahedronGeometry(.85, 1), huskMat);
+  nut.scale.set(1, 1.12, 1); g.add(nut);
+  // Three dark "eyes" — the mark that makes a brown lump read as a coconut.
+  // Placed on a ring around the nut rather than all on one face, so at least
+  // one is visible from any angle of the showcase turntable.
+  for(let i=0;i<3;i++){
+    const a = i/3*Math.PI*2 + .4;
+    const e = new THREE.Mesh(new THREE.SphereGeometry(.2, 12, 10), faceMat);
+    e.position.set(Math.sin(a)*.72, .3 - (i===2?.5:0), Math.cos(a)*.72);
+    e.scale.setScalar(.85);
+    g.add(e);
+  }
+  // a tuft of fibre on top
+  for(let i=0;i<7;i++){
+    const f = new THREE.Mesh(new THREE.ConeGeometry(.06, .5, 5), faceMat);
+    const a = i/7*Math.PI*2;
+    f.position.set(Math.cos(a)*.24, .96, Math.sin(a)*.24);
+    f.rotation.z = Math.cos(a)*.5; f.rotation.x = -Math.sin(a)*.5; g.add(f);
+  }
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  return g;
+}
+function buildCup(){
+  const g = new THREE.Group();
+  const stem = new THREE.Mesh(new THREE.CylinderGeometry(.16,.2,2.4,10), woodMat);
+  stem.position.y = 1.2; g.add(stem);
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(.5, .12, 8, 20), cupMat);
+  ring.rotation.x = Math.PI/2; ring.position.y = 2.42; g.add(ring);
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  return g;
+}
+
+// three cups sit on the stall; exactly one holds the live coconut
+const CUP_X = [-4.0, 0, 4.0];
+// cup tops land just under the coconut's underside, so it visibly rests in them
+const CUP_Y = 5.5 - 0.85*1.12 - 2.42;
+const cups = CUP_X.map(x => { const c = buildCup(); c.position.set(x, CUP_Y, -30); scene.add(c); return c; });
+const coconut = buildCoconut();
+coconut.position.set(0, 5.5, -30);
+scene.add(coconut);
+// state of the live coconut: sits in a cup until knocked loose
+const nut = {cup:1, x:0, y:5.5, z:-30, fall:null, wobble:0, hitFlash:0};
+
+// ---------- the ball ----------
+const ballMat = new THREE.MeshStandardMaterial({color:0xf0f0f5, roughness:.35, metalness:.1});
+const ball = new THREE.Mesh(new THREE.SphereGeometry(.34, 18, 14), ballMat);
+ball.castShadow = true; ball.visible = false;
+scene.add(ball);
+// the in-flight ball. null while the player is aiming.
+let shot = null;    // {x,y,z,vx,vy,vz,life}
+
+// ---------- the player's hand (a simple thrower at the line) ----------
+function buildThrower(){
+  const g = new THREE.Group();
+  const body = new THREE.MeshStandardMaterial({color:0x232741, roughness:.7});
+  const skin = new THREE.MeshStandardMaterial({color:0xe8c19e, roughness:.6});
+  const torso = new THREE.Mesh(new THREE.CapsuleGeometry(.42, .8, 6, 14), body);
+  torso.position.y = 1.5; g.add(torso);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(.38, 20, 16), skin);
+  head.position.y = 2.5; g.add(head);
+  const cap = new THREE.Mesh(new THREE.SphereGeometry(.4, 20, 12, 0, Math.PI*2, 0, Math.PI/2),
+    new THREE.MeshStandardMaterial({color:0xff9a2e, roughness:.6}));
+  cap.position.y = 2.54; g.add(cap);
+  const arm = new THREE.Mesh(new THREE.CapsuleGeometry(.13, .9, 6, 12), body);
+  arm.position.set(.5, 1.8, .1); g.add(arm);
+  for(const sx of [.2,-.2]){
+    const leg = new THREE.Mesh(new THREE.CapsuleGeometry(.15, .8, 6, 12), body);
+    leg.position.set(sx, .55, 0); g.add(leg);
+  }
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  return {group:g, arm};
+}
+const thrower = buildThrower();
+thrower.group.position.set(0, 0, 3);
+scene.add(thrower.group);
+
+// ---------- wind ribbon: shows the wind without a HUD number ----------
+// A flag on a pole beside the stall. It leans the way the wind blows and
+// stretches with its strength, so the player reads it at a glance.
+const flagMat = new THREE.MeshStandardMaterial({color:0x55f0c0, roughness:.5,
+  side:THREE.DoubleSide, emissive:0x0d4436});
+const flagPole = new THREE.Mesh(new THREE.CylinderGeometry(.1,.1,6,8), woodMat);
+flagPole.position.set(-7.4, 3, -26); scene.add(flagPole);
+const flag = new THREE.Mesh(new THREE.PlaneGeometry(2.4, .9), flagMat);
+flag.position.set(-6.2, 5.4, -26); scene.add(flag);
+
+// ---------- seagull hazard ----------
+function buildGull(){
+  const g = new THREE.Group();
+  const m = new THREE.MeshStandardMaterial({color:0xe9eef6, roughness:.6});
+  const dark = new THREE.MeshStandardMaterial({color:0x40506a, roughness:.6});
+  const body = new THREE.Mesh(new THREE.CapsuleGeometry(.3, .8, 6, 12), m);
+  body.rotation.z = Math.PI/2; g.add(body);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(.26, 14, 12), m);
+  head.position.set(.72, .14, 0); g.add(head);
+  const beak = new THREE.Mesh(new THREE.ConeGeometry(.1, .4, 8),
+    new THREE.MeshStandardMaterial({color:0xffb02e, roughness:.5}));
+  beak.rotation.z = -Math.PI/2; beak.position.set(1.06, .1, 0); g.add(beak);
+  // The body runs along x, so the wings spread sideways along z and the
+  // flap rotates each pivot about x — lifting the tip, not tipping the plank.
+  const wings = [];
+  for(const sz of [1,-1]){
+    const pivot = new THREE.Group();
+    pivot.position.set(.05, .22, sz*.26);
+    // taper the wing so it reads as a wing rather than a board
+    const w = new THREE.Mesh(new THREE.BoxGeometry(.62, .06, 1.25), dark);
+    w.position.set(0, 0, sz*.62);
+    w.scale.x = .8;
+    pivot.add(w);
+    pivot.rotation.x = sz*-.42;        // held out and slightly raised at rest
+    g.add(pivot); wings.push(pivot);
+  }
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  return {group:g, wings};
+}
+const gull = buildGull();
+gull.group.visible = false;
+scene.add(gull.group);
+// a gull that crosses in front of the stall; a ball that touches it is lost
+const gullState = {on:false, x:0, dir:1, y:5, z:-26, speed:6};
+
+// ---------- power meter (3D, so it sits in the world with the thrower) ----------
+const meterBack = new THREE.Mesh(new THREE.PlaneGeometry(.5, 4.2),
+  new THREE.MeshBasicMaterial({color:0x1a1f30, transparent:true, opacity:.75}));
+meterBack.position.set(1.35, 1.9, 3);
+scene.add(meterBack);
+const meterFill = new THREE.Mesh(new THREE.PlaneGeometry(.38, 4.0),
+  new THREE.MeshBasicMaterial({color:0x55f0c0}));
+meterFill.position.set(1.35, .3, 3.02);
+scene.add(meterFill);
+// the band that lands on the stall — overshoot it and the ball sails past
+const meterGood = new THREE.Mesh(new THREE.PlaneGeometry(.66, .1),
+  new THREE.MeshBasicMaterial({color:0xffcb3b}));
+meterGood.position.set(1.35, 1.9, 3.03);
+scene.add(meterGood);
+
+// ---------- game state ----------
+let running=false, dead=false, t=0, score=0, balls=6, hits=0;
+let charging=false, power=0, chargeDir=1;
+// Where the thrower stands IS the aim. While not charging he paces back and
+// forth along the line; pressing down stops him there and starts the meter.
+// One press does both jobs, so there is still only one thing to explain.
+let standX=0, standDir=1;
+const STAND_LIMIT = 11;     // wide enough that every wind has a reachable spot
+let wind=0, windTarget=0;            // sideways acceleration on the ball
+let timeScale=1;                     // slow-motion multiplier
+let deadAt=0;                        // when the run ended (touch retry gate)
+let shake=0;                         // camera shake amount
+let camPush=0, camPushTarget=0;      // death zoom pulls the camera in
+let nextEventAt=9;                   // seconds until the first event
+let eventQueue=[];                   // event names not yet used in this run
+let fogEv=0;                         // >0 while the sea fog is in
+let gustEv=0;                        // >0 while the wind is violent
+let doubleEv=0;                      // >0 while a second coconut is worth double
+let shrinkEv=0;                      // >0 while the coconut is small
+let resultMsg=0;                     // countdown on the hit/miss caption
+let nutReady=false;                  // true only while a coconut sits on a cup
+const scoreEl = document.getElementById('score');
+const msgEl = document.getElementById('msg');
+const titleEl = document.getElementById('title');
+const bannerEl = document.getElementById('banner');
+const bannerText = bannerEl.querySelector('.b');
+const flashEl = document.getElementById('flash');
+const vignetteEl = document.getElementById('vignette');
+const koEl = document.getElementById('ko');
+const koScoreEl = koEl.querySelector('.finalScore');
+
+// The throw leaves the hand at a FIXED angle; power sets only the speed.
+// That is what makes the meter matter: too little and the ball drops short
+// of the stall, too much and it sails over the coconut. The window that
+// arrives at cup height is power .59–.72, ~130ms of meter travel.
+const STALL_Z = -30, THROW_Z = 3;
+const GRAV = 26;
+const THROW_ANG = Math.PI/5;         // 36° — a lob, not a straight peg
+const SPEED_MIN = 22, SPEED_SPAN = 16;
+const GOOD_POWER = .654;             // centre of the window, marked on the meter
+const POWER_MIN = .18;               // a tap still throws something
+
+// ---------- presentation helpers ----------
+function banner(text, color){
+  bannerText.textContent = text;
+  bannerText.style.color = color;
+  bannerEl.classList.remove('go');
+  void bannerEl.offsetWidth;      // restart the CSS animation
+  bannerEl.style.opacity = 1;
+  bannerEl.classList.add('go');
+}
+function flash(color, strength, ms){
+  flashEl.style.background = color;
+  flashEl.style.transition = 'none';
+  flashEl.style.opacity = strength;
+  requestAnimationFrame(()=>{
+    flashEl.style.transition = `opacity ${ms}ms ease-out`;
+    flashEl.style.opacity = 0;
+  });
+}
+function say(text, ms=1.4){ msgEl.textContent = text; resultMsg = ms; }
+
+// ---------- wind ----------
+// Each throw gets a fresh wind. It is the only thing the player cannot
+// control, so it has to be visible before the ball leaves the hand.
+function rollWind(){
+  const mag = 2.2 + Math.random()*4.2 + Math.min(4, t*.06);
+  windTarget = (Math.random()<.5 ? -1 : 1) * mag * (gustEv>0 ? 2.1 : 1);
+}
+
+// ---------- events ----------
+const EVENTS = {
+  // the wind doubles and reverses mid-flight
+  gust(){
+    banner('突風', '#55f0c0');
+    gustEv = 9; rollWind();
+    flash('#9ffff0', .3, 380);
+    shake = Math.max(shake, .3);
+    return 9;
+  },
+  // sea fog: the stall fades out, so the throw has to be from memory
+  fog(){
+    banner('海霧', '#9b6bff');
+    fogEv = 7.5;
+    return 8;
+  },
+  // a second coconut appears and everything scores double
+  bonus(){
+    banner('ダブル', '#ffcb3b');
+    doubleEv = 10;
+    balls += 2;
+    flash('#ffe9a8', .35, 420);
+    return 10;
+  },
+  // the coconut shrinks to half size — same wind, smaller target
+  shrink(){
+    banner('小玉', '#ff7bd0');
+    shrinkEv = 10;
+    return 10;
+  },
+  // the gull starts patrolling the flight path
+  gull(){
+    banner('カモメ', '#ff5a2e');
+    gullState.on = true;
+    gullState.dir = Math.random()<.5 ? -1 : 1;
+    gullState.x = gullState.dir < 0 ? 13 : -13;
+    gullState.y = 4.4 + Math.random()*1.6;
+    gullState.z = -20 - Math.random()*6;
+    gullState.speed = 5.5 + Math.random()*2.5;
+    gull.group.visible = true;
+    return 9;
+  },
+};
+const EVENT_NAMES = Object.keys(EVENTS);
+// recording/debug hook: fire a named event on cue (used by the capture script)
+// returns false if the run is already over, so a capture script can wait
+// for the next run instead of firing an event onto the K.O. screen
+window.__ev = name => {
+  if(!running || dead || !EVENTS[name]) return false;
+  const busy = EVENTS[name]();
+  if(!SILENT) SND.event(); nextEventAt = t + busy + 5; return true;
+};
+window.__alive = () => running && !dead;
+window.__kill = () => { if(running && !dead){ dead=true; gameOver(); } };
+window.__recStop = () => SND.recStop();
+window.__snd = () => ({enabled: SND.enabled, silent: SILENT});
+window.__fov = () => +camera.fov.toFixed(1);
+window.__probe = () => ({t:+t.toFixed(2), balls, hits, power:+power.toFixed(2),
+  wind:+wind.toFixed(2), shot:!!shot, next:+nextEventAt.toFixed(2)});
+// the capture tooling reads these; it cannot guess the names
+window.__events = EVENT_NAMES.slice();
+window.__subjects = ['coconut','ball','cup','stall','gull','flag','thrower'];
+
+function refillEventQueue(){
+  eventQueue = EVENT_NAMES.slice();
+  for(let i=eventQueue.length-1;i>0;i--){        // shuffle so the order varies per run
+    const j = Math.floor(Math.random()*(i+1));
+    [eventQueue[i],eventQueue[j]]=[eventQueue[j],eventQueue[i]];
+  }
+}
+
+function triggerEvent(){
+  if(!eventQueue.length) refillEventQueue();
+  const name = eventQueue.pop();
+  const busy = EVENTS[name]();
+  if(!SILENT) SND.event();
+  nextEventAt = t + busy + 5 + Math.random()*4;  // breathing room between events
+}
+
+// ---------- coconut placement ----------
+// The coconut hops to a different cup after each resolved throw, so the
+// player cannot memorise one aim and repeat it.
+function placeCoconut(){
+  let c = Math.floor(Math.random()*3);
+  if(c === nut.cup) c = (c + 1 + Math.floor(Math.random()*2)) % 3;
+  nut.cup = c;
+  nut.x = CUP_X[c]; nut.y = 5.5; nut.z = STALL_Z;
+  nut.fall = null; nut.wobble = 0;
+  coconut.position.set(nut.x, nut.y, nut.z);
+  coconut.rotation.set(0,0,0);
+  coconut.visible = true;
+  rollWind();
+  nutReady = true;           // now it is on its cup with a settled wind
+}
+
+// ---------- reset ----------
+function reset(){
+  t=0; score=0; balls=6; hits=0; dead=false;
+  charging=false; power=0; chargeDir=1;
+  standX=0; standDir=1;
+  shot=null; ball.visible=false;
+  timeScale=1; shake=0; camPush=0; camPushTarget=0;
+  fogEv=0; gustEv=0; doubleEv=0; shrinkEv=0; resultMsg=0;
+  gullState.on=false; gull.group.visible=false;
+  nut.cup = 1;
+  nutReady = false;
+  placeCoconut();
+  coconut.scale.set(1,1,1);
+  nextEventAt = 9;
+  refillEventQueue();
+  msgEl.textContent='';
+  koEl.classList.remove('on');
+  vignetteEl.style.transition='opacity .3s'; vignetteEl.style.opacity=0;
+  hemi.intensity=2.1; sun.intensity=3.0;
+  scene.background.copy(SKY); scene.fog.near=34; scene.fog.far=86;
+  scene.fog.color.copy(SKY);
+  thrower.arm.rotation.x = 0;
+  thrower.group.rotation.set(0,0,0); thrower.group.position.y = 0;
+  updateHUD();
+}
+
+function updateHUD(){
+  scoreEl.textContent = `${Math.floor(score)}　　玉 ${'●'.repeat(Math.max(0,Math.min(9,balls)))}`;
+}
+
+const startBtn = document.getElementById('startBtn');
+
+// ---------- sound: everything synthesised, no audio files ----------
+// Keeps the single-HTML rule (nothing to download) and lets the music
+// react to play: the bass line speeds up with the game, events drop a
+// stinger, and the whole thing ducks out on a game over.
+const SND = (() => {
+  let ctx = null, master = null, musicGain = null, on = true, started = false;
+  let step = 0, timer = null, tempo = 0.25;
+
+  // A pentatonic scale never sounds wrong against itself, which matters
+  // when the tempo drifts with the player's speed.
+  // minor pentatonic, driving — a chase that never lets up
+  const SCALE = [0, 3, 5, 7, 10];
+  const ROOT = 196;
+  const BASS = 'square', LEAD = 'sawtooth';
+  const hz = (deg, oct = 0) =>
+    ROOT * Math.pow(2, oct + Math.floor(deg / SCALE.length)) *
+    Math.pow(2, SCALE[((deg % SCALE.length) + SCALE.length) % SCALE.length] / 12);
+
+  function ensure() {
+    if (ctx) return ctx;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    ctx = new AC();
+    master = ctx.createGain();
+    master.gain.value = 0.32;
+    master.connect(ctx.destination);
+    musicGain = ctx.createGain();
+    musicGain.gain.value = 1;
+    musicGain.connect(master);
+    return ctx;
+  }
+
+
+  // ---- 録音用の分岐（?rec=1）----
+  // Playwright の録画には音声が入らないので、ゲーム自身に master バスを
+  // 録らせる。鳴っているものそのものなので映像と必ず同期する。
+  let recDest = null, recorder = null, recChunks = [];
+  function recStart() {
+    if (!ctx || recorder) return;
+    recDest = ctx.createMediaStreamDestination();
+    master.connect(recDest);
+    recorder = new MediaRecorder(recDest.stream, {mimeType: 'audio/webm'});
+    recorder.ondataavailable = e => { if (e.data.size) recChunks.push(e.data); };
+    recorder.start();
+  }
+  function recStop() {
+    return new Promise(res => {
+      if (!recorder) return res(null);
+      recorder.onstop = async () => {
+        const blob = new Blob(recChunks, {type: 'audio/webm'});
+        const buf = await blob.arrayBuffer();
+        res(Array.from(new Uint8Array(buf)));
+      };
+      recorder.stop();
+    });
+  }
+
+  function blip(freq, dur, type = 'square', vol = 0.25, dest = null, slideTo = null) {
+    if (!ctx || !on) return;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, ctx.currentTime);
+    if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, ctx.currentTime + dur);
+    // a short attack stops every note from clicking
+    g.gain.setValueAtTime(0, ctx.currentTime);
+    g.gain.linearRampToValueAtTime(vol, ctx.currentTime + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
+    o.connect(g); g.connect(dest || master);
+    o.start(); o.stop(ctx.currentTime + dur + 0.02);
+  }
+
+  function noise(dur, vol = 0.2, hp = 800) {
+    if (!ctx || !on) return;
+    const n = Math.floor(ctx.sampleRate * dur);
+    const buf = ctx.createBuffer(1, n, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    const f = ctx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = hp;
+    const g = ctx.createGain(); g.gain.value = vol;
+    src.connect(f); f.connect(g); g.connect(master);
+    src.start();
+  }
+
+  // --- the loop: a walking bass plus an offbeat blip ---
+  function tick() {
+    if (!ctx || !on) return;
+    const bar = step % 16;
+    // straight driving pulse: bass on every beat, lead stabs offbeat
+    if (bar % 2 === 0) blip(hz(bar % 8 === 0 ? 0 : 1, -1), tempo * 1.1, BASS, 0.30, musicGain);
+    if (bar % 8 === 5) blip(hz(4, 0), tempo * 0.6, LEAD, 0.09, musicGain);
+    if (bar % 4 === 2) noise(0.04, 0.05, 5000);
+    step++;
+    timer = setTimeout(tick, tempo * 1000);
+  }
+
+  return {
+    // must be called from a user gesture — browsers block audio otherwise
+    start() {
+      if (!ensure() || started) return;
+      if (ctx.state === 'suspended') ctx.resume();
+      started = true; step = 0; tick();
+    },
+    stop() { if (timer) { clearTimeout(timer); timer = null; } started = false; },
+    /** speed the music up with the game; 1 = starting pace */
+    setPace(mult) { tempo = Math.max(0.11, 0.25 / Math.max(0.2, mult)); },
+    duck(sec = 1.6) {                                      // for game over
+      if (!ctx) return;
+      musicGain.gain.cancelScheduledValues(ctx.currentTime);
+      musicGain.gain.setValueAtTime(musicGain.gain.value, ctx.currentTime);
+      musicGain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + sec);
+    },
+    unduck() {
+      if (!ctx) return;
+      musicGain.gain.cancelScheduledValues(ctx.currentTime);
+      musicGain.gain.setValueAtTime(0.0001, ctx.currentTime);
+      musicGain.gain.exponentialRampToValueAtTime(1, ctx.currentTime + 0.4);
+    },
+    // --- one-shots ---
+    move()  { ensure(); blip(hz(3, 1), 0.07, LEAD, 0.12); },
+    jump()  { ensure(); blip(hz(0, 0), 0.16, LEAD, 0.18, null, hz(4, 1)); },
+    land()  { ensure(); noise(0.06, 0.10, 500); },
+    place() { ensure(); blip(hz(2, 0), 0.10, BASS, 0.22, null, hz(4, 1)); },
+    event() { ensure(); [0, 90, 180].forEach((ms, i) =>
+                setTimeout(() => blip(hz(2 + i, 0), 0.18, 'sawtooth', 0.20), ms)); },
+    hit()   { ensure(); noise(0.35, 0.30, 200);
+              blip(180, 0.5, 'sawtooth', 0.28, null, 40); },
+    over()  { ensure(); [0, 140, 280, 460].forEach((ms, i) =>
+                setTimeout(() => blip(hz(-i, -1), 0.42, 'triangle', 0.26), ms)); },
+    recStart() { ensure(); recStart(); },
+    recStop() { return recStop(); },
+    toggle() { on = !on; if (!on) { this.stop(); } else { this.start(); } return on; },
+    get enabled() { return on; },
+  };
+})();
+
+// --- game-specific one-shots, built on the same synth voices ---
+// Kept short and pitched so they stay readable under narration.
+const SFX = {
+  charge(){ if(!SILENT) SND.move(); },                    // a blip when the hold starts
+  throwBall(){ if(!SILENT) SND.jump(); },                 // rising whoosh on release
+  knock(){ if(!SILENT){ SND.place(); setTimeout(()=>SND.land(), 60); } },  // wood + thud
+  miss(){ if(!SILENT) SND.land(); },                      // dull thump, nothing more
+};
+
+// --- one place for every action, so touch and keyboard stay in step ---
+function startRun(){
+  titleEl.classList.add('hidden'); reset(); running=true;
+  if(!SILENT){ SND.unduck(); SND.start(); if(REC) SND.recStart(); }
+}
+
+// Hold to charge. The meter runs up and back down while held, so the
+// player is picking a moment to let go — one button, no explanation.
+function beginCharge(){
+  if(!running || dead || shot) return;
+  if(charging) return;
+  charging = true; power = 0; chargeDir = 1;
+  SFX.charge();
+}
+function releaseCharge(){
+  if(!running || dead || !charging) return;
+  charging = false;
+  throwBall(Math.max(POWER_MIN, power));
+}
+
+// The arc is fully determined at release: power sets the launch speed at a
+// fixed angle, and wind pushes sideways for the whole flight. That is the
+// entire skill — pick the moment, then live with the wind.
+function throwBall(p){
+  const sp = SPEED_MIN + p * SPEED_SPAN;
+  shot = {
+    x: standX, y: 1.9, z: THROW_Z,      // released from wherever he stopped
+    vx: 0,
+    vy:  sp * Math.sin(THROW_ANG),
+    vz: -sp * Math.cos(THROW_ANG),
+    life: 0,
+  };
+  ball.position.set(shot.x, shot.y, shot.z);
+  ball.visible = true;
+  balls--;
+  updateHUD();
+  thrower.arm.rotation.x = -2.2;                   // snap the arm forward
+  SFX.throwBall();
+  power = 0;
+}
+
+const muteBtn = document.getElementById('mute');
+function toggleMute(){ muteBtn.textContent = SND.toggle() ? '🔊' : '🔇'; }
+muteBtn.addEventListener('click', toggleMute);
+muteBtn.addEventListener('touchend', e=>{ e.preventDefault(); toggleMute(); },
+                         {passive:false});
+if(SILENT) muteBtn.style.display='none';   // automated modes have no audio
+addEventListener('keydown', e=>{ if(e.code==='KeyM') toggleMute(); });
+
+startBtn.addEventListener('click', startRun);
+// a touch on the button must start too — click alone is unreliable on touch
+startBtn.addEventListener('touchend', e=>{ e.preventDefault(); startRun(); },
+                          {passive:false});
+
+addEventListener('keydown', e=>{
+  if(e.repeat) return;                    // key-repeat must not restart the charge
+  if(!running){
+    if(e.code==='Space'||e.code==='Enter') startRun();
+    return;
+  }
+  if(e.code==='Space'||e.code==='ArrowUp'||e.code==='KeyW'){ e.preventDefault(); beginCharge(); }
+});
+addEventListener('keyup', e=>{
+  if(e.code==='Space'||e.code==='ArrowUp'||e.code==='KeyW') releaseCharge();
+});
+
+// --- touch: press and hold to charge, lift to throw ---
+// Same two actions as the keyboard, routed through the same functions so
+// the two input paths cannot drift apart.
+(function(){
+  const canvas = renderer.domElement;
+
+  canvas.addEventListener('touchstart', e=>{
+    if(dead || !running) return;
+    beginCharge();
+  }, {passive:true});
+
+  canvas.addEventListener('touchend', e=>{
+    if(dead){
+      // give the K.O. animation time to read, then a tap retries
+      if(!AUTO && Date.now()-deadAt > 1500) startRun();
+      return;
+    }
+    if(!running){ startRun(); return; }
+    releaseCharge();
+  }, {passive:true});
+  canvas.addEventListener('touchcancel', ()=>{ if(charging) releaseCharge(); }, {passive:true});
+
+  // mouse works the same way, for desktop players who never touch a key
+  canvas.addEventListener('mousedown', e=>{
+    if(dead){ if(!AUTO && Date.now()-deadAt > 1500) startRun(); return; }
+    if(!running){ startRun(); return; }
+    beginCharge();
+  });
+  addEventListener('mouseup', ()=>{ if(charging) releaseCharge(); });
+
+  // The title overlay sits above the canvas, so a tap anywhere on it never
+  // reaches the canvas handler. Start from the overlay itself.
+  titleEl.addEventListener('touchend', e=>{
+    if(!running){ e.preventDefault(); startRun(); }
+  }, {passive:false});
+
+  // stop the browser treating game taps as scroll / double-tap zoom
+  canvas.addEventListener('touchmove', e=>e.preventDefault(), {passive:false});
+})();
+
+// autoplay mode for recording: ?auto=1
+// recording holds the K.O. longer than play does: ?hold=9000
+const RETRY_MS = Math.max(1200, parseInt(QS.get('hold')||'4200', 10));
+// ?noev=1 records a calm run with no events, for narration beds
+const NOEV = QS.get('noev')==='1';
+if(AUTO){ setTimeout(startRun, 1200); }   // startRun 経由にする（音/録音も始まる）
+
+// ---------- autopilot ----------
+// Solves the same problem the player does: pick the power that lands at the
+// stall, then wait for the meter to pass it. It cannot steer, so it must
+// also decide when the wind makes the shot worth taking at all.
+let autoWaitGull = 0;
+// Closed-form flight: at a fixed angle the ball reaches the stall plane at a
+// time set by the horizontal speed, and both the height and the sideways
+// drift follow from it. Cheap enough to sweep every frame.
+function predict(p){
+  const sp = SPEED_MIN + p*SPEED_SPAN;
+  const vz = sp*Math.cos(THROW_ANG), vy = sp*Math.sin(THROW_ANG);
+  const fl = (THROW_Z - (STALL_Z + .5)) / vz;      // time to the stall plane
+  // Aim at the wind the ball will actually fly through. `wind` is still easing
+  // toward windTarget while he lines up, so using the instantaneous value makes
+  // the chosen spot slide out from under him before he can throw.
+  const w = windTarget;
+  return {
+    fl,
+    y: 1.9 + vy*fl - .5*GRAV*fl*fl,                // height when it gets there
+    x: .5 * w * fl * fl,                           // wind drift, released from x=0
+  };
+}
+function autoPilot(dt){
+  if(shot) return;
+  // Between throws the old coconut is gone (tumbling, or simply stale after a
+  // miss) and the next has not been placed yet — placeCoconut runs on a timer.
+  // Aiming in that gap solves for the wrong target and wastes the ball.
+  if(!nutReady){ if(charging){ power = 0; chargeDir = 1; } return; }
+  // A gull over the flight path eats the ball, so wait for it to pass.
+  if(gullState.on && Math.abs(gullState.x - nut.x) < 4.5){
+    autoWaitGull = .3;
+  }
+  if(autoWaitGull > 0){
+    autoWaitGull -= dt;
+    if(charging) power = 0, chargeDir = 1;         // hold the meter at the bottom
+    return;
+  }
+  // Pick the power that arrives at cup height, then stand wherever the wind
+  // will blow the ball onto the coconut from. Height depends only on power and
+  // drift only on power, so the two choices are independent: solve power
+  // first, then place the feet at (coconut - drift).
+  let best = null;
+  for(let p=.35; p<=1; p+=.005){
+    const q = predict(p);
+    const err = Math.abs(q.y - nut.y);
+    if(!best || err < best.err) best = {p, err, q};
+  }
+  const wantX = THREE.MathUtils.clamp(nut.x - best.q.x, -STAND_LIMIT, STAND_LIMIT);
+  // Walk until standing on the spot, then press. He only stops by charging,
+  // so the press has to wait for the pacing to carry him there.
+  if(!charging){
+    if(Math.abs(standX - wantX) < .35) beginCharge();
+    else if(Math.sign(wantX - standX) !== standDir) standDir = Math.sign(wantX - standX);
+    return;
+  }
+  // The wind keeps easing toward its new value, so wantX drifts while he is
+  // charging — and charging is also what stops him walking. If the spot has
+  // moved out from under him, abandon the throw and go stand on it again.
+  if(Math.abs(standX - wantX) > 1.1){ charging = false; power = 0; chargeDir = 1; return; }
+  // Release as the rising meter crosses the chosen power. Only on the way up:
+  // catching it falling works too, but waiting for the next rise is steadier.
+  if(chargeDir > 0 && power >= best.p) releaseCharge();
+}
+
+// ---------- showcase mode ----------
+// Puts one object on a turntable against an empty stage so the video can
+// talk about it while the real thing is on screen. Uses the game's own
+// meshes, so what the narration describes is exactly what ships.
+const SHOWCASE = QS.get('showcase');
+const showcase = {group:null, spin:.55, label:''};
+
+function buildShowcase(name){
+  const g = new THREE.Group();
+  let label = '', spin = .55;
+  let yaw = 0;      // opening angle of the turntable
+  let rock = 0;     // >0 = a one-sided subject: rock through ±rock rad, no full spin
+  if(name==='coconut'){
+    const c = buildCoconut(); c.scale.set(1.9,1.9,1.9); g.add(c);
+    label = 'ココナッツ'; spin = .6; yaw = -.35;  // show the three eyes first
+  } else if(name==='ball'){
+    const m = new THREE.Mesh(new THREE.SphereGeometry(.34, 24, 18), ballMat);
+    m.scale.set(4,4,4); g.add(m); label = 'ボール'; spin = .9;
+  } else if(name==='cup'){
+    const c = buildCup(); c.scale.set(1.3,1.3,1.3); g.add(c);
+    label = '受け台'; spin = .5;
+  } else if(name==='stall'){
+    const st = new THREE.Group();
+    st.add(buildStall());
+    // Dress it with its cups and a coconut so the subject matches the game.
+    // buildStall() is authored in local space, so the cups go in at local z=0
+    // (the stall's own origin) rather than the world STALL_Z the game uses.
+    for(const x of CUP_X){ const c = buildCup(); c.position.set(x, CUP_Y, 0); st.add(c); }
+    const cn = buildCoconut(); cn.position.set(CUP_X[1], 5.5, 0); st.add(cn);
+    st.scale.set(.42,.42,.42); g.add(st);
+    label = '屋台'; spin = .4; rock = .5;
+  } else if(name==='gull'){
+    const b = buildGull(); b.group.scale.set(1.7,1.7,1.7); g.add(b.group);
+    b.wings[0].rotation.x = -.5; b.wings[1].rotation.x = .5;   // wings spread, mid-beat
+    label = 'カモメ'; spin = .55; yaw = -.5;
+  } else if(name==='flag'){
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(.1,.1,6,10), woodMat);
+    const f = new THREE.Mesh(new THREE.PlaneGeometry(2.4, .9), flagMat);
+    f.position.set(1.3, 2.4, 0); g.add(pole, f);
+    label = '風見'; spin = .5;
+  } else if(name==='thrower'){
+    const th = buildThrower(); th.group.scale.set(1.5,1.5,1.5); g.add(th.group);
+    th.arm.rotation.x = -1.0;                 // hold a throwing pose
+    label = '投げ手'; spin = .5; yaw = Math.PI; // face the camera, not his back
+  }
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  scene.add(g);
+
+  // Centre the subject on the origin and pull the camera back to fit it,
+  // so every object is framed the same way regardless of its size.
+  const box = new THREE.Box3().setFromObject(g);
+  const size = box.getSize(new THREE.Vector3());
+  const mid = box.getCenter(new THREE.Vector3());
+  g.position.sub(mid);                       // sit centred at the origin
+  const reach = Math.max(size.x, size.y) * 0.5;
+  const fov = THREE.MathUtils.degToRad(camera.fov);
+  const dist = (reach / Math.tan(fov/2)) * 1.75 + 1.0;   // 1.75 = breathing room
+  camera.position.set(0, size.y*0.10, dist);
+
+  // Slide the subject sideways so a text panel can own the other half.
+  // The offset lives on a parent so the turntable still spins in place —
+  // rotating an offset group would make it orbit instead.
+  const bias = parseFloat(QS.get('sx') || '0');
+  const pivot = new THREE.Group();
+  pivot.position.x = -bias * reach * 1.15;
+  scene.add(pivot);
+  pivot.add(g);
+  g.rotation.y = yaw;
+  showcase.group = g; showcase.pivot = pivot;
+  showcase.spin = spin; showcase.label = label;
+  showcase.rock = rock; showcase.yaw = yaw; showcase.tt = 0;
+}
+
+fitCamera();          // SHOWCASE is known by here
+camera.position.set(0, 7.4, 16);
+camera.lookAt(0, 3.2, STALL_Z);
+
+if(SHOWCASE){
+  titleEl.classList.add('hidden');
+  buildShowcase(SHOWCASE);
+  scoreEl.textContent = '';
+  msgEl.textContent = QS.get('nolabel')==='1' ? '' : showcase.label;
+  msgEl.style.fontSize = 'clamp(20px,6vw,30px)';
+  msgEl.style.letterSpacing = '6px';
+  // a plain dark stage: nothing on screen but the subject
+  ground.visible = false; moon.visible = false; stall.visible = false;
+  stallLamp.visible = false;
+  throwLine.visible = false; coconut.visible = false; ball.visible = false;
+  thrower.group.visible = false; gull.group.visible = false;
+  flag.visible = false; flagPole.visible = false;
+  meterBack.visible = false; meterFill.visible = false; meterGood.visible = false;
+  for(const c of cups) c.visible = false;
+  for(const p of posts) p.visible = false;
+  scene.fog = null;
+  scene.background = new THREE.Color(0x0b0d16);
+  hemi.intensity = 3.2;
+  sun.intensity = 3.8; sun.position.set(2.5, 6, 6);
+  // a second light from the other side so the far face is not pure black
+  const fill = new THREE.PointLight(0xffc98a, 110, 40);
+  fill.position.set(-4.5, 2.4, 4.6); scene.add(fill);
+  const key = new THREE.PointLight(0xffe6c0, 150, 40);
+  key.position.set(3.4, 3.6, 5.4); scene.add(key);
+  // a rim from behind so a dark subject separates from the dark stage
+  const rim = new THREE.PointLight(0x9fb8ff, 90, 40);
+  rim.position.set(-2.2, 4.0, -6.0); scene.add(rim);
+}
+// let the capture script drive the turntable and swap subjects
+window.__showcase = name => {
+  if(showcase.pivot) scene.remove(showcase.pivot);   // pivot owns the group
+  buildShowcase(name);
+  msgEl.textContent = showcase.label;
+};
+
+// ---------- resolving a throw ----------
+function scoreHit(){
+  hits++;
+  const pts = 100 * (doubleEv>0 ? 2 : 1) * (shrinkEv>0 ? 2 : 1);
+  score += pts;
+  balls += 2;                                     // a hit buys more throws
+  say(doubleEv>0 || shrinkEv>0 ? `命中！ +${pts}` : '命中！');
+  SFX.knock();
+  flash('#ffcb3b', .45, 380);
+  shake = Math.max(shake, .35);
+  // knock the coconut off its cup — it tumbles out of frame
+  nut.fall = {vx:(Math.random()-.5)*3 + (shot ? shot.vx*.25 : 0), vy:3.4, vz:-6, rx:0, rz:0};
+  updateHUD();
+}
+function endShot(hit){
+  shot = null; ball.visible = false;
+  nutReady = false;          // no live target until the next one is placed
+  if(!hit){ SFX.miss(); }
+  // the next coconut arrives after a beat, with a fresh wind
+  setTimeout(()=>{
+    if(!running || dead) return;
+    placeCoconut();
+    if(balls <= 0){ dead = true; gameOver(); }
+  }, hit ? 700 : 420);
+}
+
+// ---------- loop ----------
+const clock = new THREE.Clock();
+function tick(){
+  requestAnimationFrame(tick);
+  const raw = Math.min(clock.getDelta(), .05);
+  const dt = raw * timeScale;
+
+  if(SHOWCASE){
+    if(showcase.group){
+      showcase.tt += raw;
+      if(showcase.rock)   // swing back and forth so the face always shows
+        showcase.group.rotation.y = showcase.yaw +
+          Math.sin(showcase.tt*showcase.spin)*showcase.rock;
+      else showcase.group.rotation.y += raw*showcase.spin;
+    }
+    camera.lookAt(0, 0, 0);        // subject is offset, camera stays on axis
+    renderer.render(scene, camera);
+    return;
+  }
+
+  if(running && !dead){
+    t += dt;
+    score += dt * 4;                              // a slow trickle while alive
+    if(resultMsg > 0){ resultMsg -= dt; if(resultMsg <= 0) msgEl.textContent=''; }
+    updateHUD();
+    if(!SILENT) SND.setPace(1 + Math.min(1.1, t*.012 + hits*.04));
+    if(AUTO) autoPilot(dt);
+
+    // --- events ---
+    if(t > nextEventAt && !NOEV) triggerEvent();
+    if(gustEv>0) gustEv -= dt;
+    if(doubleEv>0) doubleEv -= dt;
+    if(shrinkEv>0){
+      shrinkEv -= dt;
+      const s = shrinkEv>0 ? .55 : 1;
+      coconut.scale.lerp(new THREE.Vector3(s,s,s), Math.min(1,dt*5));
+    } else {
+      coconut.scale.lerp(new THREE.Vector3(1,1,1), Math.min(1,dt*4));
+    }
+
+    // 海霧: the stall fades into the fog and comes back
+    if(fogEv>0){
+      fogEv -= dt;
+      const k = fogEv > .6 ? 1 : fogEv/.6;        // lift at the end
+      scene.fog.near = 34 - 26*k;
+      scene.fog.far  = 86 - 58*k;
+      scene.fog.color.copy(SKY).lerp(new THREE.Color(0x6a6f88), k*.8);
+      scene.background.copy(scene.fog.color);
+      hemi.intensity = 2.1 + k*.9;
+      if(fogEv<=0){
+        scene.fog.near=34; scene.fog.far=86; scene.fog.color.copy(SKY);
+        scene.background.copy(SKY); hemi.intensity=2.1;
+      }
+    }
+
+    // --- wind eases toward its rolled value, so the flag has time to swing ---
+    wind += (windTarget - wind) * Math.min(1, dt*3);
+    // 突風 shoves the wind around mid-flight instead of holding steady
+    if(gustEv>0) wind += Math.sin(t*3.1)*dt*9;
+    // flag reads the wind: it leans downwind and stretches with strength
+    const wn = THREE.MathUtils.clamp(wind/9, -1, 1);
+    flag.rotation.y = Math.PI/2;                   // face the camera edge-on…
+    flag.scale.x = Math.abs(wn)*.9 + .25;
+    flag.position.x = -7.4 + Math.sign(wn || 1) * (1.2 * flag.scale.x);
+    flag.rotation.z = -wn*.45 + Math.sin(t*9)*.06*Math.abs(wn);
+    flag.rotation.y = 0;
+    flagMat.color.setHSL(.45 - Math.abs(wn)*.42, .8, .55);
+
+    // --- pacing: while idle he walks the line, and that is the aim ---
+    if(!charging && !shot){
+      standX += standDir * dt * 5.2;
+      if(standX >  STAND_LIMIT){ standX =  STAND_LIMIT; standDir = -1; }
+      if(standX < -STAND_LIMIT){ standX = -STAND_LIMIT; standDir =  1; }
+    }
+    thrower.group.position.x = standX;
+    thrower.group.rotation.y = charging || shot ? 0 : standDir*.12;
+    // the meter travels with him so both readings sit in one glance
+    meterBack.position.x = standX + 1.35;
+    meterFill.position.x = standX + 1.35;
+    meterGood.position.x = standX + 1.35;
+
+    // --- charge meter: runs up, then back down, while the button is held ---
+    if(charging){
+      // .62/s: the .13-wide hit band is ~210ms of travel, which a finger on a
+      // phone can actually catch, while still demanding a deliberate release.
+      power += chargeDir * dt * .62;
+      if(power >= 1){ power = 1; chargeDir = -1; }
+      if(power <= 0){ power = 0; chargeDir = 1; }
+    }
+    meterFill.scale.y = Math.max(.001, power);
+    meterFill.position.y = .3 + 2.0*power;         // grow upward from the base
+    // the yellow band marks the power that arrives at cup height
+    meterGood.position.y = .3 + 4.0*GOOD_POWER - .1;
+    // green inside the window, red once the throw would sail over
+    meterFill.material.color.setHSL(
+      Math.max(0, .42 - Math.abs(power-GOOD_POWER)*2.4), .85, .55);
+    // arm eases back after the throw
+    thrower.arm.rotation.x += (0 - thrower.arm.rotation.x)*Math.min(1, dt*5);
+    // lean into the charge
+    thrower.group.rotation.x = -power*.18;
+
+    // --- ball flight ---
+    if(shot){
+      shot.life += dt;
+      shot.vy -= GRAV*dt;
+      shot.vx += wind*dt;                          // the wind is the whole game
+      shot.x += shot.vx*dt; shot.y += shot.vy*dt; shot.z += shot.vz*dt;
+      ball.position.set(shot.x, shot.y, shot.z);
+      ball.rotation.x += dt*11; ball.rotation.z += dt*7;
+
+      // gull: a ball that clips it is simply gone
+      if(gullState.on && Math.abs(shot.z - gullState.z) < 1.0 &&
+         Math.abs(shot.x - gullState.x) < 1.2 && Math.abs(shot.y - gullState.y) < .9){
+        say('カモメに取られた');
+        flash('#ff5a2e', .35, 320);
+        shake = Math.max(shake, .25);
+        endShot(false);
+      }
+      // reached the stall plane?
+      else if(shot && shot.z <= STALL_Z + .5){
+        const r = (shrinkEv>0 ? .5 : .95) + .34;   // coconut radius + ball radius
+        const hit = Math.abs(shot.x - nut.x) < r &&
+                    Math.abs(shot.y - nut.y) < r + .3 && !nut.fall;
+        if(hit) scoreHit(); else say('はずれ');
+        endShot(hit);
+      }
+      // fell short, or sailed off the side
+      else if(shot && (shot.y < .3 || Math.abs(shot.x) > 22)){
+        say(shot.y < .3 ? '届かない' : '風に流された');
+        endShot(false);
+      }
+    }
+
+    // --- the knocked-off coconut tumbles away ---
+    if(nut.fall){
+      const f = nut.fall;
+      f.vy -= GRAV*dt;
+      nut.x += f.vx*dt; nut.y += f.vy*dt; nut.z += f.vz*dt;
+      coconut.position.set(nut.x, nut.y, nut.z);
+      coconut.rotation.x += dt*6; coconut.rotation.z += dt*4;
+      if(nut.y < -6) coconut.visible = false;
+    } else {
+      // an idle coconut rocks a little, so the stall never looks frozen
+      coconut.position.y = nut.y + Math.sin(t*2.2)*.05;
+      coconut.rotation.y += dt*.5;
+    }
+
+    // --- gull patrol ---
+    if(gullState.on){
+      gullState.x += gullState.dir * gullState.speed * dt;
+      gull.group.position.set(gullState.x, gullState.y + Math.sin(t*3)*.35, gullState.z);
+      gull.group.rotation.y = gullState.dir > 0 ? 0 : Math.PI;
+      const flap = Math.sin(t*13)*.55;
+      gull.wings[0].rotation.x = -.42 + flap;
+      gull.wings[1].rotation.x =  .42 - flap;
+      if(Math.abs(gullState.x) > 14){               // turn around at the edges
+        gullState.dir *= -1;
+      }
+    }
+
+    // out of balls with nothing in the air ends the run
+    if(balls <= 0 && !shot && !nut.fall) { dead = true; gameOver(); }
+  }
+
+  // --- death sequence: slow-mo unwinds, camera pushes in ---
+  if(dead){
+    timeScale += (0 - timeScale)*Math.min(1, raw*1.1);   // ease down to a near-freeze
+    // he slumps rather than falls away — the push-in is framed on him
+    thrower.group.rotation.z = Math.min(.9, thrower.group.rotation.z + raw*1.4);
+    thrower.group.position.y = Math.max(-.45, thrower.group.position.y - raw*.4);
+  }
+
+  // --- camera (runs even while dead, so the push-in and shake still play) ---
+  camPush += (camPushTarget - camPush)*Math.min(1, raw*2.2);
+  // Follow the thrower loosely — he ranges wider than the stall, so a locked
+  // camera would walk him out of frame, but tracking him 1:1 would hide the
+  // fact that he is moving at all.
+  const px = THREE.MathUtils.clamp(standX*.42 + nut.x*.12, -5.5, 5.5);
+  camera.position.x += (px - camera.position.x)*Math.min(1, raw*2.5);
+  const dolly = camDolly();
+  camera.position.y = 7.4 + dolly*.28 - camPush*2.2;
+  camera.position.z = 16 + dolly - camPush*8.5;
+  if(shake>0){
+    shake = Math.max(0, shake - raw*.9);
+    camera.position.x += (Math.random()-.5)*shake;
+    camera.position.y += (Math.random()-.5)*shake;
+  }
+  camera.lookAt(nut.x*.25 + standX*.12, 3.2 - camPush*.7, STALL_Z + camPush*6);
+
+  renderer.render(scene, camera);
+}
+
+function gameOver(hitBy){
+  running=false; deadAt=Date.now();
+  if(!SILENT){ SND.hit(); SND.duck(1.6); setTimeout(()=>SND.over(), 700); }
+  // hit feedback: red flash, red vignette, hard shake, camera punches in
+  flash('#ff2b3a', .8, 500);
+  vignetteEl.style.transition='opacity .5s'; vignetteEl.style.opacity=1;
+  shake = .9;
+  camPushTarget = 1;
+  const finalScore = Math.floor(score);
+  koScoreEl.textContent = finalScore;
+  msgEl.textContent = '';
+  setTimeout(()=>{ koEl.classList.add('on'); }, 620);   // K.O. lands after the slow-mo
+  if(AUTO){ setTimeout(()=>{ reset(); running=true;
+                             if(!SILENT) SND.unduck(); }, RETRY_MS); }
+  else setTimeout(()=>{
+    msgEl.textContent = matchMedia('(pointer:coarse)').matches
+      ? 'タップでもう一度' : 'スペースでもう一度';
+  }, 1800);
+}
+tick();
+
+// --- ルール説明 (?) : 録画中は出さない ---
+(function(){
+  const btn = document.getElementById('helpBtn');
+  const panel = document.getElementById('help');
+  if(!btn || !panel) return;
+  if(NOCHROME){                      // 録画・showcase では画面から消す
+    btn.style.display = 'none';
+    const back = document.getElementById('back');
+    if(back) back.style.display = 'none';
+    return;
+  }
+  const open = () => { panel.classList.add('on'); };
+  const close = () => { panel.classList.remove('on'); };
+  btn.addEventListener('click', open);
+  btn.addEventListener('touchend', e => { e.preventDefault(); open(); }, {passive:false});
+  panel.addEventListener('click', e => { if(e.target === panel) close(); });
+  panel.querySelector('.close').addEventListener('click', close);
+  panel.querySelector('.close').addEventListener('touchend',
+    e => { e.preventDefault(); close(); }, {passive:false});
+  addEventListener('keydown', e => {
+    if(e.code === 'Escape') close();
+    else if(e.key === '?' || (e.code === 'Slash' && e.shiftKey)) open();
+  });
+})();
+</script>
+</body>
+</html>
