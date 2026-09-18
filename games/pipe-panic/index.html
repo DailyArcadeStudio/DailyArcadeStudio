@@ -1,0 +1,1569 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>パイプ・パニック</title>
+<style>
+  html,body{margin:0;padding:0;overflow:hidden;background:#070b10;font-family:'Hiragino Kaku Gothic ProN','Helvetica Neue',Arial,sans-serif;}
+  #ui{position:fixed;top:16px;left:0;right:0;text-align:center;color:#fff;z-index:10;pointer-events:none;}
+  #score{font-size:clamp(24px,5.6vw,34px);font-weight:800;text-shadow:0 2px 8px #000;}
+  #msg{font-size:clamp(13px,3.4vw,19px);margin-top:6px;opacity:.9;text-shadow:0 2px 6px #000;}
+
+  /* --- タンクの水位計: 画面下に横長のバー --- */
+  #tankWrap{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));
+    width:min(78vw,460px);z-index:11;pointer-events:none;color:#fff;text-align:center;}
+  #tankLabel{font-size:clamp(11px,3vw,14px);letter-spacing:.14em;opacity:.8;margin-bottom:5px;
+    text-shadow:0 2px 6px #000;}
+  #tankBar{height:clamp(14px,3.6vw,20px);border:2px solid #2f4a63;border-radius:999px;
+    background:rgba(8,14,22,.8);overflow:hidden;}
+  #tankFill{height:100%;width:0%;border-radius:999px;
+    background:linear-gradient(90deg,#3bd6ff,#1e8fd6);transition:width .16s linear;}
+  #tankWrap.warn #tankFill{background:linear-gradient(90deg,#ffb03b,#ff5a3b);}
+  #tankWrap.warn #tankBar{border-color:#ff7a3b;animation:pulseBar .5s infinite alternate;}
+  @keyframes pulseBar{from{box-shadow:0 0 0 rgba(255,90,59,0);}to{box-shadow:0 0 18px rgba(255,90,59,.8);}}
+
+  #title{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:rgba(4,8,14,.76);z-index:20;color:#fff;transition:opacity .4s;padding:0 16px;box-sizing:border-box;}
+  #title h1{font-size:clamp(28px,8.2vw,56px);margin:0 0 8px;letter-spacing:2px;text-shadow:0 4px 18px #3bd6ff;text-align:center;}
+  #title p{font-size:clamp(12px,3.3vw,19px);opacity:.85;margin:4px 0;text-align:center;line-height:1.6;}
+  #title .btn{margin-top:26px;padding:14px 44px;font-size:clamp(18px,4.6vw,22px);font-weight:700;color:#03202b;
+    background:linear-gradient(180deg,#5ee7f7,#12a5c4);border:none;border-radius:12px;cursor:pointer;
+    box-shadow:0 6px 24px rgba(59,214,255,.5);}
+  #title .btn:hover{transform:scale(1.05);}
+  .hidden{opacity:0;pointer-events:none;}
+  #back{position:fixed;top:14px;left:14px;z-index:30;text-decoration:none;
+    background:rgba(12,18,28,.72);color:#fff;font:600 clamp(12px,3.2vw,15px)/1 'Hiragino Kaku Gothic ProN',Arial,sans-serif;
+    padding:0 14px;height:44px;display:flex;align-items:center;border-radius:12px;white-space:nowrap;}
+  #back:hover{background:rgba(30,42,60,.9);}
+  #mute{position:fixed;top:14px;right:14px;z-index:30;border:none;cursor:pointer;
+    background:rgba(12,18,28,.72);color:#fff;font-size:20px;line-height:1;
+    width:44px;height:44px;border-radius:12px;}
+  #mute:hover{background:rgba(30,42,60,.9);}
+  /* 端末に合う説明だけ出す */
+  .tc{display:none;}
+  @media (pointer:coarse){ .kb{display:none;} .tc{display:block;} }
+  @media (pointer:coarse){ #title .btn{padding:18px 48px;} }
+
+  /* --- イベントのバナー: 画面中央に叩きつける --- */
+  #banner{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    z-index:15;pointer-events:none;opacity:0;}
+  #banner .b{font-size:clamp(24px,6.6vw,62px);font-weight:900;letter-spacing:.06em;color:#fff;
+    padding:10px 4vw;max-width:94vw;text-align:center;transform:scale(2.4);opacity:0;
+    text-shadow:0 0 26px currentColor, 0 6px 20px #000;
+    border-top:5px solid currentColor;border-bottom:5px solid currentColor;}
+  #banner.go .b{animation:slam .62s cubic-bezier(.12,.85,.2,1) forwards;}
+  @keyframes slam{
+    0%  {transform:scale(2.4) rotate(-4deg);opacity:0;}
+    22% {transform:scale(1)   rotate(0deg); opacity:1;}
+    70% {transform:scale(1)   rotate(0deg); opacity:1;}
+    100%{transform:scale(1.12);opacity:0;}
+  }
+
+  /* --- 全画面フラッシュ --- */
+  #flash{position:fixed;inset:0;z-index:14;pointer-events:none;opacity:0;background:#fff;}
+  #vignette{position:fixed;inset:0;z-index:13;pointer-events:none;opacity:0;
+    background:radial-gradient(ellipse at center,rgba(0,0,0,0) 32%,rgba(120,0,10,.85) 100%);}
+
+  /* --- K.O. 画面 --- */
+  #ko{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    z-index:22;pointer-events:none;opacity:0;color:#fff;transition:opacity .3s;}
+  #ko.on{opacity:1;}
+  #ko .koText{font-size:clamp(86px,24vw,180px);font-weight:900;letter-spacing:10px;color:#fff;
+    text-shadow:0 0 40px #ff3b4a,0 0 90px #ff3b4a,0 10px 30px #000;
+    transform:scale(3);opacity:0;}
+  #ko.on .koText{animation:koSlam .8s cubic-bezier(.1,.9,.2,1) forwards;}
+  @keyframes koSlam{
+    0%  {transform:scale(3) rotate(-8deg);opacity:0;}
+    30% {transform:scale(1) rotate(0deg);opacity:1;}
+    36% {transform:scale(1.06);}
+    100%{transform:scale(1);opacity:1;}
+  }
+  #ko .finalLabel{font-size:clamp(14px,3.8vw,21px);letter-spacing:4px;opacity:0;margin-top:6px;text-shadow:0 2px 8px #000;}
+  #ko .finalScore{font-size:clamp(46px,13vw,78px);font-weight:800;opacity:0;text-shadow:0 4px 20px #000;}
+  #ko.on .finalLabel{animation:fadeUp .5s .75s forwards;}
+  #ko.on .finalScore{animation:fadeUp .5s .9s forwards;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+
+  /* --- あそびかた (?) --- */
+  #helpBtn{position:fixed;top:14px;right:66px;z-index:30;border:none;cursor:pointer;
+    background:rgba(12,18,28,.72);color:#fff;font:700 20px/1 'Helvetica Neue',Arial,sans-serif;
+    width:44px;height:44px;border-radius:12px;}
+  #helpBtn:hover{background:rgba(30,42,60,.9);}
+  #help{position:fixed;inset:0;z-index:40;display:none;align-items:center;
+    justify-content:center;background:rgba(3,6,12,.88);padding:20px;}
+  #help.on{display:flex;}
+  #help .box{background:#0c1622;border:1px solid #21405a;border-radius:18px;
+    max-width:560px;width:100%;max-height:86vh;overflow:auto;padding:24px 24px 20px;
+    color:#e6edf3;box-sizing:border-box;}
+  #help h2{margin:0 0 4px;font-size:clamp(19px,5vw,26px);}
+  #help .sub{color:#8b949e;font-size:clamp(12px,3.2vw,14px);margin:0 0 18px;}
+  #help h3{font-size:clamp(13px,3.4vw,15px);color:#5ee7f7;margin:18px 0 6px;letter-spacing:.04em;}
+  #help ul{margin:0;padding-left:20px;}
+  #help li{font-size:clamp(13px,3.4vw,15px);line-height:1.7;margin:3px 0;}
+  #help b{color:#5ee7f7;font-weight:700;}
+  #help .close{margin-top:20px;width:100%;padding:12px;border:none;border-radius:10px;
+    background:#21405a;color:#fff;font-size:16px;font-weight:700;cursor:pointer;}
+  #help .close:hover{background:#2e5878;}
+</style>
+</head>
+<body>
+<div id="ui"><div id="score">0</div><div id="msg"></div></div>
+<div id="tankWrap"><div id="tankLabel">タンク水位</div><div id="tankBar"><div id="tankFill"></div></div></div>
+<button id="helpBtn" title="あそびかた">?</button>
+<div id="help"><div class="box">
+  <h2>パイプ・パニック</h2>
+  <p class="sub">水が来る前にパイプを回して、道をつなぐ。ブラウザで無料。</p>
+    <h3>やること</h3>
+    <ul>
+      <li>マスを<b>タップ（クリック）すると90度回ります</b>。操作はこれだけ</li>
+      <li>左の<b>給水口</b>から水が入り、つながったパイプを一マスずつ進みます</li>
+      <li>右の<b>排水口</b>まで届けば一本ぶん成功。次の盤面が始まります</li>
+    </ul>
+    <h3>タンク</h3>
+    <ul>
+      <li>画面下のバーがタンクの水位です</li>
+      <li>水がつながっていない先へ進むと<b>あふれて一気に増えます</b></li>
+      <li>満タンになったら終わり。排水に成功すると<b>少し減ります</b></li>
+    </ul>
+    <h3>パイプの種類</h3>
+    <ul>
+      <li><b>直管</b>: まっすぐ通します。回すと縦横が入れ替わります</li>
+      <li><b>曲管</b>: 90度曲げます。回すたびに向きが変わります</li>
+      <li><b>十字管</b>: 四方どこへでも通します。回しても同じ</li>
+      <li><b>錆びた管</b>: 赤い管。水が通ると<b>そのまま漏れます</b>。避けて通してください</li>
+    </ul>
+    <h3>起きること</h3>
+    <ul>
+      <li><b>水圧上昇</b>: 水の進みがしばらく速くなります</li>
+      <li><b>停電</b>: 明かりが落ちて、盤面がほとんど見えません</li>
+      <li><b>錆の進行</b>: いくつかの管が錆びた管に変わります</li>
+      <li><b>バルブ故障</b>: 手前の管が勝手に回りだします</li>
+      <li><b>逆流</b>: タンクの水位が一気に跳ね上がります</li>
+    </ul>
+  <button class="close">とじる</button>
+</div></div>
+<a id="back" href="../../" title="ゲーム一覧へ">‹ ゲーム一覧</a>
+<button id="mute" title="音のオン・オフ">🔊</button>
+<div id="vignette"></div>
+<div id="flash"></div>
+<div id="banner"><div class="b"></div></div>
+<div id="ko">
+  <div class="koText">K.O.</div>
+  <div class="finalLabel">最終スコア</div>
+  <div class="finalScore">0</div>
+</div>
+<div id="title">
+  <h1>パイプ・パニック</h1>
+  <p>水が来る前に、パイプを回してつなぐ。</p>
+  <p class="kb">クリック : そのマスを回す &nbsp;&nbsp; ← → ↑ ↓ : 選ぶ / スペース : 回す</p>
+  <p class="tc">回したいマスを<b>タップ</b>するだけ</p>
+  <button class="btn" id="startBtn">スタート</button>
+</div>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+// ---------- url flags (declared first: sound and camera both read them) ----------
+const QS = new URLSearchParams(location.search);
+const AUTO = QS.get('auto')==='1';
+const SHOWCASE_Q = QS.get('showcase');
+// Recording must produce clean footage, so every automated mode is muted.
+const REC = QS.get('rec')==='1';   // 録音モード: 音を鳴らして拾う
+const SILENT = (AUTO || !!SHOWCASE_Q || QS.get('mute')==='1') && !REC;
+// 録画・showcase では「?」と「ゲーム一覧」を出さない（動画の邪魔になる）
+const NOCHROME = AUTO || !!SHOWCASE_Q || QS.get('nochrome')==='1';
+
+// ---------- renderer / scene ----------
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.shadowMap.enabled = true;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const SKY = new THREE.Color(0x0a121c);
+scene.background = SKY.clone();
+scene.fog = new THREE.Fog(0x0a121c, 26, 62);
+
+const camera = new THREE.PerspectiveCamera(50, innerWidth/innerHeight, .1, 200);
+
+// ---------- 盤面の寸法 ----------
+const COLS = 5, ROWS = 4;      // 横5 × 縦4 のマス
+const CELL = 2.6;              // 1マスの一辺
+// 盤の中心が原点になるよう、マス座標 → ワールド座標
+const gx = c => (c - (COLS-1)/2) * CELL;
+const gz = r => (r - (ROWS-1)/2) * CELL;
+const BOARD_W = COLS*CELL, BOARD_H = ROWS*CELL;
+
+// Portrait and landscape both have to work. 縦持ちの画面は 16:9 よりずっと
+// 細いので、FOV を固定すると盤面が枠からはみ出す。縦長になるほど
+// 垂直 FOV を広げて、盤の横幅が常に収まるようにする。
+const BASE_FOV = 50;
+function fitCamera(){
+  const aspect = innerWidth / innerHeight;
+  camera.aspect = aspect;
+  if(typeof SHOWCASE !== 'undefined' && SHOWCASE){
+    camera.fov = aspect < 1 ? 62 : 46;
+  } else {
+    const ref = 16/9;
+    camera.fov = aspect >= ref ? BASE_FOV
+      : Math.min(96, THREE.MathUtils.radToDeg(
+          2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(BASE_FOV)/2) * (ref/aspect))));
+  }
+  camera.__base = camera.fov;    // 水圧上昇の寄りはここへ戻る
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+}
+addEventListener('resize', fitCamera);
+addEventListener('orientationchange', ()=>setTimeout(fitCamera, 120));
+
+// ---------- lights ----------
+const hemi = new THREE.HemisphereLight(0x88b8ff, 0x1a2230, 1.3);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xfff0dd, 2.2);
+sun.position.set(7, 16, 8); sun.castShadow = true;
+sun.shadow.camera.left=-16; sun.shadow.camera.right=16;
+sun.shadow.camera.top=16; sun.shadow.camera.bottom=-16;
+scene.add(sun);
+// 盤の上の作業灯。停電で落ちる。
+const workLight = new THREE.PointLight(0x9fe8ff, 60, 34);
+workLight.position.set(0, 9, 4);
+scene.add(workLight);
+
+// ---------- 床（機械室の鉄板）----------
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(90, 90),
+  new THREE.MeshStandardMaterial({color:0x141c28, roughness:.95}));
+floor.rotation.x = -Math.PI/2; floor.position.y = -1.2; floor.receiveShadow = true;
+scene.add(floor);
+
+// 盤の下敷き。マスの並びが読めるよう、少しだけ明るい板を敷く。
+const deck = new THREE.Mesh(
+  new THREE.BoxGeometry(BOARD_W + 1.4, .5, BOARD_H + 1.4),
+  new THREE.MeshStandardMaterial({color:0x1d2838, roughness:.85, metalness:.15}));
+deck.position.y = -.5; deck.receiveShadow = true;
+scene.add(deck);
+
+// ---------- 材質 ----------
+const MAT = {
+  pipe:  new THREE.MeshStandardMaterial({color:0x8fa4bb, metalness:.75, roughness:.35}),
+  rust:  new THREE.MeshStandardMaterial({color:0xb4552e, metalness:.25, roughness:.85,
+                                         emissive:0x2a0c04}),
+  tile:  new THREE.MeshStandardMaterial({color:0x223145, roughness:.8, metalness:.2}),
+  water: new THREE.MeshStandardMaterial({color:0x3bd6ff, emissive:0x1183b8,
+                                         emissiveIntensity:1.5, roughness:.25}),
+  src:   new THREE.MeshStandardMaterial({color:0x2fe08a, metalness:.5, roughness:.4,
+                                         emissive:0x0d4a2c}),
+  drain: new THREE.MeshStandardMaterial({color:0xffc63b, metalness:.5, roughness:.4,
+                                         emissive:0x4a3200}),
+  glow:  new THREE.MeshBasicMaterial({color:0x5ee7f7, transparent:true, opacity:.55}),
+};
+
+// ---------- パイプのマス ----------
+// 各マスは「どの辺に口が開いているか」を 4bit で持つ。
+// bit 0=北(-z) 1=東(+x) 2=南(+z) 3=西(-x)
+const N=1, E=2, S=4, W=8;
+const KIND = {
+  straight: N|S,     // 直管（回すと横向き）
+  elbow:    N|E,     // 曲管
+  cross:    N|E|S|W, // 十字管
+};
+// マスの口を時計回りに1つぶん回す
+const rotMask = m => ((m << 1) | (m >> 3)) & 15;
+
+// 見た目のパイプを組む。管そのものは「中心から各辺へ伸びる腕」の集合。
+// 腕を個別に作るので、どんな mask でも同じ手順で組める。
+const ARM_LEN = CELL*0.5;
+const R_OUT = .40, R_IN = .26;   // 外径 / 内側の水の半径
+function buildPipe(mask, rusty){
+  const g = new THREE.Group();
+  const mat = rusty ? MAT.rust : MAT.pipe;
+  // 中心のジョイント
+  const hub = new THREE.Mesh(new THREE.SphereGeometry(R_OUT, 18, 14), mat);
+  g.add(hub);
+  const arms = [];
+  // 方位ごとの向き: [bit, 回転軸の向き]
+  const DIRS = [
+    [N, 0, -1], [E, 1, 0], [S, 0, 1], [W, -1, 0],
+  ];
+  for(const [bit, dx, dz] of DIRS){
+    if(!(mask & bit)) continue;
+    const arm = new THREE.Mesh(new THREE.CylinderGeometry(R_OUT, R_OUT, ARM_LEN, 16), mat);
+    // 円柱は既定で Y 軸。腕の向きへ倒してから半分ぶん押し出す。
+    if(dx !== 0){ arm.rotation.z = Math.PI/2; arm.position.x = dx*ARM_LEN/2; }
+    else        { arm.rotation.x = Math.PI/2; arm.position.z = dz*ARM_LEN/2; }
+    g.add(arm); arms.push(arm);
+    // 端のフランジ（隣の管とのつなぎ目が見えるように）
+    const fl = new THREE.Mesh(new THREE.CylinderGeometry(R_OUT*1.28, R_OUT*1.28, .1, 16), mat);
+    fl.rotation.copy(arm.rotation);
+    fl.position.set(dx*ARM_LEN*.96, 0, dz*ARM_LEN*.96);
+    g.add(fl);
+  }
+  g.traverse(o=>{ if(o.isMesh){ o.castShadow = true; o.receiveShadow = true; } });
+  return g;
+}
+
+// 管の中を満たす水。腕と同じ形の細い芯を作り、scale で伸ばして満ちていく。
+function buildFill(mask){
+  const g = new THREE.Group();
+  const hub = new THREE.Mesh(new THREE.SphereGeometry(R_IN, 14, 12), MAT.water);
+  hub.visible = false; g.add(hub);
+  const parts = {hub, arms:{}};
+  const DIRS = [[N,0,-1],[E,1,0],[S,0,1],[W,-1,0]];
+  for(const [bit, dx, dz] of DIRS){
+    if(!(mask & bit)) continue;
+    const a = new THREE.Mesh(new THREE.CylinderGeometry(R_IN, R_IN, ARM_LEN, 12), MAT.water);
+    // pivot を中心側に置きたいので、ジオメトリ自体をずらしておく。
+    // こうすると scale.y が「中心からどこまで満ちたか」になる。
+    a.geometry.translate(0, ARM_LEN/2, 0);
+    if(dx !== 0) a.rotation.z = dx > 0 ? -Math.PI/2 : Math.PI/2;
+    else         a.rotation.x = dz > 0 ?  Math.PI/2 : -Math.PI/2;
+    a.scale.y = 0.001; a.visible = false;
+    g.add(a); parts.arms[bit] = a;
+  }
+  return {group:g, parts};
+}
+
+// ---------- 盤面の状態 ----------
+// cells[r][c] = {mask, rusty, group, pipe, fill, spin, filled, inDir}
+let cells = [];
+const boardRoot = new THREE.Group();
+scene.add(boardRoot);
+
+function makeCell(r, c){
+  const group = new THREE.Group();
+  group.position.set(gx(c), 0, gz(r));
+  // マスの台。どこがタップできるのかを示す。
+  const tile = new THREE.Mesh(new THREE.BoxGeometry(CELL*.92, .22, CELL*.92), MAT.tile.clone());
+  tile.position.y = -.42; tile.receiveShadow = true;
+  group.add(tile);
+  boardRoot.add(group);
+  return {r, c, mask:0, rusty:false, group, tile,
+          pipe:null, fill:null, spin:0, spinFrom:0,
+          filled:false, fillT:0, inDir:0, outDirs:[], leaked:false};
+}
+
+function setCellPipe(cell, mask, rusty){
+  if(cell.pipe) cell.group.remove(cell.pipe);
+  if(cell.fill) cell.group.remove(cell.fill.group);
+  cell.mask = mask; cell.rusty = !!rusty;
+  cell.pipe = buildPipe(mask, cell.rusty);
+  cell.group.add(cell.pipe);
+  cell.fill = buildFill(mask);
+  cell.group.add(cell.fill.group);
+  cell.filled = false; cell.fillT = 0; cell.inDir = 0; cell.outDirs = [];
+  cell.leaked = false;
+  cell.spin = 0; cell.spinFrom = 0;
+  cell.pipe.rotation.y = 0;
+  cell.tile.material.emissive = new THREE.Color(0x000000);
+}
+
+// ---------- 給水口 / 排水口 ----------
+// 給水口は盤の左外、排水口は右外。どちらもワールドに直接置く。
+let srcRow = 0, drainRow = 0;
+const source = (()=>{
+  const g = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(.58,.58,1.5,18), MAT.src);
+  body.rotation.z = Math.PI/2; g.add(body);
+  const cap = new THREE.Mesh(new THREE.CylinderGeometry(.78,.78,.24,18), MAT.src);
+  cap.rotation.z = Math.PI/2; cap.position.x = .7; g.add(cap);
+  // ハンドル（バルブらしさ）
+  const wheel = new THREE.Mesh(new THREE.TorusGeometry(.5,.09,10,22), MAT.src);
+  wheel.position.set(-.5,.55,0); wheel.rotation.y = Math.PI/2; g.add(wheel);
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  scene.add(g);
+  return {group:g, wheel};
+})();
+const drain = (()=>{
+  const g = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(.58,.58,1.5,18), MAT.drain);
+  body.rotation.z = Math.PI/2; g.add(body);
+  const cap = new THREE.Mesh(new THREE.CylinderGeometry(.8,.8,.24,18), MAT.drain);
+  cap.rotation.z = Math.PI/2; cap.position.x = -.7; g.add(cap);
+  // 開口を示す黒い輪
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(.62,.1,10,24), MAT.drain);
+  ring.position.x = .78; ring.rotation.y = Math.PI/2; g.add(ring);
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  scene.add(g);
+  return {group:g, ring};
+})();
+
+// ---------- タンク（あふれると負ける）----------
+const tank = (()=>{
+  const g = new THREE.Group();
+  const shellMat = new THREE.MeshStandardMaterial({color:0x33465e, metalness:.6,
+    roughness:.4, transparent:true, opacity:.34});
+  const shell = new THREE.Mesh(new THREE.CylinderGeometry(1.5,1.5,4.4,22,1,true), shellMat);
+  shell.position.y = 2.2; g.add(shell);
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(1.72,1.72,.4,22),
+    new THREE.MeshStandardMaterial({color:0x2a3a50, metalness:.6, roughness:.45}));
+  base.position.y = .2; g.add(base);
+  // 中の水。scale.y で水位、position.y で底に貼りつける。
+  const waterMat = new THREE.MeshStandardMaterial({color:0x2fa8e0, emissive:0x0a4a6c,
+    emissiveIntensity:1.0, roughness:.2, transparent:true, opacity:.9});
+  const water = new THREE.Mesh(new THREE.CylinderGeometry(1.42,1.42,1,20), waterMat);
+  water.position.y = .4; water.scale.y = .001; g.add(water);
+  // 上の縁。あふれる位置が分かるように光らせる。
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(1.5,.12,10,26),
+    new THREE.MeshStandardMaterial({color:0x6f8aa8, metalness:.7, roughness:.3}));
+  rim.position.y = 4.4; rim.rotation.x = Math.PI/2; g.add(rim);
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  scene.add(g);
+  return {group:g, water, waterMat, rim, shell};
+})();
+
+// ---------- 漏れた水のしぶき ----------
+const splashPool = [];
+for(let i=0;i<70;i++){
+  const m = new THREE.Mesh(new THREE.SphereGeometry(.13, 8, 6),
+    new THREE.MeshStandardMaterial({color:0x5ee7f7, emissive:0x1b7fa8,
+                                    emissiveIntensity:1.2, transparent:true}));
+  m.visible = false; scene.add(m);
+  splashPool.push({mesh:m, vx:0, vy:0, vz:0, life:0});
+}
+function splash(x, y, z, n, color){
+  let used = 0;
+  for(const p of splashPool){
+    if(p.life > 0) continue;
+    p.mesh.position.set(x, y, z);
+    p.mesh.material.color.setHex(color || 0x5ee7f7);
+    p.mesh.visible = true;
+    p.vx = (Math.random()-.5)*5; p.vy = 2 + Math.random()*4.5; p.vz = (Math.random()-.5)*5;
+    p.life = .6 + Math.random()*.5;
+    if(++used >= n) break;
+  }
+}
+
+// ---------- 選択カーソル（キーボード操作用）----------
+const cursor = (()=>{
+  const g = new THREE.Group();
+  const mat = new THREE.MeshBasicMaterial({color:0xffe44d, transparent:true, opacity:.9});
+  // 四隅の L 字。マスを囲っても中の管を隠さない。
+  for(const sx of [-1,1]) for(const sz of [-1,1]){
+    const a = new THREE.Mesh(new THREE.BoxGeometry(CELL*.32,.08,.1), mat);
+    a.position.set(sx*CELL*.30, .0, sz*CELL*.46);
+    const b = new THREE.Mesh(new THREE.BoxGeometry(.1,.08,CELL*.32), mat);
+    b.position.set(sx*CELL*.46, .0, sz*CELL*.30);
+    g.add(a,b);
+  }
+  g.position.y = -.28;
+  scene.add(g);
+  return g;
+})();
+let curR = 0, curC = 0;
+
+// ---------- ゲーム状態 ----------
+let running=false, dead=false, t=0, score=0;
+let tankLevel = 0;               // 0..1 これが 1 で終わり
+let flowSpeed = 1.0;             // 水が1マス進むのにかかる時間の逆数
+let head = null;                 // いま水が入っているマス {r,c}
+let headT = 0;                   // そのマスの充填進捗 0..1
+let headIn = 0;                  // 水が入ってきた辺（bit）
+let atSource = true;             // まだ給水口から出ていない
+let solved = 0;                  // 通した本数
+let timeScale=1;
+let deadAt=0;
+let shake=0;
+let camPush=0, camPushTarget=0;  // 死亡時の寄り
+let blackout=0;                  // >0 のあいだ消灯
+let surge=0;                     // >0 のあいだ水圧上昇
+let valveT=0;                    // >0 のあいだバルブ故障（勝手に回る）
+let valveCells=[];               // 勝手に回るマス
+let nextEventAt=9;
+let eventQueue=[];
+
+const scoreEl = document.getElementById('score');
+const msgEl = document.getElementById('msg');
+const titleEl = document.getElementById('title');
+const bannerEl = document.getElementById('banner');
+const bannerText = bannerEl.querySelector('.b');
+const flashEl = document.getElementById('flash');
+const vignetteEl = document.getElementById('vignette');
+const koEl = document.getElementById('ko');
+const koScoreEl = koEl.querySelector('.finalScore');
+const tankWrapEl = document.getElementById('tankWrap');
+const tankFillEl = document.getElementById('tankFill');
+
+// ---------- presentation helpers ----------
+function banner(text, color){
+  bannerText.textContent = text;
+  bannerText.style.color = color;
+  bannerEl.classList.remove('go');
+  void bannerEl.offsetWidth;      // CSS アニメーションを撃ち直す
+  bannerEl.style.opacity = 1;
+  bannerEl.classList.add('go');
+}
+function flash(color, strength, ms){
+  flashEl.style.background = color;
+  flashEl.style.transition = 'none';
+  flashEl.style.opacity = strength;
+  requestAnimationFrame(()=>{
+    flashEl.style.transition = `opacity ${ms}ms ease-out`;
+    flashEl.style.opacity = 0;
+  });
+}
+
+// ---------- 盤面の生成 ----------
+// 解ける盤を作る: まず給水口から排水口までの一本道をランダムに引き、
+// その道のマスに「正しい向きの管」を置いてから、わざと回しておく。
+// 道以外のマスには適当な管を撒く。こうすれば必ず解があり、
+// なおかつ最初から通っていることはない。
+function laySolvablePath(){
+  // ランダムウォークで左端 srcRow から右端 drainRow へ。
+  // 列を1つずつ右に進み、その前に同じ列で上下に少し動く。
+  srcRow = Math.floor(Math.random()*ROWS);
+  const path = [];             // {r,c,in,out} in/out はその辺の bit
+  let r = srcRow;
+  path.push({r, c:0, in:W});   // 給水口から西の口へ入る
+  for(let c=0;c<COLS;c++){
+    // この列で上下に動く回数（最終列は素直に抜ける）
+    const wiggle = c===COLS-1 ? 0 : Math.floor(Math.random()*2.6);
+    for(let k=0;k<wiggle;k++){
+      const dir = Math.random()<.5 ? -1 : 1;
+      const nr = r + dir;
+      if(nr<0 || nr>=ROWS) break;
+      if(path.some(p=>p.r===nr && p.c===c)) break;   // 同じマスは踏まない
+      // いまのマスの出口は南北
+      path[path.length-1].out = dir>0 ? S : N;
+      path.push({r:nr, c, in: dir>0 ? N : S});
+      r = nr;
+    }
+    // 右へ抜ける
+    path[path.length-1].out = E;
+    if(c < COLS-1){
+      if(path.some(p=>p.r===r && p.c===c+1)) break;  // 交差したら打ち切り
+      path.push({r, c:c+1, in:W});
+    }
+  }
+  drainRow = r;
+  return path;
+}
+
+function buildBoard(){
+  const path = laySolvablePath();
+  const onPath = new Set(path.map(p=>p.r*COLS+p.c));
+
+  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
+    const cell = cells[r][c];
+    const p = path.find(q=>q.r===r && q.c===c);
+    let mask;
+    let rusty = false;
+    if(p){
+      mask = p.in | (p.out || E);
+      // 十字管をたまに混ぜる（回しても変わらないので一息つける）
+      if(Math.random() < .12) mask = KIND.cross;
+    } else {
+      // 道の外。飾りだが、うまく使えば近道になることもある。
+      const roll = Math.random();
+      mask = roll < .42 ? KIND.straight : roll < .88 ? KIND.elbow : KIND.cross;
+      rusty = Math.random() < .16;    // 錆びた管は道の外にだけ置く
+    }
+    // 向きをランダムに回してから置く。道の上の管も必ず1回は回す。
+    let turns = Math.floor(Math.random()*4);
+    if(p && mask !== KIND.cross && turns === 0) turns = 1 + Math.floor(Math.random()*3);
+    for(let i=0;i<turns;i++) mask = rotMask(mask);
+    setCellPipe(cell, mask, rusty);
+    // 置いた向きに合わせて回転を実際に当てる（見た目と mask を一致させる）
+    cell.pipe.rotation.y = 0;
+  }
+  // 給水口・排水口を盤の外へ寄せる
+  source.group.position.set(gx(0) - CELL*.5 - .85, 0, gz(srcRow));
+  drain.group.position.set(gx(COLS-1) + CELL*.5 + .85, 0, gz(drainRow));
+  // 水の頭を給水口に戻す
+  head = {r:srcRow, c:0}; headT = 0; headIn = W; atSource = true;
+  curR = srcRow; curC = 0;
+  void onPath;   // 生成の意図を残すためだけに作った集合
+}
+
+// ---------- 回す ----------
+function rotateCell(r, c, silent){
+  if(r<0||r>=ROWS||c<0||c>=COLS) return false;
+  const cell = cells[r][c];
+  // すでに水が入ったマスは回せない。ここが判断の要で、
+  // 「水が来る前に回す」という緊張がこの制約から生まれる。
+  if(cell.filled) return false;
+  cell.mask = rotMask(cell.mask);
+  cell.spinFrom = cell.pipe.rotation.y;
+  cell.spin = 1;                         // 見た目の回転アニメを開始
+  // 水の芯も新しい mask で作り直す（腕の本数は変わらないので向きだけ）
+  if(cell.fill) cell.group.remove(cell.fill.group);
+  cell.fill = buildFill(cell.mask);
+  cell.fill.group.rotation.y = -cell.pipe.rotation.y;  // 見た目に追従させる
+  cell.group.add(cell.fill.group);
+  if(!silent && !SILENT) SND.turn();
+  return true;
+}
+
+// ---------- 水の進行 ----------
+const OPP = {[N]:S, [E]:W, [S]:N, [W]:E};
+const STEP = {[N]:[-1,0], [E]:[0,1], [S]:[1,0], [W]:[0,-1]};
+
+// 水の頭がいるマスから、次にどの辺へ抜けるかを決める。
+// 十字管は入ってきた辺以外に3つ口があるので、排水口に近い向きを選ぶ。
+function chooseExit(cell, inDir){
+  const outs = [N,E,S,W].filter(d => (cell.mask & d) && d !== inDir);
+  if(!outs.length) return 0;
+  if(outs.length === 1) return outs[0];
+  // 排水口へ向かう順に優先（東 → 排水口の行へ寄る向き → 西）
+  const want = [];
+  want.push(E);
+  want.push(cell.r < drainRow ? S : N);
+  want.push(cell.r < drainRow ? N : S);
+  want.push(W);
+  for(const d of want) if(outs.includes(d)) return d;
+  return outs[0];
+}
+
+// タンクに水を足す。1.0 を超えたら終わり。
+function addTank(amount){
+  tankLevel = Math.min(1.2, tankLevel + amount);
+  if(tankLevel >= 1 && running && !dead){ dead = true; gameOver(); }
+}
+
+// 水が行き止まりに当たった / 錆びた管に入った → 漏れる
+function leak(cell, worldY){
+  if(cell) cell.leaked = true;
+  const wx = cell ? gx(cell.c) : 0, wz = cell ? gz(cell.r) : 0;
+  splash(wx, worldY==null ? .3 : worldY, wz, 12, 0x5ee7f7);
+  flash('#3bd6ff', .22, 260);
+  shake = Math.max(shake, .18);
+  addTank(.11);                 // 一回の漏れでタンクが一気に増える
+  if(!SILENT) SND.leak();
+  // 頭を給水口に戻して、次の水を流し直す
+  restartFlow();
+}
+
+// 給水口から流し直す。盤はそのまま（回し直すチャンスを残す）。
+function restartFlow(){
+  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
+    const cell = cells[r][c];
+    cell.filled = false; cell.fillT = 0; cell.inDir = 0;
+    if(cell.fill){
+      cell.fill.parts.hub.visible = false;
+      for(const k in cell.fill.parts.arms){
+        const a = cell.fill.parts.arms[k]; a.visible = false; a.scale.y = .001;
+      }
+    }
+    cell.tile.material.emissive.setHex(0x000000);
+  }
+  head = {r:srcRow, c:0}; headT = 0; headIn = W; atSource = true;
+}
+
+// 排水口まで届いた
+let totalDrained = 0;                 // 走行をまたいだ通算（テストの計測用）
+function drained(){
+  solved++; totalDrained++;
+  score += 100 + Math.max(0, 60 - Math.floor(t - lastSolvedAt)*4);
+  lastSolvedAt = t;
+  // 通すたびにタンクが少し減る。これが唯一の回復手段。
+  tankLevel = Math.max(0, tankLevel - .34);
+  banner('排水成功', '#2fe08a');
+  flash('#2fe08a', .34, 420);
+  splash(drain.group.position.x + 1, .3, drain.group.position.z, 16, 0x2fe08a);
+  if(!SILENT) SND.drain();
+  // 次の盤面。速度も少しだけ上がる。
+  buildBoard();
+}
+let lastSolvedAt = 0;
+
+// ---------- events ----------
+const EVENTS = {
+  // 水の進みが速くなる。考える時間そのものを削る。
+  surge(){
+    banner('水圧上昇', '#5ee7f7');
+    surge = 7;
+    flash('#9ff0ff', .3, 420);
+    shake = Math.max(shake, .2);
+    return 7;
+  },
+  // 明かりが落ちる。盤面がほとんど見えないまま回すことになる。
+  blackout(){
+    banner('停電', '#9b6bff');
+    blackout = 4.2;
+    return 5;
+  },
+  // 何本かの管が錆びる。錆びた管に水が入ると、そのまま漏れる。
+  rust(){
+    banner('錆の進行', '#ff8a3b');
+    const free = [];
+    for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
+      const cell = cells[r][c];
+      if(cell.filled || cell.rusty) continue;
+      // 水の頭のすぐ隣を錆びさせない。目の前で錆びられると、
+      // 錆びた管は回して直せないので、避けようがなくなる。
+      if(head && Math.abs(cell.r-head.r) + Math.abs(cell.c-head.c) <= 1) continue;
+      free.push(cell);
+    }
+    // 3本まで。盤が錆で埋まると道が消えてしまうので上限を低く抑える。
+    for(let i=0;i<3 && free.length;i++){
+      const idx = Math.floor(Math.random()*free.length);
+      const cell = free.splice(idx,1)[0];
+      const keepRot = cell.pipe.rotation.y;
+      setCellPipe(cell, cell.mask, true);
+      cell.pipe.rotation.y = keepRot;
+      cell.fill.group.rotation.y = -keepRot;
+      splash(gx(cell.c), .5, gz(cell.r), 4, 0xb4552e);
+    }
+    shake = Math.max(shake, .18);
+    return 6;
+  },
+  // 手前の列の管が勝手に回る。回した先から狂っていく。
+  valve(){
+    banner('バルブ故障', '#ffd23b');
+    valveT = 8;
+    valveCells = [];
+    // 水の頭より右（まだ来ていない側）から3つ選ぶ。理不尽にしないため。
+    const pool = [];
+    for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
+      const cell = cells[r][c];
+      if(cell.filled) continue;
+      // 錆と同じ理由で、水の頭のすぐ隣は勝手に回さない
+      if(head && Math.abs(cell.r-head.r) + Math.abs(cell.c-head.c) <= 1) continue;
+      pool.push(cell);
+    }
+    for(let i=0;i<3 && pool.length;i++){
+      valveCells.push(pool.splice(Math.floor(Math.random()*pool.length),1)[0]);
+    }
+    return 8;
+  },
+  // タンクの水位が一気に跳ねる。盤ではなく残り時間を削る。
+  backflow(){
+    banner('逆流', '#ff3b4a');
+    addTank(.26);
+    flash('#ff3b4a', .45, 520);
+    shake = Math.max(shake, .45);
+    splash(tank.group.position.x, 4.6, tank.group.position.z, 18, 0x2fa8e0);
+    return 5;
+  },
+};
+const EVENT_NAMES = Object.keys(EVENTS);
+
+// recording/debug hook: 名前を指定してイベントを起こす（撮影スクリプト用）
+// 走行が終わっていたら false を返すので、撮影側は次の回を待てる
+window.__ev = name => {
+  if(!running || dead || !EVENTS[name]) return false;
+  const busy = EVENTS[name]();
+  if(!SILENT) SND.event();
+  nextEventAt = t + busy + 5;
+  return true;
+};
+window.__alive = () => running && !dead;
+window.__kill = () => { if(running && !dead){ dead=true; gameOver(); } };
+window.__recStop = () => SND.recStop();
+window.__snd = () => ({enabled: SND.enabled, silent: SILENT});
+window.__events = EVENT_NAMES.slice();
+window.__probe = () => ({t:+t.toFixed(2), tank:+tankLevel.toFixed(3), solved,
+  head: head ? `${head.r},${head.c}` : null, headT:+headT.toFixed(2),
+  surge:+surge.toFixed(1), blackout:+blackout.toFixed(1),
+  next:+nextEventAt.toFixed(2)});
+window.__fov = () => +camera.fov.toFixed(1);
+window.__total = () => totalDrained;
+// 盤面の口の並びを一本の文字列に。テストで「回ったか」を見るのに使う。
+window.__board = () => cells.map(row => row.map(c => c.mask.toString(16)).join('')).join('/');
+// テスト用: 自動操縦がいま見ている経路と、盤の固まり具合を覗く
+window.__route = () => {
+  const r = findRoute();
+  return {
+    route: r && r.map(n=>`${n.r},${n.c}:${n.in}>${n.out}`),
+    filled: cells.map(row=>row.map(c=>c.filled?1:0).join('')).join('/'),
+    rusty: cells.map(row=>row.map(c=>c.rusty?1:0).join('')).join('/'),
+    head: head && `${head.r},${head.c}`, headIn, drainRow, srcRow,
+  };
+};
+
+function refillEventQueue(){
+  eventQueue = EVENT_NAMES.slice();
+  for(let i=eventQueue.length-1;i>0;i--){        // 回ごとに順番が変わるよう混ぜる
+    const j = Math.floor(Math.random()*(i+1));
+    [eventQueue[i],eventQueue[j]]=[eventQueue[j],eventQueue[i]];
+  }
+}
+function triggerEvent(){
+  if(!eventQueue.length) refillEventQueue();
+  const name = eventQueue.pop();
+  const busy = EVENTS[name]();
+  if(!SILENT) SND.event();
+  nextEventAt = t + busy + 5 + Math.random()*4;   // 立て続けにならないよう間を置く
+}
+
+// ---------- reset ----------
+function reset(){
+  // マスは一度だけ作り、以降は中身を差し替える
+  if(!cells.length){
+    for(let r=0;r<ROWS;r++){
+      const row = [];
+      for(let c=0;c<COLS;c++) row.push(makeCell(r,c));
+      cells.push(row);
+    }
+  }
+  t=0; score=0; dead=false; solved=0; lastSolvedAt=0;
+  tankLevel=.08; flowSpeed=1.0;
+  timeScale=1; shake=0; camPush=0; camPushTarget=0;
+  blackout=0; surge=0; valveT=0; valveCells=[];
+  nextEventAt=9;
+  refillEventQueue();
+  buildBoard();
+  // 消えかけていた明かりを戻す
+  hemi.intensity=1.3; sun.intensity=2.2; workLight.intensity=60;
+  scene.background.copy(SKY); if(scene.fog) scene.fog.color.copy(SKY);
+  for(const p of splashPool){ p.life=0; p.mesh.visible=false; }
+  msgEl.textContent='';
+  koEl.classList.remove('on');
+  vignetteEl.style.transition='opacity .3s'; vignetteEl.style.opacity=0;
+  tankWrapEl.classList.remove('warn');
+  camera.fov = camera.__base; camera.updateProjectionMatrix();
+}
+
+const startBtn = document.getElementById('startBtn');
+
+// ---------- sound: everything synthesised, no audio files ----------
+// Keeps the single-HTML rule (nothing to download) and lets the music
+// react to play: the bass line speeds up with the game, events drop a
+// stinger, and the whole thing ducks out on a game over.
+const SND = (() => {
+  let ctx = null, master = null, musicGain = null, on = true, started = false;
+  let step = 0, timer = null, tempo = 0.25;
+
+  // A pentatonic scale never sounds wrong against itself, which matters
+  // when the tempo drifts with the player's speed.
+  // minor pentatonic, driving — a chase that never lets up
+  const SCALE = [0, 3, 5, 7, 10];
+  const ROOT = 196;
+  const BASS = 'square', LEAD = 'sawtooth';
+  const hz = (deg, oct = 0) =>
+    ROOT * Math.pow(2, oct + Math.floor(deg / SCALE.length)) *
+    Math.pow(2, SCALE[((deg % SCALE.length) + SCALE.length) % SCALE.length] / 12);
+
+  function ensure() {
+    if (ctx) return ctx;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    ctx = new AC();
+    master = ctx.createGain();
+    master.gain.value = 0.32;
+    master.connect(ctx.destination);
+    musicGain = ctx.createGain();
+    musicGain.gain.value = 1;
+    musicGain.connect(master);
+    return ctx;
+  }
+
+
+  // ---- 録音用の分岐（?rec=1）----
+  // Playwright の録画には音声が入らないので、ゲーム自身に master バスを
+  // 録らせる。鳴っているものそのものなので映像と必ず同期する。
+  let recDest = null, recorder = null, recChunks = [];
+  function recStart() {
+    if (!ctx || recorder) return;
+    recDest = ctx.createMediaStreamDestination();
+    master.connect(recDest);
+    recorder = new MediaRecorder(recDest.stream, {mimeType: 'audio/webm'});
+    recorder.ondataavailable = e => { if (e.data.size) recChunks.push(e.data); };
+    recorder.start();
+  }
+  function recStop() {
+    return new Promise(res => {
+      if (!recorder) return res(null);
+      recorder.onstop = async () => {
+        const blob = new Blob(recChunks, {type: 'audio/webm'});
+        const buf = await blob.arrayBuffer();
+        res(Array.from(new Uint8Array(buf)));
+      };
+      recorder.stop();
+    });
+  }
+
+  function blip(freq, dur, type = 'square', vol = 0.25, dest = null, slideTo = null) {
+    if (!ctx || !on) return;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, ctx.currentTime);
+    if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, ctx.currentTime + dur);
+    // a short attack stops every note from clicking
+    g.gain.setValueAtTime(0, ctx.currentTime);
+    g.gain.linearRampToValueAtTime(vol, ctx.currentTime + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
+    o.connect(g); g.connect(dest || master);
+    o.start(); o.stop(ctx.currentTime + dur + 0.02);
+  }
+
+  function noise(dur, vol = 0.2, hp = 800) {
+    if (!ctx || !on) return;
+    const n = Math.floor(ctx.sampleRate * dur);
+    const buf = ctx.createBuffer(1, n, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    const f = ctx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = hp;
+    const g = ctx.createGain(); g.gain.value = vol;
+    src.connect(f); f.connect(g); g.connect(master);
+    src.start();
+  }
+
+  // --- the loop: a walking bass plus an offbeat blip ---
+  function tick() {
+    if (!ctx || !on) return;
+    const bar = step % 16;
+    // straight driving pulse: bass on every beat, lead stabs offbeat
+    if (bar % 2 === 0) blip(hz(bar % 8 === 0 ? 0 : 1, -1), tempo * 1.1, BASS, 0.30, musicGain);
+    if (bar % 8 === 5) blip(hz(4, 0), tempo * 0.6, LEAD, 0.09, musicGain);
+    if (bar % 4 === 2) noise(0.04, 0.05, 5000);
+    step++;
+    timer = setTimeout(tick, tempo * 1000);
+  }
+
+  return {
+    // must be called from a user gesture — browsers block audio otherwise
+    start() {
+      if (!ensure() || started) return;
+      if (ctx.state === 'suspended') ctx.resume();
+      started = true; step = 0; tick();
+    },
+    stop() { if (timer) { clearTimeout(timer); timer = null; } started = false; },
+    /** speed the music up with the game; 1 = starting pace */
+    setPace(mult) { tempo = Math.max(0.11, 0.25 / Math.max(0.2, mult)); },
+    duck(sec = 1.6) {                                      // for game over
+      if (!ctx) return;
+      musicGain.gain.cancelScheduledValues(ctx.currentTime);
+      musicGain.gain.setValueAtTime(musicGain.gain.value, ctx.currentTime);
+      musicGain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + sec);
+    },
+    unduck() {
+      if (!ctx) return;
+      musicGain.gain.cancelScheduledValues(ctx.currentTime);
+      musicGain.gain.setValueAtTime(0.0001, ctx.currentTime);
+      musicGain.gain.exponentialRampToValueAtTime(1, ctx.currentTime + 0.4);
+    },
+    // --- one-shots ---
+    // 管を回す: 金属が噛む短いクリック。押した数だけ鳴るので一番短く。
+    turn()  { ensure(); blip(hz(2, 1), 0.055, 'square', 0.16, null, hz(4, 1)); },
+    // 一マス進んだ: 低く小さな滴。連打されるので目立たせすぎない。
+    flow()  { ensure(); blip(hz(1, 0), 0.05, 'triangle', 0.09); },
+    // 漏れ: 落ちる音。下がる二音で「失敗」とすぐ分かる。
+    leak()  { ensure(); noise(0.22, 0.16, 900);
+              blip(hz(3, 0), 0.26, 'triangle', 0.20, null, hz(0, -1)); },
+    // 排水成功: 上がる三音のアルペジオ。唯一の「良いこと」の音。
+    drain() { ensure(); [0, 70, 140, 220].forEach((ms, i) =>
+                setTimeout(() => blip(hz(i, i > 2 ? 1 : 0), 0.22, 'square', 0.20), ms)); },
+    event() { ensure(); [0, 90, 180].forEach((ms, i) =>
+                setTimeout(() => blip(hz(2 + i, 0), 0.18, 'sawtooth', 0.20), ms)); },
+    hit()   { ensure(); noise(0.35, 0.30, 200);
+              blip(180, 0.5, 'sawtooth', 0.28, null, 40); },
+    over()  { ensure(); [0, 140, 280, 460].forEach((ms, i) =>
+                setTimeout(() => blip(hz(-i, -1), 0.42, 'triangle', 0.26), ms)); },
+    recStart() { ensure(); recStart(); },
+    recStop() { return recStop(); },
+    toggle() { on = !on; if (!on) { this.stop(); } else { this.start(); } return on; },
+    get enabled() { return on; },
+  };
+})();
+
+// --- one place for every action, so touch and keyboard stay in step ---
+function startRun(){
+  titleEl.classList.add('hidden'); reset(); running=true;
+  if(!SILENT){ SND.unduck(); SND.start(); if(REC) SND.recStart(); }
+}
+// カーソルを動かす（キーボード用）
+function moveCursor(dr, dc){
+  curR = THREE.MathUtils.clamp(curR + dr, 0, ROWS-1);
+  curC = THREE.MathUtils.clamp(curC + dc, 0, COLS-1);
+  if(!SILENT) SND.turn();
+}
+// カーソルのマスを回す（キーボード用）
+function turnCursor(){ rotateCell(curR, curC); }
+
+const muteBtn = document.getElementById('mute');
+function toggleMute(){ muteBtn.textContent = SND.toggle() ? '🔊' : '🔇'; }
+muteBtn.addEventListener('click', toggleMute);
+muteBtn.addEventListener('touchend', e=>{ e.preventDefault(); toggleMute(); },
+                         {passive:false});
+if(SILENT) muteBtn.style.display='none';   // automated modes have no audio
+addEventListener('keydown', e=>{ if(e.code==='KeyM') toggleMute(); });
+
+startBtn.addEventListener('click', startRun);
+// a touch on the button must start too — click alone is unreliable on touch
+startBtn.addEventListener('touchend', e=>{ e.preventDefault(); startRun(); },
+                          {passive:false});
+
+addEventListener('keydown', e=>{
+  if(!running){
+    if(e.code==='Space'||e.code==='Enter'){ e.preventDefault(); startRun(); }
+    return;
+  }
+  if(e.code==='ArrowLeft' ||e.code==='KeyA') moveCursor(0,-1);
+  if(e.code==='ArrowRight'||e.code==='KeyD') moveCursor(0, 1);
+  if(e.code==='ArrowUp'   ||e.code==='KeyW') moveCursor(-1,0);
+  if(e.code==='ArrowDown' ||e.code==='KeyS') moveCursor( 1,0);
+  if(e.code==='Space'||e.code==='Enter'){ e.preventDefault(); turnCursor(); }
+});
+
+// --- どのマスが押されたかを拾う ---
+// 盤は水平なので、平面 y=0 とカメラからの光線の交点を取れば済む。
+// レイキャスタで個々のメッシュを当てるより、隙間や管の細さに左右されない。
+const ray = new THREE.Raycaster();
+const plane = new THREE.Plane(new THREE.Vector3(0,1,0), 0);
+const hitPt = new THREE.Vector3();
+function cellAtScreen(px, py){
+  const ndc = new THREE.Vector2((px/innerWidth)*2-1, -(py/innerHeight)*2+1);
+  ray.setFromCamera(ndc, camera);
+  if(!ray.ray.intersectPlane(plane, hitPt)) return null;
+  const c = Math.round(hitPt.x/CELL + (COLS-1)/2);
+  const r = Math.round(hitPt.z/CELL + (ROWS-1)/2);
+  if(r<0||r>=ROWS||c<0||c>=COLS) return null;
+  return {r, c};
+}
+// タップもクリックも同じ道を通す。これが唯一の操作。
+function tapAt(px, py){
+  const cell = cellAtScreen(px, py);
+  if(!cell) return;
+  curR = cell.r; curC = cell.c;      // カーソルも一緒に動かす
+  rotateCell(cell.r, cell.c);
+}
+
+// --- touch / mouse ---
+// スマホから来る人がほとんどなので、タップだけで完結させる。
+(function(){
+  const canvas = renderer.domElement;
+  let sx=0, sy=0, st=0;
+
+  canvas.addEventListener('touchstart', e=>{
+    const p = e.changedTouches[0];
+    sx=p.clientX; sy=p.clientY; st=Date.now();
+  }, {passive:true});
+
+  canvas.addEventListener('touchend', e=>{
+    const p = e.changedTouches[0];
+    if(dead){
+      // K.O. の演出を読ませてから、タップで再挑戦
+      if(!AUTO && Date.now()-deadAt > 1500) startRun();
+      return;
+    }
+    if(!running){ startRun(); return; }
+    // 大きく動いていない短い接触だけをタップと見なす
+    const moved = Math.hypot(p.clientX-sx, p.clientY-sy);
+    if(moved < 26 && Date.now()-st < 500) tapAt(p.clientX, p.clientY);
+  }, {passive:true});
+
+  canvas.addEventListener('click', e=>{
+    if(dead){ if(!AUTO && Date.now()-deadAt > 1500) startRun(); return; }
+    if(!running){ startRun(); return; }
+    tapAt(e.clientX, e.clientY);
+  });
+
+  // タイトルの覆いはキャンバスより上にあるので、タップが下に届かない。
+  // 覆い自身から開始させる。
+  titleEl.addEventListener('touchend', e=>{
+    if(!running){ e.preventDefault(); startRun(); }
+  }, {passive:false});
+
+  // ブラウザがゲームのタッチをスクロールや拡大として扱わないようにする
+  canvas.addEventListener('touchmove', e=>e.preventDefault(), {passive:false});
+})();
+
+// autoplay mode for recording: ?auto=1
+// recording holds the K.O. longer than play does: ?hold=9000
+const RETRY_MS = Math.max(1200, parseInt(QS.get('hold')||'4200', 10));
+// ?noev=1 はイベントなしの穏やかな走行（ナレーション用の下地）
+const NOEV = QS.get('noev')==='1';
+if(AUTO){ setTimeout(startRun, 1200); }   // startRun 経由にする（音/録音も始まる）
+
+// ---------- autopilot ----------
+// 「水の頭の一手先を、実際に回して直す」だけの素朴な自動操縦。
+// 幅優先で排水口までの道を探し、道の最初の一マスを正しい向きへ回す。
+// 一度に一回しか回さないので、画面上は人が押しているように見える。
+let autoNext = 0;
+
+// いまの盤で (r,c) から排水口へ到達できるか。
+// 「回せるマス」は向きを自由にできるので、管の種類だけで通れるか判断する。
+// 直管は対向の二辺、曲管は隣り合う二辺、十字管はどこでも通せる。
+function canConnect(cell, inDir, outDir){
+  if(inDir === outDir) return false;
+  const arms = [N,E,S,W].filter(d => cell.mask & d).length;
+  if(arms >= 4) return true;                 // 十字管はどう回しても同じ
+  if(cell.filled){                           // もう回せない。いまの向きだけ。
+    return !!(cell.mask & inDir) && !!(cell.mask & outDir);
+  }
+  const straight = (inDir === OPP[outDir]);
+  // いまの管が直管なら直進のみ、曲管なら曲がりのみ作れる
+  const isStraight = (cell.mask === KIND.straight) || (cell.mask === rotMask(KIND.straight));
+  return isStraight ? straight : !straight;
+}
+
+// 水の頭から排水口までの経路を探す。戻り値は [{r,c,in,out}, ...]
+function findRoute(){
+  if(!head) return null;
+  const start = {r:head.r, c:head.c, in:headIn};
+  const key = (r,c,d) => r*COLS*16 + c*16 + d;
+  const seen = new Set([key(start.r,start.c,start.in)]);
+  const queue = [{...start, path:[]}];
+  while(queue.length){
+    const cur = queue.shift();
+    const cell = cells[cur.r][cur.c];
+    if(cell.rusty && cur.path.length) continue;   // 錆びた管は通れない
+    for(const d of [N,E,S,W]){
+      if(!canConnect(cell, cur.in, d)) continue;
+      const node = {r:cur.r, c:cur.c, in:cur.in, out:d};
+      const path = cur.path.concat([node]);
+      // 東の端から出たら排水口。行が合っていれば成功。
+      if(d === E && cur.c === COLS-1){
+        if(cur.r === drainRow) return path;
+        continue;
+      }
+      const [dr, dc] = STEP[d];
+      const nr = cur.r+dr, nc = cur.c+dc;
+      if(nr<0||nr>=ROWS||nc<0||nc>=COLS) continue;
+      const nin = OPP[d];
+      const k = key(nr,nc,nin);
+      if(seen.has(k)) continue;
+      seen.add(k);
+      if(path.length > 26) continue;
+      queue.push({r:nr, c:nc, in:nin, path});
+    }
+  }
+  return null;
+}
+
+function autoPilot(){
+  if(t < autoNext) return;
+  const route = findRoute();
+  if(!route){
+    // 道がない。まだ回せるマスを一つ回して、盤を崩してから探し直す。
+    // 頭のマスはもう水が入っていて回せないことがあるので、
+    // 「回せるマス」だけを候補にする。ここを間違えると、直せない
+    // マスを押し続けて永久に止まる。
+    const free = [];
+    for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
+      const cell = cells[r][c];
+      if(!cell.filled && !cell.rusty) free.push(cell);
+    }
+    if(free.length){
+      // 水の頭に近いものから優先して回す（手前を直すほうが効く）
+      free.sort((a,b) =>
+        (Math.abs(a.r-head.r)+Math.abs(a.c-head.c)) -
+        (Math.abs(b.r-head.r)+Math.abs(b.c-head.c)));
+      const pick = free[Math.floor(Math.random()*Math.min(4, free.length))];
+      rotateCell(pick.r, pick.c, true);
+    }
+    autoNext = t + .10;
+    return;
+  }
+  // 経路の手前から順に、向きが合っていないマスを一つだけ回す。
+  for(const node of route){
+    const cell = cells[node.r][node.c];
+    if(cell.filled) continue;
+    const ok = (cell.mask & node.in) && (cell.mask & node.out);
+    if(!ok){ rotateCell(node.r, node.c, true); autoNext = t + .12; return; }
+  }
+  // すべて合っている。水が進むのを待つ。
+  autoNext = t + .18;
+}
+
+// ---------- showcase mode ----------
+// 被写体を一つだけ暗い舞台に置いてターンテーブルに載せる。
+// ゲームで使っている実物のメッシュなので、説明と画面がずれない。
+const SHOWCASE = QS.get('showcase');
+const SUBJECTS = ['straight','elbow','cross','rust','source','drain','tank','water'];
+window.__subjects = SUBJECTS.slice();
+const showcase = {group:null, pivot:null, spin:.55, label:'', flat:false};
+
+function buildShowcase(name){
+  const g = new THREE.Group();
+  let label = '', spin = .55, flat = false;
+  if(name==='straight'){
+    const p = buildPipe(KIND.straight, false); p.scale.set(2.4,2.4,2.4); g.add(p);
+    label = '直管'; spin = .6;
+  } else if(name==='elbow'){
+    const p = buildPipe(KIND.elbow, false); p.scale.set(2.4,2.4,2.4); g.add(p);
+    label = '曲管'; spin = .6;
+  } else if(name==='cross'){
+    const p = buildPipe(KIND.cross, false); p.scale.set(2.2,2.2,2.2); g.add(p);
+    label = '十字管'; spin = .6;
+  } else if(name==='rust'){
+    const p = buildPipe(KIND.elbow, true); p.scale.set(2.4,2.4,2.4); g.add(p);
+    label = '錆びた管'; spin = .6;
+  } else if(name==='source'){
+    const s = new THREE.Group();
+    const body = new THREE.Mesh(new THREE.CylinderGeometry(.58,.58,1.5,18), MAT.src);
+    body.rotation.z = Math.PI/2; s.add(body);
+    const cap = new THREE.Mesh(new THREE.CylinderGeometry(.78,.78,.24,18), MAT.src);
+    cap.rotation.z = Math.PI/2; cap.position.x = .7; s.add(cap);
+    const wheel = new THREE.Mesh(new THREE.TorusGeometry(.5,.09,10,22), MAT.src);
+    wheel.position.set(-.5,.55,0); wheel.rotation.y = Math.PI/2; s.add(wheel);
+    s.scale.set(2.1,2.1,2.1); g.add(s);
+    label = '給水口'; spin = .55;
+  } else if(name==='drain'){
+    const s = new THREE.Group();
+    const body = new THREE.Mesh(new THREE.CylinderGeometry(.58,.58,1.5,18), MAT.drain);
+    body.rotation.z = Math.PI/2; s.add(body);
+    const cap = new THREE.Mesh(new THREE.CylinderGeometry(.8,.8,.24,18), MAT.drain);
+    cap.rotation.z = Math.PI/2; cap.position.x = -.7; s.add(cap);
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(.62,.1,10,24), MAT.drain);
+    ring.position.x = .78; ring.rotation.y = Math.PI/2; s.add(ring);
+    s.scale.set(2.1,2.1,2.1); g.add(s);
+    label = '排水口'; spin = .55;
+  } else if(name==='tank'){
+    // ゲームと同じ材質でタンクを組み直し、半分まで水を入れて見せる
+    const s = new THREE.Group();
+    const shell = new THREE.Mesh(new THREE.CylinderGeometry(1.5,1.5,4.4,22,1,true),
+      new THREE.MeshStandardMaterial({color:0x33465e, metalness:.6, roughness:.4,
+                                      transparent:true, opacity:.38, side:THREE.DoubleSide}));
+    shell.position.y = 2.2; s.add(shell);
+    const base = new THREE.Mesh(new THREE.CylinderGeometry(1.72,1.72,.4,22),
+      new THREE.MeshStandardMaterial({color:0x2a3a50, metalness:.6, roughness:.45}));
+    base.position.y = .2; s.add(base);
+    const w = new THREE.Mesh(new THREE.CylinderGeometry(1.42,1.42,1,20),
+      new THREE.MeshStandardMaterial({color:0x2fa8e0, emissive:0x0a4a6c,
+        emissiveIntensity:1.1, roughness:.2, transparent:true, opacity:.92}));
+    w.scale.y = 2.4; w.position.y = .4 + 1.2; s.add(w);
+    const rim = new THREE.Mesh(new THREE.TorusGeometry(1.5,.12,10,26),
+      new THREE.MeshStandardMaterial({color:0x6f8aa8, metalness:.7, roughness:.3}));
+    rim.position.y = 4.4; rim.rotation.x = Math.PI/2; s.add(rim);
+    s.scale.set(.95,.95,.95); g.add(s);
+    label = 'タンク'; spin = .45;
+  } else if(name==='water'){
+    // 水が満ちた曲管。ゲーム中のいちばん大事な瞬間を一つの絵にする。
+    const p = buildPipe(KIND.elbow, false); p.scale.set(2.4,2.4,2.4); g.add(p);
+    const f = buildFill(KIND.elbow);
+    f.parts.hub.visible = true;
+    for(const k in f.parts.arms){ const a = f.parts.arms[k]; a.visible = true; a.scale.y = 1; }
+    f.group.scale.set(2.4,2.4,2.4); g.add(f.group);
+    label = '通水'; spin = .6;
+  }
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  scene.add(g);
+
+  // 被写体を原点に中心合わせして、収まる距離までカメラを引く。
+  // どの大きさの被写体でも同じ構図になる。
+  const box = new THREE.Box3().setFromObject(g);
+  const size = box.getSize(new THREE.Vector3());
+  const mid = box.getCenter(new THREE.Vector3());
+  g.position.sub(mid);
+  const reach = Math.max(size.x, size.y) * 0.5;
+  const fov = THREE.MathUtils.degToRad(camera.fov);
+  const dist = (reach / Math.tan(fov/2)) * 1.75 + 1.0;   // 1.75 は余白
+  camera.position.set(0, size.y*0.10, dist);
+
+  // 文字を置く側を空けるため被写体を横へ寄せる。寄せは親に持たせる:
+  // ずらしたグループを回すと、その場で回らず公転してしまうため。
+  const bias = parseFloat(QS.get('sx') || '0');
+  const pivot = new THREE.Group();
+  pivot.position.x = -bias * reach * 1.15;
+  scene.add(pivot);
+  pivot.add(g);
+  showcase.group = g; showcase.pivot = pivot;
+  showcase.spin = spin; showcase.label = label; showcase.flat = flat;
+}
+
+fitCamera();          // ここまでで SHOWCASE は確定している
+if(SHOWCASE){
+  titleEl.classList.add('hidden');
+  buildShowcase(SHOWCASE);
+  scoreEl.textContent = '';
+  msgEl.textContent = QS.get('nolabel')==='1' ? '' : showcase.label;
+  msgEl.style.fontSize = 'clamp(18px,5vw,30px)';
+  msgEl.style.letterSpacing = '6px';
+  // 暗い舞台。被写体以外は何も映さない。
+  floor.visible = false; deck.visible = false;
+  boardRoot.visible = false;
+  source.group.visible = false; drain.group.visible = false;
+  tank.group.visible = false; cursor.visible = false;
+  tankWrapEl.style.display = 'none';
+  scene.fog = null;
+  scene.background = new THREE.Color(0x0a0d14);
+  workLight.position.set(2.8, 3.4, 4.4);
+  workLight.intensity = 130;
+  hemi.intensity = 3.2;
+  sun.intensity = 4.0; sun.position.set(2.5, 6, 6);
+  // 反対側からの補助光。裏面が真っ黒にならないように。
+  const fill = new THREE.PointLight(0x88aaff, 45, 26);
+  fill.position.set(-4.5, 2.4, 3.6); scene.add(fill);
+}
+// 撮影スクリプトからターンテーブルの被写体を差し替えられるようにする
+window.__showcase = name => {
+  if(showcase.pivot) scene.remove(showcase.pivot);   // pivot がグループを持つ
+  buildShowcase(name);
+  msgEl.textContent = showcase.label;
+};
+
+// ---------- カメラ配置（プレイ時）----------
+// 盤全体が入る高さを、盤の対角と FOV から毎フレーム決める。
+// 縦持ちでも横持ちでも同じ見え方になる。
+function placeCamera(raw){
+  const fovY = THREE.MathUtils.degToRad(camera.fov);
+  const fovX = 2*Math.atan(Math.tan(fovY/2)*camera.aspect);
+  // 盤（＋給水口・排水口・タンク）が収まる距離
+  const halfW = BOARD_W/2 + 2.4;
+  const halfH = BOARD_H/2 + 2.6;
+  const dist = Math.max(halfW/Math.tan(fovX/2), halfH/Math.tan(fovY/2)) * 1.12;
+  const push = 1 - camPush*.42;               // 死亡時に寄る
+  // 斜め上から見下ろす。真上すぎると立体感が消えるので 58 度に寝かせる。
+  const tilt = THREE.MathUtils.degToRad(58);
+  const cx = 0;
+  const cy = Math.sin(tilt)*dist*push + 1.2;
+  const cz = Math.cos(tilt)*dist*push + 1.6;
+  camera.position.set(cx, cy, cz);
+  if(shake>0){
+    shake = Math.max(0, shake - raw*.9);
+    camera.position.x += (Math.random()-.5)*shake;
+    camera.position.y += (Math.random()-.5)*shake;
+  }
+  camera.lookAt(0, 0, .3);
+}
+
+// ---------- loop ----------
+const clock = new THREE.Clock();
+function tick(){
+  requestAnimationFrame(tick);
+  const raw = Math.min(clock.getDelta(), .05);
+  const dt = raw * timeScale;
+
+  if(SHOWCASE){
+    if(showcase.group){
+      if(showcase.flat) showcase.group.rotation.z += raw*showcase.spin;
+      else showcase.group.rotation.y += raw*showcase.spin;
+    }
+    camera.lookAt(0, 0, 0);        // 被写体は横にずれているがカメラは軸上
+    renderer.render(scene, camera);
+    return;
+  }
+
+  if(running && !dead){
+    t += dt;
+    if(AUTO) autoPilot();
+
+    // --- events ---
+    if(t > nextEventAt && !NOEV) triggerEvent();
+
+    // 水圧上昇: 進みが速くなり、画面もわずかに寄る
+    if(surge>0){
+      surge -= dt;
+      camera.fov += (camera.__base*.94 - camera.fov)*Math.min(1,dt*3);
+      camera.updateProjectionMatrix();
+    } else if(Math.abs(camera.fov - camera.__base) > .05){
+      camera.fov += (camera.__base - camera.fov)*Math.min(1,dt*3);
+      camera.updateProjectionMatrix();
+    }
+
+    // 停電: 明かりを落として、終わりぎわに戻す
+    if(blackout>0){
+      blackout -= dt;
+      const k = blackout > .5 ? .10 : 1 - (blackout/.5)*.9;   // 最後に戻ってくる
+      hemi.intensity = 1.3*k; sun.intensity = 2.2*k; workLight.intensity = 60*k;
+      scene.background.copy(SKY).multiplyScalar(Math.max(.15,k));
+      if(scene.fog) scene.fog.color.copy(scene.background);
+      if(blackout<=0){
+        hemi.intensity=1.3; sun.intensity=2.2; workLight.intensity=60;
+        scene.background.copy(SKY); if(scene.fog) scene.fog.color.copy(SKY);
+      }
+    }
+
+    // バルブ故障: 選ばれたマスが一定間隔で勝手に回る
+    if(valveT>0){
+      valveT -= dt;
+      for(const cell of valveCells){
+        if(!cell || cell.filled) continue;
+        cell.valveT = (cell.valveT||0) - dt;
+        if(cell.valveT <= 0){
+          cell.valveT = 1.4 + Math.random()*.8;
+          rotateCell(cell.r, cell.c, true);
+          cell.tile.material.emissive.setHex(0x443000);
+        }
+      }
+      if(valveT<=0){
+        for(const cell of valveCells) if(cell) cell.tile.material.emissive.setHex(0x000000);
+        valveCells = [];
+      }
+    }
+
+    // --- 水の進行 ---
+    // 1マスあたりの所要時間。通した本数と水圧上昇で短くなる。
+    const perCell = Math.max(.34, .95 - solved*.045) / (surge>0 ? 1.85 : 1);
+    flowSpeed = 1/perCell;
+    if(!SILENT) SND.setPace(1 + solved*.08 + (surge>0?.5:0));
+
+    if(atSource){
+      // 給水口から最初のマスへ流れ込む前の溜め
+      headT += dt/ (perCell*.6);
+      if(headT >= 1){ atSource = false; headT = 0; enterCell(); }
+    } else if(head){
+      const cell = cells[head.r][head.c];
+      headT += dt*flowSpeed;
+      // 水の芯を伸ばす
+      paintFill(cell, headT);
+      if(headT >= 1) advance();
+    }
+
+    // タンクは常に少しずつ増える。何もしなければ必ず負ける。
+    addTank(dt * (0.014 + solved*0.0013) * (surge>0 ? 1.6 : 1));
+
+    // スコアは生きているあいだ増え続ける
+    score += dt*12;
+    scoreEl.textContent = Math.floor(score);
+
+    // HUD のタンク
+    const pct = Math.min(1, tankLevel);
+    tankFillEl.style.width = (pct*100).toFixed(1)+'%';
+    tankWrapEl.classList.toggle('warn', pct > .7);
+    // 3D のタンクにも反映（高さ 4.4 の筒に貼る）
+    tank.water.scale.y = Math.max(.001, pct*4.4);
+    tank.water.position.y = .4 + pct*4.4/2;
+    tank.waterMat.emissiveIntensity = 1.0 + pct*1.4;
+  }
+
+  // --- 管の回転アニメ（死んでいても動かす: 見た目が固まらないように）---
+  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
+    const cell = cells[r] && cells[r][c];
+    if(!cell || !cell.pipe) continue;
+    if(cell.spin > 0){
+      cell.spin = Math.max(0, cell.spin - raw*7);
+      // 回転は「90度ぶんを spin が 1→0 で消化する」ので、残りを足す
+      const target = cell.spinFrom - Math.PI/2;
+      cell.pipe.rotation.y = target + cell.spin*(Math.PI/2);
+      if(cell.fill) cell.fill.group.rotation.y = -cell.pipe.rotation.y;
+      if(cell.spin === 0){ cell.spinFrom = target; cell.pipe.rotation.y = target;
+                           if(cell.fill) cell.fill.group.rotation.y = -target; }
+    }
+  }
+  // 給水口のハンドルを回し続ける（止まっていないことを示す）
+  source.wheel.rotation.z += raw*(running && !dead ? 2.4 : .4);
+  drain.ring.rotation.z -= raw*.8;
+
+  // 選択カーソル
+  cursor.position.x += (gx(curC) - cursor.position.x)*Math.min(1, raw*14);
+  cursor.position.z += (gz(curR) - cursor.position.z)*Math.min(1, raw*14);
+  cursor.visible = !SHOWCASE && running && !dead;
+
+  // しぶき
+  for(const p of splashPool){
+    if(p.life <= 0) continue;
+    p.life -= raw;
+    p.vy -= 16*raw;
+    p.mesh.position.x += p.vx*raw;
+    p.mesh.position.y += p.vy*raw;
+    p.mesh.position.z += p.vz*raw;
+    p.mesh.material.opacity = Math.max(0, Math.min(1, p.life*2));
+    p.mesh.material.transparent = true;
+    if(p.life <= 0 || p.mesh.position.y < -1.2){ p.life = 0; p.mesh.visible = false; }
+  }
+
+  // --- 死亡演出: スローに落ちて、カメラが寄る ---
+  if(dead){
+    timeScale += (0 - timeScale)*Math.min(1, raw*1.1);
+    camPushTarget = 1;
+    // タンクから水があふれ続ける
+    if(Math.random() < .3) splash(tank.group.position.x + (Math.random()-.5)*2.4,
+                                  4.6, tank.group.position.z + (Math.random()-.5)*2.4,
+                                  2, 0x2fa8e0);
+  }
+  camPush += (camPushTarget - camPush)*Math.min(1, raw*2.2);
+
+  placeCamera(raw);
+  renderer.render(scene, camera);
+}
+
+// いま水が入ろうとしているマスに実際に入る。
+// 口が合っていなければ漏れ、錆びていても漏れる。
+function enterCell(){
+  const cell = cells[head.r][head.c];
+  if(!(cell.mask & headIn)){ leak(cell, .4); return; }   // 入口が塞がっている
+  if(cell.rusty){ leak(cell, .4); return; }              // 錆びた管は漏れる
+  // 同じマスに二度入ったら、水は輪を描いている。十字管どうしがつながると
+  // 起こりうる。放っておくと排水も漏れもせず永久に回り続けるので、
+  // ここで打ち切って漏らす。
+  if(cell.filled){ leak(cell, .4); return; }
+  cell.filled = true; cell.inDir = headIn; cell.fillT = 0;
+  cell.tile.material.emissive.setHex(0x0a3a4e);
+  cell.fill.parts.hub.visible = true;
+  const inArm = cell.fill.parts.arms[headIn];
+  if(inArm){ inArm.visible = true; inArm.scale.y = 1; }
+  headT = 0;
+  if(!SILENT) SND.flow();
+}
+
+// 充填の見た目。headT 0→1 で「入口が満ちてから出口が満ちる」ように出す。
+function paintFill(cell, k){
+  const out = chooseExit(cell, cell.inDir);
+  if(!out) return;
+  const arm = cell.fill.parts.arms[out];
+  if(arm){ arm.visible = true; arm.scale.y = Math.max(.001, Math.min(1, k)); }
+}
+
+// マスを満たし終えた。次のマスへ渡すか、漏らすか、排水するか。
+function advance(){
+  const cell = cells[head.r][head.c];
+  const out = chooseExit(cell, cell.inDir);
+  if(!out){ leak(cell, .4); return; }        // 行き止まり
+  const [dr, dc] = STEP[out];
+  const nr = head.r + dr, nc = head.c + dc;
+  // 盤の外へ出た
+  if(nr<0 || nr>=ROWS || nc<0 || nc>=COLS){
+    if(out === E && nc >= COLS && head.r === drainRow){ drained(); return; }
+    leak(cell, .4); return;                  // 排水口以外から出たら床にぶちまける
+  }
+  head = {r:nr, c:nc};
+  headIn = OPP[out];
+  headT = 0;
+  enterCell();
+}
+
+function gameOver(){
+  running=false; deadAt=Date.now();
+  if(!SILENT){ SND.hit(); SND.duck(1.6); setTimeout(()=>SND.over(), 700); }
+  // タンク決壊: 赤いフラッシュ、暗いふち、強い揺れ、カメラが寄る
+  flash('#ff2b3a', .8, 500);
+  vignetteEl.style.transition='opacity .5s'; vignetteEl.style.opacity=1;
+  shake = .9;
+  camPushTarget = 1;
+  splash(tank.group.position.x, 4.6, tank.group.position.z, 26, 0x2fa8e0);
+  tankFillEl.style.width = '100%';
+  tankWrapEl.classList.add('warn');
+  koScoreEl.textContent = Math.floor(score);
+  msgEl.textContent = '';
+  setTimeout(()=>{ koEl.classList.add('on'); }, 620);   // スローが落ち着いてから K.O.
+  if(AUTO){ setTimeout(()=>{ reset(); running=true;
+                             if(!SILENT) SND.unduck(); }, RETRY_MS); }
+  else setTimeout(()=>{
+    msgEl.textContent = matchMedia('(pointer:coarse)').matches
+      ? 'タップでもう一度' : 'スペースでもう一度';
+  }, 1800);
+}
+
+// showcase では盤を作らないが、tick が cells を舐めるので空で通しておく
+if(!SHOWCASE){
+  // タンクは盤の右奥に据える
+  tank.group.position.set(gx(COLS-1) + 3.4, -.2, gz(0) - CELL*1.35);
+  reset();
+  running = false;               // reset はタイトル表示のための下ごしらえ
+  titleEl.classList.remove('hidden');
+}
+tick();
+
+// --- あそびかた (?) : ルールを見せる。録画中は出さない ---
+(function(){
+  const btn = document.getElementById('helpBtn');
+  const panel = document.getElementById('help');
+  if(!btn || !panel) return;
+  if(NOCHROME){                      // 録画・showcase では画面から消す
+    btn.style.display = 'none';
+    const back = document.getElementById('back');
+    if(back) back.style.display = 'none';
+    return;
+  }
+  const open = () => { panel.classList.add('on'); };
+  const close = () => { panel.classList.remove('on'); };
+  btn.addEventListener('click', open);
+  btn.addEventListener('touchend', e => { e.preventDefault(); open(); }, {passive:false});
+  panel.addEventListener('click', e => { if(e.target === panel) close(); });
+  panel.querySelector('.close').addEventListener('click', close);
+  panel.querySelector('.close').addEventListener('touchend',
+    e => { e.preventDefault(); close(); }, {passive:false});
+  addEventListener('keydown', e => {
+    if(e.code === 'Escape') close();
+    else if(e.key === '?' || (e.code === 'Slash' && e.shiftKey)) open();
+  });
+})();
+</script>
+</body>
+</html>

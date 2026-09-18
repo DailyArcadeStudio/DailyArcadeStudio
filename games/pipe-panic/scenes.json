@@ -1,0 +1,235 @@
+{
+  "id": "0002_pipe_panic",
+  "title": "パイプパニック",
+  "video_title": "地下の配管図は、40年前から更新されていない",
+  "lang": "ja",
+  "voice": "am_adam",
+  "scenes": [
+    {
+      "kind": "hook",
+      "clip": "backflow",
+      "narration": "古い建物の地下には、図面と違う配管が通っています。"
+    },
+    {
+      "kind": "image",
+      "prompt": "a cramped basement machine room of an old apartment building, dozens of rusted water pipes crossing at odd angles, a large steel water tank in the corner, bare work lamp hanging, damp concrete floor, cinematic, highly detailed, cold blue and amber lighting",
+      "narration": "古い集合住宅の、地下の機械室です。ここに水のタンクが一つあります。上の階から水が落ちてきて、いったんここに溜まります。それを外へ出す配管が、この部屋を通っています。"
+    },
+    {
+      "kind": "image",
+      "prompt": "a maintenance worker in a navy jumpsuit crouching beside a rusted pipe manifold in a dim basement, holding a pipe wrench, faded paper blueprint taped to the wall behind him, handwritten corrections all over it, cinematic, highly detailed, warm lamp light against cold shadows",
+      "narration": "管理人の田村さんが、毎晩ここに降りてきます。配管の図面は40年前のものです。壁に貼ってありますが、合っていません。何度も直してほしいと言いました。返事はいつも同じです。全部やり替えるお金はない。だから田村さんは、毎晩手で回して水の道を作ります。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "elbow",
+      "kicker": "あなたの仕事",
+      "title": "回す",
+      "bullets": [
+        "管は**90度ずつしか回らない**",
+        "盤は横5マス、縦4マス",
+        "**水が入った管はもう回せない**"
+      ],
+      "narration": "これが仕事道具です。管は90度ずつ回ります。それだけです。盤は横に5つ、縦に4つ。そしてここが大事なところです。水が入った管は、もう回せません。だから水が来る前に回す。それがこのゲームの全部です。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "source",
+      "kicker": "左から",
+      "title": "給水口",
+      "bullets": [
+        "盤の左端から**水が入ってくる**",
+        "止める方法はない",
+        "行き先を作るのはあなただけ"
+      ],
+      "narration": "水は盤の左端から入ってきます。この給水口です。止める方法はありません。見てください、水はもう進んでいます。行き先を作るのは、あなただけです。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "drain",
+      "kicker": "右へ",
+      "title": "排水口",
+      "bullets": [
+        "ここへ繋げば**タンクが少し減る**",
+        "**唯一の回復手段**",
+        "繋がると盤が新しくなる"
+      ],
+      "narration": "目指すのは右端の排水口です。ここに水を届けると、タンクの水位が少し下がります。減らす方法は、これしかありません。そして繋がると、盤が丸ごと新しくなります。休む時間はありません。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "tank",
+      "kicker": "残り時間",
+      "title": "タンク",
+      "bullets": [
+        "**何もしなくても増え続ける**",
+        "満水になったらそこで終わり",
+        "通した回数が増えるほど**増える速さも上がる**"
+      ],
+      "narration": "これが本当の残り時間です。タンクの水は、何もしなくても増えます。満水になったら終わりです。そうなんです。放っておくと必ず負けます。しかも、通した回数が増えるほど、増える速さも上がっていきます。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "cross",
+      "kicker": "便利で厄介",
+      "title": "十字管",
+      "bullets": [
+        "口が4つ。**どこへでも繋がる**",
+        "水は自分で行き先を選ぶ",
+        "選ぶのは**排水口に近い向き**"
+      ],
+      "narration": "十字管は口が4つあります。どこへでも繋がる、便利な管です。ただ、水が自分で行き先を選びます。排水口に近い向きを選びます。だいたい正しいのですが、あなたの考えとは違うことがあります。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "rust",
+      "kicker": "触れない管",
+      "title": "錆びた管",
+      "bullets": [
+        "**回せない。向きを直せない**",
+        "水が入ると**そのまま漏れる**",
+        "漏れるとタンクが一気に増える"
+      ],
+      "narration": "そしてこれです。錆びた管は回りません。向きが違っていても、直せません。水が入ると、そのまま漏れます。漏れた分はタンクに行きます。しかも一回でかなり増えます。避けて道を作るしかありません。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "water",
+      "kicker": "通水",
+      "title": "繋がった瞬間",
+      "bullets": [
+        "管の芯を**水が伸びていく**",
+        "行き止まりに当たれば漏れる",
+        "漏れても盤は残る。**回し直せる**"
+      ],
+      "narration": "うまく繋がると、管の芯を水が伸びていきます。この絵のためにゲームをやっている気分になります。行き止まりに当たれば漏れます。でも盤は消えません。水は左から流れ直します。もう一度やれます。"
+    },
+    {
+      "kind": "events",
+      "clip": "events",
+      "kicker": "地下で起きること",
+      "title": "静かにはしていない",
+      "bullets": [
+        "**水圧上昇** — 水の進みが速くなる",
+        "**停電** — 盤がほとんど見えない",
+        "**バルブ故障** — 管が勝手に回る",
+        "**逆流** — タンクが一気に跳ねる"
+      ],
+      "narration": "この部屋は静かにしていません。水圧が上がると、水の進みが速くなります。考える時間そのものが削られます。停電もします。盤がほとんど見えないまま回すことになります。バルブが壊れると、管が勝手に回り始めます。そして逆流。これはタンクが一気に跳ねます。盤は無事なのに、残り時間だけが消えます。"
+    },
+    {
+      "kind": "death",
+      "clip": "death",
+      "kicker": "終わり方",
+      "title": "溢れて終わる",
+      "bullets": [
+        "負け方は**一つだけ**",
+        "タンクが満水になる",
+        "通した本数が最後に出る"
+      ],
+      "narration": "負け方は一つだけです。タンクが溢れます。管をどれだけ回しても、通した数が足りなければ、水位は上がり続けます。そして最後に、何本通せたかが出ます。田村さんは40年、毎晩この部屋で水を流してきました。あなたは、たぶん5本くらいです。"
+    },
+    {
+      "kind": "outro",
+      "title": "概要欄のリンクから遊べます",
+      "subtitle": "チャンネル登録で毎日1本",
+      "narration": "今すぐ遊べます。リンクは概要欄です。チャンネル登録をお願いします。明日も新しいゲームを出します。"
+    }
+  ],
+  "slug": "pipe-panic",
+  "channel": "Daily Arcade Studio",
+  "events": [
+    "surge",
+    "blackout",
+    "rust",
+    "valve",
+    "backflow"
+  ],
+  "short": [
+    {
+      "mark": "backflow",
+      "lead": -0.5,
+      "dur": 8.0,
+      "headline": "タンクが一気に跳ねる"
+    },
+    {
+      "mark": "valve",
+      "lead": -0.5,
+      "dur": 8.0,
+      "headline": "管が勝手に回る"
+    },
+    {
+      "mark": "blackout",
+      "lead": -0.3,
+      "dur": 7.0,
+      "headline": "見えないまま回す"
+    },
+    {
+      "mark": "surge",
+      "lead": -0.5,
+      "dur": 7.0,
+      "headline": "考える時間が減る"
+    },
+    {
+      "mark": "death",
+      "lead": -2.0,
+      "dur": 9.0,
+      "headline": "溢れたら終わり"
+    }
+  ],
+  "thumb": {
+    "hook": "溢れる前に回せ",
+    "sub": "5×4の配管。ブラウザで無料。",
+    "frame_mark": "backflow",
+    "frame_lead": 1.0
+  },
+  "short_v2": {
+    "cuts": [
+      {
+        "kind": "clip",
+        "mark": "backflow",
+        "lead": -0.5,
+        "dur": 4.5,
+        "headline": "今日のゲーム",
+        "narration": "今日のゲームです。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "elbow",
+        "dur": 5.0,
+        "headline": "パイプパニック",
+        "narration": "あなたは地下で配管を回す管理人です。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "tank",
+        "dur": 5.0,
+        "headline": "残り時間",
+        "narration": "タンクの水は何もしなくても増えます。溢れたら終わりです。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "rust",
+        "dur": 5.0,
+        "headline": "回せない",
+        "narration": "錆びた管は回りません。水が入ると、そのまま漏れます。"
+      },
+      {
+        "kind": "clip",
+        "mark": "death",
+        "lead": -2.0,
+        "dur": 5.5,
+        "headline": "",
+        "narration": "そして水は待ってくれません。"
+      },
+      {
+        "kind": "clip",
+        "mark": "run2",
+        "lead": 1.0,
+        "dur": 4.5,
+        "cta": "概要欄のリンクから遊べます",
+        "narration": "ブラウザで無料で遊べます。リンクは概要欄です。"
+      }
+    ]
+  }
+}
