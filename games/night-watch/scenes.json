@@ -1,0 +1,222 @@
+{
+  "id": "0002_night_watch",
+  "title": "ナイト・ウォッチ",
+  "video_title": "毎晩、向かいのビルの窓を数えている人がいます",
+  "lang": "ja",
+  "voice": "jp_female",
+  "scenes": [
+    {
+      "kind": "hook",
+      "clip": "blackout",
+      "narration": "向かいのビルの窓を、毎晩ぜんぶ覚えている人がいます。"
+    },
+    {
+      "kind": "image",
+      "prompt": "a lone night security guard standing at a dark window on an upper floor of an office building, looking across the street at another lit office tower at night, rain on the glass, cold blue and amber city light, cinematic, photorealistic, highly detailed",
+      "narration": "ある雑居ビルの夜警さんの話です。名前はミナさん。仕事は、真夜中の見回りです。ただ、この建物には防犯カメラがありません。オーナーが、まだ付けてくれないんです。"
+    },
+    {
+      "kind": "image",
+      "prompt": "view through a rainy window at night of an office building facade, a grid of windows, some lit warm yellow and some dark, wet glass, neon sign glow from the side, cinematic, photorealistic, highly detailed",
+      "narration": "だから彼女は、向かいの窓を見ます。灯りがひとつ消えれば、誰かが動いた合図です。そうなんです。覚えるしかないんですよ。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "watcher",
+      "kicker": "見張る人",
+      "title": "ミナさん",
+      "bullets": [
+        "武器なし。持ち物は**双眼鏡ひとつ**",
+        "仕事は歩くことではなく、**見ること**",
+        "見落としは**3回まで**"
+      ],
+      "narration": "これがミナさんです。武器はありません。持っているのは双眼鏡ひとつ。仕事は歩くことではなく、見ることです。そして見落としは、3回までです。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "litwindow",
+      "kicker": "覚えるもの",
+      "title": "灯った窓",
+      "bullets": [
+        "毎回、**並びが変わる**",
+        "覚える時間は**2秒ちょっと**",
+        "進むほど短くなる"
+      ],
+      "narration": "覚えるのは、この灯った窓の並びです。並びは毎回変わります。見られる時間は、2秒ちょっと。ここが厳しいところです。進むほど、その時間は短くなります。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "darkwindow",
+      "kicker": "探すもの",
+      "title": "消えた窓",
+      "bullets": [
+        "暗転のあいだに、**1枚だけ**変わる",
+        "消えることも、**点くこともある**",
+        "指せるのは1枚だけ"
+      ],
+      "narration": "そして一瞬、街が暗くなります。そのあいだに、窓が1枚だけ変わります。消えるとは限りません。点くこともあります。指せるのは、1枚だけです。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "neon",
+      "kicker": "じゃまするもの",
+      "title": "ネオン看板",
+      "bullets": [
+        "ビルの横で**激しく明滅する**",
+        "窓とは何の関係もない",
+        "それでも目が**そっちを向く**"
+      ],
+      "narration": "ビルの横には、ネオン看板があります。見てください、この明滅。窓とは何の関係もありません。関係ないのに、目がそっちを向くんです。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "rain",
+      "kicker": "じゃまするもの",
+      "title": "土砂降り",
+      "bullets": [
+        "ガラスがにじんで、**窓がぼやける**",
+        "灯りが**にじんで広がる**",
+        "並びは変わらない。見え方だけが変わる"
+      ],
+      "narration": "雨も降ります。ガラスがにじんで、窓の形がぼやけます。灯りだけが、ふわっと広がります。並びは変わっていません。見え方だけが変わります。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "beacon",
+      "kicker": "屋上",
+      "title": "赤ランプ",
+      "bullets": [
+        "屋上でゆっくり点滅している",
+        "ゲームの進行には**一切関係しない**",
+        "夜の長さを数える目印"
+      ],
+      "narration": "屋上には赤いランプがあります。正直に言います。これはゲームには一切関係ありません。ただ、ずっと点滅しています。ミナさんが夜の長さを数える、目印です。"
+    },
+    {
+      "kind": "events",
+      "clip": "events",
+      "kicker": "夜のできごと",
+      "title": "静かな夜にはならない",
+      "bullets": [
+        "**停電** — 覚える時間ごと奪われる",
+        "**ちらつき** — 窓が一斉に点滅する",
+        "**見回り交代まで** — 選ぶ時間が半分になる"
+      ],
+      "narration": "夜は、静かなままでは終わりません。停電が起きます。覚えている途中でも、容赦なく暗くなります。窓が一斉にちらつく夜もあります。そして一番いやなのが、交代の時間です。選ぶ時間が、半分になります。"
+    },
+    {
+      "kind": "death",
+      "clip": "death",
+      "kicker": "夜の終わり",
+      "title": "終わり方はいつも同じ",
+      "bullets": [
+        "見落とし3回で、**その夜は終わる**",
+        "画面が赤くなり、カメラが**ぐっと寄る**",
+        "最後にスコアが出る"
+      ],
+      "narration": "終わり方はいつも同じです。見落としが3回で、その夜は終わります。画面が赤くなって、カメラがぐっと寄ります。そして、あなたの点数が出ます。ミナさんは、これを毎晩やっています。あなたはたぶん、5回くらいで目が疲れます。"
+    },
+    {
+      "kind": "outro",
+      "title": "概要欄のリンクから遊べます",
+      "subtitle": "チャンネル登録もぜひ",
+      "narration": "今すぐ遊べます。概要欄のリンクからどうぞ。毎日1本ゲームを出しているので、チャンネル登録もぜひお願いします。"
+    }
+  ],
+  "slug": "night-watch",
+  "channel": "Daily Arcade Studio",
+  "events": [
+    "blackout",
+    "neon",
+    "rain",
+    "flicker",
+    "hurry"
+  ],
+  "short": [
+    {
+      "mark": "blackout",
+      "lead": -0.5,
+      "dur": 8.0,
+      "headline": "覚える時間が消える"
+    },
+    {
+      "mark": "hurry",
+      "lead": -0.5,
+      "dur": 7.0,
+      "headline": "選ぶ時間が半分に"
+    },
+    {
+      "mark": "rain",
+      "lead": -0.5,
+      "dur": 7.0,
+      "headline": "窓がにじむ"
+    },
+    {
+      "mark": "neon",
+      "lead": -0.3,
+      "dur": 6.0,
+      "headline": "見なくていい光"
+    },
+    {
+      "mark": "death",
+      "lead": -2.0,
+      "dur": 9.0,
+      "headline": "見落とし3回で終わり"
+    }
+  ],
+  "thumb": {
+    "hook": "変わった窓はどれ",
+    "sub": "2秒で覚える。1枚だけ変わる。ブラウザで無料。",
+    "frame_mark": "blackout",
+    "frame_lead": 1.2
+  },
+  "short_v2": {
+    "cuts": [
+      {
+        "kind": "clip",
+        "mark": "blackout",
+        "lead": -0.5,
+        "dur": 4.5,
+        "headline": "今日のゲーム",
+        "narration": "今日のゲームです。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "watcher",
+        "dur": 5.0,
+        "headline": "ナイト・ウォッチ",
+        "narration": "あなたは、向かいのビルを見張る夜警です。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "litwindow",
+        "dur": 5.0,
+        "headline": "覚える",
+        "narration": "まず、灯った窓の並びを覚えます。2秒です。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "darkwindow",
+        "dur": 5.0,
+        "headline": "1枚だけ変わる",
+        "narration": "暗転のあいだに、窓が1枚だけ変わります。それを指します。"
+      },
+      {
+        "kind": "clip",
+        "mark": "death",
+        "lead": -2.0,
+        "dur": 5.5,
+        "headline": "",
+        "narration": "見落としは、3回までです。"
+      },
+      {
+        "kind": "clip",
+        "mark": "run2",
+        "lead": 1.0,
+        "dur": 4.5,
+        "cta": "概要欄のリンクから遊べます",
+        "narration": "ブラウザで無料で遊べます。リンクは概要欄です。"
+      }
+    ]
+  }
+}

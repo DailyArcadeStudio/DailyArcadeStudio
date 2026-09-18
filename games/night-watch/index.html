@@ -1,0 +1,1230 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ナイト・ウォッチ</title>
+<style>
+  html,body{margin:0;padding:0;overflow:hidden;background:#07080f;
+    font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Noto Sans JP',sans-serif;}
+  #ui{position:fixed;top:16px;left:0;right:0;text-align:center;color:#fff;z-index:10;pointer-events:none;}
+  #score{font-size:clamp(24px,5.6vw,34px);font-weight:800;text-shadow:0 2px 8px #000;}
+  #msg{font-size:clamp(14px,3.6vw,19px);margin-top:6px;opacity:.9;text-shadow:0 2px 6px #000;}
+  #title{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:rgba(4,5,12,.78);z-index:20;color:#fff;transition:opacity .4s;padding:0 16px;box-sizing:border-box;}
+  #title h1{font-size:clamp(30px,9vw,60px);margin:0 0 8px;letter-spacing:3px;text-shadow:0 4px 18px #ffb020;}
+  #title p{font-size:clamp(13px,3.4vw,19px);opacity:.85;margin:4px 0;text-align:center;line-height:1.6;}
+  #title .btn{margin-top:26px;padding:14px 44px;font-size:clamp(18px,4.6vw,22px);font-weight:700;color:#1a1204;
+    background:linear-gradient(180deg,#ffc94a,#e08a10);border:none;border-radius:12px;cursor:pointer;
+    box-shadow:0 6px 24px rgba(255,180,40,.45);}
+  #title .btn:hover{transform:scale(1.05);}
+  .hidden{opacity:0;pointer-events:none;}
+  #back{position:fixed;top:14px;left:14px;z-index:30;text-decoration:none;
+    background:rgba(12,16,26,.72);color:#fff;
+    font:600 clamp(12px,3vw,15px)/1 'Hiragino Sans','Noto Sans JP',sans-serif;
+    padding:0 14px;height:44px;display:flex;align-items:center;border-radius:12px;}
+  #back:hover{background:rgba(30,38,56,.9);}
+  #mute{position:fixed;top:14px;right:14px;z-index:30;border:none;cursor:pointer;
+    background:rgba(12,16,26,.72);color:#fff;font-size:20px;line-height:1;
+    width:44px;height:44px;border-radius:12px;}
+  #mute:hover{background:rgba(30,38,56,.9);}
+  /* デバイスに合う操作説明だけ出す */
+  .tc{display:none;}
+  @media (pointer:coarse){ .kb{display:none;} .tc{display:block;} }
+  @media (pointer:coarse){ #title .btn{padding:18px 52px;} }
+
+  /* --- イベントのバナー: 画面中央に叩きつける --- */
+  #banner{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    z-index:15;pointer-events:none;opacity:0;}
+  #banner .b{font-size:clamp(24px,7vw,62px);font-weight:900;letter-spacing:.06em;color:#fff;
+    padding:10px 4vw;max-width:94vw;text-align:center;transform:scale(2.4);opacity:0;
+    text-shadow:0 0 26px currentColor, 0 6px 20px #000;
+    border-top:5px solid currentColor;border-bottom:5px solid currentColor;}
+  #banner.go .b{animation:slam .62s cubic-bezier(.12,.85,.2,1) forwards;}
+  @keyframes slam{
+    0%  {transform:scale(2.4) rotate(-4deg);opacity:0;}
+    22% {transform:scale(1)   rotate(0deg); opacity:1;}
+    70% {transform:scale(1)   rotate(0deg); opacity:1;}
+    100%{transform:scale(1.12);opacity:0;}
+  }
+
+  /* --- 全画面フラッシュ --- */
+  #flash{position:fixed;inset:0;z-index:14;pointer-events:none;opacity:0;background:#fff;}
+  #vignette{position:fixed;inset:0;z-index:13;pointer-events:none;opacity:0;
+    background:radial-gradient(ellipse at center,rgba(0,0,0,0) 32%,rgba(120,0,10,.85) 100%);}
+
+  /* --- K.O. 画面 --- */
+  #ko{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    z-index:22;pointer-events:none;opacity:0;color:#fff;transition:opacity .3s;}
+  #ko.on{opacity:1;}
+  #ko .koText{font-size:clamp(88px,24vw,180px);font-weight:900;letter-spacing:10px;color:#fff;
+    text-shadow:0 0 40px #ff3b2a,0 0 90px #ff3b2a,0 10px 30px #000;
+    transform:scale(3);opacity:0;}
+  #ko.on .koText{animation:koSlam .8s cubic-bezier(.1,.9,.2,1) forwards;}
+  @keyframes koSlam{
+    0%  {transform:scale(3) rotate(-8deg);opacity:0;}
+    30% {transform:scale(1) rotate(0deg);opacity:1;}
+    36% {transform:scale(1.06);}
+    100%{transform:scale(1);opacity:1;}
+  }
+  #ko .finalLabel{font-size:clamp(14px,3.6vw,20px);letter-spacing:5px;opacity:0;margin-top:6px;
+    text-shadow:0 2px 8px #000;}
+  #ko .finalScore{font-size:clamp(44px,13vw,80px);font-weight:800;opacity:0;text-shadow:0 4px 20px #000;}
+  #ko.on .finalLabel{animation:fadeUp .5s .75s forwards;}
+  #ko.on .finalScore{animation:fadeUp .5s .9s forwards;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+
+  /* --- 残りミス表示 --- */
+  #lives{position:fixed;bottom:16px;left:0;right:0;text-align:center;z-index:11;
+    pointer-events:none;color:#ffb020;font-size:clamp(20px,5vw,28px);letter-spacing:6px;
+    text-shadow:0 2px 10px #000;}
+
+  /* --- 遊びかた (?) --- */
+  #helpBtn{position:fixed;top:14px;right:66px;z-index:30;border:none;cursor:pointer;
+    background:rgba(12,16,26,.72);color:#fff;font:700 20px/1 sans-serif;
+    width:44px;height:44px;border-radius:12px;}
+  #helpBtn:hover{background:rgba(30,38,56,.9);}
+  #help{position:fixed;inset:0;z-index:40;display:none;align-items:center;
+    justify-content:center;background:rgba(4,6,12,.86);padding:20px;}
+  #help.on{display:flex;}
+  #help .box{background:#111726;border:1px solid #2b3550;border-radius:18px;
+    max-width:560px;width:100%;max-height:86vh;overflow:auto;padding:24px 24px 20px;
+    color:#e6edf3;}
+  #help h2{margin:0 0 4px;font-size:clamp(20px,5vw,26px);}
+  #help .sub{color:#8b949e;font-size:clamp(12px,3.2vw,14px);margin:0 0 16px;}
+  #help h3{font-size:clamp(13px,3.4vw,15px);color:#ffb020;margin:16px 0 6px;letter-spacing:.04em;}
+  #help ul{margin:0;padding-left:20px;}
+  #help li{font-size:clamp(13px,3.4vw,15px);line-height:1.7;margin:3px 0;}
+  #help b{color:#ffb020;font-weight:700;}
+  #help .close{margin-top:18px;width:100%;padding:12px;border:none;border-radius:10px;
+    background:#2b3550;color:#fff;font-size:16px;font-weight:700;cursor:pointer;}
+  #help .close:hover{background:#3a4668;}
+</style>
+</head>
+<body>
+<div id="ui"><div id="score">0</div><div id="msg"></div></div>
+<div id="lives"></div>
+<button id="helpBtn" title="遊びかた">?</button>
+<div id="help"><div class="box">
+  <h2>ナイト・ウォッチ</h2>
+  <p class="sub">向かいのビルを見張る仕事。ブラウザで無料。</p>
+    <h3>夜警</h3>
+    <ul><li>やることは<b>見ること</b>だけ。ずっと同じ窓を見ている</li>
+        <li>灯りの並びを覚えて、暗転のあとに<b>変わった一枚</b>を指す</li>
+        <li>誰も来ない。報告する相手もいない</li></ul>
+    <h3>窓</h3>
+    <ul><li>灯りが<b>ついた</b>か、<b>消えた</b>か。変化はいつも一枚だけ</li>
+        <li>正解すると窓が増え、暗転は短くなる</li>
+        <li>間違えると見落としが一つ。<b>三つで交代</b></li></ul>
+    <h3>ネオン看板</h3>
+    <ul><li>ビルの横で<b>ちらつく</b>。ただの看板</li>
+        <li>暗転のあいだも光っている。目が引っぱられる</li></ul>
+    <h3>屋上の赤ランプ</h3>
+    <ul><li>航空障害灯。<b>一定のリズム</b>で点滅する</li>
+        <li>数えても意味はない。数えてしまうが</li></ul>
+  <button class="close">わかった</button>
+</div></div>
+<a id="back" href="../../" title="ゲーム一覧にもどる">‹ ゲーム一覧</a>
+<button id="mute" title="音のオン・オフ">🔊</button>
+<div id="vignette"></div>
+<div id="flash"></div>
+<div id="banner"><div class="b"></div></div>
+<div id="ko">
+  <div class="koText">K.O.</div>
+  <div class="finalLabel">さいしゅうスコア</div>
+  <div class="finalScore">0</div>
+</div>
+<div id="title">
+  <h1>ナイト・ウォッチ</h1>
+  <p>灯りの並びを覚えて、変わった窓を見つける。</p>
+  <p class="kb">← → ↑ ↓ : カーソル移動 &nbsp;&nbsp; スペース : 決定</p>
+  <p class="tc">窓をタップ &nbsp;&nbsp; スワイプでカーソル移動</p>
+  <button class="btn" id="startBtn">スタート</button>
+</div>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+// ---------- url flags (declared first: sound and camera both read them) ----------
+const QS = new URLSearchParams(location.search);
+const AUTO = QS.get('auto')==='1';
+const SHOWCASE_Q = QS.get('showcase');
+// Recording must produce clean footage, so every automated mode is muted.
+const REC = QS.get('rec')==='1';   // 録音モード: 音を鳴らして拾う
+const SILENT = (AUTO || !!SHOWCASE_Q || QS.get('mute')==='1') && !REC;
+// 録画・showcase では「?」と「ゲーム一覧」を出さない（動画の邪魔になる）
+const NOCHROME = AUTO || !!SHOWCASE_Q || QS.get('nochrome')==='1';
+// 録画は K.O. を長めに見せる: ?hold=9000
+const RETRY_MS = Math.max(1200, parseInt(QS.get('hold')||'4200', 10));
+// ?noev=1 でイベントなしの落ち着いた映像を録る
+const NOEV = QS.get('noev')==='1';
+
+// ---------- renderer / scene ----------
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const SKY = new THREE.Color(0x070810);
+scene.background = SKY.clone();
+
+const camera = new THREE.PerspectiveCamera(46, innerWidth/innerHeight, .1, 300);
+
+// ---------- 建物のグリッド ----------
+// 窓は格子状。難易度が上がると列と段が増える。
+const CELL = 2.0;                 // 窓ピッチ
+let cols = 4, rows = 3;           // 現在のグリッド
+const MAXC = 7, MAXR = 7;
+let windows = [];                 // {mesh, glow, on, cx, cy}
+
+// 建物本体（窓より少し大きい板）— 窓が増えるたび作り直す
+const facadeMat = new THREE.MeshStandardMaterial({color:0x151a26, roughness:.95, metalness:.05});
+const facade = new THREE.Mesh(new THREE.BoxGeometry(1,1,1), facadeMat);
+scene.add(facade);
+
+// 窓のマテリアルは「消灯」「点灯」の2枚を使い回す
+const OFF_COLOR = 0x1b2230, ON_COLOR = 0xffc046;
+const winOffMat = new THREE.MeshStandardMaterial({color:OFF_COLOR, roughness:.4, metalness:.1});
+const winOnMat  = new THREE.MeshStandardMaterial({color:ON_COLOR, emissive:0xffa820,
+                                                  emissiveIntensity:1.0, roughness:.3});
+const frameMat  = new THREE.MeshStandardMaterial({color:0x0c1018, roughness:.9});
+
+// 1枚の窓（枠＋ガラス＋光のハロ）
+function buildWindow(){
+  const g = new THREE.Group();
+  const frame = new THREE.Mesh(new THREE.BoxGeometry(1.62, 1.62, .18), frameMat);
+  frame.position.z = -.06; g.add(frame);
+  const pane = new THREE.Mesh(new THREE.BoxGeometry(1.34, 1.34, .16), winOffMat);
+  g.add(pane);
+  // 桟（十字）— ただの箱に見せないための細部
+  const barV = new THREE.Mesh(new THREE.BoxGeometry(.07, 1.34, .2), frameMat);
+  const barH = new THREE.Mesh(new THREE.BoxGeometry(1.34, .07, .2), frameMat);
+  g.add(barV, barH);
+  // 光のにじみ。板ポリだと丸い円に見えるのでシェーダで外へ向けて減衰させる
+  const glow = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 3.4), new THREE.ShaderMaterial({
+    transparent:true, depthWrite:false, blending:THREE.AdditiveBlending,
+    uniforms:{c:{value:new THREE.Color(0xffb838)}, a:{value:0}},
+    vertexShader:`varying vec2 vUv; void main(){ vUv=uv;
+      gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }`,
+    fragmentShader:`uniform vec3 c; uniform float a; varying vec2 vUv;
+      void main(){ float d=distance(vUv,vec2(.5));
+        float f=pow(max(0.,1.-d*2.),2.4);
+        gl_FragColor=vec4(c, f*a); }`,
+  }));
+  glow.position.z = .22; g.add(glow);
+  return {group:g, pane, glow};
+}
+
+// 選択カーソル（狙っている窓を囲む枠）
+const cursorMat = new THREE.MeshBasicMaterial({color:0x4ff0d8, transparent:true, opacity:.9});
+const cursor = new THREE.Group();
+(function(){
+  const t = .10, L = 1.86;
+  for(const [x,y,w,h] of [[0,L/2,L,t],[0,-L/2,L,t],[-L/2,0,t,L],[L/2,0,t,L]]){
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(w,h), cursorMat);
+    m.position.set(x,y,0); cursor.add(m);
+  }
+})();
+scene.add(cursor);
+
+// ---------- ネオン看板（イベント neon で暴れる） ----------
+const neon = (()=>{
+  const g = new THREE.Group();
+  const board = new THREE.Mesh(new THREE.BoxGeometry(1.5, 5.2, .3),
+    new THREE.MeshStandardMaterial({color:0x120a14, roughness:.8}));
+  g.add(board);
+  const tubes = [];
+  for(let i=0;i<4;i++){
+    const m = new THREE.Mesh(new THREE.TorusGeometry(.42, .09, 8, 22),
+      new THREE.MeshStandardMaterial({color:0xff3b8a, emissive:0xff2a80, emissiveIntensity:1.6}));
+    m.position.set(0, 1.8 - i*1.2, .22); g.add(m); tubes.push(m);
+  }
+  const light = new THREE.PointLight(0xff3b8a, 0, 16);
+  light.position.set(0,0,2); g.add(light);
+  scene.add(g);
+  return {group:g, tubes, light, flick:0};
+})();
+
+// ---------- 屋上の赤ランプ（航空障害灯） ----------
+const beaconMat = new THREE.MeshStandardMaterial({color:0x330608, emissive:0xff1020,
+                                                  emissiveIntensity:0});
+const beacon = new THREE.Mesh(new THREE.SphereGeometry(.34, 16, 12), beaconMat);
+scene.add(beacon);
+const beaconLight = new THREE.PointLight(0xff2030, 0, 14);
+scene.add(beaconLight);
+
+// ---------- 雨（イベント rain） ----------
+const rain = (()=>{
+  const N = 420;
+  const geo = new THREE.BufferGeometry();
+  const pos = new Float32Array(N*3);
+  for(let i=0;i<N;i++){
+    pos[i*3]   = (Math.random()-.5)*34;
+    pos[i*3+1] = Math.random()*26 - 6;
+    pos[i*3+2] = Math.random()*10 - 2;
+  }
+  geo.setAttribute('position', new THREE.BufferAttribute(pos,3));
+  const mat = new THREE.PointsMaterial({color:0x9fc4ff, size:.11, transparent:true, opacity:0});
+  const pts = new THREE.Points(geo, mat);
+  scene.add(pts);
+  return {pts, mat, pos, N, on:0};
+})();
+
+// ---------- ライト ----------
+const hemi = new THREE.HemisphereLight(0x3a4a80, 0x0a0a12, .9);
+scene.add(hemi);
+const key = new THREE.DirectionalLight(0x7f9fd8, .55);
+key.position.set(-6, 9, 10); scene.add(key);
+// 街の照り返し。暗転でもここだけ薄く残す
+const bounce = new THREE.PointLight(0x4060a0, 14, 40);
+bounce.position.set(0, -6, 12); scene.add(bounce);
+
+// ---------- ゲーム状態 ----------
+let running=false, dead=false, t=0, score=0;
+let phase='watch';        // watch = 覚える / dark = 暗転 / pick = 選ぶ
+let phaseT=0;             // 現フェーズの残り秒
+let misses=0;             // 見落とし
+const MAX_MISS=3;
+let changed=null;         // 変化した窓
+let cur=0;                // カーソル位置（windows の index）
+let round=0;
+let timeScale=1, deadAt=0, shake=0;
+let camZ=18, camZTarget=18;      // 死亡時に寄る
+let nextEventAt=9, eventQueue=[];
+let flickerT=0;                  // イベント flicker の残り
+let swapPend=false;              // イベント swap 用
+let hurry=0;                     // イベント hurry の残り（制限時間が縮む）
+
+const scoreEl = document.getElementById('score');
+const msgEl = document.getElementById('msg');
+const livesEl = document.getElementById('lives');
+const titleEl = document.getElementById('title');
+const bannerEl = document.getElementById('banner');
+const bannerText = bannerEl.querySelector('.b');
+const flashEl = document.getElementById('flash');
+const vignetteEl = document.getElementById('vignette');
+const koEl = document.getElementById('ko');
+const koScoreEl = koEl.querySelector('.finalScore');
+
+// ---------- 演出ヘルパ ----------
+function banner(text, color){
+  bannerText.textContent = text;
+  bannerText.style.color = color;
+  bannerEl.classList.remove('go');
+  void bannerEl.offsetWidth;      // CSS アニメを再生し直す
+  bannerEl.style.opacity = 1;
+  bannerEl.classList.add('go');
+}
+function flash(color, strength, ms){
+  flashEl.style.background = color;
+  flashEl.style.transition = 'none';
+  flashEl.style.opacity = strength;
+  requestAnimationFrame(()=>{
+    flashEl.style.transition = `opacity ${ms}ms ease-out`;
+    flashEl.style.opacity = 0;
+  });
+}
+function drawLives(){
+  livesEl.textContent = '●'.repeat(Math.max(0, MAX_MISS-misses))
+                      + '○'.repeat(Math.min(MAX_MISS, misses));
+}
+
+// 難易度: ラウンドが進むほど窓が増える。ただし増やす向きは画面に合わせる。
+// 横長なら列を、縦長（スマホの縦持ち）なら段を優先して伸ばす。そうしないと
+// 縦画面で横幅いっぱいのビルになり、上下が大きく余って豆粒に見える。
+function wantGrid(){
+  const n = 12 + round*2;                      // 目標の窓の枚数
+  const portrait = innerHeight > innerWidth;
+  // 画面の縦横比に近い形になる c:r を選ぶ
+  const ratio = portrait ? 0.72 : 1.45;        // c / r の目安
+  let r = Math.round(Math.sqrt(n / ratio));
+  r = THREE.MathUtils.clamp(r, 3, MAXR);
+  let c = Math.round(n / r);
+  c = THREE.MathUtils.clamp(c, 3, MAXC);
+  return {c, r};
+}
+
+// ---------- グリッドの構築 ----------
+// 列・段が変わるときだけ作り直す。毎ラウンド作り直すと GC が跳ねる。
+function buildGrid(c, r){
+  for(const w of windows) scene.remove(w.group);
+  windows = [];
+  cols = c; rows = r;
+  for(let y=0;y<rows;y++){
+    for(let x=0;x<cols;x++){
+      const w = buildWindow();
+      w.group.position.set((x-(cols-1)/2)*CELL, ((rows-1)/2-y)*CELL, .34);
+      w.on = false; w.cx = x; w.cy = y;
+      scene.add(w.group);
+      windows.push(w);
+    }
+  }
+  // 建物本体を窓の外周に合わせる
+  const W = cols*CELL + 1.8, H = rows*CELL + 2.6;
+  facade.geometry.dispose();
+  facade.geometry = new THREE.BoxGeometry(W, H, 2.2);
+  facade.position.set(0, -0.5, -0.9);
+  // 看板は建物の右脇、ランプは屋上の真ん中
+  // 看板はビルの高さに合わせて縮め、横にぴたりと寄せる。
+  // 固定サイズのままだと、縦画面で横幅を食ってビル全体が小さくなる。
+  const ns = THREE.MathUtils.clamp(H / 9, .55, 1.0);
+  neon.group.scale.setScalar(ns);
+  neon.group.position.set(W/2 + 1.1*ns, 0.2, .2);
+  neon.halfW = 0.75*ns;
+  beacon.position.set(0, H/2 - 0.5 + 0.9, .1);
+  beaconLight.position.set(0, H/2 + 0.4, 1.4);
+  fitCamera();
+}
+
+// 窓の点灯状態を反映する（即時 / なめらか は光のハロ側で処理）
+function applyLit(w, lit){
+  w.on = lit;
+  w.pane.material = lit ? winOnMat : winOffMat;
+}
+
+// ---------- カメラ合わせ ----------
+// 縦持ちの画面は 16:9 よりずっと狭い。縦 FOV を広げたうえで、ビルの
+// 実寸に合わせて距離を出す。両方やらないと、縦画面でビルが切れるか、
+// 逆に豆粒になるかのどちらかになる。
+const BASE_FOV = 46;
+function fitCamera(){
+  const aspect = innerWidth / innerHeight;
+  camera.aspect = aspect;
+  if(SHOWCASE_Q){
+    camera.fov = aspect < 1 ? 62 : 46;
+  } else {
+    // 縦長ほど FOV を広げる。ただし広げすぎると歪むので 74 で止め、
+    // 残りは fitBuilding が距離で吸収する。
+    const ref = 16/9;
+    camera.fov = aspect >= ref ? BASE_FOV
+      : Math.min(74, THREE.MathUtils.radToDeg(
+          2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(BASE_FOV)/2) * Math.sqrt(ref/aspect))));
+  }
+  camera.__base = camera.fov;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+  if(!SHOWCASE_Q) fitBuilding();
+}
+// ビル全体（＋右の看板／屋上のランプ）がちょうど画面に収まる距離を出す。
+// 中身は原点対称ではない（看板は右、ランプは上）ので、上下左右それぞれの
+// 張り出しを取り、中心をカメラの注視点にしてから半径で距離を決める。
+let lookY = 0;
+function fitBuilding(){
+  const W = cols*CELL + 1.8, H = rows*CELL + 2.6;
+  const left   = -W/2;
+  const right  =  W/2 + (neon.halfW||.75)*2 + 1.1;   // ネオン看板のぶん
+  const bottom = -H/2 - 0.5;          // facade は少し下がっている
+  const top    =  H/2 + 1.4;          // 屋上の赤ランプ
+  const cxm = (left+right)/2, cym = (bottom+top)/2;
+  const halfW = (right-left)/2, halfH = (top-bottom)/2;
+  lookY = cym;
+  const vFov = THREE.MathUtils.degToRad(camera.fov);
+  const hFov = 2*Math.atan(Math.tan(vFov/2)*camera.aspect);
+  // 上のスコアと下の残りミス表示にビルが潜り込まないよう、その帯のぶんだけ
+  // 視野を余分に確保する（画面の高さに対する割合で見積もる）
+  const hudFrac = Math.min(.34, 150 / innerHeight);   // 上下合わせて使う割合
+  // 横方向は注視点からのずれ(cxm)ぶん余計に要るので足しておく
+  const dV = (halfH / (1 - hudFrac)) / Math.tan(vFov/2);
+  const dH = (halfW + Math.abs(cxm)) / Math.tan(hFov/2);
+  camZTarget = Math.max(dV, dH) * 1.02;
+  if(!dead) camZ = camZTarget;
+}
+addEventListener('resize', fitCamera);
+addEventListener('orientationchange', ()=>setTimeout(fitCamera, 120));
+
+// ---------- イベント ----------
+// それぞれ見た目も対処も違うものにして、映像に変化を出す。
+const EVENTS = {
+  // 停電: 建物ごと真っ暗。覚えている並びだけが頼り
+  blackout(){
+    banner('停電', '#9b6bff');
+    flash('#000000', .9, 260);
+    if(phase==='watch'){ phaseT = Math.min(phaseT, .35); }   // 覚える時間を奪う
+    blackoutT = 2.4;
+    return 5;
+  },
+  // ネオン: 看板が激しく明滅して視線を引っぱる
+  neon(){
+    banner('ネオン看板', '#ff3b8a');
+    neon.flick = 6.5;
+    return 6;
+  },
+  // 土砂降り: 窓がにじんで見えづらくなる
+  rain(){
+    banner('土砂降り', '#7fb4ff');
+    rain.on = 7.5;
+    return 7;
+  },
+  // ちらつき: 窓が一斉に細かく点滅する。変化を見失いやすい
+  flicker(){
+    banner('ちらつき', '#ffd23b');
+    flickerT = 5.0;
+    return 5.5;
+  },
+  // 急かされる: 選ぶ時間が半分になる
+  hurry(){
+    banner('見回り交代まで', '#ff6a3b');
+    hurry = 9;
+    flash('#ff6a3b', .3, 380);
+    return 8;
+  },
+};
+let blackoutT = 0;
+const EVENT_NAMES = Object.keys(EVENTS);
+window.__events = EVENT_NAMES.slice();
+
+// 録画・デバッグ用フック。走行が終わっていたら false を返すので、
+// 収録スクリプトは次のランを待てる。
+window.__ev = name => {
+  if(!running || dead || !EVENTS[name]) return false;
+  const busy = EVENTS[name]();
+  if(!SILENT) SND.event();
+  nextEventAt = t + busy + 5;
+  return true;
+};
+window.__alive = () => running && !dead;
+window.__kill = () => { if(running && !dead){ dead=true; gameOver(); } };
+window.__recStop = () => SND.recStop();
+window.__snd = () => ({enabled: SND.enabled, silent: SILENT});
+window.__fov = () => +camera.fov.toFixed(1);
+window.__cursor = () => cur;
+window.__probe = () => ({t:+t.toFixed(2), phase, phaseT:+phaseT.toFixed(2),
+  cols, rows, misses, round, next:+nextEventAt.toFixed(2)});
+
+function refillEventQueue(){
+  eventQueue = EVENT_NAMES.slice();
+  for(let i=eventQueue.length-1;i>0;i--){        // ランごとに順番を変える
+    const j = Math.floor(Math.random()*(i+1));
+    [eventQueue[i],eventQueue[j]]=[eventQueue[j],eventQueue[i]];
+  }
+}
+function triggerEvent(){
+  if(!eventQueue.length) refillEventQueue();
+  const name = eventQueue.pop();
+  const busy = EVENTS[name]();
+  if(!SILENT) SND.event();
+  nextEventAt = t + busy + 5 + Math.random()*4;  // イベントの間に余白を置く
+}
+
+// ---------- ラウンド進行 ----------
+// watch: 並びを見せる → dark: 暗転（この間に一枚だけ変える） → pick: 指す
+function startWatch(){
+  phase = 'watch';
+  const g = wantGrid();
+  if(g.c!==cols || g.r!==rows) buildGrid(g.c, g.r);
+  // 灯りをランダムに配る（全消灯・全点灯は避ける）
+  let lit = 0;
+  do{
+    lit = 0;
+    for(const w of windows){
+      const on = Math.random() < .45;
+      applyLit(w, on);
+      if(on) lit++;
+    }
+  } while(lit===0 || lit===windows.length);
+  changed = null;
+  cur = Math.floor(windows.length/2);
+  phaseT = Math.max(1.1, 2.6 - round*.09);
+  msgEl.textContent = '覚える';
+  if(!SILENT) SND.place();
+}
+function startDark(){
+  phase = 'dark';
+  phaseT = Math.max(.45, 1.0 - round*.03);
+  msgEl.textContent = '';
+  if(!SILENT) SND.dark();
+}
+function startPick(){
+  // 暗転の終わりに、ちょうど一枚だけ状態を反転させる
+  changed = windows[Math.floor(Math.random()*windows.length)];
+  applyLit(changed, !changed.on);
+  phase = 'pick';
+  phaseT = Math.max(1.6, 4.2 - round*.1) * (hurry>0 ? .55 : 1);
+  msgEl.textContent = '変わった窓は？';
+  if(!SILENT) SND.reveal();
+}
+
+// 選んだ窓を判定する。ここが唯一の「決定」経路（キーもタッチも通る）
+function commitPick(idx){
+  if(!running || dead || phase!=='pick') return;
+  const w = windows[idx];
+  if(w === changed){
+    // 正解: スコアと難易度が上がる
+    round++;
+    const gain = 100 + round*20 + (hurry>0 ? 60 : 0);
+    score += gain;
+    scoreEl.textContent = Math.floor(score);
+    flash('#4ff0d8', .28, 320);
+    msgEl.textContent = '正解 +' + gain;
+    if(!SILENT) SND.good();
+    phase = 'gap'; phaseT = .55;
+  } else {
+    // 不正解: 見落とし。三つで交代
+    misses++;
+    drawLives();
+    shake = Math.max(shake, .45);
+    flash('#ff2b3a', .45, 380);
+    if(!SILENT) SND.bad();
+    if(misses >= MAX_MISS){ dead = true; gameOver(); return; }
+    msgEl.textContent = '見落とし';
+    phase = 'gap'; phaseT = .7;
+  }
+}
+
+// ---------- リセット ----------
+function reset(){
+  round=0; misses=0; score=0; t=0; dead=false;
+  timeScale=1; shake=0;
+  blackoutT=0; flickerT=0; hurry=0; rain.on=0; neon.flick=0;
+  nextEventAt = 9;
+  refillEventQueue();
+  { const g = wantGrid(); buildGrid(g.c, g.r); }
+  drawLives();
+  scoreEl.textContent = '0';
+  koEl.classList.remove('on');
+  vignetteEl.style.transition='opacity .3s'; vignetteEl.style.opacity=0;
+  hemi.intensity=.9; key.intensity=.55; bounce.intensity=14;
+  camZ = camZTarget;
+  startWatch();
+}
+
+const startBtn = document.getElementById('startBtn');
+
+// ---------- sound: everything synthesised, no audio files ----------
+// Keeps the single-HTML rule (nothing to download) and lets the music
+// react to play: the bass line speeds up with the game, events drop a
+// stinger, and the whole thing ducks out on a game over.
+const SND = (() => {
+  let ctx = null, master = null, musicGain = null, on = true, started = false;
+  let step = 0, timer = null, tempo = 0.25;
+
+  // A pentatonic scale never sounds wrong against itself, which matters
+  // when the tempo drifts with the player's speed.
+  // minor pentatonic, driving — a chase that never lets up
+  const SCALE = [0, 3, 5, 7, 10];
+  const ROOT = 196;
+  const BASS = 'square', LEAD = 'sawtooth';
+  const hz = (deg, oct = 0) =>
+    ROOT * Math.pow(2, oct + Math.floor(deg / SCALE.length)) *
+    Math.pow(2, SCALE[((deg % SCALE.length) + SCALE.length) % SCALE.length] / 12);
+
+  function ensure() {
+    if (ctx) return ctx;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    ctx = new AC();
+    master = ctx.createGain();
+    master.gain.value = 0.32;
+    master.connect(ctx.destination);
+    musicGain = ctx.createGain();
+    musicGain.gain.value = 1;
+    musicGain.connect(master);
+    return ctx;
+  }
+
+
+  // ---- 録音用の分岐（?rec=1）----
+  // Playwright の録画には音声が入らないので、ゲーム自身に master バスを
+  // 録らせる。鳴っているものそのものなので映像と必ず同期する。
+  let recDest = null, recorder = null, recChunks = [];
+  function recStart() {
+    if (!ctx || recorder) return;
+    recDest = ctx.createMediaStreamDestination();
+    master.connect(recDest);
+    recorder = new MediaRecorder(recDest.stream, {mimeType: 'audio/webm'});
+    recorder.ondataavailable = e => { if (e.data.size) recChunks.push(e.data); };
+    recorder.start();
+  }
+  function recStop() {
+    return new Promise(res => {
+      if (!recorder) return res(null);
+      recorder.onstop = async () => {
+        const blob = new Blob(recChunks, {type: 'audio/webm'});
+        const buf = await blob.arrayBuffer();
+        res(Array.from(new Uint8Array(buf)));
+      };
+      recorder.stop();
+    });
+  }
+
+  function blip(freq, dur, type = 'square', vol = 0.25, dest = null, slideTo = null) {
+    if (!ctx || !on) return;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, ctx.currentTime);
+    if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, ctx.currentTime + dur);
+    // a short attack stops every note from clicking
+    g.gain.setValueAtTime(0, ctx.currentTime);
+    g.gain.linearRampToValueAtTime(vol, ctx.currentTime + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
+    o.connect(g); g.connect(dest || master);
+    o.start(); o.stop(ctx.currentTime + dur + 0.02);
+  }
+
+  function noise(dur, vol = 0.2, hp = 800) {
+    if (!ctx || !on) return;
+    const n = Math.floor(ctx.sampleRate * dur);
+    const buf = ctx.createBuffer(1, n, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    const f = ctx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = hp;
+    const g = ctx.createGain(); g.gain.value = vol;
+    src.connect(f); f.connect(g); g.connect(master);
+    src.start();
+  }
+
+  // --- the loop: a walking bass plus an offbeat blip ---
+  function tick() {
+    if (!ctx || !on) return;
+    const bar = step % 16;
+    // straight driving pulse: bass on every beat, lead stabs offbeat
+    if (bar % 2 === 0) blip(hz(bar % 8 === 0 ? 0 : 1, -1), tempo * 1.1, BASS, 0.30, musicGain);
+    if (bar % 8 === 5) blip(hz(4, 0), tempo * 0.6, LEAD, 0.09, musicGain);
+    if (bar % 4 === 2) noise(0.04, 0.05, 5000);
+    step++;
+    timer = setTimeout(tick, tempo * 1000);
+  }
+
+  return {
+    // must be called from a user gesture — browsers block audio otherwise
+    start() {
+      if (!ensure() || started) return;
+      if (ctx.state === 'suspended') ctx.resume();
+      started = true; step = 0; tick();
+    },
+    stop() { if (timer) { clearTimeout(timer); timer = null; } started = false; },
+    /** speed the music up with the game; 1 = starting pace */
+    setPace(mult) { tempo = Math.max(0.11, 0.25 / Math.max(0.2, mult)); },
+    duck(sec = 1.6) {                                      // for game over
+      if (!ctx) return;
+      musicGain.gain.cancelScheduledValues(ctx.currentTime);
+      musicGain.gain.setValueAtTime(musicGain.gain.value, ctx.currentTime);
+      musicGain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + sec);
+    },
+    unduck() {
+      if (!ctx) return;
+      musicGain.gain.cancelScheduledValues(ctx.currentTime);
+      musicGain.gain.setValueAtTime(0.0001, ctx.currentTime);
+      musicGain.gain.exponentialRampToValueAtTime(1, ctx.currentTime + 0.4);
+    },
+    // --- one-shots ---
+    // カーソル移動: 短く高い点。連打しても濁らないよう音量は控えめ
+    move()  { ensure(); blip(hz(3, 1), 0.06, LEAD, 0.11); },
+    // 覚えるフェーズの開始: 上に開く二音
+    place() { ensure(); blip(hz(2, 0), 0.10, BASS, 0.22, null, hz(4, 1)); },
+    // 暗転: 下に落ちる一音。暗くなる合図
+    dark()  { ensure(); blip(hz(4, 0), 0.22, 'triangle', 0.22, null, hz(0, -1)); },
+    // 点灯し直し: ぱっと開く短い和音（二音を同時に）
+    reveal(){ ensure(); blip(hz(2, 1), 0.14, 'triangle', 0.16);
+                        blip(hz(4, 1), 0.14, LEAD, 0.10); },
+    // 正解: 上がる三音
+    good()  { ensure(); [0, 70, 140].forEach((ms, i) =>
+                setTimeout(() => blip(hz(2 + i * 2, 1), 0.13, 'triangle', 0.20), ms)); },
+    // 不正解: 濁った低い二音
+    bad()   { ensure(); blip(hz(1, -1), 0.24, 'sawtooth', 0.22, null, hz(0, -1));
+                        noise(0.10, 0.12, 300); },
+    event() { ensure(); [0, 90, 180].forEach((ms, i) =>
+                setTimeout(() => blip(hz(2 + i, 0), 0.18, 'sawtooth', 0.20), ms)); },
+    hit()   { ensure(); noise(0.35, 0.30, 200);
+              blip(180, 0.5, 'sawtooth', 0.28, null, 40); },
+    over()  { ensure(); [0, 140, 280, 460].forEach((ms, i) =>
+                setTimeout(() => blip(hz(-i, -1), 0.42, 'triangle', 0.26), ms)); },
+    recStart() { ensure(); recStart(); },
+    recStop() { return recStop(); },
+    toggle() { on = !on; if (!on) { this.stop(); } else { this.start(); } return on; },
+    get enabled() { return on; },
+  };
+})();
+
+// --- 操作はすべてここを通す。キーとタッチがずれないように ---
+function startRun(){
+  titleEl.classList.add('hidden'); reset(); running=true;
+  if(!SILENT){ SND.unduck(); SND.start(); if(REC) SND.recStart(); }
+}
+function moveCursor(dx, dy){
+  if(!running || dead || !windows.length) return;
+  let x = windows[cur].cx + dx, y = windows[cur].cy + dy;
+  x = (x + cols) % cols; y = (y + rows) % rows;     // 端で折り返す
+  cur = y*cols + x;
+  if(!SILENT) SND.move();
+}
+function confirmPick(){ commitPick(cur); }
+
+const muteBtn = document.getElementById('mute');
+function toggleMute(){ muteBtn.textContent = SND.toggle() ? '🔊' : '🔇'; }
+muteBtn.addEventListener('click', toggleMute);
+muteBtn.addEventListener('touchend', e=>{ e.preventDefault(); toggleMute(); },
+                         {passive:false});
+if(SILENT) muteBtn.style.display='none';   // 自動モードは常に無音
+addEventListener('keydown', e=>{ if(e.code==='KeyM') toggleMute(); });
+
+startBtn.addEventListener('click', startRun);
+// タッチでも始まること。click だけではタッチ端末で取りこぼす
+startBtn.addEventListener('touchend', e=>{ e.preventDefault(); startRun(); },
+                          {passive:false});
+
+addEventListener('keydown', e=>{
+  if(!running){
+    if(e.code==='Space'||e.code==='Enter') startRun();
+    return;
+  }
+  if(dead){
+    if(e.code==='Space'||e.code==='Enter') startRun();
+    return;
+  }
+  if(e.code==='ArrowLeft' ||e.code==='KeyA') moveCursor(-1, 0);
+  if(e.code==='ArrowRight'||e.code==='KeyD') moveCursor( 1, 0);
+  if(e.code==='ArrowUp'   ||e.code==='KeyW') moveCursor( 0,-1);
+  if(e.code==='ArrowDown' ||e.code==='KeyS') moveCursor( 0, 1);
+  if(e.code==='Space'||e.code==='Enter') confirmPick();
+});
+
+// --- タッチ: 窓を直接タップ、スワイプでカーソル移動 ---
+// スマホから来る人が大半なので、キーボードなしで完結させる。
+// 画面の座標からレイを飛ばし、当たった窓をそのまま決定する。
+const raycaster = new THREE.Raycaster();
+const ndc = new THREE.Vector2();
+function pickAt(clientX, clientY){
+  ndc.x = (clientX / innerWidth) * 2 - 1;
+  ndc.y = -(clientY / innerHeight) * 2 + 1;
+  raycaster.setFromCamera(ndc, camera);
+  // 枠ごと当てたいので group 単位で交差を取る
+  for(let i=0;i<windows.length;i++){
+    const hits = raycaster.intersectObject(windows[i].group, true);
+    if(hits.length){ return i; }
+  }
+  return -1;
+}
+function tapAt(clientX, clientY){
+  const i = pickAt(clientX, clientY);
+  if(i < 0) return;
+  cur = i;
+  if(!SILENT) SND.move();
+  commitPick(i);
+}
+
+(function(){
+  let sx=0, sy=0, st=0, moved=false;
+  const SWIPE = 30;          // スワイプと見なす移動量(px)
+  const canvas = renderer.domElement;
+
+  canvas.addEventListener('touchstart', e=>{
+    const p = e.changedTouches[0];
+    sx=p.clientX; sy=p.clientY; st=Date.now(); moved=false;
+  }, {passive:true});
+
+  canvas.addEventListener('touchmove', e=>{
+    if(moved || !running || dead) return;
+    const p = e.changedTouches[0];
+    const dx = p.clientX-sx, dy = p.clientY-sy;
+    if(Math.abs(dx) > SWIPE && Math.abs(dx) > Math.abs(dy)){
+      moveCursor(dx < 0 ? -1 : 1, 0);
+      moved = true;                       // 1スワイプ 1マス
+      sx = p.clientX; sy = p.clientY;     // 続けて振れば続けて動く
+      moved = false;
+      st = 0;                             // もうタップとしては扱わない
+    } else if(Math.abs(dy) > SWIPE && Math.abs(dy) > Math.abs(dx)){
+      moveCursor(0, dy < 0 ? -1 : 1);
+      sx = p.clientX; sy = p.clientY;
+      st = 0;
+    }
+  }, {passive:true});
+
+  canvas.addEventListener('touchend', e=>{
+    if(dead){
+      // K.O. を読ませてから、タップで再挑戦
+      if(!AUTO && Date.now()-deadAt > 1500) startRun();
+      return;
+    }
+    if(!running){ startRun(); return; }
+    // スワイプにならなかった短いタッチ = タップ → その窓を選ぶ
+    if(st && Date.now()-st < 400){
+      const p = e.changedTouches[0];
+      tapAt(p.clientX, p.clientY);
+    }
+  }, {passive:true});
+
+  // マウスでも同じ経路で遊べるように
+  canvas.addEventListener('click', e=>{
+    if(!running || dead) return;
+    tapAt(e.clientX, e.clientY);
+  });
+
+  // タイトルは canvas の上にあるので、タップが canvas に届かない。
+  // オーバーレイ自身から開始する。
+  titleEl.addEventListener('touchend', e=>{
+    if(!running){ e.preventDefault(); startRun(); }
+  }, {passive:false});
+
+  // ゲーム中のタップをスクロール・ダブルタップ拡大にさせない
+  canvas.addEventListener('touchmove', e=>e.preventDefault(), {passive:false});
+})();
+
+// 自動プレイ（録画用）: ?auto=1
+if(AUTO){ setTimeout(startRun, 1200); }   // startRun 経由（音/録音もここで始まる）
+
+// ---------- autopilot ----------
+// 覚えるフェーズで並びを記録し、pick で差分を取って指す。
+// わざと少し迷うので、映像でもカーソルが動いて見える。
+let autoMemo = null, autoTarget = -1, autoDelay = 0;
+function autoPilot(dt){
+  if(phase==='watch'){
+    // 最後の一瞬の状態を覚えておく（暗転直前が真実）
+    autoMemo = windows.map(w => w.on);
+    autoTarget = -1;
+  } else if(phase==='pick'){
+    if(autoTarget < 0 && autoMemo && autoMemo.length===windows.length){
+      for(let i=0;i<windows.length;i++){
+        if(windows[i].on !== autoMemo[i]){ autoTarget = i; break; }
+      }
+      if(autoTarget < 0) autoTarget = Math.floor(Math.random()*windows.length);
+      autoDelay = .35 + Math.random()*.35;       // 人らしい間
+    }
+    if(autoTarget >= 0){
+      if(autoDelay > 0){ autoDelay -= dt; return; }
+      // カーソルを一歩ずつ寄せてから決める（動きが見えるように）
+      const a = windows[cur], b = windows[autoTarget];
+      if(a.cx !== b.cx || a.cy !== b.cy){
+        autoDelay = .07;
+        if(a.cx !== b.cx) moveCursor(Math.sign(b.cx - a.cx), 0);
+        else moveCursor(0, Math.sign(b.cy - a.cy));
+      } else {
+        commitPick(cur);
+        autoTarget = -1;
+      }
+    }
+  }
+}
+
+// ---------- showcase mode ----------
+// 被写体を一つだけターンテーブルに載せ、空の舞台で見せる。
+// ゲーム本体と同じメッシュを使うので、語る対象と出荷物が一致する。
+const SHOWCASE = SHOWCASE_Q;
+window.__subjects = ['watcher','litwindow','darkwindow','neon','beacon','rain'];
+const showcase = {group:null, pivot:null, spin:.55, label:''};
+
+function buildShowcase(name){
+  const g = new THREE.Group();
+  let label = '', spin = .55, flat = false;
+  if(name==='watcher'){
+    // 夜警そのもの: 双眼鏡を構えた見張り
+    const coat = new THREE.MeshStandardMaterial({color:0x223049, roughness:.8});
+    const skin = new THREE.MeshStandardMaterial({color:0xe8c19e, roughness:.6});
+    const dark = new THREE.MeshStandardMaterial({color:0x10141f, roughness:.7});
+    const glass= new THREE.MeshStandardMaterial({color:0xffc046, emissive:0xffa820,
+                                                 emissiveIntensity:.8, roughness:.3});
+    const torso = new THREE.Mesh(new THREE.CapsuleGeometry(.44, .8, 6, 14), coat);
+    torso.position.y = .95; g.add(torso);
+    const head = new THREE.Mesh(new THREE.SphereGeometry(.34, 22, 16), skin);
+    head.position.y = 1.78; g.add(head);
+    const cap = new THREE.Mesh(new THREE.SphereGeometry(.36, 22, 16, 0, Math.PI*2, 0, Math.PI/2), dark);
+    cap.position.y = 1.80; g.add(cap);
+    const brim = new THREE.Mesh(new THREE.BoxGeometry(.66,.07,.34), dark);
+    brim.position.set(0,1.79,.32); g.add(brim);
+    // 双眼鏡: 筒二本、レンズだけ窓の色で光らせる
+    for(const s of [1,-1]){
+      const tube = new THREE.Mesh(new THREE.CylinderGeometry(.11,.11,.42,14), dark);
+      tube.rotation.x = Math.PI/2; tube.position.set(.14*s, 1.72, .5); g.add(tube);
+      const lens = new THREE.Mesh(new THREE.CircleGeometry(.10, 16), glass);
+      lens.position.set(.14*s, 1.72, .72); g.add(lens);
+      const arm = new THREE.Mesh(new THREE.CapsuleGeometry(.11,.5,6,12), coat);
+      arm.position.set(.42*s, 1.2, .26); arm.rotation.x = -.9; g.add(arm);
+    }
+    label = '夜警'; spin = .5;
+  } else if(name==='litwindow'){
+    const w = buildWindow();
+    w.pane.material = winOnMat;
+    w.glow.material.uniforms.a.value = .9;
+    w.group.scale.set(1.5,1.5,1.5); g.add(w.group);
+    label = '灯った窓'; spin = .45;
+  } else if(name==='darkwindow'){
+    const w = buildWindow();
+    w.pane.material = winOffMat;
+    w.group.scale.set(1.5,1.5,1.5); g.add(w.group);
+    label = '消えた窓'; spin = .45;
+  } else if(name==='neon'){
+    const board = new THREE.Mesh(new THREE.BoxGeometry(1.5, 5.2, .3),
+      new THREE.MeshStandardMaterial({color:0x120a14, roughness:.8}));
+    g.add(board);
+    for(let i=0;i<4;i++){
+      const m = new THREE.Mesh(new THREE.TorusGeometry(.42,.09,8,22),
+        new THREE.MeshStandardMaterial({color:0xff3b8a, emissive:0xff2a80, emissiveIntensity:2.2}));
+      m.position.set(0, 1.8 - i*1.2, .22); g.add(m);
+    }
+    label = 'ネオン看板'; spin = .6;
+  } else if(name==='beacon'){
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(.08,.11,1.6,12),
+      new THREE.MeshStandardMaterial({color:0x2a2f3c, roughness:.8}));
+    pole.position.y = -.9; g.add(pole);
+    const bulb = new THREE.Mesh(new THREE.SphereGeometry(.42, 20, 16),
+      new THREE.MeshStandardMaterial({color:0x5a0810, emissive:0xff1020, emissiveIntensity:2.4}));
+    g.add(bulb);
+    const cage = new THREE.Mesh(new THREE.TorusGeometry(.46,.04,8,22),
+      new THREE.MeshStandardMaterial({color:0x2a2f3c, roughness:.7}));
+    cage.rotation.x = Math.PI/2; g.add(cage);
+    label = '屋上の赤ランプ'; spin = .8;
+  } else if(name==='rain'){
+    // 雨だけを一塊で見せる。細い棒を散らして帯にする
+    const mat = new THREE.MeshStandardMaterial({color:0x9fc4ff, emissive:0x3f6fbf,
+                                                emissiveIntensity:1.2, roughness:.3});
+    for(let i=0;i<90;i++){
+      const m = new THREE.Mesh(new THREE.BoxGeometry(.035,.5,.035), mat);
+      m.position.set((Math.random()-.5)*3.4, (Math.random()-.5)*4.2, (Math.random()-.5)*1.4);
+      g.add(m);
+    }
+    label = '土砂降り'; spin = .5;
+  }
+  scene.add(g);
+
+  // 被写体を原点に寄せ、バウンディングボックスに合わせてカメラを引く。
+  // どの大きさの物でも同じ収まりになる。
+  // 光のにじみ（外へ向けて透明になる板）は実体より大きいので採寸から外す。
+  // 入れたままだと、窓が実際より大きい物として扱われて小さく写る。
+  g.traverse(o=>{ if(o.isMesh && o.material && o.material.blending===THREE.AdditiveBlending)
+                    o.userData.__noFit = true; });
+  const box = new THREE.Box3();
+  g.traverse(o=>{ if(o.isMesh && !o.userData.__noFit) box.expandByObject(o); });
+  if(box.isEmpty()) box.setFromObject(g);
+  const size = box.getSize(new THREE.Vector3());
+  const mid = box.getCenter(new THREE.Vector3());
+  g.position.sub(mid);
+  const reach = Math.max(size.x, size.y) * 0.5;
+  const fov = THREE.MathUtils.degToRad(camera.fov);
+  const dist = (reach / Math.tan(fov/2)) * 1.75 + 1.0;   // 1.75 = 余白
+  camera.position.set(0, size.y*0.10, dist);
+  camera.lookAt(0,0,0);
+
+  // 文字パネルに半分を譲るため横にずらす。ずらしは親に持たせる —
+  // ずらした group を回すと、その場で回らず公転してしまう。
+  const bias = parseFloat(QS.get('sx') || '0');
+  const pivot = new THREE.Group();
+  pivot.position.x = -bias * reach * 1.15;
+  scene.add(pivot);
+  pivot.add(g);
+  showcase.group = g; showcase.pivot = pivot;
+  showcase.spin = spin; showcase.label = label; showcase.flat = flat;
+}
+
+if(SHOWCASE){
+  fitCamera();
+  titleEl.classList.add('hidden');
+  // 何もない暗い舞台にする
+  facade.visible = false;
+  neon.group.visible = false;
+  beacon.visible = false;
+  rain.pts.visible = false;
+  cursor.visible = false;
+  scene.background = new THREE.Color(0x0b0d16);
+  hemi.intensity = 2.4;
+  key.intensity = 1.8; key.position.set(3, 5, 8);
+  bounce.intensity = 90; bounce.position.set(2.8, 2.2, 5.0); bounce.distance = 30;
+  // 反対側からの補助光。裏面が真っ黒にならないように
+  const fill = new THREE.PointLight(0x88aaff, 45, 26);
+  fill.position.set(-4.5, 1.4, 4.2); scene.add(fill);
+  buildShowcase(SHOWCASE);
+  scoreEl.textContent = '';
+  livesEl.textContent = '';
+  msgEl.textContent = QS.get('nolabel')==='1' ? '' : showcase.label;
+  msgEl.style.fontSize = 'clamp(20px,5vw,30px)';
+  msgEl.style.letterSpacing = '6px';
+} else {
+  { const g = wantGrid(); buildGrid(g.c, g.r); }
+  fitCamera();
+  camera.position.set(0, lookY, camZ);
+  camera.lookAt(0, lookY, 0);
+  drawLives();
+}
+
+// 収録スクリプトがターンテーブルを回したり被写体を差し替えたりできるように
+window.__showcase = name => {
+  if(showcase.pivot) scene.remove(showcase.pivot);   // pivot が group を持つ
+  buildShowcase(name);
+  msgEl.textContent = showcase.label;
+};
+
+// ---------- ループ ----------
+const clock = new THREE.Clock();
+function tickLoop(){
+  requestAnimationFrame(tickLoop);
+  const raw = Math.min(clock.getDelta(), .05);
+  const dt = raw * timeScale;
+
+  if(SHOWCASE){
+    if(showcase.group) showcase.group.rotation.y += raw*showcase.spin;
+    camera.lookAt(0, 0, 0);        // 被写体はずれていてもカメラは軸上
+    renderer.render(scene, camera);
+    return;
+  }
+
+  if(running && !dead){
+    t += dt;
+    // 生きているあいだ、見張っているだけでスコアは増える
+    score += dt * (6 + round*1.2);
+    scoreEl.textContent = Math.floor(score);
+    if(!SILENT) SND.setPace(1 + round*.05);
+    if(AUTO) autoPilot(dt);
+
+    if(t > nextEventAt && !NOEV) triggerEvent();
+
+    // --- フェーズ進行 ---
+    phaseT -= dt;
+    if(phaseT <= 0){
+      if(phase==='watch') startDark();
+      else if(phase==='dark') startPick();
+      else if(phase==='pick'){
+        // 時間切れも見落とし扱い
+        misses++; drawLives();
+        flash('#ff2b3a', .4, 380);
+        shake = Math.max(shake, .35);
+        if(!SILENT) SND.bad();
+        if(misses >= MAX_MISS){ dead = true; gameOver(); }
+        else { msgEl.textContent='時間切れ'; phase='gap'; phaseT=.7; }
+      }
+      else if(phase==='gap') startWatch();
+    }
+  }
+
+  // --- 見た目の更新（死んでいても回す。演出が止まらないように） ---
+  const darkPhase = (phase==='dark');
+  for(let i=0;i<windows.length;i++){
+    const w = windows[i];
+    // 暗転中は全部消したように描く（状態自体は保持する）
+    let lit = w.on && !darkPhase;
+    if(blackoutT > 0) lit = false;
+    // ちらつきイベント: 窓ごとに位相をずらして細かく明滅
+    if(flickerT > 0 && lit && Math.sin(t*26 + i*1.7) < -.2) lit = false;
+    const targetA = lit ? .85 : 0;
+    const a = w.glow.material.uniforms.a;
+    a.value += (targetA - a.value) * Math.min(1, raw*14);
+    w.pane.material = lit ? winOnMat : winOffMat;
+  }
+  if(blackoutT > 0) blackoutT -= raw;
+  if(flickerT > 0) flickerT -= raw;
+  if(hurry > 0) hurry -= raw;
+
+  // 停電中は環境光も落とす
+  const envK = blackoutT > 0 ? .12 : 1;
+  hemi.intensity += (0.9*envK - hemi.intensity) * Math.min(1, raw*8);
+  key.intensity  += (0.55*envK - key.intensity) * Math.min(1, raw*8);
+  bounce.intensity += (14*envK - bounce.intensity) * Math.min(1, raw*8);
+
+  // ネオン看板: 常にゆるく明滅し、イベント中は激しく暴れる
+  {
+    const wild = neon.flick > 0;
+    if(wild) neon.flick -= raw;
+    const base = wild ? (Math.random() < .35 ? 0 : 1) : (.6 + Math.sin(t*3.1)*.25);
+    for(const tb of neon.tubes) tb.material.emissiveIntensity = 1.2*base + .2;
+    neon.light.intensity = (wild ? 26 : 8) * base;
+    neon.group.rotation.y = Math.sin(t*.4)*.06;
+  }
+
+  // 屋上の赤ランプ: 2秒周期でゆっくり点滅
+  {
+    const k = Math.max(0, Math.sin(t*Math.PI)) ** 3;
+    beaconMat.emissiveIntensity = k*2.6;
+    beaconLight.intensity = k*22;
+  }
+
+  // 雨
+  if(rain.on > 0){
+    rain.on -= raw;
+    rain.mat.opacity = Math.min(.65, rain.mat.opacity + raw*1.6);
+  } else if(rain.mat.opacity > 0){
+    rain.mat.opacity = Math.max(0, rain.mat.opacity - raw*.8);
+  }
+  if(rain.mat.opacity > 0){
+    const p = rain.pos;
+    for(let i=0;i<rain.N;i++){
+      p[i*3+1] -= (16 + (i%7)) * raw;
+      if(p[i*3+1] < -14){ p[i*3+1] = 14 + Math.random()*8; p[i*3] = (Math.random()-.5)*34; }
+    }
+    rain.pts.geometry.attributes.position.needsUpdate = true;
+  }
+
+  // カーソル: 選べるフェーズだけ出す。少し脈打たせて位置を示す
+  if(windows.length && running && !dead && (phase==='pick' || phase==='dark')){
+    cursor.visible = true;
+    const w = windows[cur];
+    cursor.position.lerp(
+      new THREE.Vector3(w.group.position.x, w.group.position.y, w.group.position.z + .35),
+      Math.min(1, raw*16));
+    const pulse = .93 + Math.sin(t*7)*.07;
+    cursor.scale.set(pulse, pulse, 1);
+    cursorMat.opacity = phase==='pick' ? .95 : .35;
+  } else if(!SHOWCASE){
+    cursor.visible = false;
+  }
+
+  // --- 死亡演出: スローが効き、カメラが寄る ---
+  if(dead){
+    timeScale += (0 - timeScale)*Math.min(1, raw*1.1);
+  }
+
+  // --- カメラ（死んでいても動かす） ---
+  camZ += (camZTarget - camZ)*Math.min(1, raw*2.4);
+  camera.position.z = camZ;
+  camera.position.x = 0; camera.position.y = lookY;
+  if(shake>0){
+    shake = Math.max(0, shake - raw*.9);
+    camera.position.x += (Math.random()-.5)*shake;
+    camera.position.y += (Math.random()-.5)*shake;
+  }
+  camera.lookAt(0, lookY, 0);
+
+  renderer.render(scene, camera);
+}
+
+function gameOver(){
+  running=false; deadAt=Date.now();
+  if(!SILENT){ SND.hit(); SND.duck(1.6); setTimeout(()=>SND.over(), 700); }
+  // 当たった感じ: 赤フラッシュ、赤いビネット、強い揺れ、カメラが寄る
+  flash('#ff2b3a', .8, 500);
+  vignetteEl.style.transition='opacity .5s'; vignetteEl.style.opacity=1;
+  shake = .9;
+  camZTarget = camZ * .55;          // 寄り
+  cursor.visible = false;
+  drawLives();
+  const finalScore = Math.floor(score);
+  koScoreEl.textContent = finalScore;
+  msgEl.textContent = '';
+  setTimeout(()=>{ koEl.classList.add('on'); }, 620);   // スローのあとに K.O.
+  if(AUTO){ setTimeout(()=>{ reset(); running=true;
+                             if(!SILENT) SND.unduck(); }, RETRY_MS); }
+  else setTimeout(()=>{
+    msgEl.textContent = matchMedia('(pointer:coarse)').matches
+      ? 'タップでもう一度' : 'スペースでもう一度';
+  }, 1800);
+}
+tickLoop();
+
+// --- 遊びかた (?) : 録画中は出さない ---
+(function(){
+  const btn = document.getElementById('helpBtn');
+  const panel = document.getElementById('help');
+  if(!btn || !panel) return;
+  if(NOCHROME){                      // 録画・showcase では画面から消す
+    btn.style.display = 'none';
+    const back = document.getElementById('back');
+    if(back) back.style.display = 'none';
+    return;
+  }
+  const open = () => { panel.classList.add('on'); };
+  const close = () => { panel.classList.remove('on'); };
+  btn.addEventListener('click', open);
+  btn.addEventListener('touchend', e => { e.preventDefault(); open(); }, {passive:false});
+  panel.addEventListener('click', e => { if(e.target === panel) close(); });
+  panel.querySelector('.close').addEventListener('click', close);
+  panel.querySelector('.close').addEventListener('touchend',
+    e => { e.preventDefault(); close(); }, {passive:false});
+  addEventListener('keydown', e => {
+    if(e.code === 'Escape') close();
+    else if(e.key === '?' || (e.code === 'Slash' && e.shiftKey)) open();
+  });
+})();
+</script>
+</body>
+</html>
