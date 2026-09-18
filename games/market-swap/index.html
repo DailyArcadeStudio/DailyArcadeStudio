@@ -1,0 +1,1410 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>マーケット・スワップ</title>
+<style>
+  html,body{margin:0;padding:0;overflow:hidden;background:#090a12;font-family:'Hiragino Kaku Gothic ProN','Yu Gothic','Helvetica Neue',Arial,sans-serif;}
+  #ui{position:fixed;top:14px;left:0;right:0;text-align:center;color:#fff;z-index:10;
+    pointer-events:none;opacity:0;transition:opacity .35s;}
+  #ui.on{opacity:1;}
+  #scoreLabel{font-size:clamp(11px,2.6vw,13px);letter-spacing:.32em;opacity:.65;text-shadow:0 2px 6px #000;}
+  #score{font-size:clamp(26px,6.4vw,36px);font-weight:800;text-shadow:0 2px 8px #000;line-height:1.1;}
+  #stats{display:flex;gap:clamp(14px,4vw,28px);justify-content:center;margin-top:7px;
+    font-size:clamp(12px,3.2vw,16px);font-weight:700;opacity:.92;text-shadow:0 2px 6px #000;}
+  #lives{color:#ff9a2e;letter-spacing:.12em;}
+  #msg{font-size:clamp(14px,4vw,21px);margin-top:6px;opacity:.95;text-shadow:0 2px 6px #000;font-weight:700;}
+  /* choose-phase countdown: a thin bar so the pressure is visible without text */
+  #timerWrap{margin:8px auto 0;width:min(46vw,300px);height:6px;border-radius:3px;
+    background:rgba(255,255,255,.14);overflow:hidden;opacity:0;transition:opacity .2s;}
+  #timerWrap.on{opacity:1;}
+  #timerBar{height:100%;width:100%;background:linear-gradient(90deg,#ff9a2e,#ffd23b);}
+
+  #title{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:rgba(6,6,14,.74);z-index:20;color:#fff;transition:opacity .4s;padding:16px;box-sizing:border-box;}
+  #title h1{font-size:clamp(24px,7vw,52px);margin:0 0 10px;letter-spacing:1px;text-align:center;
+    line-height:1.2;max-width:100%;text-shadow:0 4px 18px #ff9a2e;}
+  #title p{font-size:clamp(13px,3.4vw,19px);opacity:.88;margin:4px 0;text-align:center;line-height:1.6;max-width:36em;}
+  #title .btn{margin-top:26px;padding:14px 48px;font-size:clamp(18px,5vw,22px);font-weight:700;color:#fff;
+    background:linear-gradient(180deg,#ff9a2e,#c25a10);border:none;border-radius:12px;cursor:pointer;
+    box-shadow:0 6px 24px rgba(255,154,46,.45);font-family:inherit;}
+  #title .btn:hover{transform:scale(1.05);}
+  .hidden{opacity:0;pointer-events:none;}
+  #back{position:fixed;top:14px;left:14px;z-index:30;text-decoration:none;
+    background:rgba(12,16,26,.72);color:#fff;font:600 clamp(13px,3.2vw,15px)/1 inherit;
+    padding:0 14px;height:44px;display:flex;align-items:center;border-radius:12px;font-family:inherit;}
+  #back:hover{background:rgba(30,38,56,.9);}
+  #mute{position:fixed;top:14px;right:14px;z-index:30;border:none;cursor:pointer;
+    background:rgba(12,16,26,.72);color:#fff;font-size:20px;line-height:1;
+    width:44px;height:44px;border-radius:12px;}
+  #mute:hover{background:rgba(30,38,56,.9);}
+  /* show the hint that matches the device */
+  .tc{display:none;}
+  .nw{white-space:nowrap;display:inline-block;}
+  @media (pointer:coarse){ .kb{display:none;} .tc{display:block;} }
+  @media (pointer:coarse){ #title .btn{padding:18px 56px;} }
+
+  /* --- event banner: slams into the middle of the screen --- */
+  #banner{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    z-index:15;pointer-events:none;opacity:0;}
+  #banner .b{font-size:clamp(26px,7.4vw,64px);font-weight:900;letter-spacing:.1em;color:#fff;
+    padding:10px 4vw;max-width:94vw;text-align:center;transform:scale(2.4);opacity:0;
+    text-shadow:0 0 26px currentColor, 0 6px 20px #000;
+    border-top:5px solid currentColor;border-bottom:5px solid currentColor;}
+  #banner.go .b{animation:slam .62s cubic-bezier(.12,.85,.2,1) forwards;}
+  @keyframes slam{
+    0%  {transform:scale(2.4) rotate(-4deg);opacity:0;}
+    22% {transform:scale(1)   rotate(0deg); opacity:1;}
+    70% {transform:scale(1)   rotate(0deg); opacity:1;}
+    100%{transform:scale(1.12);opacity:0;}
+  }
+
+  /* --- full-screen colour flashes --- */
+  #flash{position:fixed;inset:0;z-index:14;pointer-events:none;opacity:0;background:#fff;}
+  #vignette{position:fixed;inset:0;z-index:13;pointer-events:none;opacity:0;
+    background:radial-gradient(ellipse at center,rgba(0,0,0,0) 32%,rgba(120,0,10,.85) 100%);}
+
+  /* --- K.O. screen --- */
+  #ko{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    z-index:22;pointer-events:none;opacity:0;color:#fff;transition:opacity .3s;}
+  #ko.on{opacity:1;}
+  #ko .koText{font-size:clamp(86px,24vw,180px);font-weight:900;letter-spacing:10px;color:#fff;
+    text-shadow:0 0 40px #ff5a2e,0 0 90px #ff5a2e,0 10px 30px #000;
+    transform:scale(3);opacity:0;}
+  #ko.on .koText{animation:koSlam .8s cubic-bezier(.1,.9,.2,1) forwards;}
+  @keyframes koSlam{
+    0%  {transform:scale(3) rotate(-8deg);opacity:0;}
+    30% {transform:scale(1) rotate(0deg);opacity:1;}
+    36% {transform:scale(1.06);}
+    100%{transform:scale(1);opacity:1;}
+  }
+  #ko .finalLabel{font-size:clamp(14px,3.6vw,20px);letter-spacing:.4em;opacity:0;margin-top:6px;text-shadow:0 2px 8px #000;}
+  #ko .finalScore{font-size:clamp(46px,13vw,78px);font-weight:800;opacity:0;text-shadow:0 4px 20px #000;}
+  #ko.on .finalLabel{animation:fadeUp .5s .75s forwards;}
+  #ko.on .finalScore{animation:fadeUp .5s .9s forwards;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+
+  /* --- help (?) --- */
+  #helpBtn{position:fixed;top:14px;right:66px;z-index:30;border:none;cursor:pointer;
+    background:rgba(12,16,26,.72);color:#fff;font:700 20px/1 inherit;font-family:inherit;
+    width:44px;height:44px;border-radius:12px;}
+  #helpBtn:hover{background:rgba(30,38,56,.9);}
+  #help{position:fixed;inset:0;z-index:40;display:none;align-items:center;
+    justify-content:center;background:rgba(4,6,12,.84);padding:20px;}
+  #help.on{display:flex;}
+  #help .box{background:#141a28;border:1px solid #33405e;border-radius:18px;
+    max-width:560px;width:100%;max-height:86vh;overflow:auto;padding:24px 26px 20px;
+    color:#e6edf3;font-family:inherit;box-sizing:border-box;}
+  #help h2{margin:0 0 4px;font-size:clamp(19px,5vw,25px);}
+  #help .sub{color:#8b949e;font-size:clamp(12px,3.2vw,14px);margin:0 0 16px;}
+  #help h3{font-size:clamp(13px,3.4vw,15px);color:#ff9a2e;margin:16px 0 6px;letter-spacing:.04em;}
+  #help ul{margin:0;padding-left:20px;}
+  #help li{font-size:clamp(13px,3.4vw,15px);line-height:1.7;margin:3px 0;}
+  #help b{color:#ffd23b;font-weight:700;}
+  #help .close{margin-top:20px;width:100%;padding:12px;border:none;border-radius:10px;
+    background:#33405e;color:#fff;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;}
+  #help .close:hover{background:#44547c;}
+</style>
+</head>
+<body>
+<div id="ui">
+  <div id="scoreLabel">スコア</div>
+  <div id="score">0</div>
+  <div id="stats"><div id="round">第 1 問</div><div id="lives">◆◆◆</div></div>
+  <div id="msg"></div>
+  <div id="timerWrap"><div id="timerBar"></div></div>
+</div>
+<button id="helpBtn" title="あそびかた">?</button>
+<div id="help"><div class="box">
+  <h2>マーケット・スワップ</h2>
+  <p class="sub">夜の市場。屋台がざるの下で中身を入れかえる。ブラウザで無料。</p>
+    <h3>魚</h3>
+    <ul><li>最初に一度だけ、どの屋台にいるか<b>見せてくれる</b></li><li>あとはざるの中。<b>目で追うしかない</b></li><li>当てれば点。外せば残りが減る</li></ul>
+    <h3>屋台</h3>
+    <ul><li>二台ずつ、位置を<b>入れかえる</b></li><li>問が進むほど回数が増え、速くなる</li><li>ときどき<b>四台</b>になる</li></ul>
+    <h3>荷車</h3>
+    <ul><li>手前を横切って屋台を<b>隠す</b></li><li>入れかえは、たいてい<b>この影で起きる</b></li><li>見えなくても、動きは続いている</li></ul>
+    <h3>選ぶ</h3>
+    <ul><li>屋台を<b>タップ</b>、または ← → で選んでスペース</li><li>バーが尽きたら<b>はずれ扱い</b></li><li>残りが０になったら終わり</li></ul>
+    <h3>市場の事情</h3>
+    <ul><li><b>停電</b>・<b>にわか雨</b>・<b>早業</b>・<b>裏返し</b>が割りこむ</li><li>どれも、追いかけるのを邪魔してくる</li></ul>
+  <button class="close">とじる</button>
+</div></div>
+<a id="back" href="../../" title="ゲーム一覧にもどる">‹ ゲーム一覧</a>
+<button id="mute" title="音の オン / オフ">🔊</button>
+<div id="vignette"></div>
+<div id="flash"></div>
+<div id="banner"><div class="b"></div></div>
+<div id="ko">
+  <div class="koText">K.O.</div>
+  <div class="finalLabel">最終スコア</div>
+  <div class="finalScore">0</div>
+</div>
+<div id="title">
+  <h1>マーケット・スワップ</h1>
+  <p>荷車のかげで、屋台が中身を入れかえる。</p>
+  <p>魚を見失うな。</p>
+  <p class="kb"><span class="nw">← → : 屋台をえらぶ</span> &nbsp; <span class="nw">スペース : 決定</span></p>
+  <p class="tc"><span class="nw">屋台をタップ</span> &nbsp; <span class="nw">左右スワイプでもえらべる</span></p>
+  <button class="btn" id="startBtn">スタート</button>
+</div>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+// ---------- url flags (declared first: sound and camera both read them) ----------
+const QS = new URLSearchParams(location.search);
+const AUTO = QS.get('auto')==='1';
+const SHOWCASE_Q = QS.get('showcase');
+const SHOWCASE = SHOWCASE_Q;
+// Recording must produce clean footage, so every automated mode is muted.
+const REC = QS.get('rec')==='1';   // 録音モード: 音を鳴らして拾う
+const SILENT = (AUTO || !!SHOWCASE_Q || QS.get('mute')==='1') && !REC;
+// 録画・showcase では「?」と「ゲーム一覧」を出さない（動画の邪魔になる）
+const NOCHROME = AUTO || !!SHOWCASE_Q || QS.get('nochrome')==='1';
+// ?noev=1 はイベントなしの穏やかな録画用
+const NOEV = QS.get('noev')==='1';
+// 録画は K.O. を長めに見せる: ?hold=9000
+const RETRY_MS = Math.max(1200, parseInt(QS.get('hold')||'4200', 10));
+
+// ---------- renderer / scene ----------
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.shadowMap.enabled = true;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const SKY = new THREE.Color(0x0d0f1c);
+scene.background = SKY.clone();
+scene.fog = new THREE.Fog(0x0d0f1c, 22, 64);
+
+const camera = new THREE.PerspectiveCamera(48, innerWidth/innerHeight, .1, 140);
+
+// Portrait and landscape both have to work. A phone held upright is far
+// narrower than 16:9, and with a fixed FOV the row of stalls falls outside
+// the frame — so widen the vertical FOV as the screen gets taller.
+const BASE_FOV = 48;
+// The row of stalls is a wide, short subject, so what matters is the
+// HORIZONTAL field. On a tall screen a fixed FOV crops the outer stalls;
+// widening the vertical FOV alone fixes that but leaves the row tiny in a
+// sea of sky. So do both: widen the FOV a little, and pull the camera back
+// the rest of the way. CAM_DIST is the result, and the game reads it.
+const ROW_HALF = 5.2;          // widest the row ever gets (4 stalls + body)
+let CAM_DIST = 10.6, CAM_HEIGHT = 3.4, CAM_LOOK_Y = 1.7;
+function fitCamera(){
+  const aspect = innerWidth / innerHeight;
+  camera.aspect = aspect;
+  if(SHOWCASE){
+    camera.fov = aspect < 1 ? 56 : 42;
+  } else {
+    const ref = 16/9;
+    // cap the widening well below the reference's 96°: past ~64° the row
+    // starts to fish-eye and the stalls at the ends shear badly
+    camera.fov = aspect >= ref ? BASE_FOV
+      : Math.min(64, THREE.MathUtils.radToDeg(
+          2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(BASE_FOV)/2) * (ref/aspect))));
+    // distance needed for ROW_HALF to fit horizontally at this fov/aspect
+    const vhalf = Math.tan(THREE.MathUtils.degToRad(camera.fov)/2);
+    const hhalf = vhalf * aspect;
+    CAM_DIST = Math.max(10.6, ROW_HALF / hhalf + 1.2);
+    if(!dead) camDistTarget = CAM_DIST;
+    // On a tall screen the row only occupies a thin horizontal band, so the
+    // frame fills up with empty sky and empty street. Climbing higher and
+    // tilting down turns that wasted height into visible ground around the
+    // stalls, which is also where the carts and the shadows live.
+    const tall = Math.max(0, 1/Math.max(aspect,.4) - 1);   // 0 in landscape
+    CAM_HEIGHT = 3.4 + tall*2.2;
+    // aim at the row itself as the camera climbs, otherwise the stalls drift
+    // to the top of the frame and leave an empty foreground below them
+    CAM_LOOK_Y = 1.7 + tall*1.15;
+  }
+  camera.__base = camera.fov;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+}
+addEventListener('resize', fitCamera);
+addEventListener('orientationchange', ()=>setTimeout(fitCamera, 120));
+
+// ---------- lights ----------
+const hemi = new THREE.HemisphereLight(0x5f6bb0, 0x241a12, 1.15);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xffd7a0, 1.9);
+sun.position.set(5, 13, 8); sun.castShadow = true;
+sun.shadow.camera.left=-12; sun.shadow.camera.right=12;
+sun.shadow.camera.top=12; sun.shadow.camera.bottom=-12;
+scene.add(sun);
+// warm market light hanging over the row
+const marketLight = new THREE.PointLight(0xffb45a, 90, 30);
+marketLight.position.set(0, 6.4, 3.2);
+scene.add(marketLight);
+const BASE_LIGHT = {hemi:1.15, sun:1.9, market:90};
+
+// ---------- materials (shared, so showcase shows the shipping object) ----------
+const ACCENT = 0xff9a2e;
+const woodMat      = new THREE.MeshStandardMaterial({color:0x5b3b26, roughness:.88});
+const woodTopMat   = new THREE.MeshStandardMaterial({color:0x8a5c36, roughness:.8});
+const postMat      = new THREE.MeshStandardMaterial({color:0x2e2419, roughness:.85});
+const canopyMat    = new THREE.MeshStandardMaterial({color:0xd8452f, roughness:.75, side:THREE.DoubleSide});
+const canopyMat2   = new THREE.MeshStandardMaterial({color:0xf0ebdc, roughness:.8, side:THREE.DoubleSide});
+const basketMat    = new THREE.MeshStandardMaterial({color:0xc39a56, roughness:.95, side:THREE.DoubleSide});
+const basketRimMat = new THREE.MeshStandardMaterial({color:0x8d6c34, roughness:.9});
+const fishMat      = new THREE.MeshStandardMaterial({color:0x9fe8ff, metalness:.55, roughness:.28,
+                                                    emissive:0x1c4c60});
+const fishFinMat   = new THREE.MeshStandardMaterial({color:0x4fb9d8, roughness:.5, emissive:0x113844});
+const tarpMat      = new THREE.MeshStandardMaterial({color:0x3a2a4e, roughness:.9});
+const cartWoodMat  = new THREE.MeshStandardMaterial({color:0x46301f, roughness:.9});
+const wheelMat     = new THREE.MeshStandardMaterial({color:0x201812, roughness:.9});
+const lanternMat   = new THREE.MeshStandardMaterial({color:0xffb45a, emissive:0xff8a20,
+                                                    emissiveIntensity:1.4, roughness:.6});
+const markerMat    = new THREE.MeshStandardMaterial({color:ACCENT, emissive:ACCENT,
+                                                    emissiveIntensity:1.1, roughness:.4});
+
+// ---------- ground + backdrop ----------
+// big enough that the far edge is always behind the buildings and the near
+// edge always behind the camera — otherwise the street stops in mid-frame
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(160, 160),
+  new THREE.MeshStandardMaterial({color:0x211d2c, roughness:.95}));
+ground.rotation.x = -Math.PI/2; ground.position.z = -20; ground.receiveShadow = true;
+scene.add(ground);
+// a warm strip of light on the street so the stalls sit on something
+const strip = new THREE.Mesh(new THREE.PlaneGeometry(26, 7),
+  new THREE.MeshBasicMaterial({color:0x6b3a14, transparent:true, opacity:.35}));
+strip.rotation.x = -Math.PI/2; strip.position.set(0,.012,1.2);
+scene.add(strip);
+
+// distant market buildings — silhouettes only, they just need depth
+const backdrop = new THREE.Group();
+for(let i=0;i<26;i++){
+  const w = 2 + Math.random()*4, h = 3 + Math.random()*9;
+  const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, 3),
+    new THREE.MeshStandardMaterial({color:0x171a2a, roughness:1}));
+  b.position.set((i-12.5)*3.2 + (Math.random()-.5)*1.4, h/2, -22 - Math.random()*9);
+  backdrop.add(b);
+  // a lit window or two
+  if(Math.random()<.7){
+    const win = new THREE.Mesh(new THREE.PlaneGeometry(.5,.7),
+      new THREE.MeshBasicMaterial({color:0xffc477, transparent:true, opacity:.55}));
+    win.position.set(b.position.x + (Math.random()-.5)*w*.5, 1.5+Math.random()*(h-2.5), b.position.z+1.55);
+    backdrop.add(win);
+  }
+}
+scene.add(backdrop);
+
+// a string of lanterns above the row — the market's own light
+// Sits behind the stalls and above the canopies: it should frame the row,
+// not crowd it, so keep the lanterns small and well upstage.
+const lanterns = [];
+const LANTERN_Y = 4.15, LANTERN_Z = -5.5;
+for(let i=0;i<13;i++){
+  const l = new THREE.Mesh(new THREE.SphereGeometry(.19, 14, 10), lanternMat);
+  l.scale.set(1,1.25,1);
+  l.position.set((i-6)*2.3, LANTERN_Y + Math.sin(i*1.3)*.16, LANTERN_Z);
+  scene.add(l); lanterns.push(l);
+}
+const wire = new THREE.Mesh(new THREE.BoxGeometry(30,.035,.035),
+  new THREE.MeshBasicMaterial({color:0x3b3746}));
+wire.position.set(0, LANTERN_Y+.34, LANTERN_Z); scene.add(wire);
+
+// ---------- rain (event only) ----------
+const rainMat = new THREE.MeshBasicMaterial({color:0xbcd8ff, transparent:true, opacity:0});
+const rainDrops = [];
+for(let i=0;i<150;i++){
+  const d = new THREE.Mesh(new THREE.BoxGeometry(.03,.75,.03), rainMat);
+  d.position.set((Math.random()-.5)*26, Math.random()*14, -8 + Math.random()*16);
+  scene.add(d); rainDrops.push(d);
+}
+
+// ---------- the fish ----------
+function buildFish(){
+  const g = new THREE.Group();
+  // long and narrow, with a pointed snout: a round body reads as a balloon
+  const body = new THREE.Mesh(new THREE.SphereGeometry(.34, 20, 14), fishMat);
+  body.scale.set(1.7,.74,.48); g.add(body);
+  // sunk far enough into the body that only the taper shows: a cone wider
+  // than the body at the join reads as a collar, not a snout
+  const snout = new THREE.Mesh(new THREE.ConeGeometry(.23,.46,16), fishMat);
+  snout.rotation.z = -Math.PI/2; snout.position.x = .53;
+  snout.scale.set(1,.78,.6); g.add(snout);
+  const tail = new THREE.Mesh(new THREE.ConeGeometry(.26,.42,4), fishFinMat);
+  tail.rotation.z = Math.PI/2; tail.position.x = -.68; tail.scale.z = .3; g.add(tail);
+  const dorsal = new THREE.Mesh(new THREE.ConeGeometry(.14,.3,4), fishFinMat);
+  dorsal.position.set(-.06,.24,0); dorsal.rotation.z = -.25; dorsal.scale.z = .26; g.add(dorsal);
+  for(const s of [1,-1]){
+    const pec = new THREE.Mesh(new THREE.ConeGeometry(.1,.26,4), fishFinMat);
+    pec.position.set(.08,-.07,.15*s); pec.rotation.z = Math.PI/2+.4;
+    pec.rotation.y = -.5*s; pec.scale.z = .3; g.add(pec);
+    const eye = new THREE.Mesh(new THREE.SphereGeometry(.055,10,8),
+      new THREE.MeshBasicMaterial({color:0x0c1018}));
+    eye.position.set(.36,.08,.12*s); g.add(eye);
+  }
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  return g;
+}
+
+// ---------- the basket lid (ざる) ----------
+function buildLid(){
+  const g = new THREE.Group();
+  // an upside-down woven bowl: a hemisphere reads as a basket from every angle
+  const bowl = new THREE.Mesh(
+    new THREE.SphereGeometry(.62, 22, 12, 0, Math.PI*2, 0, Math.PI/2), basketMat);
+  g.add(bowl);
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(.615,.045,8,26), basketRimMat);
+  rim.rotation.x = Math.PI/2; g.add(rim);
+  const knob = new THREE.Mesh(new THREE.SphereGeometry(.09,10,8), basketRimMat);
+  knob.position.y = .6; g.add(knob);
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  return g;
+}
+
+// ---------- a stall ----------
+// Built symmetrically front-to-back: the 裏返し event spins the whole row,
+// so the far side has to read as a stall too.
+function buildStall(){
+  const g = new THREE.Group();
+  const counter = new THREE.Mesh(new THREE.BoxGeometry(1.9,.92,1.3), woodMat);
+  counter.position.y = .46; g.add(counter);
+  const top = new THREE.Mesh(new THREE.BoxGeometry(2.06,.14,1.46), woodTopMat);
+  top.position.y = .99; g.add(top);
+  for(const sx of [-.86,.86]) for(const sz of [-.58,.58]){
+    const p = new THREE.Mesh(new THREE.BoxGeometry(.11,1.5,.11), postMat);
+    p.position.set(sx,1.76,sz); g.add(p);
+  }
+  // canopy: two tilted slabs meeting in a ridge
+  // accent on the slab that faces the camera, cream behind it — the striped
+  // awning is the one bit of strong colour in the row
+  const roofA = new THREE.Mesh(new THREE.BoxGeometry(2.36,.09,1.05), canopyMat2);
+  roofA.position.set(0,2.58,-.44); roofA.rotation.x = -.42; g.add(roofA);
+  const roofB = new THREE.Mesh(new THREE.BoxGeometry(2.36,.09,1.05), canopyMat);
+  roofB.position.set(0,2.58,.44); roofB.rotation.x = .42; g.add(roofB);
+  const ridge = new THREE.Mesh(new THREE.BoxGeometry(2.4,.1,.12), postMat);
+  ridge.position.y = 2.79; g.add(ridge);
+  // a small lantern on each side so the stall still reads after a flip
+  for(const sz of [.62,-.62]){
+    const lan = new THREE.Mesh(new THREE.SphereGeometry(.16,12,9), lanternMat);
+    lan.scale.set(1,1.2,1); lan.position.set(.86,2.22,sz); g.add(lan);
+  }
+  g.traverse(o=>{ if(o.isMesh && o.castShadow !== false) o.castShadow = true; });
+  return g;
+}
+
+// ---------- the cart that hides the swap ----------
+function buildCart(){
+  const g = new THREE.Group();
+  const bed = new THREE.Mesh(new THREE.BoxGeometry(3.3,.34,1.5), cartWoodMat);
+  bed.position.y = .82; g.add(bed);
+  const tarp = new THREE.Mesh(new THREE.BoxGeometry(3.0,1.9,1.35), tarpMat);
+  tarp.position.y = 1.95; g.add(tarp);
+  // two rope bands and a crate lip, so the load is not one flat rectangle
+  const ropeMat = new THREE.MeshStandardMaterial({color:0x8a7a52, roughness:.9});
+  for(const ry of [1.45, 2.42]){
+    const rope = new THREE.Mesh(new THREE.BoxGeometry(3.06,.1,1.4), ropeMat);
+    rope.position.y = ry; g.add(rope);
+  }
+  for(const rx of [-.95, .95]){
+    const rope = new THREE.Mesh(new THREE.BoxGeometry(.1,1.94,1.4), ropeMat);
+    rope.position.set(rx,1.95,0); g.add(rope);
+  }
+  const crate = new THREE.Mesh(new THREE.BoxGeometry(2.4,.42,1.15), cartWoodMat);
+  crate.position.y = 3.05; g.add(crate);
+  const handle = new THREE.Mesh(new THREE.BoxGeometry(1.5,.1,.1), cartWoodMat);
+  handle.position.set(2.2,.95,0); g.add(handle);
+  for(const sx of [-1.0,1.0]) for(const sz of [.78,-.78]){
+    const w = new THREE.Mesh(new THREE.CylinderGeometry(.56,.56,.14,18), wheelMat);
+    w.rotation.x = Math.PI/2; w.position.set(sx,.56,sz); g.add(w);
+    const hub = new THREE.Mesh(new THREE.CylinderGeometry(.13,.13,.18,10), cartWoodMat);
+    hub.rotation.x = Math.PI/2; hub.position.set(sx,.56,sz); g.add(hub);
+  }
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  return g;
+}
+
+// ---------- the selection marker ----------
+function buildMarker(high){
+  const g = new THREE.Group();
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(1.0,.075,10,36), markerMat);
+  ring.rotation.x = Math.PI/2; g.add(ring);
+  // In play the arrow must clear the canopy (~2.8) or the counter hides it.
+  // The showcase frames the marker on its own, where that gap is just dead
+  // space, so it sits the arrow back down on the ring.
+  const arrow = new THREE.Mesh(new THREE.ConeGeometry(.28,.6,4), markerMat);
+  arrow.rotation.x = Math.PI; arrow.position.y = high ? 3.5 : 1.15; g.add(arrow);
+  return g;
+}
+
+// ---------- the play field ----------
+// Everything that can be flipped by 裏返し lives under rowGroup.
+const rowGroup = new THREE.Group();
+scene.add(rowGroup);
+
+
+const MAX_STALLS = 4;
+const stalls = [];           // {group, lid, slot, sx, tx, dir, lidT, lidY}
+for(let i=0;i<MAX_STALLS;i++){
+  const group = buildStall();
+  const lid = buildLid();
+  lid.position.set(0,1.06,0);
+  group.add(lid);
+  rowGroup.add(group);
+  stalls.push({group, lid, slot:i, sx:0, tx:0, dir:1, lidT:0, lidY:0});
+}
+const fish = buildFish();
+fish.position.set(0,1.38,0);
+rowGroup.add(fish);
+
+const marker = buildMarker(true);
+marker.position.y = .06;
+scene.add(marker);
+marker.visible = false;
+
+const carts = [];            // {group, x, vx}
+const cartPool = [];
+function getCart(){
+  const c = cartPool.pop() || buildCart();
+  scene.add(c); return c;
+}
+
+// slot positions depend on how many stalls are in play this round
+function slotXs(n){
+  const gap = n>=4 ? 2.45 : 3.05;
+  return Array.from({length:n},(_,i)=>(i-(n-1)/2)*gap);
+}
+
+// ---------- game state ----------
+let running=false, dead=false, t=0, score=0;
+let phase='idle', pt=0;          // phase name + seconds inside it
+let round=1, lives=3;
+let stallCount=3, slotX=slotXs(3);
+let fishStall=null;              // the stall object actually holding the fish
+let selIdx=1;                    // index into stalls[] highlighted by the keyboard
+let swapsLeft=0, swapping=false, swapT=0, swapDur=.6, swapGap=0;
+let chooseLimit=3.4;
+let lastPick=null, lastCorrect=false;
+let timeScale=1;                 // slow-motion multiplier
+let deadAt=0;
+let shake=0;
+let camDist=10.6, camDistTarget=10.6;
+let camFocusX=0;
+// event state
+let blackout=0, rain=0, expressT=0, cartBoost=0, forceFour=false;
+let rowSpinTarget=0;
+let cartTimer=0, cartSide=1;
+let nextEventAt=11;
+let eventQueue=[];
+
+const scoreEl  = document.getElementById('score');
+const msgEl    = document.getElementById('msg');
+const roundEl  = document.getElementById('round');
+const livesEl  = document.getElementById('lives');
+const statsEl  = document.getElementById('stats');
+const timerWrap= document.getElementById('timerWrap');
+const timerBar = document.getElementById('timerBar');
+const titleEl  = document.getElementById('title');
+const uiEl     = document.getElementById('ui');
+const bannerEl = document.getElementById('banner');
+const bannerText = bannerEl.querySelector('.b');
+const flashEl  = document.getElementById('flash');
+const vignetteEl = document.getElementById('vignette');
+const koEl     = document.getElementById('ko');
+const koScoreEl= koEl.querySelector('.finalScore');
+const scoreLabelEl = document.getElementById('scoreLabel');
+
+// ---------- presentation helpers ----------
+function banner(text, color){
+  bannerText.textContent = text;
+  bannerText.style.color = color;
+  bannerEl.classList.remove('go');
+  void bannerEl.offsetWidth;      // restart the CSS animation
+  bannerEl.style.opacity = 1;
+  bannerEl.classList.add('go');
+}
+function flash(color, strength, ms){
+  flashEl.style.background = color;
+  flashEl.style.transition = 'none';
+  flashEl.style.opacity = strength;
+  requestAnimationFrame(()=>{
+    flashEl.style.transition = `opacity ${ms}ms ease-out`;
+    flashEl.style.opacity = 0;
+  });
+}
+function drawLives(){ livesEl.textContent = '◆'.repeat(Math.max(0,lives)) + '◇'.repeat(Math.max(0,3-lives)); }
+
+// ---------- carts ----------
+function spawnCart(){
+  const g = getCart();
+  const dir = cartSide; cartSide *= -1;
+  const x = -dir*10.5;
+  g.position.set(x, 0, 3.1);
+  g.rotation.y = dir>0 ? 0 : Math.PI;   // handle leads the way
+  carts.push({group:g, x, vx: dir*7.4});
+}
+function updateCarts(dt){
+  for(let i=carts.length-1;i>=0;i--){
+    const c = carts[i];
+    c.x += c.vx*dt;
+    c.group.position.x = c.x;
+    // wheels roll
+    for(const m of c.group.children) if(m.geometry && m.geometry.type==='CylinderGeometry')
+      m.rotation.y -= c.vx*dt*1.8;
+    if(Math.abs(c.x) > 11){
+      scene.remove(c.group); cartPool.push(c.group); carts.splice(i,1);
+    }
+  }
+}
+// the cart currently closest to the middle of the row, if any
+function activeCart(){
+  let best=null;
+  for(const c of carts) if(Math.abs(c.x) < 5.2 && (!best || Math.abs(c.x)<Math.abs(best.x))) best=c;
+  return best;
+}
+
+// ---------- the swap ----------
+function beginSwap(){
+  const live = stalls.slice(0, stallCount);
+  let a, b;
+  const cart = activeCart();
+  if(cart){
+    // "two stalls swap goods behind a cart": pick the pair the cart is covering
+    const order = live.slice().sort((p,q)=>
+      Math.abs(slotX[p.slot]-cart.x) - Math.abs(slotX[q.slot]-cart.x));
+    a = order[0]; b = order[1];
+  } else {
+    a = live[Math.floor(Math.random()*live.length)];
+    do { b = live[Math.floor(Math.random()*live.length)]; } while(b===a);
+  }
+  const sa = a.slot, sb = b.slot;
+  a.slot = sb; b.slot = sa;
+  a.sx = slotX[sa]; a.tx = slotX[sb]; a.dir =  1;   // one swings toward the street
+  b.sx = slotX[sb]; b.tx = slotX[sa]; b.dir = -1;   // the other behind
+  a.moving = true; b.moving = true;
+  swapT = 0; swapping = true; swapsLeft--;
+  if(!SILENT) SND.move();
+}
+function updateSwap(dt){
+  if(!swapping) return;
+  swapT += dt;
+  const dur = swapDur / (expressT>0 ? 2 : 1);
+  const p = Math.min(1, swapT/dur);
+  const e = p*p*(3-2*p);                      // smoothstep
+  const arc = Math.sin(p*Math.PI);
+  for(const s of stalls){
+    if(!s.moving) continue;
+    s.group.position.x = s.sx + (s.tx-s.sx)*e;
+    s.group.position.z = arc * 1.55 * s.dir;
+    s.group.rotation.y = arc * .22 * s.dir;
+  }
+  if(p>=1){
+    for(const s of stalls){
+      if(!s.moving) continue;
+      s.moving=false; s.group.position.z=0; s.group.rotation.y=0;
+      s.group.position.x = s.tx;
+    }
+    swapping = false;
+    swapGap = .16;
+  }
+}
+
+// ---------- phases ----------
+function layoutStalls(){
+  slotX = slotXs(stallCount);
+  for(let i=0;i<stalls.length;i++){
+    const s = stalls[i];
+    s.slot = i;
+    s.moving = false;
+    s.group.visible = i < stallCount;
+    s.group.position.set(i<stallCount ? slotX[i] : 0, 0, 0);
+    s.group.rotation.y = 0;
+  }
+}
+
+function enterPhase(name){
+  phase = name; pt = 0;
+  if(name==='reveal'){
+    stallCount = forceFour ? 4 : (round>=6 && Math.random()<.35 ? 4 : 3);
+    forceFour = false;
+    layoutStalls();
+    rowGroup.rotation.y = 0; rowSpinTarget = 0;
+    fishStall = stalls[Math.floor(Math.random()*stallCount)];
+    fishStall.group.add(fish);
+    fish.position.set(0,1.38,0);
+    fish.visible = true;
+    for(const s of stalls) s.lidT = 1;       // every lid up: the board is honest
+    selIdx = Math.min(selIdx, stallCount-1);
+    roundEl.textContent = '第 ' + round + ' 問';
+    msgEl.textContent = 'よく見て';
+    timerWrap.classList.remove('on');
+    marker.visible = false;
+    if(!SILENT) SND.jump();                  // "here it is"
+  }
+  if(name==='swap'){
+    for(const s of stalls) s.lidT = 0;       // lids down
+    msgEl.textContent = '追え';
+    swapsLeft = Math.min(9, 2 + Math.floor(round*.75));
+    swapDur = Math.max(.34, .62 - round*.018);
+    swapping = false; swapGap = .5;
+    cartTimer = .25;
+    if(!SILENT) SND.land();
+  }
+  if(name==='choose'){
+    msgEl.textContent = 'どの屋台？';
+    chooseLimit = Math.max(1.9, 3.6 - round*.11);
+    timerWrap.classList.add('on');
+    timerBar.style.width = '100%';
+    marker.visible = true;
+    lastPick = null;
+  }
+  if(name==='result'){
+    for(const s of stalls) s.lidT = 1;       // everything opens
+    timerWrap.classList.remove('on');
+    marker.visible = false;
+  }
+}
+
+function advancePhase(dt){
+  pt += dt;
+  if(phase==='reveal'){
+    if(pt > Math.max(.8, 1.5 - round*.05)) enterPhase('swap');
+  } else if(phase==='swap'){
+    // carts keep rolling through the whole shuffle
+    cartTimer -= dt;
+    if(cartTimer <= 0){
+      spawnCart();
+      cartTimer = (cartBoost>0 ? 1.15 : 2.35) + Math.random()*.5;
+    }
+    updateSwap(dt);
+    if(!swapping){
+      swapGap -= dt;
+      if(swapGap <= 0){
+        if(swapsLeft > 0) beginSwap();
+        else enterPhase('choose');
+      }
+    }
+  } else if(phase==='choose'){
+    const left = Math.max(0, 1 - pt/chooseLimit);
+    timerBar.style.width = (left*100).toFixed(1) + '%';
+    if(AUTO) autoPilot();
+    if(pt >= chooseLimit) resolve(null);      // ran out of time = wrong
+  } else if(phase==='result'){
+    if(pt > 1.35){
+      if(lives <= 0){ dead = true; gameOver(); }
+      else { round++; enterPhase('reveal'); }
+    }
+  }
+}
+
+// ---------- the one decision in the game ----------
+function choose(idx){
+  if(phase !== 'choose' || !running || dead) return;
+  if(idx == null || idx < 0 || idx >= stallCount) return;
+  selIdx = idx;
+  resolve(stalls[idx]);
+}
+function resolve(picked){
+  lastPick = picked;
+  lastCorrect = picked === fishStall;
+  if(lastCorrect){
+    score += 120 + round*45;
+    msgEl.textContent = 'あたり  +' + (120 + round*45);
+    flash('#5cff9a', .30, 420);
+    if(!SILENT) SND.place();
+  } else {
+    lives--;
+    drawLives();
+    msgEl.textContent = picked ? 'はずれ' : '時間切れ';
+    flash('#ff2b3a', .45, 460);
+    shake = Math.max(shake, .3);
+    // a double thud reads as "wrong" without stealing the game-over sound
+    if(!SILENT){ SND.land(); setTimeout(()=>SND.land(), 95); }
+  }
+  camFocusX = fishStall ? worldX(fishStall) : 0;
+  enterPhase('result');
+}
+
+// world x of a stall (rowGroup may be flipped, so read it from the matrix)
+const _v = new THREE.Vector3();
+function worldX(s){ return s.group.getWorldPosition(_v).x; }
+
+// keyboard selection moves by what the player sees, not by slot index —
+// after 裏返し the leftmost stall on screen is not slot 0 any more.
+function visualOrder(){
+  return stalls.slice(0, stallCount)
+    .map((s,i)=>({s, i, x: worldX(s)}))
+    .sort((a,b)=>a.x-b.x);
+}
+function moveSel(d){
+  if(phase !== 'choose') return;
+  const ord = visualOrder();
+  let at = ord.findIndex(o=>o.i===selIdx);
+  if(at < 0) at = 0;
+  at = Math.max(0, Math.min(ord.length-1, at + d));
+  selIdx = ord[at].i;
+  if(!SILENT) SND.move();
+}
+function confirmSel(){ choose(selIdx); }
+
+// ---------- events ----------
+const EVENTS = {
+  // the lanterns die: only silhouettes while the stalls keep moving
+  blackout(){
+    banner('停電', '#9b6bff');
+    blackout = 2.8;
+    return 3.6;
+  },
+  // two carts at once, then a faster stream of them
+  doublecart(){
+    banner('荷車 二台', '#ffd23b');
+    spawnCart(); spawnCart();
+    cartBoost = 6.5;
+    return 5.5;
+  },
+  // one more stall joins from the next question
+  fourth(){
+    banner('屋台 四台', '#ff9a2e');
+    forceFour = true;
+    flash('#ff9a2e', .26, 380);
+    return 4;
+  },
+  // the hands speed up
+  express(){
+    banner('早業', '#55f0c0');
+    expressT = 5.5;
+    flash('#9ffff0', .24, 360);
+    return 5.5;
+  },
+  // the whole row turns around: left and right swap meaning
+  turntable(){
+    banner('裏返し', '#ff5a8a');
+    rowSpinTarget += Math.PI;
+    shake = Math.max(shake, .22);
+    return 4;
+  },
+  // a squall: the street goes wet and the canopies blur the view
+  rain(){
+    banner('にわか雨', '#8fd4ff');
+    rain = 7;
+    return 6.5;
+  },
+};
+const EVENT_NAMES = Object.keys(EVENTS);
+const SUBJECT_NAMES = ['fish','stall','lid','cart','lantern','marker'];
+
+// recording/debug hooks: the capture tooling reads these by name
+window.__events = EVENT_NAMES.slice();
+window.__subjects = SUBJECT_NAMES.slice();
+window.__ev = name => {
+  if(!running || dead || !EVENTS[name]) return false;
+  const busy = EVENTS[name]();
+  if(!SILENT) SND.event();
+  nextEventAt = t + busy + 5;
+  return true;
+};
+window.__alive = () => running && !dead;
+window.__kill = () => { if(running && !dead){ dead=true; gameOver(); } };
+window.__recStop = () => SND.recStop();
+window.__snd = () => ({enabled: SND.enabled, silent: SILENT});
+window.__fov = () => +camera.fov.toFixed(1);
+window.__probe = () => ({t:+t.toFixed(2), phase, round, lives, stalls:stallCount,
+  sel:selIdx, fish:fishStall?stalls.indexOf(fishStall):-1,
+  swapsLeft, carts:carts.length, next:+nextEventAt.toFixed(2)});
+
+function refillEventQueue(){
+  eventQueue = EVENT_NAMES.slice();
+  for(let i=eventQueue.length-1;i>0;i--){        // shuffle so the order varies per run
+    const j = Math.floor(Math.random()*(i+1));
+    [eventQueue[i],eventQueue[j]]=[eventQueue[j],eventQueue[i]];
+  }
+}
+function triggerEvent(){
+  if(!eventQueue.length) refillEventQueue();
+  const name = eventQueue.pop();
+  const busy = EVENTS[name]();
+  if(!SILENT) SND.event();
+  nextEventAt = t + busy + 6 + Math.random()*5;   // breathing room between events
+}
+
+// ---------- reset ----------
+function reset(){
+  for(const c of carts){ scene.remove(c.group); cartPool.push(c.group); }
+  carts.length = 0;
+  t=0; score=0; round=1; lives=3; dead=false;
+  timeScale=1; shake=0; camDist=CAM_DIST; camDistTarget=CAM_DIST; camFocusX=0;
+  blackout=0; rain=0; expressT=0; cartBoost=0; forceFour=false;
+  rowGroup.rotation.y = 0; rowSpinTarget = 0;
+  rainMat.opacity = 0;
+  hemi.intensity=BASE_LIGHT.hemi; sun.intensity=BASE_LIGHT.sun; marketLight.intensity=BASE_LIGHT.market;
+  scene.background.copy(SKY); scene.fog.color.copy(SKY);
+  nextEventAt = 11;
+  refillEventQueue();
+  drawLives();
+  scoreEl.textContent = '0';
+  koEl.classList.remove('on');
+  vignetteEl.style.transition='opacity .3s'; vignetteEl.style.opacity=0;
+  camera.position.set(0, CAM_HEIGHT, CAM_DIST);
+  selIdx = 1;
+  enterPhase('reveal');
+}
+
+const startBtn = document.getElementById('startBtn');
+
+// ---------- sound: everything synthesised, no audio files ----------
+// Keeps the single-HTML rule (nothing to download) and lets the music
+// react to play: the bass line speeds up with the game, events drop a
+// stinger, and the whole thing ducks out on a game over.
+const SND = (() => {
+  let ctx = null, master = null, musicGain = null, on = true, started = false;
+  let step = 0, timer = null, tempo = 0.25;
+
+  // A pentatonic scale never sounds wrong against itself, which matters
+  // when the tempo drifts with the player's speed.
+  // minor pentatonic, driving — a chase that never lets up
+  const SCALE = [0, 3, 5, 7, 10];
+  const ROOT = 196;
+  const BASS = 'square', LEAD = 'sawtooth';
+  const hz = (deg, oct = 0) =>
+    ROOT * Math.pow(2, oct + Math.floor(deg / SCALE.length)) *
+    Math.pow(2, SCALE[((deg % SCALE.length) + SCALE.length) % SCALE.length] / 12);
+
+  function ensure() {
+    if (ctx) return ctx;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    ctx = new AC();
+    master = ctx.createGain();
+    master.gain.value = 0.32;
+    master.connect(ctx.destination);
+    musicGain = ctx.createGain();
+    musicGain.gain.value = 1;
+    musicGain.connect(master);
+    return ctx;
+  }
+
+
+  // ---- 録音用の分岐（?rec=1）----
+  // Playwright の録画には音声が入らないので、ゲーム自身に master バスを
+  // 録らせる。鳴っているものそのものなので映像と必ず同期する。
+  let recDest = null, recorder = null, recChunks = [];
+  function recStart() {
+    if (!ctx || recorder) return;
+    recDest = ctx.createMediaStreamDestination();
+    master.connect(recDest);
+    recorder = new MediaRecorder(recDest.stream, {mimeType: 'audio/webm'});
+    recorder.ondataavailable = e => { if (e.data.size) recChunks.push(e.data); };
+    recorder.start();
+  }
+  function recStop() {
+    return new Promise(res => {
+      if (!recorder) return res(null);
+      recorder.onstop = async () => {
+        const blob = new Blob(recChunks, {type: 'audio/webm'});
+        const buf = await blob.arrayBuffer();
+        res(Array.from(new Uint8Array(buf)));
+      };
+      recorder.stop();
+    });
+  }
+
+  function blip(freq, dur, type = 'square', vol = 0.25, dest = null, slideTo = null) {
+    if (!ctx || !on) return;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, ctx.currentTime);
+    if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, ctx.currentTime + dur);
+    // a short attack stops every note from clicking
+    g.gain.setValueAtTime(0, ctx.currentTime);
+    g.gain.linearRampToValueAtTime(vol, ctx.currentTime + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
+    o.connect(g); g.connect(dest || master);
+    o.start(); o.stop(ctx.currentTime + dur + 0.02);
+  }
+
+  function noise(dur, vol = 0.2, hp = 800) {
+    if (!ctx || !on) return;
+    const n = Math.floor(ctx.sampleRate * dur);
+    const buf = ctx.createBuffer(1, n, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    const f = ctx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = hp;
+    const g = ctx.createGain(); g.gain.value = vol;
+    src.connect(f); f.connect(g); g.connect(master);
+    src.start();
+  }
+
+  // --- the loop: a walking bass plus an offbeat blip ---
+  function tick() {
+    if (!ctx || !on) return;
+    const bar = step % 16;
+    // straight driving pulse: bass on every beat, lead stabs offbeat
+    if (bar % 2 === 0) blip(hz(bar % 8 === 0 ? 0 : 1, -1), tempo * 1.1, BASS, 0.30, musicGain);
+    if (bar % 8 === 5) blip(hz(4, 0), tempo * 0.6, LEAD, 0.09, musicGain);
+    if (bar % 4 === 2) noise(0.04, 0.05, 5000);
+    step++;
+    timer = setTimeout(tick, tempo * 1000);
+  }
+
+  return {
+    // must be called from a user gesture — browsers block audio otherwise
+    start() {
+      if (!ensure() || started) return;
+      if (ctx.state === 'suspended') ctx.resume();
+      started = true; step = 0; tick();
+    },
+    stop() { if (timer) { clearTimeout(timer); timer = null; } started = false; },
+    /** speed the music up with the game; 1 = starting pace */
+    setPace(mult) { tempo = Math.max(0.11, 0.25 / Math.max(0.2, mult)); },
+    duck(sec = 1.6) {                                      // for game over
+      if (!ctx) return;
+      musicGain.gain.cancelScheduledValues(ctx.currentTime);
+      musicGain.gain.setValueAtTime(musicGain.gain.value, ctx.currentTime);
+      musicGain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + sec);
+    },
+    unduck() {
+      if (!ctx) return;
+      musicGain.gain.cancelScheduledValues(ctx.currentTime);
+      musicGain.gain.setValueAtTime(0.0001, ctx.currentTime);
+      musicGain.gain.exponentialRampToValueAtTime(1, ctx.currentTime + 0.4);
+    },
+    // --- one-shots ---
+    move()  { ensure(); blip(hz(3, 1), 0.07, LEAD, 0.12); },
+    jump()  { ensure(); blip(hz(0, 0), 0.16, LEAD, 0.18, null, hz(4, 1)); },
+    land()  { ensure(); noise(0.06, 0.10, 500); },
+    place() { ensure(); blip(hz(2, 0), 0.10, BASS, 0.22, null, hz(4, 1)); },
+    event() { ensure(); [0, 90, 180].forEach((ms, i) =>
+                setTimeout(() => blip(hz(2 + i, 0), 0.18, 'sawtooth', 0.20), ms)); },
+    hit()   { ensure(); noise(0.35, 0.30, 200);
+              blip(180, 0.5, 'sawtooth', 0.28, null, 40); },
+    over()  { ensure(); [0, 140, 280, 460].forEach((ms, i) =>
+                setTimeout(() => blip(hz(-i, -1), 0.42, 'triangle', 0.26), ms)); },
+    recStart() { ensure(); recStart(); },
+    recStop() { return recStop(); },
+    toggle() { on = !on; if (!on) { this.stop(); } else { this.start(); } return on; },
+    get enabled() { return on; },
+  };
+})();
+
+// --- one place for every action, so touch and keyboard stay in step ---
+function startRun(){
+  titleEl.classList.add('hidden'); uiEl.classList.add('on'); reset(); running=true;
+  if(!SILENT){ SND.unduck(); SND.start(); if(REC) SND.recStart(); }
+}
+
+const muteBtn = document.getElementById('mute');
+function toggleMute(){ muteBtn.textContent = SND.toggle() ? '🔊' : '🔇'; }
+muteBtn.addEventListener('click', toggleMute);
+muteBtn.addEventListener('touchend', e=>{ e.preventDefault(); toggleMute(); },
+                         {passive:false});
+if(SILENT) muteBtn.style.display='none';   // automated modes have no audio
+addEventListener('keydown', e=>{ if(e.code==='KeyM') toggleMute(); });
+
+startBtn.addEventListener('click', startRun);
+// a touch on the button must start too — click alone is unreliable on touch
+startBtn.addEventListener('touchend', e=>{ e.preventDefault(); startRun(); },
+                          {passive:false});
+
+addEventListener('keydown', e=>{
+  if(!running){
+    if(e.code==='Space'||e.code==='Enter'){
+      // after a K.O. the same key retries; let the animation read first
+      if(!dead || Date.now()-deadAt > 1200) startRun();
+    }
+    return;
+  }
+  if(e.code==='ArrowLeft' ||e.code==='KeyA') moveSel(-1);
+  if(e.code==='ArrowRight'||e.code==='KeyD') moveSel(1);
+  if(e.code==='Space'||e.code==='Enter'||e.code==='ArrowUp'||e.code==='KeyW') confirmSel();
+  // 1-4 pick a stall outright, counted from the left of the screen
+  const n = {Digit1:0,Digit2:1,Digit3:2,Digit4:3}[e.code];
+  if(n !== undefined){
+    const ord = visualOrder();
+    if(n < ord.length) choose(ord[n].i);
+  }
+});
+
+// --- touch: tap the stall itself, or swipe to move the marker ---
+// Most viewers arrive from a phone, so the game has to be playable
+// without a keyboard. A tap raycasts straight onto a stall.
+const raycaster = new THREE.Raycaster();
+const ndc = new THREE.Vector2();
+function pickAt(clientX, clientY){
+  ndc.x = (clientX / innerWidth) * 2 - 1;
+  ndc.y = -(clientY / innerHeight) * 2 + 1;
+  raycaster.setFromCamera(ndc, camera);
+  const live = stalls.slice(0, stallCount).map(s=>s.group);
+  const hits = raycaster.intersectObjects(live, true);
+  if(hits.length){
+    // walk up to the stall group we registered
+    let o = hits[0].object;
+    while(o && !live.includes(o)) o = o.parent;
+    if(o) return stalls.indexOf(stalls.find(s=>s.group===o));
+  }
+  // missed every stall: fall back to the nearest one horizontally,
+  // so a tap just above or below a stall still counts
+  const ord = visualOrder();
+  if(!ord.length) return null;
+  let best = ord[0], bestD = Infinity;
+  for(const o of ord){
+    const p = o.s.group.getWorldPosition(_v).clone().project(camera);
+    const px = (p.x*.5+.5)*innerWidth;
+    const d = Math.abs(px - clientX);
+    if(d < bestD){ bestD = d; best = o; }
+  }
+  return bestD < innerWidth*0.28 ? best.i : null;
+}
+
+(function(){
+  let sx=0, sy=0, st=0, moved=false;
+  const SWIPE = 32;          // px before a drag counts as a swipe
+  const canvas = renderer.domElement;
+
+  canvas.addEventListener('touchstart', e=>{
+    const tt = e.changedTouches[0];
+    sx=tt.clientX; sy=tt.clientY; st=Date.now(); moved=false;
+  }, {passive:true});
+
+  canvas.addEventListener('touchmove', e=>{
+    if(moved || !running || dead) return;
+    const tt = e.changedTouches[0];
+    const dx = tt.clientX-sx, dy = tt.clientY-sy;
+    if(Math.abs(dx) > SWIPE && Math.abs(dx) > Math.abs(dy)){
+      moveSel(dx < 0 ? -1 : 1);
+      moved = true;                       // one step per swipe
+    }
+  }, {passive:true});
+
+  canvas.addEventListener('touchend', e=>{
+    if(dead){
+      // give the K.O. animation time to read, then a tap retries
+      if(!AUTO && Date.now()-deadAt > 1500) startRun();
+      return;
+    }
+    if(!running){ startRun(); return; }
+    if(moved) return;                     // that was a swipe, not a tap
+    if(Date.now()-st > 500) return;
+    const tt = e.changedTouches[0];
+    const idx = pickAt(tt.clientX, tt.clientY);
+    if(idx != null && idx >= 0) choose(idx);
+  }, {passive:true});
+
+  // mouse plays the same way: click a stall
+  canvas.addEventListener('click', e=>{
+    if(!running || dead) return;
+    const idx = pickAt(e.clientX, e.clientY);
+    if(idx != null && idx >= 0) choose(idx);
+  });
+
+  // The title overlay sits above the canvas, so a tap anywhere on it never
+  // reaches the canvas handler. Start from the overlay itself.
+  titleEl.addEventListener('touchend', e=>{
+    if(!running){ e.preventDefault(); startRun(); }
+  }, {passive:false});
+
+  // stop the browser treating game taps as scroll / double-tap zoom
+  canvas.addEventListener('touchmove', e=>e.preventDefault(), {passive:false});
+})();
+
+// autoplay mode for recording: ?auto=1
+if(AUTO){ setTimeout(startRun, 1200); }   // startRun 経由にする（音/録音も始まる）
+
+// The autopilot tracks the fish the same way a player would — it just never
+// blinks. A small, rising error rate keeps runs finite so footage has a K.O.
+let autoWaited = 0;
+function autoPilot(){
+  if(phase !== 'choose' || lastPick) return;
+  autoWaited += 1;
+  if(pt < .45) return;                       // let the choose phase read on camera
+  const errChance = Math.min(.34, .02 + round*.022);
+  let target = stalls.indexOf(fishStall);
+  if(Math.random() < errChance){
+    const others = [];
+    for(let i=0;i<stallCount;i++) if(i!==target) others.push(i);
+    target = others[Math.floor(Math.random()*others.length)];
+  }
+  choose(target);
+}
+
+// ---------- showcase mode ----------
+// Puts one object on a turntable against an empty stage so the video can
+// talk about it while the real thing is on screen. Uses the game's own
+// meshes, so what the narration describes is exactly what ships.
+const showcase = {group:null, pivot:null, spin:.55, label:''};
+const SHOWCASE_LABELS = {
+  fish:'魚', stall:'屋台', lid:'ざる', cart:'荷車', lantern:'提灯', marker:'目印',
+};
+
+function buildShowcase(name){
+  const g = new THREE.Group();
+  let spin = .55;
+  if(name==='fish'){
+    const f = buildFish(); f.scale.set(2.6,2.6,2.6); g.add(f); spin = .75;
+  } else if(name==='stall'){
+    const s = buildStall();
+    const l = buildLid(); l.position.set(0,1.06,0); s.add(l);   // as it ships
+    g.add(s); spin = .45;
+  } else if(name==='lid'){
+    const l = buildLid(); l.scale.set(2.2,2.2,2.2); g.add(l); spin = .6;
+  } else if(name==='cart'){
+    const c = buildCart(); g.add(c); spin = .4;
+  } else if(name==='lantern'){
+    const l = new THREE.Mesh(new THREE.SphereGeometry(.3,18,14), lanternMat);
+    l.scale.set(2.6,3.2,2.6); g.add(l);
+    const cap = new THREE.Mesh(new THREE.CylinderGeometry(.22,.22,.12,14), postMat);
+    cap.position.y = .96; g.add(cap); spin = .5;
+  } else if(name==='marker'){
+    const m = buildMarker(false); m.scale.set(1.5,1.5,1.5); g.add(m); spin = .9;
+  }
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  scene.add(g);
+
+  // Centre the subject on the origin and pull the camera back to fit it,
+  // so every object is framed the same way regardless of its size.
+  const box = new THREE.Box3().setFromObject(g);
+  const size = box.getSize(new THREE.Vector3());
+  const mid = box.getCenter(new THREE.Vector3());
+  g.position.sub(mid);
+  // Fit against BOTH axes: a wide object (the cart) is limited by the
+  // horizontal field, a tall one (the stall) by the vertical. Measuring only
+  // against the vertical FOV leaves wide subjects marooned in dead space.
+  // The turntable spins, so use the depth as a width too — the subject must
+  // still fit once it has turned 90°.
+  const vfov = THREE.MathUtils.degToRad(camera.fov);
+  const hfov = 2*Math.atan(Math.tan(vfov/2)*camera.aspect);
+  const halfW = Math.max(size.x, size.z)*0.5, halfH = size.y*0.5;
+  const reach = Math.max(halfW, halfH);
+  const dist = Math.max(halfH/Math.tan(vfov/2), halfW/Math.tan(hfov/2))*1.35 + 0.8;
+  camera.position.set(0, size.y*0.06, dist);
+
+  // Slide the subject sideways so a text panel can own the other half.
+  // The offset lives on a parent so the turntable still spins in place —
+  // rotating an offset group would make it orbit instead.
+  const bias = parseFloat(QS.get('sx') || '0');
+  const pivot = new THREE.Group();
+  pivot.position.x = -bias * reach * 1.15;
+  scene.add(pivot);
+  pivot.add(g);
+  showcase.group = g; showcase.pivot = pivot;
+  showcase.spin = spin;
+  showcase.label = SHOWCASE_LABELS[name] || name;
+}
+
+fitCamera();
+if(SHOWCASE){
+  titleEl.classList.add('hidden');
+  uiEl.classList.add('on');
+  buildShowcase(SHOWCASE);
+  scoreEl.textContent = '';
+  scoreLabelEl.textContent = '';
+  statsEl.style.display = 'none';
+  timerWrap.style.display = 'none';
+  msgEl.textContent = QS.get('nolabel')==='1' ? '' : showcase.label;
+  msgEl.style.fontSize = 'clamp(22px,6vw,32px)';
+  msgEl.style.letterSpacing = '.3em';
+  // a plain dark stage: nothing on screen but the subject
+  ground.visible = false; strip.visible = false; backdrop.visible = false;
+  wire.visible = false;
+  for(const l of lanterns) l.visible = false;
+  for(const d of rainDrops) d.visible = false;
+  rowGroup.visible = false; marker.visible = false;
+  scene.fog = null;
+  scene.background = new THREE.Color(0x0b0d16);
+  hemi.intensity = 3.0;
+  sun.intensity = 3.4; sun.position.set(2.5, 6, 6);
+  marketLight.position.set(2.8, 3.4, 4.4);
+  marketLight.intensity = 140;
+  // a second light from the other side so the far face is not pure black
+  const fill = new THREE.PointLight(0x88aaff, 48, 28);
+  fill.position.set(-4.6, 2.6, 3.8); scene.add(fill);
+}
+// let the capture script drive the turntable and swap subjects
+window.__showcase = name => {
+  if(showcase.pivot) scene.remove(showcase.pivot);   // pivot owns the group
+  buildShowcase(name);
+  msgEl.textContent = showcase.label;
+};
+
+// ---------- loop ----------
+const clock = new THREE.Clock();
+function tick(){
+  requestAnimationFrame(tick);
+  const raw = Math.min(clock.getDelta(), .05);
+  const dt = raw * timeScale;
+
+  if(SHOWCASE){
+    if(showcase.group) showcase.group.rotation.y += raw*showcase.spin;
+    camera.lookAt(0, 0, 0);        // subject is offset, camera stays on axis
+    renderer.render(scene, camera);
+    return;
+  }
+
+  if(running && !dead){
+    t += dt;
+    score += dt*5;                 // a slow trickle, so the number always moves
+    scoreEl.textContent = Math.floor(score);
+    if(!SILENT) SND.setPace(Math.min(2.2, 1 + round*.07));
+
+    if(t > nextEventAt && !NOEV) triggerEvent();
+    advancePhase(dt);
+    updateCarts(dt);
+
+    // --- event upkeep ---
+    if(expressT>0) expressT -= dt;
+    if(cartBoost>0) cartBoost -= dt;
+
+    // 停電: the market goes dark, but the shuffle does not stop
+    if(blackout>0){
+      blackout -= dt;
+      const k = blackout > .5 ? .07 : .07 + (1-blackout/.5)*.93;   // fade back in
+      hemi.intensity = BASE_LIGHT.hemi*Math.max(.18,k);
+      sun.intensity = BASE_LIGHT.sun*k;
+      marketLight.intensity = BASE_LIGHT.market*k;
+      lanternMat.emissiveIntensity = 1.4*k;
+      scene.background.copy(SKY).multiplyScalar(.25 + .75*k);
+      scene.fog.color.copy(scene.background);
+      if(blackout<=0){
+        hemi.intensity=BASE_LIGHT.hemi; sun.intensity=BASE_LIGHT.sun;
+        marketLight.intensity=BASE_LIGHT.market; lanternMat.emissiveIntensity=1.4;
+        scene.background.copy(SKY); scene.fog.color.copy(SKY);
+      }
+    }
+
+    // にわか雨
+    if(rain>0){
+      rain -= dt;
+      rainMat.opacity = Math.min(.5, rainMat.opacity + dt*1.6);
+      if(rain<=0) rain = 0;
+    } else if(rainMat.opacity > 0){
+      rainMat.opacity = Math.max(0, rainMat.opacity - dt*.7);
+    }
+    if(rainMat.opacity > 0){
+      for(const d of rainDrops){
+        d.position.y -= 22*dt;
+        if(d.position.y < 0){
+          d.position.y = 12 + Math.random()*4;
+          d.position.x = (Math.random()-.5)*26;
+        }
+      }
+    }
+
+    // 裏返し: ease the whole row around
+    if(Math.abs(rowGroup.rotation.y - rowSpinTarget) > .002){
+      rowGroup.rotation.y += (rowSpinTarget - rowGroup.rotation.y)*Math.min(1, dt*2.6);
+    }
+
+    // lids ride up and down toward their phase target
+    for(const s of stalls){
+      s.lidY += (s.lidT*0.95 - s.lidY)*Math.min(1, dt*9);   // stays under the canopy
+      s.lid.position.y = 1.06 + s.lidY;
+      s.lid.rotation.y += dt*.4*s.lidY;
+    }
+
+    // the fish idles so it reads as alive while it is on show
+    fish.rotation.z = Math.sin(t*5)*.12;
+    fish.position.y = 1.38 + Math.sin(t*3.2)*.05;
+    // hide it while the lids are down: no peeking through the basket
+    fish.visible = fishStall ? fishStall.lidY > .38 : false;
+
+    // lanterns sway
+    for(let i=0;i<lanterns.length;i++)
+      lanterns[i].position.y = LANTERN_Y + Math.sin(t*1.4 + i*.7)*.1;
+
+    // the marker sits under the stall the keyboard has selected
+    if(marker.visible && stalls[selIdx]){
+      const p = stalls[selIdx].group.getWorldPosition(_v);
+      marker.position.x += (p.x - marker.position.x)*Math.min(1, dt*14);
+      marker.position.z = p.z;
+      marker.rotation.y += dt*1.6;
+      marker.scale.setScalar(1 + Math.sin(t*7)*.04);
+    }
+  }
+
+  // --- death sequence: slow-mo unwinds, camera pushes in on the real stall ---
+  if(dead){
+    timeScale += (0 - timeScale)*Math.min(1, raw*1.1);
+    // The last thing the player sees is where the fish actually was: lift that
+    // one basket clear of the canopy and float the fish up out of it. Every
+    // other lid settles back down so it cannot be mistaken for the answer.
+    for(const s of stalls){
+      const target = (s===fishStall) ? 0.95 : 0;
+      s.lidY += (target - s.lidY)*Math.min(1, raw*3);
+      s.lid.position.y = 1.06 + s.lidY;
+    }
+    if(fishStall){
+      fish.visible = true;
+      // rise to just above the counter, then hold — drifting forever would
+      // take it through the canopy
+      fish.position.y += (2.0 - fish.position.y)*Math.min(1, raw*1.8);
+      fish.rotation.z += raw*1.6;
+    }
+  }
+
+  // --- camera (runs even while dead, so the zoom and shake still play) ---
+  camDist += (camDistTarget - camDist)*Math.min(1, raw*2.2);
+  camera.position.z = camDist;
+  // ride a little lower as the camera pushes in, so the push reads as a move
+  camera.position.y = CAM_HEIGHT - (CAM_DIST-camDist)*.12;
+  camera.position.x += (camFocusX*.5 - camera.position.x)*Math.min(1, raw*3);
+  // aim at the middle of the stalls, not the floor: keeps the row centred
+  // in frame at every aspect ratio instead of sinking to the bottom third
+  let lx = camera.position.x*.4, ly = CAM_LOOK_Y;
+  if(shake>0){
+    shake = Math.max(0, shake - raw*.9);
+    camera.position.x += (Math.random()-.5)*shake;
+    camera.position.y += (Math.random()-.5)*shake;
+  }
+  camera.lookAt(lx, ly, 0);
+
+  renderer.render(scene, camera);
+}
+
+function gameOver(){
+  running=false; deadAt=Date.now();
+  if(!SILENT){ SND.hit(); SND.duck(1.6); setTimeout(()=>SND.over(), 700); }
+  flash('#ff2b3a', .8, 500);
+  vignetteEl.style.transition='opacity .5s'; vignetteEl.style.opacity=1;
+  shake = .9;
+  camDistTarget = CAM_DIST*0.53;             // push in on the stall that had it
+  camFocusX = fishStall ? worldX(fishStall) : 0;
+  timerWrap.classList.remove('on');
+  marker.visible = false;
+  const finalScore = Math.floor(score);
+  koScoreEl.textContent = finalScore;
+  msgEl.textContent = '';
+  setTimeout(()=>{ koEl.classList.add('on'); }, 620);   // K.O. lands after the slow-mo
+  if(AUTO){ setTimeout(()=>{ reset(); running=true;
+                             if(!SILENT) SND.unduck(); }, RETRY_MS); }
+  else setTimeout(()=>{
+    msgEl.textContent = matchMedia('(pointer:coarse)').matches
+      ? 'タップでもう一度' : 'スペースでもう一度';
+  }, 1800);
+}
+tick();
+
+// --- help (?) : ルールを見せる。録画中は出さない ---
+(function(){
+  const btn = document.getElementById('helpBtn');
+  const panel = document.getElementById('help');
+  if(!btn || !panel) return;
+  if(NOCHROME){                      // 録画・showcase では画面から消す
+    btn.style.display = 'none';
+    const back = document.getElementById('back');
+    if(back) back.style.display = 'none';
+    return;
+  }
+  const open = () => { panel.classList.add('on'); };
+  const close = () => { panel.classList.remove('on'); };
+  btn.addEventListener('click', open);
+  btn.addEventListener('touchend', e => { e.preventDefault(); open(); }, {passive:false});
+  panel.addEventListener('click', e => { if(e.target === panel) close(); });
+  panel.querySelector('.close').addEventListener('click', close);
+  panel.querySelector('.close').addEventListener('touchend',
+    e => { e.preventDefault(); close(); }, {passive:false});
+  addEventListener('keydown', e => {
+    if(e.code === 'Escape') close();
+    else if(e.key === '?' || (e.code === 'Slash' && e.shiftKey)) open();
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,228 @@
+{
+  "id": "0002_market_swap",
+  "title": "魚はどこへ行った",
+  "video_title": "並んだ屋台が、客の見ている前で中身を入れ替えます",
+  "lang": "javascript",
+  "voice": "am_adam",
+  "scenes": [
+    {
+      "kind": "hook",
+      "clip": "doublecart",
+      "narration": "この市場では、買った魚が別の屋台から出てきます。"
+    },
+    {
+      "kind": "image",
+      "prompt": "a narrow crowded fish market alley at dusk, wooden stalls side by side under paper lanterns, crushed ice and whole fish on the counters, wet stone ground, warm orange light, realistic cinematic photograph, shallow depth of field, highly detailed",
+      "narration": "ある港町の市場に、魚屋が三軒、並んでいます。仲は、いいそうです。一台の台車を、三軒で共同で使っています。"
+    },
+    {
+      "kind": "image",
+      "prompt": "a heavy wooden handcart loaded with crates of ice being pushed through a tight market alley, blocking the view of the stalls behind it, motion blur on the wheels, lanterns glowing above, realistic cinematic photograph, moody warm lighting, highly detailed",
+      "narration": "その台車が、通るんです。狭い通りなので、通ると前が見えません。店主たちは、その間に品物を融通し合います。そうなんです。客が見ていない、一瞬の間に。"
+    },
+    {
+      "kind": "image",
+      "prompt": "a customer's point of view in a fish market, three identical wooden stall counters with lids closed over the goods, lanterns above, nobody willing to explain, realistic cinematic photograph, warm dim light, shallow depth of field, highly detailed",
+      "narration": "あなたは、いい魚を一匹、見つけました。でも、まだ受け取っていません。だから、目を離せない。それだけのゲームです。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "fish",
+      "kicker": "追うもの",
+      "title": "魚",
+      "bullets": [
+        "最初に**一度だけ**見せてくれる",
+        "そのあとは**ざるの下**。もう見えない",
+        "追うのは魚ではなく、**魚が入った屋台**"
+      ],
+      "narration": "これが、その魚です。最初に一度だけ、どこにあるか見せてくれます。見せてくれるのは、そこまで。あとはざるがかぶさって、見えません。だからあなたが追うのは、魚じゃないんです。魚が入った屋台のほうです。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "stall",
+      "kicker": "動くもの",
+      "title": "屋台",
+      "bullets": [
+        "三台、ときどき**四台**",
+        "二台ずつ、位置を**交換する**",
+        "回数も速さも、**問題が進むほど増える**"
+      ],
+      "narration": "屋台です。ふだんは三台ですが、途中から四台になることがあります。入れ替わるのは、いつも二台ずつ。この回数が、問題が進むほど増えます。速さも上がります。最初は二回。終わりのほうでは、九回です。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "cart",
+      "kicker": "邪魔するもの",
+      "title": "荷車",
+      "bullets": [
+        "手前を横切って、**視界をふさぐ**",
+        "隠れている間も、屋台は**動き続ける**",
+        "止まってはくれない"
+      ],
+      "narration": "そして、これが例の台車です。画面の手前を、ごろごろ横切ります。見てください。隠れている間も、屋台は動き続けるんです。待ってはくれません。ここが一番、面白いところです。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "lid",
+      "kicker": "ふた",
+      "title": "ざる",
+      "bullets": [
+        "入れ替えが始まると**全部閉まる**",
+        "答え合わせで、**全部開く**",
+        "中身は最後まで見せない"
+      ],
+      "narration": "ざるです。入れ替えが始まると、全部の屋台でこれが閉まります。開くのは、あなたが答えたあと。そのとき三台とも同時に開くので、間違えたかどうかも、同時にわかります。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "marker",
+      "kicker": "選ぶ",
+      "title": "目印",
+      "bullets": [
+        "左右で動かして、**一台を選ぶ**",
+        "制限時間つき。**最初は3秒半**",
+        "終盤は**2秒を切る**"
+      ],
+      "narration": "答えるときは、この目印を左右に動かして、屋台を一台選びます。時間制限があります。最初は3秒半。でも、これも短くなっていきます。終わりのほうでは、2秒ありません。迷ったら、それだけで不正解です。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "lantern",
+      "kicker": "明かり",
+      "title": "提灯",
+      "bullets": [
+        "屋台の上に吊るされている",
+        "**消えることがある**",
+        "そのときは影だけが動く"
+      ],
+      "narration": "屋台の上には、提灯が吊るしてあります。ふつうは、ただの明かりです。ただ、これが消えることがあるんです。消えている間も、屋台は入れ替わり続けます。影だけが動きます。"
+    },
+    {
+      "kind": "events",
+      "clip": "events",
+      "kicker": "市場の事情",
+      "title": "静かにはしていません",
+      "bullets": [
+        "**停電** — 明かりが2秒ちょっと落ちる",
+        "**荷車 二台** — 前を塞ぐものが倍になる",
+        "**裏返し** — 列ごと半回転する"
+      ],
+      "narration": "市場は、静かにはしていません。停電が起きて、明かりが2秒ちょっと落ちます。台車が二台同時に来ることもあります。そして裏返し。屋台の列が、そのまま半回転します。そうです。さっきまで左だったものが、右になります。"
+    },
+    {
+      "kind": "death",
+      "clip": "death",
+      "kicker": "終わりかた",
+      "title": "間違えられるのは、三回まで",
+      "bullets": [
+        "外すたびに**一つ減る**",
+        "時間切れも、**外したのと同じ**",
+        "ゼロで終了。そこまでの問題数が出る"
+      ],
+      "narration": "間違えられるのは、三回までです。時間切れも、外したのと同じ扱いになります。ゼロになったら、そこで終わり。何問まで追えたかが出ます。店主たちは、これを毎日やっています。あなたは、たぶん七問目で見失います。"
+    },
+    {
+      "kind": "outro",
+      "title": "概要欄のリンクから遊べます",
+      "subtitle": "チャンネル登録もお願いします",
+      "narration": "今すぐ遊べます。概要欄のリンクからどうぞ。毎日一本、新しいゲームを出しています。チャンネル登録も、お願いします。"
+    }
+  ],
+  "slug": "market-swap",
+  "channel": "Daily Arcade Studio",
+  "events": [
+    "blackout",
+    "doublecart",
+    "fourth",
+    "express",
+    "turntable",
+    "rain"
+  ],
+  "short": [
+    {
+      "mark": "doublecart",
+      "lead": -0.3,
+      "dur": 9.0,
+      "headline": "荷車が二台"
+    },
+    {
+      "mark": "turntable",
+      "lead": -0.5,
+      "dur": 8.0,
+      "headline": "列ごと半回転"
+    },
+    {
+      "mark": "blackout",
+      "lead": -0.5,
+      "dur": 8.0,
+      "headline": "明かりが落ちる"
+    },
+    {
+      "mark": "express",
+      "lead": -0.5,
+      "dur": 7.0,
+      "headline": "手が速くなる"
+    },
+    {
+      "mark": "death",
+      "lead": -2.0,
+      "dur": 9.0,
+      "headline": "三回で終わり"
+    }
+  ],
+  "thumb": {
+    "hook": "魚はどこへ行った",
+    "sub": "屋台が入れ替わる。目を離すと負け。ブラウザで無料。",
+    "frame_mark": "doublecart",
+    "frame_lead": 1.0
+  },
+  "short_v2": {
+    "cuts": [
+      {
+        "kind": "clip",
+        "mark": "doublecart",
+        "lead": -0.3,
+        "dur": 4.5,
+        "headline": "今日のゲーム",
+        "narration": "今日のゲームです。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "fish",
+        "dur": 5.0,
+        "headline": "魚はどこへ行った",
+        "narration": "あなたは、買った魚を見失わないように見張る客です。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "stall",
+        "dur": 5.0,
+        "headline": "入れ替わる",
+        "narration": "屋台が二台ずつ、位置を交換します。中身ごとです。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "cart",
+        "dur": 5.0,
+        "headline": "見えない",
+        "narration": "荷車が前を塞ぎます。その間も、屋台は動き続けます。"
+      },
+      {
+        "kind": "clip",
+        "mark": "death",
+        "lead": -2.0,
+        "dur": 5.5,
+        "headline": "",
+        "narration": "間違えられるのは、三回までです。"
+      },
+      {
+        "kind": "clip",
+        "mark": "run2",
+        "lead": 1.0,
+        "dur": 4.5,
+        "cta": "概要欄のリンクから遊べます",
+        "narration": "ブラウザで無料で遊べます。リンクは概要欄です。"
+      }
+    ]
+  }
+}
