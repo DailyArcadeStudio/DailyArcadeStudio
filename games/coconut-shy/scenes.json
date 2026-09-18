@@ -1,0 +1,239 @@
+{
+  "id": "0034_coconut_shy",
+  "title": "ココナッツ落とし",
+  "lang": "javascript",
+  "voice": "am_adam",
+  "video_title": "海風のせいで、誰も当てられない屋台があります",
+  "scenes": [
+    {
+      "kind": "hook",
+      "clip": "gust",
+      "narration": "この屋台、店主が一日中、自分でボールを投げています。"
+    },
+    {
+      "kind": "image",
+      "prompt": "a small seaside carnival stall at the end of a wooden pier, three wooden posts with coconuts balanced on cups, faded striped canvas awning flapping hard in the wind, grey sea behind, overcast afternoon light, photorealistic, cinematic, highly detailed",
+      "narration": "海沿いの小さなお祭りに、ココナッツ落としの屋台があります。店主の名前はメル。この場所で、もう十八年やっています。ただ、この屋台には困ったところがあって。"
+    },
+    {
+      "kind": "image",
+      "prompt": "a weathered man in his sixties standing alone at a carnival stall, holding a small ball, wind pushing his jacket sideways, empty pier behind him, grey overcast sky, documentary photography, natural light, photorealistic, highly detailed",
+      "narration": "屋台が海に真正面を向いているんです。だから風がまっすぐ横から吹く。そうなんです、ボールが曲がります。お客さんは当たらない。それで、インチキだろうと言われるようになりました。"
+    },
+    {
+      "kind": "image",
+      "prompt": "close-up of a hand-painted wooden sign on a carnival stall, weathered paint, salt-stained, hanging slightly crooked, sea wind, soft grey daylight, shallow depth of field, photorealistic, cinematic, highly detailed",
+      "narration": "メルの答えはこうでした。じゃあ自分が投げます。お客さんの前で、同じ風で、同じボールで。見てください、これが毎日の光景です。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "thrower",
+      "kicker": "投げる人",
+      "title": "メル",
+      "bullets": [
+        "**立ち位置がそのまま狙い**。左右に歩いて止まる",
+        "押している間はパワーが上下する",
+        "離した瞬間に、すべてが決まる"
+      ],
+      "narration": "操作はひとつだけです。メルは投げる前、左右にうろうろ歩いています。押すとその場で止まる。これが狙いです。押しっぱなしにするとパワーが上下します。離せば、投げる。そうです、ボタンはひとつしかありません。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "coconut",
+      "kicker": "的",
+      "title": "ココナッツ",
+      "bullets": [
+        "台の上のカップに、ひとつだけ乗っている",
+        "当てるたびに**別のカップへ移動する**",
+        "落とせば玉が2個増える"
+      ],
+      "narration": "的はココナッツです。カップの上にひとつだけ乗っています。落とすと、次のココナッツは別のカップに乗ります。同じ場所には戻ってきません。落とすたびに玉が2個もらえます。つまり当て続けているかぎり、終わりません。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "ball",
+      "kicker": "パワー",
+      "title": "ボール",
+      "bullets": [
+        "投げる**角度は固定**。決めるのは速さだけ",
+        "弱いと台の手前で落ちる",
+        "強いとココナッツの上を越えていく"
+      ],
+      "narration": "ここが面白いところです。投げる角度は変えられません。決められるのは速さだけ。弱いと台の手前でぽとりと落ちます。強いとココナッツの上を素通りします。ちょうどいい幅は、メーターのほんの一部です。目安にすると、百三十ミリ秒くらい。まばたきより短いです。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "flag",
+      "kicker": "風",
+      "title": "旗",
+      "bullets": [
+        "**一投ごとに風が変わる**。強さも向きも",
+        "旗が傾いた方へ、ボールも流れる",
+        "強い風ほど旗の色が変わる"
+      ],
+      "narration": "風は一投ごとに変わります。強さも、向きもです。台の横に旗が立っていて、これが唯一の手がかりです。旗が倒れた方へ、ボールも同じだけ流れます。だから、風を読んで、その分だけ横に立つ。これがこのゲームの全部です。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "cup",
+      "kicker": "台",
+      "title": "カップ",
+      "bullets": [
+        "カップは3つ。生きているのは1つだけ",
+        "**カップに当ててもゼロ点**",
+        "ココナッツ本体だけが得点"
+      ],
+      "narration": "カップは3つ並んでいます。でも、ココナッツが乗っているのは1つだけ。惜しいのはここです。カップに当たっても、点は入りません。ココナッツそのものに当てないといけない。あと数センチ、というのを何度も見ることになります。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "stall",
+      "kicker": "距離",
+      "title": "屋台",
+      "bullets": [
+        "投げる位置から、およそ33メートル奥",
+        "ボールが飛んでいる間、**風は効き続ける**",
+        "途中で軌道は直せない"
+      ],
+      "narration": "屋台までは、だいたい33メートル。けっこう遠いです。そしてボールが飛んでいるあいだ、風はずっと効き続けます。放物線の後半ほど、横にずれていく。離したあとは、もう何もできません。見ているだけです。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "gull",
+      "kicker": "邪魔",
+      "title": "カモメ",
+      "bullets": [
+        "飛行ルートを横切っていく",
+        "**触れたボールはそこで終わり**",
+        "よけようがない"
+      ],
+      "narration": "それから、カモメです。ボールの通り道を横切っていきます。当たったボールは、そこで落ちます。よけようはありません。完璧な一投が、カモメ一羽で消えます。もちろん、メルのせいではありません。"
+    },
+    {
+      "kind": "events",
+      "clip": "events",
+      "kicker": "海のいたずら",
+      "title": "海は静かにしてくれない",
+      "bullets": [
+        "**突風** — 風が倍になって、向きも変わる",
+        "**海霧** — 屋台が見えなくなる。記憶で投げる",
+        "**小玉** — ココナッツが半分の大きさに"
+      ],
+      "narration": "そして、ここからが本題です。海は静かにしてくれません。突風が来ると、風が倍になって向きまで変わります。海霧が出ると、屋台が白く消えます。そうです、見えないまま投げます。小玉が出ると、ココナッツが半分の大きさになります。風は同じままで、的だけ小さくなる。ひどい話です。そのかわり、当たれば点は倍です。"
+    },
+    {
+      "kind": "death",
+      "clip": "death",
+      "kicker": "玉がなくなるとき",
+      "title": "終わり方はひとつだけ",
+      "bullets": [
+        "持ち玉は6個から始まる",
+        "外すと減る。当てると**2個増える**",
+        "ゼロになった瞬間、そこで終わり"
+      ],
+      "narration": "終わり方はひとつだけです。玉がなくなったとき。始まりは6個。外せば減って、当てれば2個増えます。だから上手い人は、いつまでも終わりません。下手だと、あっという間です。メルはこれを十八年続けています。あなたは、たぶん7投くらいです。"
+    },
+    {
+      "kind": "outro",
+      "title": "概要欄のリンクから遊べます",
+      "subtitle": "チャンネル登録を — 毎日1本、新しいゲーム",
+      "narration": "ブラウザで無料で遊べます。概要欄のリンクからどうぞ。チャンネル登録もお願いします。明日もまた、新しいゲームを出します。"
+    }
+  ],
+  "slug": "coconut-shy",
+  "channel": "Daily Arcade Studio",
+  "events": [
+    "gust",
+    "fog",
+    "bonus",
+    "shrink",
+    "gull"
+  ],
+  "short": [
+    {
+      "mark": "gust",
+      "lead": -0.3,
+      "dur": 9.0,
+      "headline": "風が倍になる"
+    },
+    {
+      "mark": "fog",
+      "lead": -0.5,
+      "dur": 8.0,
+      "headline": "見えないまま投げる"
+    },
+    {
+      "mark": "shrink",
+      "lead": -0.5,
+      "dur": 8.0,
+      "headline": "的が半分の大きさに"
+    },
+    {
+      "mark": "gull",
+      "lead": -0.5,
+      "dur": 7.0,
+      "headline": "カモメは避けられない"
+    },
+    {
+      "mark": "death",
+      "lead": -2.0,
+      "dur": 9.0,
+      "headline": "玉がゼロで終わり"
+    }
+  ],
+  "thumb": {
+    "hook": "風が全部曲げる",
+    "sub": "一投ごとに風が変わる。ブラウザで無料。",
+    "frame_mark": "gust",
+    "frame_lead": 1.0
+  },
+  "short_v2": {
+    "cuts": [
+      {
+        "kind": "clip",
+        "mark": "gust",
+        "lead": -0.3,
+        "dur": 4.5,
+        "headline": "今日のゲーム",
+        "narration": "今日のゲームです。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "thrower",
+        "dur": 5.0,
+        "headline": "ココナッツ落とし",
+        "narration": "海風の屋台で、ココナッツを落とす人です。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "flag",
+        "dur": 5.0,
+        "headline": "風が変わる",
+        "narration": "風は一投ごとに変わります。旗が倒れた方へ、ボールも流れます。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "ball",
+        "dur": 5.0,
+        "headline": "角度は固定",
+        "narration": "投げる角度は変えられません。決めるのは速さと、立つ位置だけです。"
+      },
+      {
+        "kind": "clip",
+        "mark": "death",
+        "lead": -2.0,
+        "dur": 5.5,
+        "headline": "",
+        "narration": "玉がなくなったら、そこで終わりです。"
+      },
+      {
+        "kind": "clip",
+        "mark": "run2",
+        "lead": 1.0,
+        "dur": 4.5,
+        "cta": "概要欄のリンクから遊べます",
+        "narration": "ブラウザで無料で遊べます。リンクは概要欄です。"
+      }
+    ]
+  }
+}
