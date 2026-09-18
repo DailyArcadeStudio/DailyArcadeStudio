@@ -1,0 +1,216 @@
+{
+  "id": "0099_curling_sweep",
+  "title": "カーリング・スイープ",
+  "video_title": "床が傾いた小さなリンクで、石はいつも右に流れる",
+  "lang": "ja",
+  "voice": "jp_female",
+  "scenes": [
+    {
+      "kind": "hook",
+      "clip": "guards",
+      "narration": "石は、自分では曲がりません。曲げるのは、氷のほうです。"
+    },
+    {
+      "kind": "image",
+      "prompt": "a small old curling rink in a rural town, weathered corrugated metal walls, a single sheet of ice under fluorescent lights, worn wooden benches along the side, early morning, cold blue light, photorealistic, cinematic, highly detailed",
+      "narration": "小さな町に、古いカーリング場が一つあります。リンクは一本だけです。ここには、みんなが知っている問題があります。"
+    },
+    {
+      "kind": "image",
+      "prompt": "close-up of a granite curling stone sliding on ice, drifting off its intended line, faint curved track visible behind it on the frosted surface, shallow depth of field, cold light, photorealistic, cinematic, highly detailed",
+      "narration": "床が、ほんの少し傾いているんです。だから投げた石は、みんな同じほうへ流れます。毎回です。"
+    },
+    {
+      "kind": "image",
+      "prompt": "an elderly man in a worn fleece jacket sweeping the ice with a curling broom, leaning hard into the stroke, empty rink behind him, breath visible in the cold air, photorealistic, cinematic, warm practical lighting",
+      "narration": "直すには、床を全部はがすしかありません。そんなお金はありません。だから管理人のミツオさんは、今日もはいて曲げます。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "stone",
+      "kicker": "投げるもの",
+      "title": "ストーン",
+      "bullets": [
+        "手をはなれたら、**もう投げ直せない**",
+        "まっすぐ進まず、じわじわ横に流れる",
+        "止まった位置が、そのまま点になる"
+      ],
+      "narration": "これがストーンです。手をはなれたら、もう投げ直せません。そして、まっすぐには進みません。じわじわ横に流れていきます。止まった場所が、そのまま点数になります。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "broom",
+      "kicker": "あなたの仕事",
+      "title": "ブルーム",
+      "bullets": [
+        "**左をはくと、石は左へ**寄る",
+        "**右をはくと、石は右へ**寄る",
+        "はいた側の氷がとけて、石がそちらに逃げる"
+      ],
+      "narration": "操作はこれだけです。左をはくと、石は左に寄ります。右をはくと、右です。はいた側の氷がとけて、石がそっちに逃げるんですね。ミツオさんがやっていることと、まったく同じです。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "house",
+      "kicker": "ねらう場所",
+      "title": "ハウス",
+      "bullets": [
+        "奥の的。**中心に近いほど高得点**",
+        "まん中の赤い円が最大",
+        "外すと、失敗が1つたまる"
+      ],
+      "narration": "ねらうのは奥の的、ハウスです。中心に近いほど点が高くなります。まん中まで入れば最高です。ここが面白いところなんですが、外したときは0点ではありません。失敗が1つたまります。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "guard",
+      "kicker": "じゃまなもの",
+      "title": "ガードストーン",
+      "bullets": [
+        "先に置かれた石。**ぶつかると弾かれる**",
+        "避けるには、早めに寄せておくこと",
+        "ぶつかった石は、たいてい外へ出る"
+      ],
+      "narration": "手前には、先に置かれた石が待っています。ぶつかれば、はじかれます。そうなると、だいたい外に出ます。だから早めに寄せておく。これが全部です。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "boards",
+      "kicker": "リンクのはし",
+      "title": "サイドボード",
+      "bullets": [
+        "リンクの幅は、見た目より**せまい**",
+        "はしを越えたら、その投球は終わり",
+        "流れに気づくのが遅いと、ここへ行く"
+      ],
+      "narration": "リンクのはしには板があります。見た目よりせまいです。流れに気づくのが遅れると、石はここへ向かいます。越えたら、その一投は終わりです。"
+    },
+    {
+      "kind": "events",
+      "clip": "events",
+      "kicker": "リンクの気分",
+      "title": "氷は毎回ちがう",
+      "bullets": [
+        "**よこ風** — 一方向にずっと押される",
+        "**き り** — 奥が見えなくなる",
+        "**みがかれた氷** — はいても曲がらない",
+        "**カール反転** — 途中で流れが裏返る"
+      ],
+      "narration": "そして、ここからが本題です。氷は毎回ちがいます。よこ風が吹けば、石はずっと片側に押されます。きりが出れば、奥が見えません。みがかれた氷は、はいても曲がってくれません。いちばん厄介なのがカール反転です。投げている途中で、流れる向きが裏返ります。はく側を、あわてて切り替えてください。"
+    },
+    {
+      "kind": "death",
+      "clip": "death",
+      "kicker": "ランの終わり",
+      "title": "3回外したら、そこまで",
+      "bullets": [
+        "ハウスを外すと**ライフが1つ減る**",
+        "**3回外すと終わり**",
+        "投げるほど石は速くなり、流れも強くなる"
+      ],
+      "narration": "終わり方はいつも同じです。3回外したら、そこまでです。しかも投げるほど石は速くなって、流れも強くなります。ミツオさんは、この傾いた床で40年はいてきました。あなたは、たぶん5投でおしまいです。"
+    },
+    {
+      "kind": "outro",
+      "title": "概要欄のリンクから遊べます",
+      "subtitle": "チャンネル登録もお願いします",
+      "narration": "ブラウザで、今すぐ無料で遊べます。概要欄のリンクからどうぞ。チャンネル登録もお願いします。毎日、新しいゲームを出しています。"
+    }
+  ],
+  "slug": "curling-sweep",
+  "channel": "Daily Arcade Studio",
+  "events": [
+    "gust",
+    "fog",
+    "slick",
+    "guards",
+    "doubletake"
+  ],
+  "short": [
+    {
+      "mark": "doubletake",
+      "lead": -0.5,
+      "dur": 9.0,
+      "headline": "途中で流れが裏返る"
+    },
+    {
+      "mark": "guards",
+      "lead": -0.5,
+      "dur": 8.0,
+      "headline": "ぶつかったら外へ"
+    },
+    {
+      "mark": "slick",
+      "lead": -0.5,
+      "dur": 7.0,
+      "headline": "はいても曲がらない"
+    },
+    {
+      "mark": "gust",
+      "lead": -0.5,
+      "dur": 7.0,
+      "headline": "ずっと押され続ける"
+    },
+    {
+      "mark": "death",
+      "lead": -2.0,
+      "dur": 9.0,
+      "headline": "3回外したら終わり"
+    }
+  ],
+  "thumb": {
+    "hook": "石は自分で曲がらない",
+    "sub": "曲げるのは氷のほう。ブラウザで無料。",
+    "frame_mark": "doubletake",
+    "frame_lead": 1.0
+  },
+  "short_v2": {
+    "cuts": [
+      {
+        "kind": "clip",
+        "mark": "doubletake",
+        "lead": -0.5,
+        "dur": 4.5,
+        "headline": "今日のゲーム",
+        "narration": "今日のゲームです。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "stone",
+        "dur": 5.0,
+        "headline": "カーリング・スイープ",
+        "narration": "傾いた氷の上で、石をまん中に止める人です。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "broom",
+        "dur": 5.0,
+        "headline": "はいて曲げる",
+        "narration": "左をはけば左へ、右をはけば右へ。石はそっちに逃げます。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "guard",
+        "dur": 5.0,
+        "headline": "ガード",
+        "narration": "先に置かれた石です。ぶつかると、はじかれて外へ出ます。"
+      },
+      {
+        "kind": "clip",
+        "mark": "death",
+        "lead": -2.0,
+        "dur": 5.0,
+        "headline": "",
+        "narration": "3回外したら、そこまでです。"
+      },
+      {
+        "kind": "clip",
+        "mark": "run2",
+        "lead": 1.0,
+        "dur": 4.5,
+        "cta": "概要欄のリンクから遊べます",
+        "narration": "ブラウザで無料で遊べます。リンクは概要欄です。"
+      }
+    ]
+  }
+}
