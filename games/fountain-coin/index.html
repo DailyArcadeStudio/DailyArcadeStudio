@@ -1,0 +1,1320 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>フォンタナ・コイン</title>
+<style>
+  html,body{margin:0;padding:0;overflow:hidden;background:#07090f;font-family:'Hiragino Kaku Gothic ProN','Helvetica Neue',Arial,sans-serif;}
+  #ui{position:fixed;top:16px;left:0;right:0;text-align:center;color:#fff;z-index:10;pointer-events:none;}
+  #score{font-size:clamp(24px,5.6vw,34px);font-weight:800;text-shadow:0 2px 8px #000;}
+  #msg{font-size:clamp(13px,3.4vw,19px);margin-top:6px;opacity:.9;text-shadow:0 2px 6px #000;}
+  #title{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:rgba(4,7,14,.74);z-index:20;color:#fff;transition:opacity .4s;padding:0 16px;box-sizing:border-box;}
+  #title h1{font-size:clamp(30px,8.6vw,58px);margin:0 0 8px;letter-spacing:2px;text-shadow:0 4px 18px #22d3ee;text-align:center;}
+  #title p{font-size:clamp(12px,3.3vw,19px);opacity:.85;margin:4px 0;text-align:center;line-height:1.6;}
+  #title .btn{margin-top:26px;padding:14px 44px;font-size:clamp(18px,4.6vw,22px);font-weight:700;color:#04212b;
+    background:linear-gradient(180deg,#5ee7f7,#12a5c4);border:none;border-radius:12px;cursor:pointer;
+    box-shadow:0 6px 24px rgba(34,211,238,.5);}
+  #title .btn:hover{transform:scale(1.05);}
+  .hidden{opacity:0;pointer-events:none;}
+  #back{position:fixed;top:14px;left:14px;z-index:30;text-decoration:none;
+    background:rgba(12,16,26,.72);color:#fff;font:600 clamp(12px,3.2vw,15px)/1 'Hiragino Kaku Gothic ProN',Arial,sans-serif;
+    padding:0 14px;height:44px;display:flex;align-items:center;border-radius:12px;white-space:nowrap;}
+  #back:hover{background:rgba(30,38,56,.9);}
+  #mute{position:fixed;top:14px;right:14px;z-index:30;border:none;cursor:pointer;
+    background:rgba(12,16,26,.72);color:#fff;font-size:20px;line-height:1;
+    width:44px;height:44px;border-radius:12px;}
+  #mute:hover{background:rgba(30,38,56,.9);}
+  /* 端末に合う説明だけ出す */
+  .tc{display:none;}
+  @media (pointer:coarse){ .kb{display:none;} .tc{display:block;} }
+  @media (pointer:coarse){ #title .btn{padding:18px 48px;} }
+
+  /* --- イベントのバナー: 画面中央に叩きつける --- */
+  #banner{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    z-index:15;pointer-events:none;opacity:0;}
+  #banner .b{font-size:clamp(24px,6.6vw,62px);font-weight:900;letter-spacing:.06em;color:#fff;
+    padding:10px 4vw;max-width:94vw;text-align:center;transform:scale(2.4);opacity:0;
+    text-shadow:0 0 26px currentColor, 0 6px 20px #000;
+    border-top:5px solid currentColor;border-bottom:5px solid currentColor;}
+  #banner.go .b{animation:slam .62s cubic-bezier(.12,.85,.2,1) forwards;}
+  @keyframes slam{
+    0%  {transform:scale(2.4) rotate(-4deg);opacity:0;}
+    22% {transform:scale(1)   rotate(0deg); opacity:1;}
+    70% {transform:scale(1)   rotate(0deg); opacity:1;}
+    100%{transform:scale(1.12);opacity:0;}
+  }
+
+  /* --- 全画面フラッシュ --- */
+  #flash{position:fixed;inset:0;z-index:14;pointer-events:none;opacity:0;background:#fff;}
+  #vignette{position:fixed;inset:0;z-index:13;pointer-events:none;opacity:0;
+    background:radial-gradient(ellipse at center,rgba(0,0,0,0) 32%,rgba(120,0,10,.85) 100%);}
+
+  /* --- K.O. 画面 --- */
+  #ko{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    z-index:22;pointer-events:none;opacity:0;color:#fff;transition:opacity .3s;}
+  #ko.on{opacity:1;}
+  #ko .koText{font-size:clamp(86px,24vw,180px);font-weight:900;letter-spacing:10px;color:#fff;
+    text-shadow:0 0 40px #ff3b4a,0 0 90px #ff3b4a,0 10px 30px #000;
+    transform:scale(3);opacity:0;}
+  #ko.on .koText{animation:koSlam .8s cubic-bezier(.1,.9,.2,1) forwards;}
+  @keyframes koSlam{
+    0%  {transform:scale(3) rotate(-8deg);opacity:0;}
+    30% {transform:scale(1) rotate(0deg);opacity:1;}
+    36% {transform:scale(1.06);}
+    100%{transform:scale(1);opacity:1;}
+  }
+  #ko .finalLabel{font-size:clamp(14px,3.8vw,21px);letter-spacing:4px;opacity:0;margin-top:6px;text-shadow:0 2px 8px #000;}
+  #ko .finalScore{font-size:clamp(46px,13vw,78px);font-weight:800;opacity:0;text-shadow:0 4px 20px #000;}
+  #ko.on .finalLabel{animation:fadeUp .5s .75s forwards;}
+  #ko.on .finalScore{animation:fadeUp .5s .9s forwards;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+
+  /* --- あそびかた (?) --- */
+  #helpBtn{position:fixed;top:14px;right:66px;z-index:30;border:none;cursor:pointer;
+    background:rgba(12,16,26,.72);color:#fff;font:700 20px/1 'Helvetica Neue',Arial,sans-serif;
+    width:44px;height:44px;border-radius:12px;}
+  #helpBtn:hover{background:rgba(30,38,56,.9);}
+  #help{position:fixed;inset:0;z-index:40;display:none;align-items:center;
+    justify-content:center;background:rgba(4,6,12,.86);padding:20px;}
+  #help.on{display:flex;}
+  #help .box{background:#0e1726;border:1px solid #234055;border-radius:18px;
+    max-width:560px;width:100%;max-height:86vh;overflow:auto;padding:24px 24px 20px;
+    color:#e6edf3;box-sizing:border-box;}
+  #help h2{margin:0 0 4px;font-size:clamp(19px,5vw,26px);}
+  #help .sub{color:#8b949e;font-size:clamp(12px,3.2vw,14px);margin:0 0 18px;}
+  #help h3{font-size:clamp(13px,3.4vw,15px);color:#5ee7f7;margin:18px 0 6px;letter-spacing:.04em;}
+  #help ul{margin:0;padding-left:20px;}
+  #help li{font-size:clamp(13px,3.4vw,15px);line-height:1.7;margin:3px 0;}
+  #help b{color:#5ee7f7;font-weight:700;}
+  #help .close{margin-top:20px;width:100%;padding:12px;border:none;border-radius:10px;
+    background:#234055;color:#fff;font-size:16px;font-weight:700;cursor:pointer;}
+  #help .close:hover{background:#2f5673;}
+</style>
+</head>
+<body>
+<div id="ui"><div id="score">0</div><div id="msg"></div></div>
+<button id="helpBtn" title="あそびかた">?</button>
+<div id="help"><div class="box">
+  <h2>フォンタナ・コイン</h2>
+  <p class="sub">コインを縁で跳ねさせて、泉の水盤へ。ブラウザで無料。</p>
+    <h3>投げかた</h3>
+    <ul>
+      <li>コインを<b>引っぱって離す</b>だけ。引いた向きと長さがそのまま力になります</li>
+      <li>長く引くほど強く、遠くへ飛びます</li>
+      <li>投げられるのは<b>一度に一枚</b>。着水するまで次は投げられません</li>
+    </ul>
+    <h3>大理石の縁</h3>
+    <ul>
+      <li>手前にある<b>白い縁</b>。コインはここで跳ねます</li>
+      <li>縁を使って入れると<b>ボーナス</b>。直接入れるより点が高い</li>
+      <li>当てずに越えてもいい。ただし点は伸びません</li>
+    </ul>
+    <h3>水盤</h3>
+    <ul>
+      <li>奥の青い円。ここに落ちれば成功です</li>
+      <li><b>中心に近いほど高得点</b></li>
+      <li>泉は<b>左右に動きます</b>。止まってはくれません</li>
+    </ul>
+    <h3>外した枚数</h3>
+    <ul>
+      <li>持ち金は<b>3枚ぶん</b>。外すと一つ減ります</li>
+      <li>ゼロになった時点で終わりです</li>
+      <li>入れ続けているかぎり、財布は減りません</li>
+    </ul>
+    <h3>起きること</h3>
+    <ul>
+      <li><b>強風</b>: 飛んでいるコインが横に流されます</li>
+      <li><b>噴水</b>: 水柱が上がり、当たったコインは弾かれます</li>
+      <li><b>金貨</b>: 一投だけ、入れれば三倍</li>
+      <li><b>暗転</b>: 明かりが落ちて、水盤がほとんど見えません</li>
+      <li><b>狭窄</b>: 水盤が縮み、しばらく戻りません</li>
+    </ul>
+  <button class="close">とじる</button>
+</div></div>
+<a id="back" href="../../" title="ゲーム一覧へ">‹ ゲーム一覧</a>
+<button id="mute" title="音のオン・オフ">🔊</button>
+<div id="vignette"></div>
+<div id="flash"></div>
+<div id="banner"><div class="b"></div></div>
+<div id="ko">
+  <div class="koText">K.O.</div>
+  <div class="finalLabel">さいしゅうスコア</div>
+  <div class="finalScore">0</div>
+</div>
+<div id="title">
+  <h1>フォンタナ・コイン</h1>
+  <p>縁で跳ねさせて、泉へ投げ入れる。</p>
+  <p class="kb">ドラッグして離す : 投げる</p>
+  <p class="kb">スペース : おまかせ投げ</p>
+  <p class="tc">画面を引っぱって離す : 投げる</p>
+  <button class="btn" id="startBtn">スタート</button>
+</div>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+// ---------- url flags (declared first: sound and camera both read them) ----------
+const QS = new URLSearchParams(location.search);
+const AUTO = QS.get('auto')==='1';
+const SHOWCASE_Q = QS.get('showcase');
+// Recording must produce clean footage, so every automated mode is muted.
+const REC = QS.get('rec')==='1';   // 録音モード: 音を鳴らして拾う
+const SILENT = (AUTO || !!SHOWCASE_Q || QS.get('mute')==='1') && !REC;
+// 録画・showcase では「?」と「ゲーム一覧」を出さない（動画の邪魔になる）
+const NOCHROME = AUTO || !!SHOWCASE_Q || QS.get('nochrome')==='1';
+// ?noev=1 でイベントを止める（ナレーション用の静かな素材）
+const NOEV = QS.get('noev')==='1';
+
+// ---------- renderer / scene ----------
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.shadowMap.enabled = true;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const SKY = new THREE.Color(0x0a1020);
+scene.background = SKY.clone();
+scene.fog = new THREE.Fog(0x0a1020, 30, 78);
+
+const camera = new THREE.PerspectiveCamera(52, innerWidth/innerHeight, .1, 220);
+
+// 遊びの舞台は「手前の投擲台 → 大理石の縁 → 奥の水盤」という一本の奥行き。
+// z=0 が投げる側、z が負のほうが泉。
+const THROW_Z   = 2.5;    // コインが生まれる位置
+const RIM_Z     = -9;     // 大理石の縁（跳ね返る板）
+const BASIN_Z   = -20;    // 水盤の中心
+const BASIN_Y   = -1.2;   // 水面の高さ
+
+// Portrait と landscape の両方で遊べないといけない。縦持ちの画面は
+// 16:9 よりずっと細いので、FOV を固定すると泉がフレームから外れる。
+// アスペクトが縦長になるほど縦 FOV を広げて、横の見え方を保つ。
+const BASE_FOV = 52;
+function fitCamera(){
+  const aspect = innerWidth / innerHeight;
+  camera.aspect = aspect;
+  if(typeof SHOWCASE !== 'undefined' && SHOWCASE){
+    camera.fov = aspect < 1 ? 62 : 46;
+  } else {
+    const ref = 16/9;
+    camera.fov = aspect >= ref ? BASE_FOV
+      : Math.min(94, THREE.MathUtils.radToDeg(
+          2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(BASE_FOV)/2) * (ref/aspect))));
+  }
+  camera.__base = camera.fov;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+}
+addEventListener('resize', fitCamera);
+addEventListener('orientationchange', ()=>setTimeout(fitCamera, 120));
+
+// ---------- lights ----------
+const hemi = new THREE.HemisphereLight(0x89b7ff, 0x1a1428, 1.3);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xfff0d8, 2.2);
+sun.position.set(-7, 16, 9); sun.castShadow = true;
+sun.shadow.camera.left=-22; sun.shadow.camera.right=22;
+sun.shadow.camera.top=22; sun.shadow.camera.bottom=-22;
+sun.shadow.camera.far = 60;
+scene.add(sun);
+// 泉そのものを下から照らす。水盤が暗い背景から浮き上がる。
+const basinLight = new THREE.PointLight(0x5ee7f7, 60, 34);
+basinLight.position.set(0, BASIN_Y+2.4, BASIN_Z);
+scene.add(basinLight);
+
+// ---------- 広場の床 ----------
+const PLAZA_MAT = new THREE.MeshStandardMaterial({color:0x2a2f45, roughness:.92});
+const plaza = new THREE.Mesh(new THREE.PlaneGeometry(90, 110), PLAZA_MAT);
+plaza.rotation.x = -Math.PI/2; plaza.position.set(0, -2.0, -24);
+plaza.receiveShadow = true;
+scene.add(plaza);
+// 石畳の目地。床が真っ平らに見えないための線。
+const seams = [];
+for(let i=0;i<14;i++){
+  const l = new THREE.Mesh(new THREE.PlaneGeometry(52, .05),
+    new THREE.MeshBasicMaterial({color:0x4a5878, transparent:true, opacity:.4}));
+  l.rotation.x = -Math.PI/2; l.position.set(0, -1.99, 6 - i*6);
+  scene.add(l); seams.push(l);
+}
+
+// ---------- 背景: 泉の奥に立つ建物のシルエット ----------
+const facade = new THREE.Group();
+(function(){
+  const stone = new THREE.MeshStandardMaterial({color:0x3d4363, roughness:.9});
+  const back = new THREE.Mesh(new THREE.BoxGeometry(34, 20, 2), stone);
+  back.position.set(0, 8, BASIN_Z - 13); facade.add(back);
+  // 柱を並べる。トレヴィらしい列柱の気配だけ出す。
+  for(let i=-4;i<=4;i++){
+    const col = new THREE.Mesh(new THREE.CylinderGeometry(.75,.85,13,14), stone);
+    col.position.set(i*3.6, 4.5, BASIN_Z - 11.4); col.castShadow=true; facade.add(col);
+    const cap = new THREE.Mesh(new THREE.BoxGeometry(2.0,.6,2.0), stone);
+    cap.position.set(i*3.6, 11.2, BASIN_Z - 11.4); facade.add(cap);
+  }
+  const pedimentMat = new THREE.MeshStandardMaterial({color:0x4b5278, roughness:.85});
+  const ped = new THREE.Mesh(new THREE.BoxGeometry(32, 1.6, 3.2), pedimentMat);
+  ped.position.set(0, 12.2, BASIN_Z - 11.4); facade.add(ped);
+  // 中央のアーチ（窪み）。暗い板を一枚置くだけで奥行きが出る。
+  const niche = new THREE.Mesh(new THREE.BoxGeometry(6.4, 10, .4),
+    new THREE.MeshStandardMaterial({color:0x151a2c, roughness:1}));
+  niche.position.set(0, 4.6, BASIN_Z - 12.2); facade.add(niche);
+  scene.add(facade);
+})();
+
+// ---------- 大理石の縁（跳ね返る板） ----------
+// プレイヤーが狙う最初の面。ここに当ててから入れるとボーナス。
+const RIM_MAT  = new THREE.MeshStandardMaterial({color:0xe8e4d8, roughness:.42, metalness:.05});
+const RIM_TOP_MAT = new THREE.MeshStandardMaterial({color:0xf6f2e6, roughness:.3,
+  emissive:0x332f22, metalness:.1});
+const RIM_W = 13, RIM_H = 1.6, RIM_TOP_Y = -0.2;   // 縁の上面の高さ
+function buildRim(){
+  const g = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.BoxGeometry(RIM_W, RIM_H, 1.5), RIM_MAT);
+  body.position.y = RIM_TOP_Y - RIM_H/2 - .1; g.add(body);
+  const top = new THREE.Mesh(new THREE.BoxGeometry(RIM_W+.5, .28, 2.0), RIM_TOP_MAT);
+  top.position.y = RIM_TOP_Y; g.add(top);
+  // 縁の上に等間隔の小柱。当たり判定には使わない、見た目だけの刻み。
+  for(let i=-3;i<=3;i++){
+    const knob = new THREE.Mesh(new THREE.CylinderGeometry(.16,.2,.34,10), RIM_TOP_MAT);
+    knob.position.set(i*1.9, RIM_TOP_Y+.3, 0); g.add(knob);
+  }
+  g.traverse(o=>{ if(o.isMesh){ o.castShadow=true; o.receiveShadow=true; } });
+  return g;
+}
+const rim = buildRim();
+rim.position.z = RIM_Z;
+scene.add(rim);
+
+// ---------- 水盤（泉） ----------
+const BASIN_R0 = 4.2;                 // 基本の半径
+let basinR = BASIN_R0;                // 狭窄イベントで縮む
+const WATER_MAT = new THREE.MeshStandardMaterial({
+  color:0x1d7fa8, roughness:.18, metalness:.35,
+  emissive:0x0a3d55, transparent:true, opacity:.94});
+const BASIN_WALL_MAT = new THREE.MeshStandardMaterial({color:0xd8d2c2, roughness:.55});
+const basin = new THREE.Group();
+const water = new THREE.Mesh(new THREE.CircleGeometry(1, 56), WATER_MAT);
+water.rotation.x = -Math.PI/2; water.position.y = BASIN_Y;
+basin.add(water);
+const BASIN_WALL_H = 2.6;   // 床(-2.0)まで届く高さ。短いと水盤が宙に浮く
+const basinWall = new THREE.Mesh(
+  new THREE.CylinderGeometry(1, 1, BASIN_WALL_H, 56, 1, true), BASIN_WALL_MAT);
+basinWall.position.y = BASIN_Y - BASIN_WALL_H/2 + .12;
+basinWall.material.side = THREE.DoubleSide;
+basin.add(basinWall);
+// 中心の的。近いほど高得点なので、目で狙えるように輪を描く。
+const bullseye = new THREE.Mesh(new THREE.RingGeometry(.28, .42, 40),
+  new THREE.MeshBasicMaterial({color:0xffd23b, transparent:true, opacity:.85, side:THREE.DoubleSide}));
+bullseye.rotation.x = -Math.PI/2; bullseye.position.y = BASIN_Y + .02;
+basin.add(bullseye);
+const midRing = new THREE.Mesh(new THREE.RingGeometry(.62, .68, 44),
+  new THREE.MeshBasicMaterial({color:0x8ff0ff, transparent:true, opacity:.5, side:THREE.DoubleSide}));
+midRing.rotation.x = -Math.PI/2; midRing.position.y = BASIN_Y + .02;
+basin.add(midRing);
+// 水盤のふち石。壁の切り口を隠し、水面に縁取りを与える。
+const basinLip = new THREE.Mesh(new THREE.TorusGeometry(1, .16, 10, 56), BASIN_WALL_MAT);
+basinLip.rotation.x = -Math.PI/2; basinLip.position.y = BASIN_Y + .06;
+basin.add(basinLip);
+basin.position.set(0, 0, BASIN_Z);
+scene.add(basin);
+function applyBasinRadius(){
+  // 半径は scale で効かせる。リングは basin の子なので一緒に伸縮する。
+  water.scale.set(basinR, basinR, 1);
+  basinWall.scale.set(basinR+.25, 1, basinR+.25);
+  bullseye.scale.set(basinR, basinR, 1);
+  midRing.scale.set(basinR, basinR, 1);
+  basinLip.scale.set(basinR+.12, basinR+.12, 1);   // torus は回転済みなので x,y が半径
+}
+applyBasinRadius();
+
+// 水しぶき用の粒。プールしておいて使い回す。
+const splashMat = new THREE.MeshBasicMaterial({color:0xbdf0ff, transparent:true, opacity:.9});
+const splashes = [];
+for(let i=0;i<48;i++){
+  const m = new THREE.Mesh(new THREE.SphereGeometry(.12, 8, 6), splashMat.clone());
+  m.visible = false; scene.add(m);
+  splashes.push({mesh:m, v:new THREE.Vector3(), life:0});
+}
+function splash(x, y, z, n, color){
+  let used = 0;
+  for(const s of splashes){
+    if(s.life > 0) continue;
+    s.mesh.position.set(x, y, z);
+    s.mesh.material.color.set(color || 0xbdf0ff);
+    const a = Math.random()*Math.PI*2, sp = 1.6 + Math.random()*3.4;
+    s.v.set(Math.cos(a)*sp*.6, 3.2 + Math.random()*3.6, Math.sin(a)*sp*.6);
+    s.life = .55 + Math.random()*.4;
+    s.mesh.visible = true;
+    if(++used >= n) break;
+  }
+}
+
+// ---------- 噴水の水柱（イベント用） ----------
+// 水盤の中央から立ち上がる柱。飛んでいるコインに当たると弾く。
+const JET_MAT = new THREE.MeshBasicMaterial({color:0x9fe8ff, transparent:true, opacity:.55});
+const jet = new THREE.Mesh(new THREE.CylinderGeometry(.55, .9, 9, 18, 1, true), JET_MAT);
+jet.material.side = THREE.DoubleSide;
+jet.position.set(0, BASIN_Y + 4.5, BASIN_Z);
+jet.visible = false;
+scene.add(jet);
+
+// ---------- コイン ----------
+const COIN_MAT = new THREE.MeshStandardMaterial({color:0xc9cdd6, metalness:.92, roughness:.22});
+const GOLD_MAT = new THREE.MeshStandardMaterial({color:0xffcf47, metalness:.95, roughness:.18,
+  emissive:0x3a2600});
+function buildCoin(gold){
+  const g = new THREE.Group();
+  const mat = gold ? GOLD_MAT : COIN_MAT;
+  const disc = new THREE.Mesh(new THREE.CylinderGeometry(.42, .42, .09, 26), mat);
+  disc.rotation.x = Math.PI/2;      // 面をカメラ側に向ける
+  g.add(disc);
+  // 縁のふち取りと中央の刻印。単なる円盤に見せないための二枚。
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(.38, .045, 8, 26), mat);
+  g.add(ring);
+  const stamp = new THREE.Mesh(new THREE.BoxGeometry(.1, .24, .12),
+    gold ? GOLD_MAT : new THREE.MeshStandardMaterial({color:0x9aa0ad, metalness:.8, roughness:.4}));
+  g.add(stamp);
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  return g;
+}
+const coin = buildCoin(false);
+const goldCoin = buildCoin(true);
+goldCoin.visible = false;
+scene.add(coin, goldCoin);
+
+// 財布（残り枚数）の表示。投擲台の手前に実物として並べる。
+const purse = [];
+for(let i=0;i<3;i++){
+  const c = buildCoin(false);
+  c.scale.set(.8,.8,.8);
+  c.position.set(-1.3 + i*1.3, -1.55, THROW_Z + 1.2);
+  c.rotation.x = Math.PI/2 - .35;
+  scene.add(c); purse.push(c);
+}
+
+// ---------- 狙いのガイド（引っぱっている間だけ出る） ----------
+// 予測点を一列に並べる。放物線がそのまま見えるので説明がいらない。
+const guideDots = [];
+const guideMat = new THREE.MeshBasicMaterial({color:0x5ee7f7, transparent:true, opacity:.75});
+for(let i=0;i<16;i++){
+  const d = new THREE.Mesh(new THREE.SphereGeometry(.1, 8, 6), guideMat);
+  d.visible = false; scene.add(d); guideDots.push(d);
+}
+
+// ---------- game state ----------
+let running=false, dead=false, t=0, score=0, lives=3;
+let timeScale=1;                 // スローモーション
+let deadAt=0;                    // 死んだ時刻（タップ再挑戦のガード）
+let shake=0;                     // カメラの揺れ
+let camPush=0, camPushTarget=0;  // 死亡時にカメラを寄せる量
+let nextEventAt=7;               // 最初のイベントまでの秒
+let eventQueue=[];               // この回でまだ使っていないイベント名
+
+// 投擲の状態
+let coinFlying=false;            // 飛行中は次を投げられない
+let cv = new THREE.Vector3();    // コインの速度
+let coinSpin = 0;
+let rimTouched=false;            // この一投で縁に当たったか
+let goldShot=false;              // この一投は金貨か
+let goldArmed=false;             // 次の一投を金貨にする予約
+let landedAt=0;                  // 着水した時刻（次を投げるまでの間）
+let aiming=false, aimVec={x:0,y:0};   // 引っぱり中のベクトル（画面座標）
+
+// 泉の横移動
+let basinX=0, basinPhase=0, basinSpeed=.55, basinRange=3.2;
+// イベント効果
+let wind=0, windT=0;             // 横風（コインを流す）
+let jetT=0;                      // 噴水が出ている残り秒
+let blackout=0;                  // 暗転の残り秒
+let squeezeT=0;                  // 狭窄の残り秒
+
+const scoreEl = document.getElementById('score');
+const msgEl = document.getElementById('msg');
+const titleEl = document.getElementById('title');
+const bannerEl = document.getElementById('banner');
+const bannerText = bannerEl.querySelector('.b');
+const flashEl = document.getElementById('flash');
+const vignetteEl = document.getElementById('vignette');
+const koEl = document.getElementById('ko');
+const koScoreEl = koEl.querySelector('.finalScore');
+
+// ---------- presentation helpers ----------
+function banner(text, color){
+  bannerText.textContent = text;
+  bannerText.style.color = color;
+  bannerEl.classList.remove('go');
+  void bannerEl.offsetWidth;      // CSS アニメーションを打ち直す
+  bannerEl.style.opacity = 1;
+  bannerEl.classList.add('go');
+}
+function flash(color, strength, ms){
+  flashEl.style.background = color;
+  flashEl.style.transition = 'none';
+  flashEl.style.opacity = strength;
+  requestAnimationFrame(()=>{
+    flashEl.style.transition = `opacity ${ms}ms ease-out`;
+    flashEl.style.opacity = 0;
+  });
+}
+function updateHud(){
+  scoreEl.textContent = Math.floor(score);
+  for(let i=0;i<purse.length;i++){
+    purse[i].visible = i < lives;
+  }
+}
+
+// ---------- events ----------
+// どれも「投げる」という一つの操作に別の意味を与える。
+// 風は狙いを、噴水は経路を、暗転は情報を、狭窄は許容誤差を変える。
+const EVENTS = {
+  wind(){
+    // 横風。飛行中のコインだけを流す。投げる前に向きが読める。
+    wind = (Math.random()<.5?-1:1) * (2.6 + Math.random()*2.0);
+    windT = 9;
+    banner('強風', '#8ff0ff');
+    shake = Math.max(shake, .14);
+    return 9;
+  },
+  jet(){
+    // 水柱。水盤の真上に立つので、山なりに越えるしかなくなる。
+    jetT = 8; jet.visible = true;
+    banner('噴水', '#5ee7f7');
+    splash(basin.position.x, BASIN_Y, BASIN_Z, 16, 0x9fe8ff);
+    return 8;
+  },
+  gold(){
+    // 次の一投だけ金貨。入れば三倍、外せば普通に一枚減る。
+    goldArmed = true;
+    banner('金貨 三倍', '#ffd23b');
+    flash('#ffd23b', .3, 380);
+    return 6;
+  },
+  blackout(){
+    // 明かりが落ちる。水盤の位置を覚えていないと投げられない。
+    blackout = 6.5;
+    banner('暗転', '#a78bfa');
+    return 7;
+  },
+  squeeze(){
+    // 水盤が縮む。狙いの精度そのものを要求される。
+    squeezeT = 9;
+    banner('狭窄', '#ff8a5c');
+    shake = Math.max(shake, .2);
+    return 9;
+  },
+};
+const EVENT_NAMES = Object.keys(EVENTS);
+
+// recording/debug hook: 名前を指定してイベントを起こす（撮影スクリプト用）
+// 走行が終わっていたら false を返すので、撮影側は次の回を待てる
+window.__ev = name => {
+  if(!running || dead || !EVENTS[name]) return false;
+  const busy = EVENTS[name]();
+  if(!SILENT) SND.event();
+  nextEventAt = t + busy + 5;
+  return true;
+};
+window.__alive = () => running && !dead;
+window.__kill = () => { if(running && !dead){ dead=true; gameOver(); } };
+window.__recStop = () => SND.recStop();
+window.__snd = () => ({enabled: SND.enabled, silent: SILENT});
+window.__events = EVENT_NAMES.slice();
+window.__probe = () => ({t:+t.toFixed(2), lives, flying:coinFlying,
+  bx:+basin.position.x.toFixed(2), r:+basinR.toFixed(2),
+  wind:+wind.toFixed(2), next:+nextEventAt.toFixed(2)});
+
+function refillEventQueue(){
+  eventQueue = EVENT_NAMES.slice();
+  for(let i=eventQueue.length-1;i>0;i--){        // 回ごとに順番が変わるよう混ぜる
+    const j = Math.floor(Math.random()*(i+1));
+    [eventQueue[i],eventQueue[j]]=[eventQueue[j],eventQueue[i]];
+  }
+}
+function triggerEvent(){
+  if(!eventQueue.length) refillEventQueue();
+  const name = eventQueue.pop();
+  const busy = EVENTS[name]();
+  if(!SILENT) SND.event();
+  nextEventAt = t + busy + 4 + Math.random()*4;  // イベントの間を空ける
+}
+
+// ---------- 投擲 ----------
+function resetCoin(){
+  coin.visible = !goldArmed;
+  goldCoin.visible = goldArmed;
+  goldShot = goldArmed;
+  const c = activeCoin();
+  c.position.set(0, -0.6, THROW_Z);
+  c.rotation.set(0,0,0);
+  cv.set(0,0,0);
+  coinFlying = false; rimTouched = false; coinSpin = 0;
+}
+function activeCoin(){ return goldShot ? goldCoin : coin; }
+
+// 引っぱりベクトル（画面のピクセル）から初速を作る。
+// 上に引くほど高く、横に引くほどその向きへ。引いた長さが力。
+const MAX_PULL = 220;            // これ以上引いても強くならない
+function throwCoin(dx, dy){
+  if(coinFlying || !running || dead) return;
+  const len = Math.min(MAX_PULL, Math.hypot(dx, dy));
+  if(len < 12) return;           // 事故のような短いドラッグは投げない
+  const p = len / MAX_PULL;      // 0..1 の力
+  const nx = dx / (len || 1);
+  // 画面の下向きドラッグ(dy>0)は「手前に引く」= 強く投げる、が自然。
+  // 引いた角度は、真下に引くほど高い放物線になるように使う。
+  const lift = Math.max(.25, dy / (len || 1));     // 0.25..1
+  const power = 9 + p * 13;                        // 9..22
+  cv.set(nx * power * .55, lift * power * .62, -power);
+  const c = activeCoin();
+  c.position.set(0, -0.6, THROW_Z);
+  coinFlying = true; rimTouched = false;
+  coinSpin = 7 + p*9;
+  if(!SILENT) SND.throwCoin(p);
+}
+
+// おまかせ投げ（キーボードのスペース）。指の代わりに、現在の泉へ向けた
+// 標準的な一投を出す。タッチとキーボードで同じ throwCoin を通す。
+function quickThrow(){
+  if(coinFlying) return;
+  const target = basin.position.x;
+  // 泉が動くので、コインの飛行時間ぶん先を読む
+  const lead = target + basinVel()*1.0;
+  const dx = THREE.MathUtils.clamp(lead * 15.2, -MAX_PULL*.6, MAX_PULL*.6);
+  throwCoin(dx, 180);
+}
+function basinVel(){
+  // sin の微分。次の一瞬に泉がどちらへ動くか。
+  return Math.cos(basinPhase) * basinSpeed * basinRange;
+}
+
+// ---------- 判定 ----------
+function scoreLanding(x, z){
+  const dx = x - basin.position.x, dz = z - BASIN_Z;
+  const d = Math.hypot(dx, dz);
+  if(d > basinR) return null;                 // 外した
+  const acc = 1 - d / basinR;                 // 0..1 中心ほど 1
+  let pts = Math.round(60 + acc*acc*240);     // 60..300
+  let tag = '水盤';
+  if(rimTouched){ pts = Math.round(pts * 1.8); tag = '縁ボーナス'; }
+  if(goldShot){ pts *= 3; tag = '金貨 ' + tag; }
+  return {pts, acc, tag};
+}
+
+function landSuccess(res){
+  score += res.pts;
+  const c = activeCoin();
+  splash(c.position.x, BASIN_Y, c.position.z, res.acc>.6 ? 18 : 11,
+         goldShot ? 0xffd88a : 0xbdf0ff);
+  msgEl.textContent = res.tag + '  +' + res.pts;
+  if(!SILENT) SND.splashIn(res.acc, rimTouched);
+  if(res.acc > .72) flash(goldShot ? '#ffd23b' : '#5ee7f7', .22, 300);
+  goldArmed = false;
+  landedAt = t;
+  coinFlying = false;
+  activeCoin().visible = false;
+  // 泉の揺れ方を少し変える。当てるたびに同じ動きにならないように。
+  basinSpeed = .5 + Math.random()*.45 + Math.min(.6, score/4000);
+}
+
+function landMiss(where){
+  lives--;
+  const c = activeCoin();
+  if(where === 'water') splash(c.position.x, BASIN_Y, c.position.z, 8, 0x93a6c8);
+  msgEl.textContent = lives > 0 ? 'はずれ  のこり ' + lives : '';
+  if(!SILENT) SND.miss();
+  shake = Math.max(shake, .25);
+  goldArmed = false;
+  landedAt = t;
+  coinFlying = false;
+  activeCoin().visible = false;
+  updateHud();
+  if(lives <= 0){ dead = true; gameOver(); }
+}
+
+// ---------- reset ----------
+function reset(){
+  t=0; score=0; lives=3; dead=false;
+  timeScale=1; shake=0; camPush=0; camPushTarget=0;
+  wind=0; windT=0; jetT=0; jet.visible=false;
+  blackout=0; squeezeT=0; basinR=BASIN_R0; applyBasinRadius();
+  basinPhase=0; basinSpeed=.55; basinRange=3.2; basin.position.x=0;
+  goldArmed=false; goldShot=false; landedAt=0;
+  nextEventAt = 7;
+  refillEventQueue();
+  resetCoin();
+  coin.visible = true; goldCoin.visible = false;
+  for(const g of guideDots) g.visible = false;
+  for(const s of splashes){ s.life = 0; s.mesh.visible = false; }
+  hemi.intensity=1.3; sun.intensity=2.2; basinLight.intensity=60;
+  scene.background.copy(SKY); scene.fog.color.copy(SKY);
+  msgEl.textContent='';
+  koEl.classList.remove('on');
+  vignetteEl.style.transition='opacity .3s'; vignetteEl.style.opacity=0;
+  updateHud();
+}
+
+const startBtn = document.getElementById('startBtn');
+
+// ---------- sound: everything synthesised, no audio files ----------
+// Keeps the single-HTML rule (nothing to download) and lets the music
+// react to play: the bass line speeds up with the game, events drop a
+// stinger, and the whole thing ducks out on a game over.
+const SND = (() => {
+  let ctx = null, master = null, musicGain = null, on = true, started = false;
+  let step = 0, timer = null, tempo = 0.25;
+
+  // A pentatonic scale never sounds wrong against itself, which matters
+  // when the tempo drifts with the player's speed.
+  // minor pentatonic, driving — a chase that never lets up
+  const SCALE = [0, 3, 5, 7, 10];
+  const ROOT = 196;
+  const BASS = 'square', LEAD = 'sawtooth';
+  const hz = (deg, oct = 0) =>
+    ROOT * Math.pow(2, oct + Math.floor(deg / SCALE.length)) *
+    Math.pow(2, SCALE[((deg % SCALE.length) + SCALE.length) % SCALE.length] / 12);
+
+  function ensure() {
+    if (ctx) return ctx;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    ctx = new AC();
+    master = ctx.createGain();
+    master.gain.value = 0.32;
+    master.connect(ctx.destination);
+    musicGain = ctx.createGain();
+    musicGain.gain.value = 1;
+    musicGain.connect(master);
+    return ctx;
+  }
+
+
+  // ---- 録音用の分岐（?rec=1）----
+  // Playwright の録画には音声が入らないので、ゲーム自身に master バスを
+  // 録らせる。鳴っているものそのものなので映像と必ず同期する。
+  let recDest = null, recorder = null, recChunks = [];
+  function recStart() {
+    if (!ctx || recorder) return;
+    recDest = ctx.createMediaStreamDestination();
+    master.connect(recDest);
+    recorder = new MediaRecorder(recDest.stream, {mimeType: 'audio/webm'});
+    recorder.ondataavailable = e => { if (e.data.size) recChunks.push(e.data); };
+    recorder.start();
+  }
+  function recStop() {
+    return new Promise(res => {
+      if (!recorder) return res(null);
+      recorder.onstop = async () => {
+        const blob = new Blob(recChunks, {type: 'audio/webm'});
+        const buf = await blob.arrayBuffer();
+        res(Array.from(new Uint8Array(buf)));
+      };
+      recorder.stop();
+    });
+  }
+
+  function blip(freq, dur, type = 'square', vol = 0.25, dest = null, slideTo = null) {
+    if (!ctx || !on) return;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, ctx.currentTime);
+    if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, ctx.currentTime + dur);
+    // a short attack stops every note from clicking
+    g.gain.setValueAtTime(0, ctx.currentTime);
+    g.gain.linearRampToValueAtTime(vol, ctx.currentTime + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
+    o.connect(g); g.connect(dest || master);
+    o.start(); o.stop(ctx.currentTime + dur + 0.02);
+  }
+
+  function noise(dur, vol = 0.2, hp = 800) {
+    if (!ctx || !on) return;
+    const n = Math.floor(ctx.sampleRate * dur);
+    const buf = ctx.createBuffer(1, n, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    const f = ctx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = hp;
+    const g = ctx.createGain(); g.gain.value = vol;
+    src.connect(f); f.connect(g); g.connect(master);
+    src.start();
+  }
+
+  // --- the loop: a walking bass plus an offbeat blip ---
+  function tick() {
+    if (!ctx || !on) return;
+    const bar = step % 16;
+    // straight driving pulse: bass on every beat, lead stabs offbeat
+    if (bar % 2 === 0) blip(hz(bar % 8 === 0 ? 0 : 1, -1), tempo * 1.1, BASS, 0.30, musicGain);
+    if (bar % 8 === 5) blip(hz(4, 0), tempo * 0.6, LEAD, 0.09, musicGain);
+    if (bar % 4 === 2) noise(0.04, 0.05, 5000);
+    step++;
+    timer = setTimeout(tick, tempo * 1000);
+  }
+
+  return {
+    // must be called from a user gesture — browsers block audio otherwise
+    start() {
+      if (!ensure() || started) return;
+      if (ctx.state === 'suspended') ctx.resume();
+      started = true; step = 0; tick();
+    },
+    stop() { if (timer) { clearTimeout(timer); timer = null; } started = false; },
+    /** speed the music up with the game; 1 = starting pace */
+    setPace(mult) { tempo = Math.max(0.11, 0.25 / Math.max(0.2, mult)); },
+    duck(sec = 1.6) {                                      // for game over
+      if (!ctx) return;
+      musicGain.gain.cancelScheduledValues(ctx.currentTime);
+      musicGain.gain.setValueAtTime(musicGain.gain.value, ctx.currentTime);
+      musicGain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + sec);
+    },
+    unduck() {
+      if (!ctx) return;
+      musicGain.gain.cancelScheduledValues(ctx.currentTime);
+      musicGain.gain.setValueAtTime(0.0001, ctx.currentTime);
+      musicGain.gain.exponentialRampToValueAtTime(1, ctx.currentTime + 0.4);
+    },
+    // --- one-shots ---
+    // 引き始め: 低く短いクリック。押した手応えだけを返す。
+    aim()   { ensure(); blip(hz(0, -1), 0.05, BASS, 0.14); },
+    // 投げる: 力に応じて上へ滑る。強いほど高く終わる。
+    throwCoin(p){ ensure(); blip(hz(1, 0), 0.13, LEAD, 0.17, null, hz(2 + Math.round(p*4), 1)); },
+    // 縁で跳ねる: 硬く短い金属音。水音とはっきり違う高さにする。
+    rim()   { ensure(); blip(1480, 0.07, 'square', 0.16, null, 980); },
+    // 成功: 上がる三音。中心に近いほど高く始める。
+    splashIn(acc, bonus){
+      ensure();
+      const base = 2 + Math.round(acc*3);
+      const notes = bonus ? [0,1,2,4] : [0,2,4];
+      notes.forEach((n,i)=> setTimeout(()=> blip(hz(base+n, 0), 0.2, 'triangle', 0.22), i*72));
+      noise(0.16, 0.10, 1600);
+    },
+    // 外し: 落ちる二音と鈍い水音。成功と混同しない下降。
+    miss()  { ensure(); noise(0.18, 0.12, 300);
+              [0,110].forEach((ms,i)=> setTimeout(()=> blip(hz(2-i*3, -1), 0.24, 'triangle', 0.20), ms)); },
+    event() { ensure(); [0, 90, 180].forEach((ms, i) =>
+                setTimeout(() => blip(hz(2 + i, 0), 0.18, 'sawtooth', 0.20), ms)); },
+    hit()   { ensure(); noise(0.35, 0.30, 200);
+              blip(180, 0.5, 'sawtooth', 0.28, null, 40); },
+    over()  { ensure(); [0, 140, 280, 460].forEach((ms, i) =>
+                setTimeout(() => blip(hz(-i, -1), 0.42, 'triangle', 0.26), ms)); },
+    recStart() { ensure(); recStart(); },
+    recStop() { return recStop(); },
+    toggle() { on = !on; if (!on) { this.stop(); } else { this.start(); } return on; },
+    get enabled() { return on; },
+  };
+})();
+
+// --- one place for every action, so touch and keyboard stay in step ---
+function startRun(){
+  titleEl.classList.add('hidden'); reset(); running=true;
+  if(!SILENT){ SND.unduck(); SND.start(); if(REC) SND.recStart(); }
+}
+
+const muteBtn = document.getElementById('mute');
+function toggleMute(){ muteBtn.textContent = SND.toggle() ? '🔊' : '🔇'; }
+muteBtn.addEventListener('click', toggleMute);
+muteBtn.addEventListener('touchend', e=>{ e.preventDefault(); toggleMute(); },
+                         {passive:false});
+if(SILENT) muteBtn.style.display='none';   // automated modes have no audio
+addEventListener('keydown', e=>{ if(e.code==='KeyM') toggleMute(); });
+
+startBtn.addEventListener('click', startRun);
+// a touch on the button must start too — click alone is unreliable on touch
+startBtn.addEventListener('touchend', e=>{ e.preventDefault(); startRun(); },
+                          {passive:false});
+
+addEventListener('keydown', e=>{
+  if(!running){
+    if(e.code==='Space'||e.code==='Enter') startRun();
+    return;
+  }
+  if(dead){
+    if(e.code==='Space'||e.code==='Enter'){ if(Date.now()-deadAt>1200) startRun(); }
+    return;
+  }
+  // キーボードでも同じ throwCoin を通す。矢印は引く向きを作るだけ。
+  if(e.code==='Space')      quickThrow();
+  if(e.code==='ArrowLeft'||e.code==='KeyA')  throwCoin(-70, 180);
+  if(e.code==='ArrowRight'||e.code==='KeyD') throwCoin( 70, 180);
+  if(e.code==='ArrowUp'||e.code==='KeyW')    throwCoin(   0, 205);  // 強く、奥へ
+  if(e.code==='ArrowDown'||e.code==='KeyS')  throwCoin(   0, 113);  // 低く、縁に当てて
+});
+
+// --- 入力: 引っぱって離す（マウスも指も同じ経路） ---
+// ドラッグの向きと長さがそのまま初速になる。指の動き一つで
+// 方向と力を同時に決められるので、説明が要らない。
+(function(){
+  let sx=0, sy=0, down=false;
+  const canvas = renderer.domElement;
+
+  function begin(x, y){
+    if(dead){
+      // K.O. の演出を読ませてから、タップで再挑戦
+      if(!AUTO && Date.now()-deadAt > 1500) startRun();
+      return;
+    }
+    if(!running){ startRun(); return; }
+    if(coinFlying) return;
+    down = true; aiming = true; sx=x; sy=y; aimVec.x=0; aimVec.y=0;
+    if(!SILENT) SND.aim();
+  }
+  function move(x, y){
+    if(!down) return;
+    aimVec.x = x - sx; aimVec.y = y - sy;
+  }
+  function end(x, y){
+    if(!down) return;
+    down = false; aiming = false;
+    for(const g of guideDots) g.visible = false;
+    throwCoin(x - sx, y - sy);
+  }
+
+  canvas.addEventListener('touchstart', e=>{
+    const p = e.changedTouches[0]; begin(p.clientX, p.clientY);
+  }, {passive:true});
+  canvas.addEventListener('touchmove', e=>{
+    const p = e.changedTouches[0]; move(p.clientX, p.clientY);
+  }, {passive:true});
+  canvas.addEventListener('touchend', e=>{
+    const p = e.changedTouches[0]; end(p.clientX, p.clientY);
+  }, {passive:true});
+  canvas.addEventListener('touchcancel', ()=>{ down=false; aiming=false;
+    for(const g of guideDots) g.visible = false; }, {passive:true});
+
+  canvas.addEventListener('mousedown', e=> begin(e.clientX, e.clientY));
+  canvas.addEventListener('mousemove', e=> move(e.clientX, e.clientY));
+  addEventListener('mouseup', e=>{ if(down) end(e.clientX, e.clientY); });
+
+  // タイトルの覆いはキャンバスより上にあるので、タップが下に届かない。
+  // 覆い自身から開始させる。
+  titleEl.addEventListener('touchend', e=>{
+    if(!running){ e.preventDefault(); startRun(); }
+  }, {passive:false});
+
+  // ブラウザがゲームのタッチをスクロールや拡大として扱わないようにする
+  canvas.addEventListener('touchmove', e=>e.preventDefault(), {passive:false});
+})();
+
+// autoplay mode for recording: ?auto=1
+// recording holds the K.O. longer than play does: ?hold=9000
+const RETRY_MS = Math.max(1200, parseInt(QS.get('hold')||'4200', 10));
+if(AUTO){ setTimeout(startRun, 1200); }   // startRun 経由にする（音/録音も始まる）
+
+// ---------- autopilot ----------
+// 泉の先読みをして、たまに縁を使ってボーナスを取る。
+// 上手すぎると死なないので、わざと少しだけ手元を狂わせる。
+let autoNext = 0;
+function autoPilot(){
+  if(coinFlying || t < autoNext) return;
+  if(t - landedAt < .45) return;              // 着水直後は間を置く（見栄え）
+
+  // 飛行時間はおよそ 1.1 秒。その間に泉が動くぶんを読む。
+  const flight = 1.15;
+  const lead = basin.position.x +
+    Math.cos(basinPhase) * basinSpeed * basinRange * flight * .8;
+  // 風があるなら風上へずらす（風は飛行中ずっと効くので二乗ぶん見込む）
+  const windDrift = wind * flight * flight * .5;
+  let aimX = lead - windDrift;
+
+  // 縁を狙うと 1.8 倍。噴水が出ていないときだけ、半分の確率で狙う。
+  // dy の値は軌道を積分して決めてある: 約 113 で縁に当ててから中心、
+  // 約 180 で直接中心。噴水のときは越えるために深く引く。
+  const useRim = jetT <= 0 && Math.random() < .5;
+  const dy = jetT > 0 ? 196 : (useRim ? 113 : 180);
+  // 狭窄中は外しやすいので、丁寧に（ブレを小さく）
+  const jitter = (squeezeT > 0 ? .10 : .22) * (Math.random()*2-1);
+  aimX += jitter * 1.6;
+
+  // world の x を引っぱりのピクセル量に直す。係数は軌道から実測した値で、
+  // 縁を経由する低い球のほうが横に伸びるぶん小さい。
+  const pxPerWorld = useRim ? 10.2 : 15.2;
+  const dx = THREE.MathUtils.clamp(aimX * pxPerWorld, -MAX_PULL*.7, MAX_PULL*.7);
+  throwCoin(dx, dy);
+  autoNext = t + .3;
+}
+
+// ---------- showcase mode ----------
+// 被写体を一つだけ暗い舞台に置いてターンテーブルに載せる。
+// ゲームで使っている実物のメッシュなので、説明と画面がずれない。
+const SHOWCASE = QS.get('showcase');
+const SUBJECTS = ['coin','gold','rim','basin','jet','purse'];
+window.__subjects = SUBJECTS.slice();
+const showcase = {group:null, pivot:null, spin:.55, label:'', flat:false};
+
+function buildShowcase(name){
+  const g = new THREE.Group();
+  let label = '', spin = .55, flat = false;
+  if(name==='coin'){
+    const c = buildCoin(false); c.scale.set(3.2,3.2,3.2); g.add(c);
+    label = 'コイン'; spin = 1.1;
+  } else if(name==='gold'){
+    const c = buildCoin(true); c.scale.set(3.2,3.2,3.2); g.add(c);
+    label = '金貨'; spin = 1.1;
+  } else if(name==='rim'){
+    const r = buildRim(); r.scale.set(.9,1.6,1.6); g.add(r);
+    label = '大理石の縁'; spin = .45;
+  } else if(name==='basin'){
+    // 水盤は水面とふちと的の輪。ゲームと同じ材質で組み直す。
+    const b = new THREE.Group();
+    const w = new THREE.Mesh(new THREE.CircleGeometry(BASIN_R0, 56), WATER_MAT);
+    w.rotation.x = -Math.PI/2; b.add(w);
+    const wall = new THREE.Mesh(
+      new THREE.CylinderGeometry(BASIN_R0+.25, BASIN_R0+.25, 1.5, 56, 1, true), BASIN_WALL_MAT);
+    wall.material.side = THREE.DoubleSide; wall.position.y = -.55; b.add(wall);
+    const eye = new THREE.Mesh(new THREE.RingGeometry(BASIN_R0*.28, BASIN_R0*.42, 40),
+      new THREE.MeshBasicMaterial({color:0xffd23b, side:THREE.DoubleSide}));
+    eye.rotation.x = -Math.PI/2; eye.position.y = .02; b.add(eye);
+    b.rotation.x = .5;             // 傾けて水面が見えるようにする
+    g.add(b); label = '水盤'; spin = .4;
+  } else if(name==='jet'){
+    const j = new THREE.Mesh(new THREE.CylinderGeometry(.55,.9,9,18,1,true), JET_MAT.clone());
+    j.material.side = THREE.DoubleSide; j.material.opacity = .75; g.add(j);
+    // 足元にしぶきの粒を散らす。水柱だけだと筒に見える。
+    for(let i=0;i<14;i++){
+      const d = new THREE.Mesh(new THREE.SphereGeometry(.16,8,6),
+        new THREE.MeshBasicMaterial({color:0xbdf0ff}));
+      const a = Math.random()*Math.PI*2, rr = .6+Math.random()*1.5;
+      d.position.set(Math.cos(a)*rr, -4.2 + Math.random()*1.6, Math.sin(a)*rr);
+      g.add(d);
+    }
+    label = '噴水'; spin = .7;
+  } else if(name==='purse'){
+    // 残り枚数の表示。三枚並べたものを一つの被写体として見せる。
+    for(let i=0;i<3;i++){
+      const c = buildCoin(false);
+      c.scale.set(2.0,2.0,2.0);
+      c.position.set(-1.9 + i*1.9, 0, 0);
+      c.rotation.x = Math.PI/2 - .4;
+      g.add(c);
+    }
+    label = '財布（のこり三枚）'; spin = .5;
+  }
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  scene.add(g);
+
+  // 被写体を原点に寄せ、バウンディングボックスに合わせてカメラを引く。
+  // 大きさが違っても、同じ寄り方で写る。
+  const box = new THREE.Box3().setFromObject(g);
+  const size = box.getSize(new THREE.Vector3());
+  const mid = box.getCenter(new THREE.Vector3());
+  g.position.sub(mid);
+  const reach = Math.max(size.x, size.y) * 0.5;
+  const fov = THREE.MathUtils.degToRad(camera.fov);
+  const dist = (reach / Math.tan(fov/2)) * 1.75 + 1.0;   // 1.75 = 余白
+  camera.position.set(0, size.y*0.10, dist);
+
+  // 横にずらして、反対側にテキストの場所を空ける。
+  // ずらしは親に持たせる。ずらした group をそのまま回すと公転してしまう。
+  const bias = parseFloat(QS.get('sx') || '0');
+  const pivot = new THREE.Group();
+  pivot.position.x = -bias * reach * 1.15;
+  scene.add(pivot);
+  pivot.add(g);
+  showcase.group = g; showcase.pivot = pivot;
+  showcase.spin = spin; showcase.label = label; showcase.flat = flat;
+}
+
+fitCamera();          // ここまでで SHOWCASE は確定している
+if(SHOWCASE){
+  titleEl.classList.add('hidden');
+  buildShowcase(SHOWCASE);
+  scoreEl.textContent = '';
+  msgEl.textContent = QS.get('nolabel')==='1' ? '' : showcase.label;
+  msgEl.style.fontSize = 'clamp(18px,4.6vw,30px)';
+  msgEl.style.letterSpacing = '5px';
+  // まっさらな暗い舞台: 被写体以外は何も出さない
+  plaza.visible = false; facade.visible = false;
+  rim.visible = false; basin.visible = false; jet.visible = false;
+  coin.visible = false; goldCoin.visible = false;
+  for(const p of purse) p.visible = false;
+  for(const s of seams) s.visible = false;
+  for(const d of guideDots) d.visible = false;
+  scene.fog = null;
+  scene.background = new THREE.Color(0x0b0d16);
+  basinLight.position.set(2.6, 3.2, 4.2);
+  basinLight.intensity = 130;
+  hemi.intensity = 3.2;
+  sun.intensity = 4.0; sun.position.set(2.5, 6, 6);
+  // 反対側からの補助光。奥の面が真っ黒にならないように。
+  const fill = new THREE.PointLight(0x88aaff, 45, 26);
+  fill.position.set(-4.5, 2.4, 3.6); scene.add(fill);
+}
+// 撮影スクリプトから被写体を差し替えられるようにする
+window.__showcase = name => {
+  if(showcase.pivot) scene.remove(showcase.pivot);   // pivot が group を持っている
+  buildShowcase(name);
+  msgEl.textContent = showcase.label;
+};
+
+// ---------- 物理 ----------
+const GRAV = 22;
+// 一投ぶんの軌道を先読みして、ガイドの点を並べる。
+// 実際の積分と同じ式を使うので、出ている点と飛ぶ軌道がずれない。
+function projectGuide(dx, dy){
+  const len = Math.min(MAX_PULL, Math.hypot(dx, dy));
+  if(len < 12){ for(const g of guideDots) g.visible=false; return; }
+  const p = len / MAX_PULL;
+  const nx = dx / (len||1);
+  const lift = Math.max(.25, dy / (len||1));
+  const power = 9 + p*13;
+  const v = new THREE.Vector3(nx*power*.55, lift*power*.62, -power);
+  const pos = new THREE.Vector3(0, -0.6, THROW_Z);
+  const h = .05;
+  let di = 0;
+  for(let s=0; s<160 && di<guideDots.length; s++){
+    v.y -= GRAV*h;
+    v.x += wind*h;
+    pos.addScaledVector(v, h);
+    if(s % 10 === 9){
+      const d = guideDots[di++];
+      d.position.copy(pos); d.visible = true;
+      // 遠い点ほど薄く。狙いの先が主張しすぎない。
+      d.scale.setScalar(1 - di/guideDots.length*.55);
+    }
+    if(pos.y < BASIN_Y - 1) break;
+  }
+  for(let i=di;i<guideDots.length;i++) guideDots[i].visible = false;
+}
+
+function stepCoin(dt){
+  const c = activeCoin();
+  cv.y -= GRAV*dt;
+  cv.x += wind*dt;                    // 横風は飛んでいる間ずっと効く
+  c.position.addScaledVector(cv, dt);
+  c.rotation.x += coinSpin*dt;
+  c.rotation.z += coinSpin*.4*dt;
+
+  // --- 大理石の縁で跳ねる ---
+  // 縁は薄い板。上から落ちてきて上面を下向きに横切った瞬間だけ拾う。
+  if(!rimTouched && cv.y < 0 &&
+     Math.abs(c.position.z - RIM_Z) < 1.6 &&
+     Math.abs(c.position.x) < RIM_W/2 + .3 &&
+     c.position.y < RIM_TOP_Y + .45 && c.position.y > RIM_TOP_Y - .6){
+    c.position.y = RIM_TOP_Y + .45;
+    cv.y = Math.abs(cv.y) * .72;      // 弾む。勢いは落ちる
+    cv.z *= .88;                      // 少し失速して手前寄りに落ちる
+    rimTouched = true;
+    coinSpin *= 1.5;
+    splash(c.position.x, RIM_TOP_Y+.3, RIM_Z, 5, 0xfff0c0);
+    shake = Math.max(shake, .07);
+    if(!SILENT) SND.rim();
+  }
+
+  // --- 噴水に当たる ---
+  if(jetT > 0){
+    const jx = c.position.x - basin.position.x, jz = c.position.z - BASIN_Z;
+    if(Math.hypot(jx, jz) < 1.0 && c.position.y < BASIN_Y + 8.5 && c.position.y > BASIN_Y){
+      // 水柱に押し上げられて、手前に弾き返される
+      cv.y = Math.max(cv.y, 5.5);
+      cv.z = Math.abs(cv.z)*.5 + 2.5;
+      cv.x += (jx>=0?1:-1) * 3.2;
+      splash(c.position.x, c.position.y, c.position.z, 8, 0x9fe8ff);
+      if(!SILENT) SND.rim();
+    }
+  }
+
+  // --- 着水・着地の判定 ---
+  if(c.position.y <= BASIN_Y){
+    const res = scoreLanding(c.position.x, c.position.z);
+    if(res) landSuccess(res);
+    else landMiss('water');
+    return;
+  }
+  // 床まで落ちた／横や奥へ外れた
+  if(c.position.y <= -1.9 || Math.abs(c.position.x) > 22 ||
+     c.position.z < BASIN_Z - 14 || c.position.z > THROW_Z + 8){
+    landMiss('floor');
+  }
+}
+
+// ---------- loop ----------
+const clock = new THREE.Clock();
+function tick(){
+  requestAnimationFrame(tick);
+  const raw = Math.min(clock.getDelta(), .05);
+  const dt = raw * timeScale;
+
+  if(SHOWCASE){
+    if(showcase.group){
+      if(showcase.flat) showcase.group.rotation.z += raw*showcase.spin;
+      else showcase.group.rotation.y += raw*showcase.spin;
+    }
+    camera.lookAt(0, 0, 0);        // 被写体はずらしてある。カメラは軸上のまま
+    renderer.render(scene, camera);
+    return;
+  }
+
+  // タイトル画面でも泉は動かしておく。止まった絵にしない。
+  if(!running && !dead){
+    basinPhase += raw*basinSpeed;
+    basin.position.x = Math.sin(basinPhase)*basinRange;
+  }
+
+  if(running && !dead){
+    t += dt;
+    // 生きているかぎりスコアは伸びる（投げ入れた点に上乗せ）
+    score += dt*6;
+    updateHud();
+    // 音楽は入った枚数ではなく、経過とともに少しずつ速くなる
+    if(!SILENT) SND.setPace(1 + Math.min(1.1, t/70));
+    if(AUTO) autoPilot();
+
+    if(t > nextEventAt && !NOEV) triggerEvent();
+
+    // --- 泉の横移動。ゲームの土台になる動き ---
+    basinPhase += dt*basinSpeed;
+    basin.position.x = Math.sin(basinPhase)*basinRange;
+    basinLight.position.x = basin.position.x;
+    jet.position.x = basin.position.x;
+    // 水面のさざなみ。的の輪をゆっくり脈打たせる。
+    bullseye.material.opacity = .6 + Math.sin(t*3)*.25;
+
+    // --- 強風 ---
+    if(windT > 0){
+      windT -= dt;
+      if(windT <= 0){ wind = 0; }
+    }
+
+    // --- 噴水 ---
+    if(jetT > 0){
+      jetT -= dt;
+      const k = Math.min(1, jetT*2) * Math.min(1, (8-jetT)*3);  // 出入りをなめらかに
+      jet.scale.y = .35 + k*.75;
+      jet.position.y = BASIN_Y + jet.scale.y*4.5;
+      jet.material.opacity = .25 + k*.4;
+      if(Math.random() < dt*22) splash(basin.position.x + (Math.random()-.5)*1.6,
+                                       BASIN_Y+.2, BASIN_Z + (Math.random()-.5)*1.6, 1, 0x9fe8ff);
+      if(jetT <= 0) jet.visible = false;
+    }
+
+    // --- 暗転: 明かりを落として、最後に戻す ---
+    if(blackout > 0){
+      blackout -= dt;
+      const k = blackout > .5 ? .08 : 1 - blackout/.5;   // 終わりぎわに戻る
+      hemi.intensity = 1.3*k; sun.intensity = 2.2*k;
+      basinLight.intensity = 60*(.18 + k*.82);          // 泉だけ薄く残す
+      scene.background.setHex(0x01020a).lerp(SKY, k);
+      scene.fog.color.copy(scene.background);
+      if(blackout <= 0){
+        hemi.intensity=1.3; sun.intensity=2.2; basinLight.intensity=60;
+        scene.background.copy(SKY); scene.fog.color.copy(SKY);
+      }
+    }
+
+    // --- 狭窄: 水盤が縮み、終わりに戻る ---
+    if(squeezeT > 0){
+      squeezeT -= dt;
+      const target = squeezeT > .6 ? BASIN_R0*.5 : BASIN_R0;
+      basinR += (target - basinR)*Math.min(1, dt*4);
+      applyBasinRadius();
+      if(squeezeT <= 0){ basinR = BASIN_R0; applyBasinRadius(); }
+    }
+
+    // --- 投擲 ---
+    if(coinFlying) stepCoin(dt);
+    else {
+      // 待機中のコインは投擲台の上でゆっくり回る
+      const c = activeCoin();
+      c.visible = true;
+      c.position.set(0, -0.6 + Math.sin(t*2.2)*.06, THROW_Z);
+      c.rotation.y += raw*1.2;
+      if(aiming) projectGuide(aimVec.x, aimVec.y);
+    }
+  }
+
+  // --- しぶきの粒 ---
+  for(const s of splashes){
+    if(s.life <= 0) continue;
+    s.life -= raw;
+    s.v.y -= 16*raw;
+    s.mesh.position.addScaledVector(s.v, raw);
+    s.mesh.material.opacity = Math.max(0, s.life*1.6);
+    if(s.life <= 0) s.mesh.visible = false;
+  }
+
+  // --- 死亡演出: スローが解け、コインが沈み、カメラが寄る ---
+  if(dead){
+    timeScale += (0 - timeScale)*Math.min(1, raw*1.1);
+    const c = activeCoin();
+    c.rotation.z += raw*3.0;
+    c.position.y -= raw*.6;
+  }
+
+  // --- カメラ（死んでいる間も動く。寄りと揺れを見せるため） ---
+  camPush += (camPushTarget - camPush)*Math.min(1, raw*2.2);
+  // 高さは「縁の向こうの水面が見える角度」で決めてある。これより低いと
+  // 水盤が縁の陰に隠れて、狙う的が画面から消える。
+  const baseY = 7.6, baseZ = 12.5;
+  camera.position.set(
+    basin.position.x*.12,
+    baseY - camPush*2.4,
+    baseZ - camPush*5.4);
+  // 飛んでいるコインを少しだけ追う。画面が固まらない程度に。
+  if(coinFlying){
+    const c = activeCoin();
+    camera.position.x += c.position.x*.06;
+    camera.position.y += Math.max(0, c.position.y)*.05;
+  }
+  if(shake > 0){
+    shake = Math.max(0, shake - raw*.9);
+    camera.position.x += (Math.random()-.5)*shake;
+    camera.position.y += (Math.random()-.5)*shake;
+  }
+  camera.lookAt(basin.position.x*.35, -1.0 + camPush*.6, BASIN_Z + 2);
+
+  renderer.render(scene, camera);
+}
+
+function gameOver(){
+  running=false; deadAt=Date.now();
+  if(!SILENT){ SND.hit(); SND.duck(1.6); setTimeout(()=>SND.over(), 700); }
+  // 赤いフラッシュ、赤い周辺減光、強い揺れ、カメラが突っ込む
+  flash('#ff2b3a', .8, 500);
+  vignetteEl.style.transition='opacity .5s'; vignetteEl.style.opacity=1;
+  shake = .9;
+  camPushTarget = 1;
+  aiming = false;
+  for(const g of guideDots) g.visible = false;
+  const finalScore = Math.floor(score);
+  koScoreEl.textContent = finalScore;
+  msgEl.textContent = '';
+  setTimeout(()=>{ koEl.classList.add('on'); }, 620);   // スローが落ちきってから K.O.
+  if(AUTO){ setTimeout(()=>{ reset(); running=true;
+                             if(!SILENT) SND.unduck(); }, RETRY_MS); }
+  else setTimeout(()=>{
+    msgEl.textContent = matchMedia('(pointer:coarse)').matches
+      ? 'タップでもう一度' : 'スペースでもう一度';
+  }, 1800);
+}
+tick();
+
+// --- あそびかた (?) : ルールを見せる。録画中は出さない ---
+(function(){
+  const btn = document.getElementById('helpBtn');
+  const panel = document.getElementById('help');
+  if(!btn || !panel) return;
+  if(NOCHROME){                      // 録画・showcase では画面から消す
+    btn.style.display = 'none';
+    const back = document.getElementById('back');
+    if(back) back.style.display = 'none';
+    return;
+  }
+  const open = () => { panel.classList.add('on'); };
+  const close = () => { panel.classList.remove('on'); };
+  btn.addEventListener('click', open);
+  btn.addEventListener('touchend', e => { e.preventDefault(); open(); }, {passive:false});
+  panel.addEventListener('click', e => { if(e.target === panel) close(); });
+  panel.querySelector('.close').addEventListener('click', close);
+  panel.querySelector('.close').addEventListener('touchend',
+    e => { e.preventDefault(); close(); }, {passive:false});
+  addEventListener('keydown', e => {
+    if(e.code === 'Escape') close();
+    else if(e.key === '?' || (e.code === 'Slash' && e.shiftKey)) open();
+  });
+})();
+</script>
+</body>
+</html>

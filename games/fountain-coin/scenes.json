@@ -1,0 +1,227 @@
+{
+  "id": "0002_fountain_coin",
+  "title": "フォンタナ・コイン",
+  "lang": "javascript",
+  "voice": "am_adam",
+  "scenes": [
+    {
+      "kind": "hook",
+      "clip": "jet",
+      "narration": "このゲームは、バスの出発時刻から生まれました。"
+    },
+    {
+      "kind": "image",
+      "prompt": "a crowded baroque stone fountain in a small Italian piazza at midday, dense crowd of tourists pressed against the marble rim, bright harsh sunlight, long shadows, photorealistic, cinematic wide shot, highly detailed",
+      "narration": "イタリアの小さな広場に、泉があります。コインを投げると願いがかなう、あの泉です。観光バスが毎日止まります。"
+    },
+    {
+      "kind": "image",
+      "prompt": "a tour coach parked on a narrow European street, driver leaning on the open door checking his wristwatch, warm afternoon light, photorealistic, cinematic, shallow depth of field, highly detailed",
+      "narration": "ただ、バスは十五分しか止まりません。運転手のマルコは、時間にとても厳しい人です。そして泉のまわりは、いつも人でいっぱいです。"
+    },
+    {
+      "kind": "image",
+      "prompt": "a woman's hand holding three small coins, seen from behind a crowd, blurred marble fountain rim in the background, golden hour light, photorealistic, cinematic close-up, shallow depth of field, highly detailed",
+      "narration": "だから、前には出られません。人の後ろから、大理石の縁を越えて投げるしかないんです。財布の小銭は三枚。それで足りるはずでした。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "coin",
+      "kicker": "投げるもの",
+      "title": "コイン",
+      "bullets": [
+        "**引っぱって離す**。それだけ",
+        "引いた長さが力、引いた向きが角度",
+        "投げたあとは、もう何もできません"
+      ],
+      "narration": "これがコインです。画面を引っぱって離すと飛びます。引いた長さが力、引いた向きが角度になります。そうなんです、投げたあとは何もできません。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "basin",
+      "kicker": "ねらう場所",
+      "title": "水盤",
+      "bullets": [
+        "**左右にゆっくり動きます**。止まりません",
+        "真ん中に近いほど点が高い",
+        "外すと、財布が一枚減ります"
+      ],
+      "narration": "ねらうのはこの水盤です。見てください、左右にゆっくり動いています。止まりません。真ん中に近いほど点が高くて、外すと財布が一枚減ります。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "rim",
+      "kicker": "こえるもの",
+      "title": "大理石の縁",
+      "bullets": [
+        "手前に立ちはだかる**厚い板**",
+        "上面に当てると**跳ねて**伸びます",
+        "当ててから入れると、点が**1.8倍**"
+      ],
+      "narration": "ここが面白いところです。手前にこの縁があります。邪魔なだけの壁に見えますよね。でも上面に当てると、コインが跳ねて伸びるんです。当ててから入れると点が1.8倍になります。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "jet",
+      "kicker": "じゃまするもの",
+      "title": "噴水",
+      "bullets": [
+        "水盤の**真上**に水柱が立ちます",
+        "当たったコインは**手前へ弾き返される**",
+        "山なりに越えるしかありません"
+      ],
+      "narration": "そして噴水です。水盤の真上に水柱が立ちます。当たったコインは手前に弾き返されます。まっすぐ投げても届きません。山なりに越えるしかないんです。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "gold",
+      "kicker": "ごほうび",
+      "title": "金貨",
+      "bullets": [
+        "一投だけ、入れば**三倍**",
+        "外したときの減りは、いつもと同じ一枚",
+        "だから狙いを変えたくなります"
+      ],
+      "narration": "ときどき金貨が来ます。一投だけ、入れば三倍です。外しても減るのは一枚だけ。もちろん、そう聞くと欲が出ますよね。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "purse",
+      "kicker": "のこり",
+      "title": "財布",
+      "bullets": [
+        "持ち金は**三枚ぶん**",
+        "入れ続けているかぎり、**減りません**",
+        "ゼロになった時点で終わりです"
+      ],
+      "narration": "財布は三枚ぶんです。ここが大事なところです。入れ続けているかぎり、財布は減りません。つまり時間制限ではなくて、腕の制限です。"
+    },
+    {
+      "kind": "events",
+      "clip": "events",
+      "kicker": "広場で起きること",
+      "title": "泉は静かにしていません",
+      "bullets": [
+        "**強風** — 飛んでいるコインが横に流される",
+        "**暗転** — 明かりが落ちて水盤が見えない",
+        "**狭窄** — 水盤が半分に縮んで、戻らない"
+      ],
+      "narration": "泉は静かにしていません。強風が吹くと、飛んでいるコインが横に流されます。暗転では明かりが落ちて、水盤がほとんど見えません。位置を覚えていないと投げられません。そして狭窄。水盤が半分に縮みます。しばらく戻りません。"
+    },
+    {
+      "kind": "death",
+      "clip": "death",
+      "kicker": "一回の終わり",
+      "title": "三枚使い切って、おわり",
+      "bullets": [
+        "時間が**ゆっくり止まります**",
+        "カメラが泉へ寄っていきます",
+        "そして点数が出ます"
+      ],
+      "narration": "三枚使い切ると終わります。時間がゆっくり止まって、カメラが泉に寄って、点数が出ます。マルコのバスは十五分待ってくれます。あなたは、たぶん二十秒で財布が空になります。"
+    },
+    {
+      "kind": "outro",
+      "title": "概要欄のリンクから遊べます",
+      "subtitle": "チャンネル登録で、毎日一本",
+      "narration": "今すぐ遊べます。概要欄のリンクからどうぞ。高評価とチャンネル登録もお願いします。明日も一本出します。"
+    }
+  ],
+  "slug": "fountain-coin",
+  "video_title": "バスは十五分しか待ってくれません",
+  "channel": "Daily Arcade Studio",
+  "events": [
+    "wind",
+    "jet",
+    "gold",
+    "blackout",
+    "squeeze"
+  ],
+  "short": [
+    {
+      "mark": "jet",
+      "lead": -0.3,
+      "dur": 9.0,
+      "headline": "水柱が邪魔をする"
+    },
+    {
+      "mark": "squeeze",
+      "lead": -0.5,
+      "dur": 8.0,
+      "headline": "水盤が半分に縮む"
+    },
+    {
+      "mark": "gold",
+      "lead": -0.5,
+      "dur": 7.0,
+      "headline": "入れば三倍"
+    },
+    {
+      "mark": "blackout",
+      "lead": -0.5,
+      "dur": 8.0,
+      "headline": "見えないまま投げる"
+    },
+    {
+      "mark": "death",
+      "lead": -2.0,
+      "dur": 9.0,
+      "headline": "コインは三枚だけ"
+    }
+  ],
+  "thumb": {
+    "hook": "縁で跳ねさせろ",
+    "sub": "コインは三枚。ブラウザで無料。",
+    "frame_mark": "jet",
+    "frame_lead": 1.0
+  },
+  "short_v2": {
+    "cuts": [
+      {
+        "kind": "clip",
+        "mark": "jet",
+        "lead": -0.3,
+        "dur": 4.5,
+        "headline": "今日のゲーム",
+        "narration": "今日のゲームです。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "coin",
+        "dur": 5.0,
+        "headline": "フォンタナ・コイン",
+        "narration": "人の後ろから、泉にコインを投げ入れる人です。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "rim",
+        "dur": 5.0,
+        "headline": "縁で跳ねる",
+        "narration": "手前の縁に当てると跳ねて伸びます。点も1.8倍です。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "basin",
+        "dur": 5.0,
+        "headline": "動く水盤",
+        "narration": "ねらう水盤は、左右にゆっくり動き続けます。"
+      },
+      {
+        "kind": "clip",
+        "mark": "death",
+        "lead": -2.0,
+        "dur": 5.5,
+        "headline": "",
+        "narration": "コインは三枚だけです。"
+      },
+      {
+        "kind": "clip",
+        "mark": "run2",
+        "lead": 1.0,
+        "dur": 4.5,
+        "cta": "概要欄のリンクから遊べます",
+        "narration": "ブラウザで無料で遊べます。リンクは概要欄です。"
+      }
+    ]
+  }
+}
