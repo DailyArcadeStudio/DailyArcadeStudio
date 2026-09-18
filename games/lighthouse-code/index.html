@@ -1,0 +1,1367 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>灯台の合図</title>
+<style>
+  html,body{margin:0;padding:0;overflow:hidden;background:#05070f;font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN','Helvetica Neue',Arial,sans-serif;}
+  #ui{position:fixed;top:16px;left:0;right:0;text-align:center;color:#fff;z-index:10;pointer-events:none;}
+  #score{font-size:clamp(24px,5.6vw,34px);font-weight:800;text-shadow:0 2px 8px #000;}
+  #msg{font-size:clamp(14px,3.6vw,20px);margin-top:6px;opacity:.92;text-shadow:0 2px 6px #000;}
+  #title{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:rgba(4,6,14,.74);z-index:20;color:#fff;transition:opacity .4s;padding:0 16px;box-sizing:border-box;}
+  #title h1{font-size:clamp(30px,9vw,60px);margin:0 0 8px;letter-spacing:4px;text-shadow:0 4px 18px #ffb347;}
+  #title p{font-size:clamp(13px,3.4vw,19px);opacity:.85;margin:4px 0;text-align:center;line-height:1.6;}
+  #title .btn{margin-top:26px;padding:14px 44px;font-size:clamp(18px,4.6vw,22px);font-weight:700;color:#0b0d16;
+    background:linear-gradient(180deg,#ffc95c,#e08a1e);border:none;border-radius:12px;cursor:pointer;
+    box-shadow:0 6px 24px rgba(255,180,60,.45);}
+  #title .btn:hover{transform:scale(1.05);}
+  .hidden{opacity:0;pointer-events:none;}
+  #back{position:fixed;top:14px;left:14px;z-index:30;text-decoration:none;
+    background:rgba(12,16,26,.72);color:#fff;font:600 clamp(13px,3.4vw,15px)/1 'Hiragino Sans','Helvetica Neue',Arial,sans-serif;
+    padding:0 16px;height:44px;display:flex;align-items:center;border-radius:12px;}
+  #back:hover{background:rgba(30,38,56,.9);}
+  #mute{position:fixed;top:14px;right:14px;z-index:30;border:none;cursor:pointer;
+    background:rgba(12,16,26,.72);color:#fff;font-size:20px;line-height:1;
+    width:44px;height:44px;border-radius:12px;}
+  #mute:hover{background:rgba(30,38,56,.9);}
+  /* show the hint that matches the device */
+  .tc{display:none;}
+  @media (pointer:coarse){ .kb{display:none;} .tc{display:block;} }
+  /* a finger-sized START button on touch devices */
+  @media (pointer:coarse){ #title .btn{padding:18px 52px;} }
+
+  /* --- event banner: slams into the middle of the screen --- */
+  #banner{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    z-index:15;pointer-events:none;opacity:0;}
+  #banner .b{font-size:clamp(26px,7.4vw,66px);font-weight:900;letter-spacing:.06em;color:#fff;
+    padding:10px 4vw;max-width:94vw;text-align:center;transform:scale(2.4);opacity:0;
+    text-shadow:0 0 26px currentColor, 0 6px 20px #000;
+    border-top:5px solid currentColor;border-bottom:5px solid currentColor;}
+  #banner.go .b{animation:slam .62s cubic-bezier(.12,.85,.2,1) forwards;}
+  @keyframes slam{
+    0%  {transform:scale(2.4) rotate(-4deg);opacity:0;}
+    22% {transform:scale(1)   rotate(0deg); opacity:1;}
+    70% {transform:scale(1)   rotate(0deg); opacity:1;}
+    100%{transform:scale(1.12);opacity:0;}
+  }
+
+  /* --- full-screen colour flashes --- */
+  #flash{position:fixed;inset:0;z-index:14;pointer-events:none;opacity:0;background:#fff;}
+  #vignette{position:fixed;inset:0;z-index:13;pointer-events:none;opacity:0;
+    background:radial-gradient(ellipse at center,rgba(0,0,0,0) 32%,rgba(120,0,10,.85) 100%);}
+
+  /* --- K.O. screen --- */
+  #ko{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    z-index:22;pointer-events:none;opacity:0;color:#fff;transition:opacity .3s;}
+  #ko.on{opacity:1;}
+  #ko .koText{font-size:clamp(84px,24vw,180px);font-weight:900;letter-spacing:10px;color:#fff;
+    text-shadow:0 0 40px #ff5a3c,0 0 90px #ff5a3c,0 10px 30px #000;
+    transform:scale(3);opacity:0;}
+  #ko.on .koText{animation:koSlam .8s cubic-bezier(.1,.9,.2,1) forwards;}
+  @keyframes koSlam{
+    0%  {transform:scale(3) rotate(-8deg);opacity:0;}
+    30% {transform:scale(1) rotate(0deg);opacity:1;}
+    36% {transform:scale(1.06);}
+    100%{transform:scale(1);opacity:1;}
+  }
+  #ko .finalLabel{font-size:clamp(14px,3.8vw,22px);letter-spacing:5px;opacity:0;margin-top:6px;text-shadow:0 2px 8px #000;}
+  #ko .finalScore{font-size:clamp(44px,13vw,80px);font-weight:800;opacity:0;text-shadow:0 4px 20px #000;}
+  #ko.on .finalLabel{animation:fadeUp .5s .75s forwards;}
+  #ko.on .finalScore{animation:fadeUp .5s .9s forwards;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+
+  /* --- help (?) --- */
+  #helpBtn{position:fixed;top:14px;right:66px;z-index:30;border:none;cursor:pointer;
+    background:rgba(12,16,26,.72);color:#fff;font:700 20px/1 'Helvetica Neue',Arial,sans-serif;
+    width:44px;height:44px;border-radius:12px;}
+  #helpBtn:hover{background:rgba(30,38,56,.9);}
+  #help{position:fixed;inset:0;z-index:40;display:none;align-items:center;
+    justify-content:center;background:rgba(4,6,12,.84);padding:20px;}
+  #help.on{display:flex;}
+  #help .box{background:#111726;border:1px solid #2b3550;border-radius:18px;
+    max-width:560px;width:100%;max-height:86vh;overflow:auto;padding:26px 24px 22px;
+    color:#e6edf3;font-family:'Hiragino Sans','Helvetica Neue',Arial,sans-serif;}
+  #help h2{margin:0 0 4px;font-size:clamp(20px,5vw,26px);}
+  #help .sub{color:#8b949e;font-size:clamp(12px,3.2vw,14px);margin:0 0 18px;}
+  #help h3{font-size:clamp(13px,3.4vw,15px);color:#ffc95c;margin:18px 0 6px;letter-spacing:.04em;}
+  #help ul{margin:0;padding-left:20px;}
+  #help li{font-size:clamp(13px,3.4vw,15px);line-height:1.7;margin:3px 0;}
+  #help b{color:#ffc95c;font-weight:700;}
+  #help .close{margin-top:20px;width:100%;padding:12px;border:none;border-radius:10px;
+    background:#2b3550;color:#fff;font-size:16px;font-weight:700;cursor:pointer;}
+  #help .close:hover{background:#3a4668;}
+</style>
+</head>
+<body>
+<div id="ui"><div id="score">0</div><div id="msg"></div></div>
+<button id="helpBtn" title="あそびかた">?</button>
+<div id="help"><div class="box">
+  <h2>灯台の合図</h2>
+  <p class="sub">沖の船が光る。同じ順番で灯りを返す。ブラウザだけで遊べます。</p>
+    <h3>船の合図</h3>
+    <ul><li>沖の船が<b>色つきの光</b>をひとつずつ点滅させます</li><li>点滅が終わるまで、こちらは何も押せません</li><li>合図は毎回<b>一つずつ長く</b>なっていきます</li></ul>
+    <h3>返信</h3>
+    <ul><li>灯台のレンズは<b>4色</b>に分かれています</li><li>見た<b>同じ順番</b>で色を押し返します</li><li>順番を間違えたら、その場で終わりです</li></ul>
+    <h3>持ち時間</h3>
+    <ul><li>返信中は<b>波の砂時計</b>が減りつづけます</li><li>ゼロになる前に返しきること</li><li>合図が長くなるほど、余裕はなくなります</li></ul>
+    <h3>操作</h3>
+    <ul><li>画面の<b>四隅（上下左右）をタップ</b>、または<b>その方向へスワイプ</b></li><li>キーボードは <b>← ↑ → ↓</b> もしくは <b>A W D S</b></li><li>押す色は、レンズに出ている位置と同じです</li></ul>
+  <button class="close">わかった</button>
+</div></div>
+<a id="back" href="../../" title="ゲーム一覧にもどる">‹ ゲーム一覧</a>
+<button id="mute" title="音のオン・オフ">🔊</button>
+<div id="vignette"></div>
+<div id="flash"></div>
+<div id="banner"><div class="b"></div></div>
+<div id="ko">
+  <div class="koText">K.O.</div>
+  <div class="finalLabel">さいしゅうスコア</div>
+  <div class="finalScore">0</div>
+</div>
+<div id="title">
+  <h1>灯台の合図</h1>
+  <p>沖の船が光る。同じ順番で、灯りを返す。</p>
+  <p class="kb">← ↑ → ↓ / A W D S : 色をえらぶ</p>
+  <p class="tc">画面の上下左右をタップ、またはスワイプ</p>
+  <button class="btn" id="startBtn">スタート</button>
+</div>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+// ---------- url flags (declared first: sound and camera both read them) ----------
+const QS = new URLSearchParams(location.search);
+const AUTO = QS.get('auto')==='1';
+const SHOWCASE_Q = QS.get('showcase');
+// Recording must produce clean footage, so every automated mode is muted.
+const REC = QS.get('rec')==='1';   // 録音モード: 音を鳴らして拾う
+const SILENT = (AUTO || !!SHOWCASE_Q || QS.get('mute')==='1') && !REC;
+// 録画・showcase では「?」と「ゲーム一覧」を出さない（動画の邪魔になる）
+const NOCHROME = AUTO || !!SHOWCASE_Q || QS.get('nochrome')==='1';
+
+// ---------- renderer / scene ----------
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.shadowMap.enabled = true;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const SKY = new THREE.Color(0x070b18);
+scene.background = SKY.clone();
+scene.fog = new THREE.Fog(0x070b18, 30, 120);
+
+const camera = new THREE.PerspectiveCamera(52, innerWidth/innerHeight, .1, 400);
+
+// The four signal colours. Index order is the same everywhere:
+// 0 = left, 1 = up, 2 = right, 3 = down — on the lens, on the ship, in the input.
+const COLORS = [0xff4d5a, 0xffc93c, 0x4de1ff, 0x7bff8e];
+const COLOR_NAMES = ['赤','黄','青','緑'];
+// where each colour sits on the lens, in screen terms
+const DIRS = [
+  {x:-1, y: 0},   // 0 left
+  {x: 0, y: 1},   // 1 up
+  {x: 1, y: 0},   // 2 right
+  {x: 0, y:-1},   // 3 down
+];
+
+// Portrait and landscape both have to work. A phone held upright is far
+// narrower than 16:9, and with a fixed FOV the lighthouse and the ship
+// fall outside the frame — so widen the vertical FOV as the screen gets taller.
+const BASE_FOV = 52;
+function fitCamera(){
+  const aspect = innerWidth / innerHeight;
+  camera.aspect = aspect;
+  if(typeof SHOWCASE !== 'undefined' && SHOWCASE){
+    camera.fov = aspect < 1 ? 62 : 46;
+  } else {
+    // keep the horizontal field roughly constant across aspect ratios
+    const ref = 16/9;
+    camera.fov = aspect >= ref ? BASE_FOV
+      : Math.min(96, THREE.MathUtils.radToDeg(
+          2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(BASE_FOV)/2) * (ref/aspect))));
+  }
+  camera.__base = camera.fov;    // 濃霧イベントが戻り先として使う
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+}
+addEventListener('resize', fitCamera);
+addEventListener('orientationchange', ()=>setTimeout(fitCamera, 120));
+
+// ---------- lights ----------
+const hemi = new THREE.HemisphereLight(0x3b5680, 0x0a1020, 1.1);
+scene.add(hemi);
+const moonLight = new THREE.DirectionalLight(0xbcd0ff, 1.1);
+moonLight.position.set(-8, 16, 10); moonLight.castShadow = true;
+moonLight.shadow.camera.left=-20; moonLight.shadow.camera.right=20;
+moonLight.shadow.camera.top=20; moonLight.shadow.camera.bottom=-20;
+scene.add(moonLight);
+
+// ---------- sea ----------
+// A big low-poly plane whose vertices are pushed around in the loop; cheap
+// swell without a shader, and the peaks catch the lamp colour nicely.
+const seaGeo = new THREE.PlaneGeometry(400, 400, 70, 70);
+const seaMat = new THREE.MeshStandardMaterial({
+  color:0x0b1c33, roughness:.42, metalness:.35, flatShading:true});
+const sea = new THREE.Mesh(seaGeo, seaMat);
+sea.rotation.x = -Math.PI/2;
+sea.position.y = -1.2;
+sea.receiveShadow = true;
+scene.add(sea);
+const seaBase = seaGeo.attributes.position.array.slice();   // 原形を保存して毎フレーム揺らす
+
+// moon
+const moon = new THREE.Mesh(new THREE.CircleGeometry(4.2, 40),
+  new THREE.MeshBasicMaterial({color:0xdfe8ff}));
+moon.position.set(-26, 22, -120);
+scene.add(moon);
+
+// ---------- lighthouse (the player's tower) ----------
+const LAMP_Y = 9.2;             // height of the lens, everything aims at this
+function buildTower(){
+  const g = new THREE.Group();
+  const stone = new THREE.MeshStandardMaterial({color:0xe8e4dc, roughness:.85});
+  const band  = new THREE.MeshStandardMaterial({color:0xd7392f, roughness:.7});
+  const dark  = new THREE.MeshStandardMaterial({color:0x232a3a, roughness:.6});
+  // rock the tower stands on
+  const rock = new THREE.Mesh(new THREE.CylinderGeometry(3.4, 4.6, 2.2, 9),
+    new THREE.MeshStandardMaterial({color:0x2a2f3d, roughness:1, flatShading:true}));
+  rock.position.y = -0.9; g.add(rock);
+  // tapered shaft
+  const shaft = new THREE.Mesh(new THREE.CylinderGeometry(1.35, 2.1, 8, 18), stone);
+  shaft.position.y = 4.2; g.add(shaft);
+  // two red bands, the classic paint job
+  for(const y of [2.2, 5.6]){
+    const r = 2.1 + (1.35-2.1)*((y-0.2)/8);      // follow the taper at that height
+    const b = new THREE.Mesh(new THREE.CylinderGeometry(r*1.02, r*1.06, .9, 18), band);
+    b.position.y = y; g.add(b);
+  }
+  // gallery deck under the lamp room
+  const deck = new THREE.Mesh(new THREE.CylinderGeometry(2.1, 2.1, .28, 20), dark);
+  deck.position.y = 8.1; g.add(deck);
+  // lamp room housing: an open cage of posts so the lens stays visible
+  for(let i=0;i<8;i++){
+    const a = i/8*Math.PI*2;
+    const p = new THREE.Mesh(new THREE.BoxGeometry(.14,2.2,.14), dark);
+    p.position.set(Math.cos(a)*1.55, LAMP_Y, Math.sin(a)*1.55);
+    g.add(p);
+  }
+  // roof
+  const roof = new THREE.Mesh(new THREE.ConeGeometry(2.0, 1.5, 20), band);
+  roof.position.y = 11.1; g.add(roof);
+  const finial = new THREE.Mesh(new THREE.SphereGeometry(.2, 12, 10), dark);
+  finial.position.y = 12.0; g.add(finial);
+  g.traverse(o=>{ if(o.isMesh){ o.castShadow = true; o.receiveShadow = true; } });
+  return g;
+}
+
+// The lens: four coloured quarter-panels around the lamp. These ARE the
+// four inputs — pressing left lights the left panel, and so on.
+function buildLens(){
+  const g = new THREE.Group();
+  const panels = [];
+  for(let i=0;i<4;i++){
+    // a quarter cylinder facing the player's direction i
+    const geo = new THREE.CylinderGeometry(1.2, 1.2, 1.7, 12, 1, true,
+                                           -Math.PI/4, Math.PI/2);
+    const mat = new THREE.MeshStandardMaterial({
+      color:COLORS[i], emissive:COLORS[i], emissiveIntensity:.12,
+      transparent:true, opacity:.55, side:THREE.DoubleSide, roughness:.25});
+    const m = new THREE.Mesh(geo, mat);
+    // rotate so panel 0 faces left (-x), 1 faces +z (toward camera = "up" on screen),
+    // 2 faces right (+x), 3 faces away (-z = "down" on screen)
+    m.rotation.y = Math.PI + i*Math.PI/2;
+    g.add(m);
+    panels.push({mesh:m, mat, glow:0});
+  }
+  // the burner inside
+  const core = new THREE.Mesh(new THREE.SphereGeometry(.42, 18, 14),
+    new THREE.MeshBasicMaterial({color:0xfff3d0}));
+  g.add(core);
+  return {group:g, panels, core};
+}
+
+const tower = buildTower();
+tower.position.set(0, 0, 0);
+scene.add(tower);
+const lens = buildLens();
+lens.group.position.y = LAMP_Y;
+tower.add(lens.group);
+// the lamp's own light, tinted by whichever panel is firing
+const lampLight = new THREE.PointLight(0xfff3d0, 60, 60, 1.6);
+lampLight.position.set(0, LAMP_Y, 0);
+scene.add(lampLight);
+
+// The sweeping beam: a long cone from the lamp. It idles slowly and snaps
+// to the answering colour whenever the player presses.
+const beam = new THREE.Mesh(
+  new THREE.ConeGeometry(3.4, 64, 22, 1, true),
+  new THREE.MeshBasicMaterial({color:0xfff3d0, transparent:true, opacity:.10,
+    blending:THREE.AdditiveBlending, depthWrite:false, side:THREE.DoubleSide}));
+beam.geometry.translate(0, -32, 0);        // tip at the origin, body pointing -y
+beam.rotation.z = Math.PI/2;               // lay it flat, pointing +x
+beam.position.set(0, LAMP_Y, 0);
+scene.add(beam);
+
+// ---------- the ship (sends the pattern) ----------
+function buildShip(){
+  const g = new THREE.Group();
+  const hullMat = new THREE.MeshStandardMaterial({color:0x1d2536, roughness:.8});
+  const deckMat = new THREE.MeshStandardMaterial({color:0x3c4a63, roughness:.7});
+  const rust    = new THREE.MeshStandardMaterial({color:0x8a4a32, roughness:.85});
+  // hull: a stretched box with a cut bow
+  const hull = new THREE.Mesh(new THREE.BoxGeometry(7.4, 1.5, 2.3), hullMat);
+  hull.position.y = .2; g.add(hull);
+  const bow = new THREE.Mesh(new THREE.CylinderGeometry(1.15, 1.15, 2.3, 12, 1, false,
+                             -Math.PI/2, Math.PI), hullMat);
+  bow.rotation.x = Math.PI/2; bow.rotation.y = Math.PI/2;
+  bow.position.set(3.7, .2, 0); g.add(bow);
+  const stripe = new THREE.Mesh(new THREE.BoxGeometry(7.5, .26, 2.36), rust);
+  stripe.position.y = .78; g.add(stripe);
+  // superstructure
+  const house = new THREE.Mesh(new THREE.BoxGeometry(2.4, 1.5, 1.9), deckMat);
+  house.position.set(-1.4, 1.7, 0); g.add(house);
+  const bridge = new THREE.Mesh(new THREE.BoxGeometry(1.7, .8, 1.6),
+    new THREE.MeshStandardMaterial({color:0x5a6d8f, roughness:.4, metalness:.3}));
+  bridge.position.set(-1.4, 2.8, 0); g.add(bridge);
+  const funnel = new THREE.Mesh(new THREE.CylinderGeometry(.42, .5, 1.6, 12), rust);
+  funnel.position.set(-2.6, 3.0, 0); g.add(funnel);
+  // signal mast — the lamp hangs at the top of this
+  const mast = new THREE.Mesh(new THREE.CylinderGeometry(.09, .12, 4.2, 8), deckMat);
+  mast.position.set(.9, 3.0, 0); g.add(mast);
+  const yard = new THREE.Mesh(new THREE.BoxGeometry(.1, .1, 2.0), deckMat);
+  yard.position.set(.9, 4.4, 0); g.add(yard);
+  // the signal lamp itself: dark until the ship flashes
+  const lamp = new THREE.Mesh(new THREE.SphereGeometry(.46, 18, 14),
+    new THREE.MeshBasicMaterial({color:0x222735}));
+  lamp.position.set(.9, 5.0, 0); g.add(lamp);
+  const halo = new THREE.Mesh(new THREE.CircleGeometry(2.6, 36), new THREE.ShaderMaterial({
+    transparent:true, depthWrite:false, blending:THREE.AdditiveBlending,
+    uniforms:{c:{value:new THREE.Color(0xffffff)}, a:{value:0}},
+    vertexShader:`varying vec2 vUv; void main(){ vUv=uv;
+      gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.); }`,
+    // a flat disc reads as a hard circle, so fall the alpha off in the shader
+    fragmentShader:`uniform vec3 c; uniform float a; varying vec2 vUv;
+      void main(){ float d=distance(vUv,vec2(.5));
+        float f=pow(max(0.,1.-d*2.),2.4)*a;
+        gl_FragColor=vec4(c,f); }`,
+  }));
+  halo.position.set(.9, 5.0, 1.2); g.add(halo);
+  const light = new THREE.PointLight(0xffffff, 0, 34, 1.7);
+  light.position.set(.9, 5.0, 0); g.add(light);
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  return {group:g, lamp, halo, light};
+}
+const ship = buildShip();
+ship.group.position.set(6, -.6, -46);
+ship.group.rotation.y = -0.35;
+scene.add(ship.group);
+
+// ---------- rocks & buoy (scenery + showcase subjects) ----------
+function buildRock(seed){
+  const m = new THREE.Mesh(new THREE.DodecahedronGeometry(1.6, 0),
+    new THREE.MeshStandardMaterial({color:0x232a38, roughness:1, flatShading:true}));
+  m.scale.set(1 + seed*.5, .7 + seed*.6, 1.1 - seed*.3);
+  m.castShadow = true; m.receiveShadow = true;
+  return m;
+}
+const rocks = [];
+for(let i=0;i<9;i++){
+  const r = buildRock((i%4)/4);
+  const a = (i/9)*Math.PI*2 + .4;
+  const d = 14 + (i%3)*9;
+  r.position.set(Math.cos(a)*d, -1.6, Math.sin(a)*d - 8);
+  r.rotation.y = i;
+  scene.add(r); rocks.push(r);
+}
+
+// A buoy bobs between the tower and the ship; it blinks back the streak count,
+// which gives the player a second, quieter read on how they are doing.
+function buildBuoy(){
+  const g = new THREE.Group();
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(.55, .8, 1.6, 12),
+    new THREE.MeshStandardMaterial({color:0x2f9d5b, roughness:.6}));
+  body.position.y = .4; g.add(body);
+  const skirt = new THREE.Mesh(new THREE.ConeGeometry(.95, .7, 12),
+    new THREE.MeshStandardMaterial({color:0x1b1f2b, roughness:.9}));
+  skirt.position.y = -.6; skirt.rotation.x = Math.PI; g.add(skirt);
+  const cage = new THREE.Mesh(new THREE.CylinderGeometry(.34, .34, 1.1, 8, 1, true),
+    new THREE.MeshStandardMaterial({color:0x8b93a6, roughness:.5, metalness:.5,
+      side:THREE.DoubleSide}));
+  cage.position.y = 1.6; g.add(cage);
+  const bulb = new THREE.Mesh(new THREE.SphereGeometry(.26, 14, 12),
+    new THREE.MeshBasicMaterial({color:0x2f9d5b}));
+  bulb.position.y = 1.6; g.add(bulb);
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  return {group:g, bulb};
+}
+const buoy = buildBuoy();
+buoy.group.position.set(-9, -1.1, -20);
+scene.add(buoy.group);
+
+// ---------- fog bank (event prop, also a showcase subject) ----------
+function buildFogBank(){
+  const g = new THREE.Group();
+  const mat = new THREE.MeshStandardMaterial({color:0xb9c6dc, roughness:1,
+    transparent:true, opacity:.34, flatShading:true});
+  for(let i=0;i<7;i++){
+    const b = new THREE.Mesh(new THREE.IcosahedronGeometry(2.6 + (i%3)*.9, 0), mat);
+    b.position.set((i-3)*2.6, (i%2)*.9, ((i*37)%5-2)*1.1);
+    b.scale.y = .55;
+    g.add(b);
+  }
+  return g;
+}
+const fogBank = buildFogBank();
+fogBank.position.set(0, 2.2, -26);
+fogBank.visible = false;
+scene.add(fogBank);
+
+// ---------- gulls (event prop, also a showcase subject) ----------
+function buildGull(){
+  const g = new THREE.Group();
+  const white = new THREE.MeshStandardMaterial({color:0xf2f4f8, roughness:.7});
+  const grey  = new THREE.MeshStandardMaterial({color:0x8d98ad, roughness:.8});
+  const body = new THREE.Mesh(new THREE.CapsuleGeometry(.18, .5, 5, 10), white);
+  body.rotation.z = Math.PI/2; g.add(body);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(.17, 12, 10), white);
+  head.position.set(.42, .1, 0); g.add(head);
+  const beak = new THREE.Mesh(new THREE.ConeGeometry(.06, .26, 8),
+    new THREE.MeshStandardMaterial({color:0xffb23c, roughness:.5}));
+  beak.rotation.z = -Math.PI/2; beak.position.set(.62, .08, 0); g.add(beak);
+  const wingL = new THREE.Mesh(new THREE.BoxGeometry(.5, .05, 1.5), grey);
+  wingL.position.set(0, .1, .75); g.add(wingL);
+  const wingR = new THREE.Mesh(new THREE.BoxGeometry(.5, .05, 1.5), grey);
+  wingR.position.set(0, .1, -.75); g.add(wingR);
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  return {group:g, wingL, wingR};
+}
+const gulls = [];
+for(let i=0;i<6;i++){
+  const gl = buildGull();
+  gl.group.visible = false;
+  scene.add(gl.group);
+  gulls.push(gl);
+}
+
+// ---------- game state ----------
+let running=false, dead=false, t=0, score=0;
+let timeScale=1;                 // slow-motion multiplier
+let deadAt=0;                    // when the run ended (touch retry gate)
+let shake=0;                     // camera shake amount
+let camDist=26, camDistTarget=26;   // death zoom pulls the camera in
+let nextEventAt=9;               // seconds until the first event
+let eventQueue=[];               // event names not yet used in this run
+
+// --- the signal round ---
+// phase: 'watch'  = the ship is flashing, input ignored
+//        'answer' = the player repeats it, the hourglass drains
+//        'gap'    = short breather between rounds
+let phase='gap', pattern=[], answerIdx=0, round=0, streak=0;
+let flashIdx=0, flashTimer=0, flashOn=false;
+let answerTime=0, answerMax=1;   // the shrinking time budget
+let gapTimer=1.2;
+let pulse=0;                     // ship lamp brightness 0..1
+let camYaw=0, camYawTarget=0;    // events swing the camera a little
+
+// --- event state ---
+let fog=0;                       // >0 while the fog bank is in
+let gullTime=0;                  // >0 while the gulls cross
+let swell=0;                     // >0 while the sea is rough
+let blackout=0;                  // >0 while the lens is dead and only sound cues remain
+let reverse=false;               // 逆信号: answer the pattern backwards
+
+const scoreEl = document.getElementById('score');
+const msgEl = document.getElementById('msg');
+const titleEl = document.getElementById('title');
+const bannerEl = document.getElementById('banner');
+const bannerText = bannerEl.querySelector('.b');
+const flashEl = document.getElementById('flash');
+const vignetteEl = document.getElementById('vignette');
+const koEl = document.getElementById('ko');
+const koScoreEl = koEl.querySelector('.finalScore');
+
+// ---------- presentation helpers ----------
+function banner(text, color){
+  bannerText.textContent = text;
+  bannerText.style.color = color;
+  bannerEl.classList.remove('go');
+  void bannerEl.offsetWidth;      // restart the CSS animation
+  bannerEl.style.opacity = 1;
+  bannerEl.classList.add('go');
+}
+function flash(color, strength, ms){
+  flashEl.style.background = color;
+  flashEl.style.transition = 'none';
+  flashEl.style.opacity = strength;
+  requestAnimationFrame(()=>{
+    flashEl.style.transition = `opacity ${ms}ms ease-out`;
+    flashEl.style.opacity = 0;
+  });
+}
+const hexOf = i => '#' + COLORS[i].toString(16).padStart(6,'0');
+
+// ---------- events ----------
+// Each one changes what the round feels like, not just how it looks.
+const EVENTS = {
+  // the fog rolls in and eats the ship: the flashes are barely readable
+  fog(){
+    banner('濃霧', '#b9c6dc');
+    fog = 9;
+    fogBank.visible = true;
+    scene.fog.near = 8;
+    return 9;
+  },
+  // gulls cross the line of sight, briefly blanking the signal lamp
+  gulls(){
+    banner('かもめの群れ', '#f2f4f8');
+    gullTime = 7.5;
+    for(let i=0;i<gulls.length;i++){
+      const g = gulls[i];
+      g.group.visible = true;
+      g.group.position.set(34, 5 + i*1.5 - 2, -52 + i*4);
+      g.group.scale.setScalar(1.6);
+      g.__spd = 11 + i*1.4;
+    }
+    if(!SILENT) SND.gull();
+    return 7.5;
+  },
+  // a heavy swell: the sea churns, the camera rolls, the ship pitches hard
+  swell(){
+    banner('高波', '#4de1ff');
+    swell = 8;
+    shake = Math.max(shake, .3);
+    camYawTarget = .22;
+    return 8;
+  },
+  // the lens dies: for one round you answer from memory with no colour feedback
+  blackout(){
+    banner('停電', '#ffc93c');
+    blackout = 8;
+    flash('#000000', .9, 700);
+    return 8;
+  },
+  // 逆信号: the next patterns must be answered back-to-front
+  reverse(){
+    banner('逆信号', '#ff4d5a');
+    reverse = true;
+    flash('#ff4d5a', .4, 420);
+    camYawTarget = -.18;
+    return 10;
+  },
+};
+const EVENT_NAMES = Object.keys(EVENTS);
+const SUBJECT_NAMES = ['lighthouse','lens','ship','buoy','rock','fog','gull'];
+
+// recording/debug hooks: the capture tooling reads these by name
+window.__events = EVENT_NAMES.slice();
+window.__subjects = SUBJECT_NAMES.slice();
+window.__ev = name => {
+  if(!running || dead || !EVENTS[name]) return false;
+  const busy = EVENTS[name]();
+  if(!SILENT) SND.event();
+  nextEventAt = t + busy + 5;
+  return true;
+};
+window.__alive = () => running && !dead;
+window.__kill = () => { if(running && !dead){ dead=true; gameOver(); } };
+window.__recStop = () => SND.recStop();
+window.__snd = () => ({enabled: SND.enabled, silent: SILENT});
+window.__probe = () => ({t:+t.toFixed(2), phase, round, streak,
+  pat:pattern.join(''), idx:answerIdx, left:+answerTime.toFixed(2),
+  rev:reverse, next:+nextEventAt.toFixed(2)});
+
+function refillEventQueue(){
+  eventQueue = EVENT_NAMES.slice();
+  for(let i=eventQueue.length-1;i>0;i--){        // shuffle so the order varies per run
+    const j = Math.floor(Math.random()*(i+1));
+    [eventQueue[i],eventQueue[j]]=[eventQueue[j],eventQueue[i]];
+  }
+}
+
+function triggerEvent(){
+  if(!eventQueue.length) refillEventQueue();
+  const name = eventQueue.pop();
+  const busy = EVENTS[name]();
+  if(!SILENT) SND.event();
+  nextEventAt = t + busy + 5 + Math.random()*4;  // breathing room between events
+}
+
+// ---------- round logic ----------
+// The pattern grows by one every round and the flashes get quicker, so the
+// difficulty is entirely in how much you can hold at once.
+function startRound(){
+  round++;
+  // lengthen every round, but cap it — past about 9 nobody is playing fairly
+  const len = Math.min(9, 2 + Math.floor(round/1.6));
+  pattern = [];
+  for(let i=0;i<len;i++){
+    let c = Math.floor(Math.random()*4);
+    // avoid three of the same colour in a row: it reads as one long flash
+    if(i>=2 && pattern[i-1]===c && pattern[i-2]===c) c = (c+1)%4;
+    pattern.push(c);
+  }
+  phase = 'watch';
+  flashIdx = 0; flashOn = false; flashTimer = .35;
+  answerIdx = 0;
+  msgEl.textContent = reverse ? '見ておく（逆に返す）' : '見ておく';
+}
+
+// how long one flash lasts, shrinking with the round number
+function flashOnTime(){ return Math.max(.20, .46 - round*.012); }
+function flashOffTime(){ return Math.max(.11, .24 - round*.008); }
+
+function beginAnswer(){
+  phase = 'answer';
+  answerIdx = 0;
+  // budget: roughly a second per symbol early, tightening as rounds pile up
+  answerMax = pattern.length * Math.max(.62, 1.15 - round*.022) + .9;
+  answerTime = answerMax;
+  msgEl.textContent = reverse ? '逆の順で返す' : 'おなじ順で返す';
+}
+
+// the player pressed colour i
+function press(i){
+  if(!running || dead) return;
+  if(phase !== 'answer'){
+    // pressing during the ship's signal is harmless, but it still lights the
+    // lens so the control never feels dead
+    lens.panels[i].glow = Math.max(lens.panels[i].glow, .5);
+    if(!SILENT) SND.blip(i);
+    return;
+  }
+  lens.panels[i].glow = 1;
+  if(!SILENT) SND.blip(i);
+
+  // reverse mode reads the pattern from the back
+  const want = reverse ? pattern[pattern.length-1-answerIdx] : pattern[answerIdx];
+  if(i !== want){
+    dead = true; gameOver(i, want);
+    return;
+  }
+  answerIdx++;
+  score += 12 + round*3;                 // every correct symbol pays
+  scoreEl.textContent = Math.floor(score);
+  if(answerIdx >= pattern.length){
+    // round cleared
+    streak++;
+    score += 40 + round*12 + Math.floor(answerTime*10);   // bonus for answering fast
+    scoreEl.textContent = Math.floor(score);
+    if(!SILENT) SND.clear();
+    flash(hexOf(i), .22, 320);
+    phase = 'gap';
+    gapTimer = 1.1;
+    msgEl.textContent = '通じた';
+    reverse = false;                     // 逆信号 lasts exactly one cleared round
+  }
+}
+
+// ---------- reset ----------
+function reset(){
+  t=0; score=0; dead=false; round=0; streak=0;
+  timeScale=1; shake=0; camDist=26; camDistTarget=26;
+  fog=0; gullTime=0; swell=0; blackout=0; reverse=false;
+  camYaw=0; camYawTarget=0;
+  fogBank.visible=false; fogBank.position.set(0,2.2,-26);
+  for(const g of gulls) g.group.visible=false;
+  scene.fog.near = 30; scene.fog.far = 120;
+  scene.background.copy(SKY); scene.fog.color.copy(SKY);
+  hemi.intensity = 1.1; moonLight.intensity = 1.1;
+  ship.group.position.set(6, -.6, -46);
+  ship.group.rotation.set(0, -0.35, 0);
+  ship.light.intensity = 0;
+  ship.halo.material.uniforms.a.value = 0;
+  ship.lamp.material.color.setHex(0x222735);
+  tower.rotation.set(0,0,0);
+  tower.position.set(0,0,0);
+  for(const p of lens.panels) p.glow = 0;
+  lens.group.rotation.y = 0;
+  phase='gap'; gapTimer=1.0; pattern=[]; answerIdx=0; pulse=0;
+  nextEventAt = 9;
+  refillEventQueue();
+  scoreEl.textContent = '0';
+  msgEl.textContent = '';
+  koEl.classList.remove('on');
+  vignetteEl.style.transition='opacity .3s'; vignetteEl.style.opacity=0;
+}
+
+const startBtn = document.getElementById('startBtn');
+
+// ---------- sound: everything synthesised, no audio files ----------
+// Keeps the single-HTML rule (nothing to download) and lets the music
+// react to play: the bass line speeds up with the game, events drop a
+// stinger, and the whole thing ducks out on a game over.
+const SND = (() => {
+  let ctx = null, master = null, musicGain = null, on = true, started = false;
+  let step = 0, timer = null, tempo = 0.25;
+
+  // A pentatonic scale never sounds wrong against itself, which matters
+  // when the tempo drifts with the player's speed.
+  // minor pentatonic, slow and wide — a foghorn night, not a chase
+  const SCALE = [0, 3, 5, 7, 10];
+  const ROOT = 196;
+  const BASS = 'triangle', LEAD = 'sine';
+  const hz = (deg, oct = 0) =>
+    ROOT * Math.pow(2, oct + Math.floor(deg / SCALE.length)) *
+    Math.pow(2, SCALE[((deg % SCALE.length) + SCALE.length) % SCALE.length] / 12);
+
+  function ensure() {
+    if (ctx) return ctx;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    ctx = new AC();
+    master = ctx.createGain();
+    master.gain.value = 0.32;
+    master.connect(ctx.destination);
+    musicGain = ctx.createGain();
+    musicGain.gain.value = 1;
+    musicGain.connect(master);
+    return ctx;
+  }
+
+  // ---- 録音用の分岐（?rec=1）----
+  // Playwright の録画には音声が入らないので、ゲーム自身に master バスを
+  // 録らせる。鳴っているものそのものなので映像と必ず同期する。
+  let recDest = null, recorder = null, recChunks = [];
+  function recStart() {
+    if (!ctx || recorder) return;
+    recDest = ctx.createMediaStreamDestination();
+    master.connect(recDest);
+    recorder = new MediaRecorder(recDest.stream, {mimeType: 'audio/webm'});
+    recorder.ondataavailable = e => { if (e.data.size) recChunks.push(e.data); };
+    recorder.start();
+  }
+  function recStop() {
+    return new Promise(res => {
+      if (!recorder) return res(null);
+      recorder.onstop = async () => {
+        const blob = new Blob(recChunks, {type: 'audio/webm'});
+        const buf = await blob.arrayBuffer();
+        res(Array.from(new Uint8Array(buf)));
+      };
+      recorder.stop();
+    });
+  }
+
+  function blip(freq, dur, type = 'square', vol = 0.25, dest = null, slideTo = null) {
+    if (!ctx || !on) return;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, ctx.currentTime);
+    if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, ctx.currentTime + dur);
+    // a short attack stops every note from clicking
+    g.gain.setValueAtTime(0, ctx.currentTime);
+    g.gain.linearRampToValueAtTime(vol, ctx.currentTime + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
+    o.connect(g); g.connect(dest || master);
+    o.start(); o.stop(ctx.currentTime + dur + 0.02);
+  }
+
+  function noise(dur, vol = 0.2, hp = 800) {
+    if (!ctx || !on) return;
+    const n = Math.floor(ctx.sampleRate * dur);
+    const buf = ctx.createBuffer(1, n, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    const f = ctx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = hp;
+    const g = ctx.createGain(); g.gain.value = vol;
+    src.connect(f); f.connect(g); g.connect(master);
+    src.start();
+  }
+
+  // --- the loop: a slow swell of bass with a distant bell ---
+  function tick() {
+    if (!ctx || !on) return;
+    const bar = step % 16;
+    // sparse and wide: this game is about listening, so the bed stays out of the way
+    if (bar % 4 === 0) blip(hz(bar % 8 === 0 ? 0 : 2, -1), tempo * 2.4, BASS, 0.24, musicGain);
+    if (bar % 16 === 10) blip(hz(4, 1), tempo * 1.6, LEAD, 0.06, musicGain);
+    if (bar % 8 === 4) noise(0.22, 0.028, 300);      // wash of surf
+    step++;
+    timer = setTimeout(tick, tempo * 1000);
+  }
+
+  // Each signal colour has its own pitch, rising left→up→right→down. The
+  // player can learn the pattern by ear as well as by eye — that is the whole
+  // point of the game, so these four notes must stay clean and distinct.
+  const TONE = [262, 349, 440, 587];
+
+  return {
+    // must be called from a user gesture — browsers block audio otherwise
+    start() {
+      if (!ensure() || started) return;
+      if (ctx.state === 'suspended') ctx.resume();
+      started = true; step = 0; tick();
+    },
+    stop() { if (timer) { clearTimeout(timer); timer = null; } started = false; },
+    /** speed the music up with the game; 1 = starting pace */
+    setPace(mult) { tempo = Math.max(0.13, 0.30 / Math.max(0.2, mult)); },
+    duck(sec = 1.6) {                                      // for game over
+      if (!ctx) return;
+      musicGain.gain.cancelScheduledValues(ctx.currentTime);
+      musicGain.gain.setValueAtTime(musicGain.gain.value, ctx.currentTime);
+      musicGain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + sec);
+    },
+    unduck() {
+      if (!ctx) return;
+      musicGain.gain.cancelScheduledValues(ctx.currentTime);
+      musicGain.gain.setValueAtTime(0.0001, ctx.currentTime);
+      musicGain.gain.exponentialRampToValueAtTime(1, ctx.currentTime + 0.4);
+    },
+    // --- one-shots ---
+    // the ship's flash: same pitch as the answer, one octave up and softer
+    ping(i) { ensure(); blip(TONE[i] * 2, 0.20, 'sine', 0.22); },
+    // the player's answer
+    blip(i) { ensure(); blip(TONE[i], 0.13, 'triangle', 0.24); },
+    clear() { ensure(); [0, 90, 190].forEach((ms, k) =>
+                setTimeout(() => blip(TONE[k + 1] * 2, 0.16, 'sine', 0.16), ms)); },
+    horn()  { ensure(); blip(98, 1.1, 'sawtooth', 0.16, null, 88); },
+    gull()  { ensure(); [0, 130, 260].forEach(ms =>
+                setTimeout(() => blip(1180, 0.09, 'sawtooth', 0.07, null, 760), ms)); },
+    tickTock() { ensure(); blip(1500, 0.03, 'square', 0.06); },
+    event() { ensure(); [0, 90, 180].forEach((ms, i) =>
+                setTimeout(() => blip(hz(2 + i, 0), 0.18, 'sawtooth', 0.20), ms)); },
+    hit()   { ensure(); noise(0.35, 0.30, 200);
+              blip(180, 0.5, 'sawtooth', 0.28, null, 40); },
+    over()  { ensure(); [0, 140, 280, 460].forEach((ms, i) =>
+                setTimeout(() => blip(hz(-i, -1), 0.42, 'triangle', 0.26), ms)); },
+    recStart() { ensure(); recStart(); },
+    recStop() { return recStop(); },
+    toggle() { on = !on; if (!on) { this.stop(); } else { this.start(); } return on; },
+    get enabled() { return on; },
+  };
+})();
+
+// --- one place for every action, so touch and keyboard stay in step ---
+function startRun(){
+  titleEl.classList.add('hidden'); reset(); running=true;
+  if(!SILENT){ SND.unduck(); SND.start(); if(REC) SND.recStart(); }
+}
+// the four inputs, named so keyboard and touch call the identical function
+function pressLeft(){  press(0); }
+function pressUp(){    press(1); }
+function pressRight(){ press(2); }
+function pressDown(){  press(3); }
+
+const muteBtn = document.getElementById('mute');
+function toggleMute(){ muteBtn.textContent = SND.toggle() ? '🔊' : '🔇'; }
+muteBtn.addEventListener('click', toggleMute);
+muteBtn.addEventListener('touchend', e=>{ e.preventDefault(); toggleMute(); },
+                         {passive:false});
+if(SILENT) muteBtn.style.display='none';   // automated modes have no audio
+addEventListener('keydown', e=>{ if(e.code==='KeyM') toggleMute(); });
+
+startBtn.addEventListener('click', startRun);
+// a touch on the button must start too — click alone is unreliable on touch
+startBtn.addEventListener('touchend', e=>{ e.preventDefault(); startRun(); },
+                          {passive:false});
+
+addEventListener('keydown', e=>{
+  if(!running){
+    if(e.code==='Space'||e.code==='Enter') startRun();
+    return;
+  }
+  if(dead){
+    if(e.code==='Space'||e.code==='Enter') startRun();
+    return;
+  }
+  if(e.code==='ArrowLeft' ||e.code==='KeyA') pressLeft();
+  if(e.code==='ArrowUp'   ||e.code==='KeyW') pressUp();
+  if(e.code==='ArrowRight'||e.code==='KeyD') pressRight();
+  if(e.code==='ArrowDown' ||e.code==='KeyS') pressDown();
+});
+
+// --- touch: tap a quadrant, or flick in that direction ---
+// Most viewers arrive from a phone, so the game has to be playable without a
+// keyboard. The screen is split into four wedges from the centre, matching the
+// four lens panels; a swipe works too for players who prefer flicking.
+(function(){
+  let sx=0, sy=0, st=0, sent=false;
+  const SWIPE = 32;          // px before a drag counts as a swipe
+  const canvas = renderer.domElement;
+
+  // which of the four directions does this point on screen belong to?
+  function quadrant(x, y){
+    const dx = x - innerWidth/2, dy = y - innerHeight/2;
+    if(Math.abs(dx) > Math.abs(dy)) return dx < 0 ? 0 : 2;
+    return dy < 0 ? 1 : 3;
+  }
+  const FN = [pressLeft, pressUp, pressRight, pressDown];
+
+  canvas.addEventListener('touchstart', e=>{
+    const tt = e.changedTouches[0];
+    sx=tt.clientX; sy=tt.clientY; st=Date.now(); sent=false;
+  }, {passive:true});
+
+  canvas.addEventListener('touchmove', e=>{
+    if(sent || !running || dead) return;
+    const tt = e.changedTouches[0];
+    const dx = tt.clientX-sx, dy = tt.clientY-sy;
+    if(Math.max(Math.abs(dx), Math.abs(dy)) > SWIPE){
+      const d = Math.abs(dx) > Math.abs(dy) ? (dx<0?0:2) : (dy<0?1:3);
+      FN[d]();
+      sent = true;                      // one press per flick
+    }
+  }, {passive:true});
+
+  canvas.addEventListener('touchend', e=>{
+    if(dead){
+      // give the K.O. animation time to read, then a tap retries
+      if(!AUTO && Date.now()-deadAt > 1500) startRun();
+      return;
+    }
+    if(!running){ startRun(); return; }
+    // a short touch that never became a flick is a tap → use the quadrant
+    if(!sent && Date.now()-st < 400){
+      const tt = e.changedTouches[0];
+      FN[quadrant(tt.clientX, tt.clientY)]();
+    }
+  }, {passive:true});
+
+  // mouse: clicking a quadrant works the same way, for desktop players
+  canvas.addEventListener('pointerdown', e=>{
+    if(e.pointerType === 'touch') return;      // touch is handled above
+    if(!running || dead) return;
+    FN[quadrant(e.clientX, e.clientY)]();
+  });
+
+  // The title overlay sits above the canvas, so a tap anywhere on it never
+  // reaches the canvas handler. Start from the overlay itself.
+  titleEl.addEventListener('touchend', e=>{
+    if(!running){ e.preventDefault(); startRun(); }
+  }, {passive:false});
+
+  // stop the browser treating game taps as scroll / double-tap zoom
+  canvas.addEventListener('touchmove', e=>e.preventDefault(), {passive:false});
+})();
+
+// autoplay mode for recording: ?auto=1
+// recording holds the K.O. longer than play does: ?hold=9000
+const RETRY_MS = Math.max(1200, parseInt(QS.get('hold')||'4200', 10));
+// ?noev=1 records a calm run with no events, for narration beds
+const NOEV = QS.get('noev')==='1';
+if(AUTO){ setTimeout(startRun, 1200); }   // startRun 経由にする（音/録音も始まる）
+
+// ---------- autopilot ----------
+// It remembers the pattern perfectly (it is the same array the ship read from)
+// but answers on a human-looking rhythm, so the footage does not look like a
+// machine dumping four inputs in one frame.
+let autoNext = 0;
+function autoPilot(dt){
+  if(phase !== 'answer'){ autoNext = 0; return; }
+  autoNext -= dt;
+  if(autoNext > 0) return;
+  const want = reverse ? pattern[pattern.length-1-answerIdx] : pattern[answerIdx];
+  if(want === undefined) return;
+  // occasionally hesitate on a long pattern; it reads as thinking
+  press(want);
+  autoNext = 0.26 + Math.random()*0.16 + (pattern.length>6 ? 0.06 : 0);
+}
+
+// ---------- showcase mode ----------
+// Puts one object on a turntable against an empty stage so the video can talk
+// about it while the real thing is on screen. Uses the game's own meshes, so
+// what the narration describes is exactly what ships.
+const SHOWCASE = QS.get('showcase');
+const showcase = {group:null, pivot:null, spin:.55, label:'', flat:false};
+const SHOWCASE_LABELS = {
+  lighthouse:'灯台', lens:'レンズ', ship:'貨物船', buoy:'ブイ',
+  rock:'岩礁', fog:'濃霧', gull:'かもめ',
+};
+
+function buildShowcase(name){
+  const g = new THREE.Group();
+  let spin = .55, flat = false;
+  if(name==='lighthouse'){
+    const tw = buildTower();
+    const ln = buildLens();
+    ln.group.position.y = LAMP_Y;
+    // light the panels so the lens does not read as grey glass on the stage
+    for(let i=0;i<4;i++) ln.panels[i].mat.emissiveIntensity = .9;
+    tw.add(ln.group);
+    tw.scale.setScalar(.85);
+    g.add(tw); spin = .4;
+  } else if(name==='lens'){
+    const ln = buildLens();
+    for(let i=0;i<4;i++) ln.panels[i].mat.emissiveIntensity = 1.1;
+    ln.group.scale.setScalar(2.1);
+    g.add(ln.group); spin = .7;
+  } else if(name==='ship'){
+    const s = buildShip();
+    s.lamp.material.color.setHex(0xffc93c);     // lamp lit, as the player sees it
+    s.halo.material.uniforms.a.value = .7;
+    s.halo.material.uniforms.c.value.setHex(0xffc93c);
+    g.add(s.group); spin = .45;
+  } else if(name==='buoy'){
+    const b = buildBuoy();
+    b.group.scale.setScalar(1.7);
+    g.add(b.group); spin = .6;
+  } else if(name==='rock'){
+    const r = buildRock(.5);
+    r.scale.setScalar(1.6);
+    g.add(r); spin = .5;
+  } else if(name==='fog'){
+    const f = buildFogBank();
+    f.visible = true; f.scale.setScalar(.55);
+    g.add(f); spin = .35;
+  } else if(name==='gull'){
+    const gl = buildGull();
+    gl.group.scale.setScalar(2.4);
+    gl.wingL.rotation.x = -.5; gl.wingR.rotation.x = .5;   // a wingbeat pose
+    g.add(gl.group); spin = .65;
+  }
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  scene.add(g);
+
+  // Centre the subject on the origin and pull the camera back to fit it,
+  // so every object is framed the same way regardless of its size.
+  const box = new THREE.Box3().setFromObject(g);
+  const size = box.getSize(new THREE.Vector3());
+  const mid = box.getCenter(new THREE.Vector3());
+  g.position.sub(mid);                       // sit centred at the origin
+  const reach = Math.max(size.x, size.y) * 0.5;
+  const fov = THREE.MathUtils.degToRad(camera.fov);
+  const dist = (reach / Math.tan(fov/2)) * 1.75 + 1.0;   // 1.75 = breathing room
+  camera.position.set(0, size.y*0.10, dist);
+
+  // Slide the subject sideways so a text panel can own the other half.
+  // The offset lives on a parent so the turntable still spins in place —
+  // rotating an offset group would make it orbit instead.
+  const bias = parseFloat(QS.get('sx') || '0');
+  const pivot = new THREE.Group();
+  pivot.position.x = -bias * reach * 1.15;
+  scene.add(pivot);
+  pivot.add(g);
+  showcase.group = g; showcase.pivot = pivot;
+  showcase.spin = spin; showcase.flat = flat;
+  showcase.label = SHOWCASE_LABELS[name] || name;
+}
+
+fitCamera();          // SHOWCASE is known by here
+if(SHOWCASE){
+  titleEl.classList.add('hidden');
+  buildShowcase(SHOWCASE);
+  scoreEl.textContent = '';
+  msgEl.textContent = QS.get('nolabel')==='1' ? '' : showcase.label;
+  msgEl.style.fontSize = 'clamp(20px,5vw,30px)';
+  msgEl.style.letterSpacing = '6px';
+  // a plain dark stage: nothing on screen but the subject
+  sea.visible = false; moon.visible = false;
+  tower.visible = false; lens.group.visible = false;
+  beam.visible = false; ship.group.visible = false;
+  buoy.group.visible = false; fogBank.visible = false;
+  for(const r of rocks) r.visible = false;
+  for(const g of gulls) g.group.visible = false;
+  lampLight.visible = false;
+  scene.fog = null;
+  scene.background = new THREE.Color(0x0b0d16);
+  hemi.intensity = 3.0;
+  moonLight.intensity = 3.6; moonLight.position.set(2.5, 6, 6);
+  const key = new THREE.PointLight(0xfff0dd, 130, 30);
+  key.position.set(2.6, 3.2, 4.6); scene.add(key);
+  // a second light from the other side so the far face is not pure black
+  const fill = new THREE.PointLight(0x88aaff, 48, 28);
+  fill.position.set(-4.8, 2.4, 3.6); scene.add(fill);
+}
+// let the capture script drive the turntable and swap subjects
+window.__showcase = name => {
+  if(showcase.pivot) scene.remove(showcase.pivot);   // pivot owns the group
+  buildShowcase(name);
+  msgEl.textContent = showcase.label;
+};
+
+// ---------- loop ----------
+let beamAngle = 0;
+const UP = new THREE.Vector3(0,1,0);            // reused: no per-frame allocation
+const IDLE_BEAM = new THREE.Color(0xfff3d0);
+const clock = new THREE.Clock();
+let tickAcc = 0;                  // for the answer-clock tick sound
+
+function tick(){
+  requestAnimationFrame(tick);
+  const raw = Math.min(clock.getDelta(), .05);
+  const dt = raw * timeScale;
+
+  if(SHOWCASE){
+    if(showcase.group){
+      if(showcase.flat) showcase.group.rotation.z += raw*showcase.spin;
+      else showcase.group.rotation.y += raw*showcase.spin;
+    }
+    camera.lookAt(0, 0, 0);        // subject is offset, camera stays on axis
+    renderer.render(scene, camera);
+    return;
+  }
+
+  // --- sea: always alive, even on the title screen ---
+  {
+    const pos = seaGeo.attributes.position;
+    const amp = 0.45 + swell*0.16;
+    const now = performance.now()*0.001;
+    for(let i=0;i<pos.count;i++){
+      const x = seaBase[i*3], y = seaBase[i*3+1];
+      pos.array[i*3+2] = Math.sin(x*0.13 + now*1.1) * amp
+                       + Math.cos(y*0.17 - now*0.8) * amp*0.8
+                       + Math.sin((x+y)*0.05 + now*.4) * amp*1.4;
+    }
+    pos.needsUpdate = true;
+    seaGeo.computeVertexNormals();
+  }
+
+  if(running && !dead){
+    t += dt;
+    if(!SILENT) SND.setPace(1 + round*0.05);
+
+    // --- events ---
+    if(t > nextEventAt && !NOEV) triggerEvent();
+
+    // --- the round state machine ---
+    if(phase === 'watch'){
+      flashTimer -= dt;
+      if(flashTimer <= 0){
+        if(flashOn){
+          // flash just ended — go dark, then move to the next symbol
+          flashOn = false;
+          flashIdx++;
+          flashTimer = flashOffTime();
+          if(flashIdx >= pattern.length){ beginAnswer(); }
+        } else {
+          if(flashIdx < pattern.length){
+            flashOn = true;
+            flashTimer = flashOnTime();
+            const c = pattern[flashIdx];
+            ship.lamp.material.color.setHex(COLORS[c]);
+            ship.halo.material.uniforms.c.value.setHex(COLORS[c]);
+            ship.light.color.setHex(COLORS[c]);
+            if(!SILENT) SND.ping(c);
+            // during 停電 the lens is dead, but the ship still signals, so a
+            // player who learned the four tones can still answer
+            if(blackout <= 0) lens.panels[c].glow = Math.max(lens.panels[c].glow, .35);
+          }
+        }
+      }
+      // the lamp brightness follows the flash, with a fast fall-off
+      pulse += ((flashOn ? 1 : 0) - pulse) * Math.min(1, dt*22);
+    } else if(phase === 'answer'){
+      pulse += (0 - pulse) * Math.min(1, dt*10);
+      answerTime -= dt;
+      // a ticking clock in the last two seconds: the deadline should be heard
+      if(answerTime < 2.2){
+        tickAcc -= dt;
+        if(tickAcc <= 0){ if(!SILENT) SND.tickTock(); tickAcc = Math.max(.14, answerTime*.16); }
+      }
+      if(answerTime <= 0){ dead = true; gameOver(-1, -1); }
+    } else if(phase === 'gap'){
+      pulse += (0 - pulse) * Math.min(1, dt*10);
+      gapTimer -= dt;
+      if(gapTimer <= 0) startRound();
+    }
+
+    // ship lamp presentation
+    const lampVis = pulse * (fog>0 ? .55 : 1) * (gullBlocked() ? .15 : 1);
+    ship.light.intensity = lampVis * 26;
+    ship.halo.material.uniforms.a.value = lampVis * .85;
+    if(lampVis < .05) ship.lamp.material.color.setHex(0x222735);
+    else {
+      const ci = pattern.length ? pattern[Math.min(flashIdx, pattern.length-1)] : 0;
+      ship.lamp.material.color.setHex(COLORS[ci]).multiplyScalar(.4 + lampVis*.6);
+    }
+
+    // the ship rides the swell
+    const bob = Math.sin(t*1.1)*.35 + Math.sin(t*0.63)*.2;
+    ship.group.position.y = -.6 + bob * (1 + swell*.22);
+    ship.group.rotation.z = Math.sin(t*0.9)*.045 * (1 + swell*.3);
+    ship.group.rotation.x = Math.sin(t*1.3+1)*.03 * (1 + swell*.3);
+    // it drifts slowly across the horizon so the frame is never static
+    ship.group.position.x = 6 + Math.sin(t*0.09)*9;
+    ship.group.rotation.y = -0.35 + Math.sin(t*0.09+Math.PI/2)*0.16;
+
+    // the buoy bobs and blinks the streak back
+    buoy.group.position.y = -1.1 + Math.sin(t*1.5+2)*.3*(1+swell*.3);
+    buoy.group.rotation.z = Math.sin(t*1.2)*.12;
+    const blink = (t % 2.4) < 0.18 && streak > 0;
+    buoy.bulb.material.color.setHex(blink ? 0x9dffc0 : 0x1d5a35);
+
+    // --- event updates ---
+    if(fog > 0){
+      fog -= dt;
+      const k = Math.min(1, fog*.6);            // thins out as it leaves
+      fogBank.position.x = Math.sin(t*.25)*6;
+      fogBank.position.z = -26 + Math.sin(t*.18)*5;
+      for(const b of fogBank.children) b.material.opacity = .34*k;
+      scene.fog.near = 30 - 22*k;
+      if(fog <= 0){ fogBank.visible=false; scene.fog.near = 30; }
+    }
+    if(gullTime > 0){
+      gullTime -= dt;
+      for(const g of gulls){
+        g.group.position.x -= g.__spd * dt;
+        g.group.position.y += Math.sin(t*3 + g.__spd)*dt*1.4;
+        const beat = Math.sin(t*9 + g.__spd);
+        g.wingL.rotation.x = -beat*.7; g.wingR.rotation.x = beat*.7;
+        if(g.group.position.x < -40) g.group.position.x = 40;
+      }
+      if(gullTime <= 0) for(const g of gulls) g.group.visible = false;
+    }
+    if(swell > 0){
+      swell -= dt;
+      shake = Math.max(shake, .07);
+      if(swell <= 0) camYawTarget = 0;
+    }
+    if(blackout > 0){
+      blackout -= dt;
+      const k = Math.min(1, blackout*.8);
+      hemi.intensity = 1.1 * (1-k*.75);
+      moonLight.intensity = 1.1 * (1-k*.6);
+      if(blackout <= 0){ hemi.intensity = 1.1; moonLight.intensity = 1.1; }
+    }
+    // 逆信号 has no timer of its own: it is cleared by solving one round.
+  }
+
+  // --- lens panels: glow decays, colour bleeds into the lamp light ---
+  let lit = -1, litAmt = 0;
+  for(let i=0;i<4;i++){
+    const p = lens.panels[i];
+    p.glow = Math.max(0, p.glow - raw*2.6);
+    // during 停電 the panels stay dark no matter what is pressed
+    const g = blackout > 0 ? 0 : p.glow;
+    p.mat.emissiveIntensity = .12 + g*2.4;
+    p.mat.opacity = .5 + g*.45;
+    if(g > litAmt){ litAmt = g; lit = i; }
+  }
+  const coreBright = blackout > 0 ? .12 : (.35 + litAmt*.65);
+  lens.core.material.color.setRGB(coreBright, coreBright*.96, coreBright*.85);
+  lampLight.intensity = (blackout > 0 ? 6 : 34 + litAmt*90);
+  if(lit >= 0) lampLight.color.setHex(COLORS[lit]);
+  else lampLight.color.setHex(0xfff3d0);
+
+  // --- the sweeping beam ---
+  // It idles round the horizon; a press snaps it to that colour's direction
+  // and holds it there while the glow lasts, so a correct answer is a big
+  // readable stab of light out over the water.
+  if(litAmt > .05 && lit >= 0 && blackout <= 0){
+    const want = Math.atan2(DIRS[lit].y, DIRS[lit].x);
+    // shortest way round, so the beam never spins the long way for one press
+    let d = ((want - beamAngle + Math.PI*3) % (Math.PI*2)) - Math.PI;
+    beamAngle += d * Math.min(1, raw*10);
+    beam.material.color.setHex(COLORS[lit]);
+    beam.material.opacity = .10 + litAmt*.30;
+  } else {
+    beamAngle += raw * (running && !dead ? .55 : .3);
+    beam.material.color.lerp(IDLE_BEAM, Math.min(1, raw*2));
+    beam.material.opacity += (.09 - beam.material.opacity) * Math.min(1, raw*2);
+  }
+  // the beam lies in the horizontal plane: rotate about Y, tilt a touch down
+  beam.rotation.set(0, 0, Math.PI/2);
+  beam.rotateOnWorldAxis(UP, -beamAngle);
+  lens.group.rotation.y = -beamAngle;
+
+  // --- the answer clock, drawn as a shrinking ring of the tower's own light ---
+  if(running && !dead && phase === 'answer'){
+    const frac = Math.max(0, answerTime/answerMax);
+    // the whole tower reddens as time runs out — visible without reading a bar
+    const warn = 1 - frac;
+    vignetteEl.style.transition = 'opacity .15s';
+    vignetteEl.style.opacity = warn > .55 ? (warn-.55)*1.4 : 0;
+    const left = Math.max(0, Math.ceil(answerTime*10)/10).toFixed(1);
+    msgEl.textContent = (reverse ? '逆の順で返す  ' : 'おなじ順で返す  ')
+      + `${answerIdx}/${pattern.length}  ${left}秒`;
+  } else if(running && !dead && vignetteEl.style.opacity !== '0'){
+    vignetteEl.style.opacity = 0;
+  }
+
+  if(running && !dead && AUTO) autoPilot(dt);
+
+  // --- death sequence: slow-mo unwinds, the lamp gutters out ---
+  if(dead){
+    timeScale += (0 - timeScale)*Math.min(1, raw*1.1);   // ease down to a near-freeze
+    tower.rotation.z += raw*0.22;                        // the tower leans
+    tower.position.y -= raw*0.5;
+    lampLight.intensity *= (1 - Math.min(1, raw*2.2));
+  }
+
+  // --- camera (runs even while dead, so the zoom and shake still play) ---
+  camDist += (camDistTarget - camDist)*Math.min(1, raw*2.0);
+  camYaw += (camYawTarget - camYaw)*Math.min(1, raw*1.4);
+  const camH = 9.0 - (26-camDist)*.22;
+  camera.position.x = Math.sin(camYaw)*camDist;
+  camera.position.z = Math.cos(camYaw)*camDist;
+  camera.position.y = camH;
+  if(shake>0){
+    shake = Math.max(0, shake - raw*.9);
+    camera.position.x += (Math.random()-.5)*shake;
+    camera.position.y += (Math.random()-.5)*shake;
+  }
+  camera.lookAt(0, LAMP_Y - 1.4 - (26-camDist)*.08, -6);
+
+  // keep the moon parked behind the scene regardless of camera swing
+  moon.lookAt(camera.position);
+
+  renderer.render(scene, camera);
+}
+
+// during かもめの群れ a bird can sit in front of the ship's lamp
+function gullBlocked(){
+  if(gullTime <= 0) return false;
+  for(const g of gulls){
+    if(!g.group.visible) continue;
+    if(Math.abs(g.group.position.x - ship.group.position.x) < 3.2) return true;
+  }
+  return false;
+}
+
+function gameOver(got, want){
+  running=false; deadAt=Date.now();
+  if(!SILENT){ SND.hit(); SND.duck(1.6); setTimeout(()=>SND.over(), 700);
+               setTimeout(()=>SND.horn(), 1100); }
+  // hit feedback: red flash, red vignette, hard shake, camera punches in
+  flash('#ff2b3a', .8, 500);
+  vignetteEl.style.transition='opacity .5s'; vignetteEl.style.opacity=1;
+  shake = .9;
+  camDistTarget = 13;
+  const finalScore = Math.floor(score);
+  koScoreEl.textContent = finalScore;
+  // say what went wrong — a wrong colour and a timeout are different mistakes
+  msgEl.textContent = got < 0 ? '時間切れ'
+    : `${COLOR_NAMES[got]} ではなく ${COLOR_NAMES[want]}`;
+  setTimeout(()=>{ koEl.classList.add('on'); }, 620);   // K.O. lands after the slow-mo
+  if(AUTO){ setTimeout(()=>{ reset(); running=true;
+                             if(!SILENT) SND.unduck(); }, RETRY_MS); }
+  else setTimeout(()=>{
+    msgEl.textContent = matchMedia('(pointer:coarse)').matches
+      ? 'タップでもう一度' : 'スペースでもう一度';
+  }, 1800);
+}
+tick();
+
+// --- help (?) : ルールを見せる。録画中は出さない ---
+(function(){
+  const btn = document.getElementById('helpBtn');
+  const panel = document.getElementById('help');
+  if(!btn || !panel) return;
+  if(NOCHROME){                      // 録画・showcase では画面から消す
+    btn.style.display = 'none';
+    const back = document.getElementById('back');
+    if(back) back.style.display = 'none';
+    return;
+  }
+  const open = () => { panel.classList.add('on'); };
+  const close = () => { panel.classList.remove('on'); };
+  btn.addEventListener('click', open);
+  btn.addEventListener('touchend', e => { e.preventDefault(); open(); }, {passive:false});
+  panel.addEventListener('click', e => { if(e.target === panel) close(); });
+  panel.querySelector('.close').addEventListener('click', close);
+  panel.querySelector('.close').addEventListener('touchend',
+    e => { e.preventDefault(); close(); }, {passive:false});
+  addEventListener('keydown', e => {
+    if(e.code === 'Escape') close();
+    else if(e.key === '?' || (e.code === 'Slash' && e.shiftKey)) open();
+  });
+})();
+</script>
+</body>
+</html>

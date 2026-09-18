@@ -1,0 +1,234 @@
+{
+  "id": "0003_lighthouse_code",
+  "title": "灯台の合図",
+  "video_title": "無線が壊れたまま直らない灯台があります",
+  "lang": "ja",
+  "voice": "jp_female",
+  "scenes": [
+    {
+      "kind": "hook",
+      "clip": "blackout",
+      "narration": "沖の船が光ります。同じ順番で、返します。"
+    },
+    {
+      "kind": "image",
+      "prompt": "a small red and white lighthouse on a rocky island at night, warm lamp glowing in the lantern room, dark cold sea and low swell around it, distant cargo ship lights on the horizon, moonlight, cinematic, photorealistic, highly detailed",
+      "narration": "岬の先の、小さな灯台の話です。守っているのは、ハルさん。ここの無線は、去年から壊れています。修理は来年だと言われました。"
+    },
+    {
+      "kind": "image",
+      "prompt": "interior of a lighthouse lantern room at night seen from behind, a keeper's silhouette at the glass looking out to sea, an old broken radio set on a wooden table, warm lamp light, cold blue sea beyond, cinematic, photorealistic, highly detailed",
+      "narration": "だから船は、ランプで光って合図してきます。ハルさんは、それを同じ順番で返します。そうなんです。これしか、通じる方法がないんです。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "lighthouse",
+      "kicker": "返す人",
+      "title": "ハルさんの灯台",
+      "bullets": [
+        "動きません。**その場で光るだけ**",
+        "仕事は歩くことではなく、**返すこと**",
+        "間違えたら、そこで終わり"
+      ],
+      "narration": "これがハルさんの灯台です。どこにも動きません。その場で光るだけです。仕事は歩くことではなく、返すことです。そして間違えたら、そこで終わりです。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "ship",
+      "kicker": "送ってくる側",
+      "title": "沖の貨物船",
+      "bullets": [
+        "色つきの光を**ひとつずつ**点滅させる",
+        "光っているあいだは、**こちらは押せない**",
+        "合図は毎回**一つずつ長くなる**"
+      ],
+      "narration": "送ってくるのは、この貨物船です。色つきの光を、ひとつずつ点滅させます。光っているあいだ、こちらは何も押せません。見ておくだけです。そして合図は、毎回一つずつ長くなります。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "lens",
+      "kicker": "返す道具",
+      "title": "4色のレンズ",
+      "bullets": [
+        "赤、黄、青、緑の**4面**に分かれている",
+        "上下左右の**位置がそのまま色**",
+        "見た順番のとおりに押し返す"
+      ],
+      "narration": "返すのは、このレンズです。赤、黄、青、緑の4面に分かれています。ここが親切なところです。押す場所は、光っている色の位置とそのまま同じ。あとは、見た順番どおりに押すだけです。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "buoy",
+      "kicker": "数える相棒",
+      "title": "沖のブイ",
+      "bullets": [
+        "灯台と船のあいだで**ゆっくり揺れている**",
+        "通じた回数を**緑に点滅して返す**",
+        "スコアを見なくても、調子が分かる"
+      ],
+      "narration": "灯台と船のあいだに、ブイが浮いています。これが地味にいい仕事をします。通じた回数を、緑の光で点滅して返してくるんです。数字を見なくても、調子が分かります。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "rock",
+      "kicker": "海のほう",
+      "title": "岩礁",
+      "bullets": [
+        "灯台のまわりに**ぐるりと並んでいる**",
+        "ゲームの進行には**一切関係しない**",
+        "そこに灯台が建っている理由"
+      ],
+      "narration": "灯台のまわりには、岩がごろごろしています。正直に言います。これはゲームには一切関係ありません。ただ、この岩があるから、ここに灯台が建っているんです。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "fog",
+      "kicker": "じゃまするもの",
+      "title": "濃霧",
+      "bullets": [
+        "沖から流れてきて、**船を飲み込む**",
+        "光はにじんで、色が読みにくくなる",
+        "合図は変わらない。見え方だけが変わる"
+      ],
+      "narration": "夜には、霧が出ます。沖から流れてきて、船をまるごと飲み込みます。光はにじんで、色が読みにくくなります。合図そのものは変わっていません。見え方だけが変わります。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "gull",
+      "kicker": "じゃまするもの",
+      "title": "かもめ",
+      "bullets": [
+        "**視線の先を横切る**",
+        "横切った一瞬、光が隠れる",
+        "悪気はない。ただ飛んでいるだけ"
+      ],
+      "narration": "そして、かもめです。見てください、ちょうど目の前を横切ります。その一瞬だけ、光が隠れます。悪気はありません。ただ飛んでいるだけです。それでも、一個ぶん見逃します。"
+    },
+    {
+      "kind": "events",
+      "clip": "events",
+      "kicker": "夜のできごと",
+      "title": "静かな夜にはならない",
+      "bullets": [
+        "**停電** — レンズが消えて、手ごたえが無くなる",
+        "**高波** — 海が荒れて、画面ごと揺れる",
+        "**逆信号** — 見た順番を、後ろから返す"
+      ],
+      "narration": "夜は、静かなままでは終わりません。停電が起きます。レンズが消えて、押しても色が光りません。記憶だけが頼りです。高波が来れば、画面ごと揺れます。そしてここからが本題です。逆信号。見た順番を、後ろから返します。"
+    },
+    {
+      "kind": "death",
+      "clip": "death",
+      "kicker": "夜の終わり",
+      "title": "終わり方はいつも同じ",
+      "bullets": [
+        "色をひとつ間違えるか、**時間切れ**",
+        "画面が赤くなり、カメラが**ぐっと寄る**",
+        "何色を返すはずだったかを、教えてくれる"
+      ],
+      "narration": "終わり方はいつも同じです。色をひとつ間違えるか、返しきる前の時間切れ。画面が赤くなって、カメラがぐっと寄ります。そのあと、何色を返すはずだったかを教えてくれます。ハルさんは、これを毎晩やっています。あなたはたぶん、6回目で自信をなくします。"
+    },
+    {
+      "kind": "outro",
+      "title": "概要欄のリンクから遊べます",
+      "subtitle": "チャンネル登録もぜひ",
+      "narration": "今すぐ遊べます。概要欄のリンクからどうぞ。毎日1本ゲームを出しているので、チャンネル登録もぜひお願いします。"
+    }
+  ],
+  "slug": "lighthouse-code",
+  "channel": "Daily Arcade Studio",
+  "events": [
+    "fog",
+    "gulls",
+    "swell",
+    "blackout",
+    "reverse"
+  ],
+  "short": [
+    {
+      "mark": "reverse",
+      "lead": -0.5,
+      "dur": 8.0,
+      "headline": "今度は逆から返す"
+    },
+    {
+      "mark": "blackout",
+      "lead": -0.5,
+      "dur": 8.0,
+      "headline": "レンズが消える"
+    },
+    {
+      "mark": "fog",
+      "lead": -0.5,
+      "dur": 7.0,
+      "headline": "船が霧に沈む"
+    },
+    {
+      "mark": "gulls",
+      "lead": -0.3,
+      "dur": 6.0,
+      "headline": "かもめが横切る"
+    },
+    {
+      "mark": "death",
+      "lead": -2.0,
+      "dur": 9.0,
+      "headline": "一色でも違えば終わり"
+    }
+  ],
+  "thumb": {
+    "hook": "同じ順番で返す",
+    "sub": "沖の船が光る。4色で返信。ブラウザで無料。",
+    "frame_mark": "reverse",
+    "frame_lead": 1.2
+  },
+  "short_v2": {
+    "cuts": [
+      {
+        "kind": "clip",
+        "mark": "reverse",
+        "lead": -0.5,
+        "dur": 4.5,
+        "headline": "今日のゲーム",
+        "narration": "今日のゲームです。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "lighthouse",
+        "dur": 5.0,
+        "headline": "灯台の合図",
+        "narration": "あなたは、沖の船に灯りで返事をする灯台守です。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "ship",
+        "dur": 5.0,
+        "headline": "船が光る",
+        "narration": "まず、船が色つきの光を順番に出します。見ておきます。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "lens",
+        "dur": 5.0,
+        "headline": "同じ順で",
+        "narration": "そのあと、レンズの4色を同じ順番で押し返します。"
+      },
+      {
+        "kind": "clip",
+        "mark": "death",
+        "lead": -2.0,
+        "dur": 5.5,
+        "headline": "",
+        "narration": "一色でも違えば、そこで終わりです。"
+      },
+      {
+        "kind": "clip",
+        "mark": "run2",
+        "lead": 1.0,
+        "dur": 4.5,
+        "cta": "概要欄のリンクから遊べます",
+        "narration": "ブラウザで無料で遊べます。リンクは概要欄です。"
+      }
+    ]
+  }
+}
