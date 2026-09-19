@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>あなたがハンニバルだったら</title>
+<meta property="og:title" content="あなたがハンニバルだったら">
+<meta property="og:description" content="あなたはカルタゴの若い将軍です。海はローマに押さえられています。象と5万の兵を連れて、どこから攻めますか。">
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;background:#0b0e14;color:#e6edf3;
+       font-family:-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;
+       line-height:1.75;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+  .wrap{max-width:600px;margin:0 auto;padding:22px 18px 60px}
+  h1{font-size:clamp(21px,5.6vw,29px);margin:6px 0 8px;line-height:1.4}
+  .lead{color:#8b949e;font-size:14.5px;margin:0 0 20px}
+  .prog{position:sticky;top:0;background:#0b0e14;padding:10px 0 12px;z-index:5}
+  .bar{height:4px;background:#1c2333;border-radius:2px;overflow:hidden}
+  .bar i{display:block;height:100%;background:#d4a544;width:0;transition:width .3s}
+  .count{font-size:12.5px;color:#8b949e;margin-top:6px;letter-spacing:.04em}
+  .scene{background:#121722;border:1px solid #222b3d;border-radius:14px;
+          padding:20px 18px;margin:0 0 16px}
+  .year{color:#d4a544;font-size:12.5px;letter-spacing:.1em;margin:0 0 8px}
+  .sit{font-size:16px;margin:0 0 18px;color:#dbe3ec}
+  .opts{display:grid;gap:10px}
+  .opt{border:1px solid #2b3550;background:#161d2b;color:#e6edf3;border-radius:11px;
+        padding:15px 16px;font-size:15.5px;cursor:pointer;text-align:left;
+        font-family:inherit;line-height:1.6;transition:.15s}
+  .opt:hover{border-color:#d4a544}
+  .opt:active{transform:scale(.985)}
+  .log{margin:0 0 20px}
+  .logi{border-left:2px solid #2b3550;padding:2px 0 2px 14px;margin:0 0 10px;
+         font-size:13.5px;color:#7d8796}
+  .logi b{color:#b3bdcc;font-weight:600}
+  #end{display:none} #end.on{display:block}
+  .eimg{width:100%;border-radius:14px;display:block;margin:0 0 18px;background:#121722}
+  .etag{color:#d4a544;font-size:13px;letter-spacing:.09em;margin:0 0 4px}
+  .ename{font-size:clamp(23px,6.4vw,32px);margin:0 0 14px;line-height:1.35}
+  .ebody{font-size:15.5px;color:#c9d1d9;margin:0 0 20px;white-space:pre-wrap}
+  .fact{background:#121722;border-left:3px solid #58a6ff;border-radius:0 10px 10px 0;
+         padding:14px 16px;margin:0 0 20px;font-size:14.5px;color:#c9d1d9}
+  .fact b{color:#58a6ff;display:block;margin-bottom:5px;font-size:12.5px;
+           letter-spacing:.08em}
+  .warn{color:#6e7681;font-size:12.5px;margin:18px 0 0;padding:12px 14px;
+         border:1px dashed #2b3550;border-radius:10px}
+  .share{display:grid;gap:10px;margin:22px 0}
+  .share a,.share button{display:block;text-align:center;padding:14px;border-radius:12px;
+        text-decoration:none;font-weight:700;font-size:15px;border:1px solid #2b3550;
+        background:#161d2b;color:#e6edf3;cursor:pointer;font-family:inherit}
+  .back{display:inline-block;margin-top:6px;color:#8b949e;font-size:14px}
+  footer{margin-top:32px;color:#6e7681;font-size:12.5px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div id="sim">
+  <h1>あなたがハンニバルだったら</h1>
+  <p class="lead">あなたはカルタゴの若い将軍です。海はローマに押さえられています。象と5万の兵を連れて、どこから攻めますか。</p>
+  <div class="prog"><div class="bar"><i id="pbar"></i></div>
+    <div class="count"><span id="pnum">1</span> / 8</div></div>
+  <div class="log" id="log"></div>
+  <div class="scene" id="scene"></div>
+</div>
+
+<div id="end">
+  <img class="eimg" id="eimg" alt="">
+  <p class="etag" id="etag"></p>
+  <h1 class="ename" id="ename"></h1>
+  <p class="ebody" id="ebody"></p>
+  <div class="fact" id="fact"></div>
+  <div class="share">
+    <a id="tw" target="_blank" rel="noopener">結果をXに投稿する</a>
+    <button id="again">やり直す</button>
+  </div>
+  <a class="back" href="../">ほかのシミュレータを見る</a>
+  <p class="warn">これはシミュレータです。あなたの選択によっては史実と異なる結末になります。
+  実際に起きたことは上の「史実」の欄をご覧ください。</p>
+</div>
+
+<footer>MosukeStudio</footer>
+</div>
+
+<script>
+const DATA = {"title": "あなたがハンニバルだったら", "lead": "あなたはカルタゴの若い将軍です。海はローマに押さえられています。象と5万の兵を連れて、どこから攻めますか。", "axes": [{"label": "攻めに出るか、じっと構えるか", "pos": "攻", "neg": "守"}, {"label": "自分の軍だけで戦うか、人を頼るか", "pos": "独", "neg": "組"}], "history": "ハンニバルは紀元前218年の夏にスペインを出て、秋にアルプスを越えたと言われています。山にいたのは15日ほど。下りたときの兵はおよそ2万6千で、出発時の半分ほどでした。その後16年イタリアに居座りますが、本国からの増援は届かず、ザマで敗れたと伝わります。", "scenes": [{"year": "前219年", "situation": "あなたはスペインで軍を預かっています。目の前のサグントゥムという町は、ローマと手を結んでいます。町を攻めれば、ローマとの戦争になります。攻めなければ、ローマはスペインの中にくさびを打ったままです。本国の議会は、まだ何も言ってきません。", "options": [{"text": "町を囲む。ローマが動く前に、スペインを自分の土台にしておく", "a": 2, "b": 1}, {"text": "手を出さない。本国の議会に相談し、外交で条約の線を引き直す", "a": -2, "b": -1}]}, {"year": "前218年 春", "situation": "戦争が始まりました。カルタゴの艦隊は、ローマの艦隊より数が少ないと言われています。海から兵を運べば早いですが、途中で捕まれば全部失います。陸なら遠回りで、間に大きな川と山があります。", "options": [{"text": "海は捨てる。陸をまっすぐ、ローマの本国まで歩いていく", "a": 2, "b": 1}, {"text": "スペインを固め、海岸線を守りながら相手が来るのを待つ", "a": -2, "b": 0}]}, {"year": "前218年 夏", "situation": "スペインを出るとき、兵はおよそ10万。全員を連れていけば、道中の食料が持ちません。留守にするスペインも、手薄にはできません。ここで軍を分けるかどうかを決めます。", "options": [{"text": "一部をスペインの守りに残し、自分は精鋭だけを連れて進む", "a": 1, "b": -1}, {"text": "数が力だ。全軍を連れていき、イタリアで一気に決める", "a": 2, "b": 2}]}, {"year": "前218年 8月", "situation": "ローヌ川に着きました。向こう岸には、地元の部族が並んで待っています。象も渡らせなければなりません。同じころ、ローマの執政官スキピオの軍が、海沿いに上陸したという知らせが入りました。", "options": [{"text": "一隊を上流へ回して背後を突かせ、正面と挟んで一気に渡る", "a": 2, "b": 1}, {"text": "近くの部族に贈り物をして味方につけ、舟と案内を出してもらう", "a": 0, "b": -2}]}, {"year": "前218年 9月", "situation": "川を渡ったところで、スキピオの軍が近いと分かりました。ここで戦えば、山に入る前に決着がつくかもしれません。ただし勝っても、兵と時間は減ります。季節は、もう秋に向かっています。", "options": [{"text": "戦わずに北へそれる。目的はこの軍ではなく、イタリアの中だ", "a": -1, "b": 1}, {"text": "ここで受けて立つ。上陸したばかりの敵を、平地で叩いておく", "a": 2, "b": 1}]}, {"year": "前218年 10月", "situation": "山に入りました。谷が細くなり、列が何キロにも伸びています。上の岩場に、地元の部族が集まっているのが見えました。彼らは、こちらが伸びきるのを待っているようです。", "options": [{"text": "夜のうちに軽い兵を高い所へ登らせ、朝には上をこちらが取る", "a": 2, "b": 1}, {"text": "使者を送って通行料を払い、道案内を頼んで静かに通り抜ける", "a": -1, "b": -2}]}, {"year": "前218年 10月末", "situation": "峠に着きました。標高は2000メートルを超え、すでに雪です。兵の多くはアフリカやスペインの出身で、雪を見たことがない者もいます。動けなくなる者が出はじめました。引き返すなら、ここが最後です。", "options": [{"text": "兵を集め、雲の切れ目から見えるイタリアの平野を指さして進む", "a": 2, "b": 1}, {"text": "春まで山のふもとまで下がり、部族の村で冬を越させてもらう", "a": -2, "b": -2}]}, {"year": "前218年 11月", "situation": "下りきりました。残った兵は、およそ2万6千。半分です。目の前の北イタリアには、ローマに土地を取られて怒っている部族がいます。ローマ軍は、まだこちらの到着を信じていないようです。", "options": [{"text": "休まず進む。疲れていても、驚いている今のうちに戦いを仕掛ける", "a": 2, "b": 2}, {"text": "まず部族と手を組む。食料と兵を借りてから、ローマに向かう", "a": 1, "b": -2}]}], "endings": {"攻独": {"tag": "ENDING 1", "name": "誰も来ない方向から来た男", "body": "もし、こうしていたら。あなたは攻め続け、最後まで自分の軍だけを信じました。山を半分の兵で下り、休まずローマ軍にぶつかります。奇襲は効きました。トレビア、トラシメヌス、カンナエ。2年で三度勝ち、カンナエでは包囲した形が今も教科書に載っています。ただ、あなたには攻城の道具がありません。ローマの城壁は高く、同盟した町も一つずつ剥がされていきます。兵は補充されないまま減っていく。強いのに、終われない。独りで勝ち続けることと、戦争に勝つことは、別のことでした。", "image_prompt": "A Carthaginian general in bronze armour on horseback leading a ragged, half-strength army out of the Alpine foothills onto the plains of northern Italy at dawn, one surviving war elephant behind him, exhausted soldiers with battered shields, snow-capped mountains receding in the distance, cold clear autumn light, 19th century academic history painting, oil on canvas, cinematic composition, no text, no letters, no words, no writing, no signage", "image": "img/攻独.jpg"}, "攻組": {"tag": "ENDING 2", "name": "半分の軍で、16年", "body": "これが、史実にいちばん近い道です。あなたは攻めの手を緩めず、同時に人を頼りました。山を下りてすぐ、ローマに不満を持つ北イタリアの部族と手を組みます。食料と兵が入り、半分になった軍がもう一度形になりました。そこから16年、あなたは敵の国の中に居座り続けます。カンナエのあと、南イタリアの町がいくつも離れていきました。ただ、本国からの増援は届きません。ローマはあなたを避けて、スペインとアフリカを取りにいきます。最後はザマで負けました。勝ち方は見事でした。それでも、戦争は本国が終わらせるものでした。", "image_prompt": "A Carthaginian commander clasping hands with Gallic chieftains in fur cloaks and torcs outside a wooden hill village in northern Italy, carts of grain and fresh warriors arriving behind them, weary Carthaginian veterans resting by campfires, the Alps white on the far horizon, late autumn afternoon light, 19th century academic history painting, oil on canvas, no text, no letters, no words, no writing, no signage", "image": "img/攻組.jpg"}, "守独": {"tag": "ENDING 3", "name": "スペインを守り抜いた将軍", "body": "もし、こうしていたら。あなたは山を越えず、自分の土地を自分の手で守りました。エブロ川の線に兵を並べ、銀山を押さえ、海岸の町を固めます。ローマは上陸を繰り返しますが、そのたびに押し返されました。戦争は遠いスペインの中だけで続き、イタリアの畑は荒れません。あなたの名は、たぶん教科書に一行しか残らなかったでしょう。ただ、カルタゴの兵は山で2万人を失わずに済みました。攻めないという選び方は、負けとは違います。その代わり、勝ちもしませんでした。", "image_prompt": "A Carthaginian general in bronze armour inspecting a fortified river line in Spain, stone watchtowers and palisades along a wide river, spearmen drilling on the near bank, silver mine carts and mules on a hillside road behind, dry sunlit landscape with olive trees, 19th century academic history painting, oil on canvas, no text, no letters, no words, no writing, no signage", "image": "img/守独.jpg"}, "守組": {"tag": "ENDING 4", "name": "冬を待った隊列", "body": "もし、こうしていたら。あなたは無理をせず、人の助けを借りました。峠の前で引き返し、ふもとの村で冬を越させてもらいます。兵は死なず、象も残りました。春、雪が解けた道を、案内をつけてゆっくり越えます。下りたときの軍は、まだ4万近くいたかもしれません。ただし、半年です。その間にローマは、あなたが来ると知りました。平野に兵が並び、北イタリアの部族は様子を見にまわります。奇襲という一番大きな武器を、あなたは冬と引きかえに手放しました。兵を惜しむと、驚きを失う。どちらかしか取れない場面でした。", "image_prompt": "A Carthaginian army wintering in a valley village at the foot of the Alps, soldiers and local mountain villagers sharing fires outside timber huts, war elephants sheltered under a long wooden roof, snow on the peaks above and thawing mud in the valley, pale winter light, 19th century academic history painting, oil on canvas, no text, no letters, no words, no writing, no signage", "image": "img/守組.jpg"}}};
+let i = 0;
+const score = [0, 0];
+const picks = [];
+
+const sceneEl = document.getElementById('scene');
+const logEl = document.getElementById('log');
+
+function render() {
+  const s = DATA.scenes[i];
+  document.getElementById('pnum').textContent = i + 1;
+  document.getElementById('pbar').style.width = (i / DATA.scenes.length * 100) + '%';
+  sceneEl.innerHTML = `<p class="year">${s.year}</p><p class="sit">${s.situation}</p>`;
+  const box = document.createElement('div');
+  box.className = 'opts';
+  s.options.forEach(o => {
+    const b = document.createElement('button');
+    b.className = 'opt';
+    b.textContent = o.text;
+    b.onclick = () => choose(o);
+    box.appendChild(b);
+  });
+  sceneEl.appendChild(box);
+}
+
+function choose(o) {
+  score[0] += o.a || 0;
+  score[1] += o.b || 0;
+  picks.push(o.text);
+  const d = document.createElement('div');
+  d.className = 'logi';
+  d.innerHTML = `<b>${DATA.scenes[i].year}</b> ${o.text}`;
+  logEl.appendChild(d);
+  i++;
+  if (i < DATA.scenes.length) { render(); scrollTo(0, 0); }
+  else finish();
+}
+
+function finish() {
+  // 2軸の符号で4象限 → 4つの結末
+  const key = (score[0] >= 0 ? DATA.axes[0].pos : DATA.axes[0].neg)
+            + (score[1] >= 0 ? DATA.axes[1].pos : DATA.axes[1].neg);
+  const e = DATA.endings[key] || DATA.endings[Object.keys(DATA.endings)[0]];
+  document.getElementById('eimg').src = e.image;
+  document.getElementById('eimg').alt = e.name;
+  document.getElementById('etag').textContent = e.tag || 'ENDING';
+  document.getElementById('ename').textContent = e.name;
+  document.getElementById('ebody').textContent = e.body;
+  document.getElementById('fact').innerHTML =
+    `<b>史実では</b>${DATA.history}`;
+  const txt = encodeURIComponent(
+    `${DATA.title}\n私の結末は「${e.name}」でした。\n`);
+  document.getElementById('tw').href =
+    `https://twitter.com/intent/tweet?text=${txt}&url=${encodeURIComponent(location.href)}`;
+  document.getElementById('sim').style.display = 'none';
+  document.getElementById('end').classList.add('on');
+  scrollTo(0, 0);
+}
+
+document.getElementById('again').onclick = () => location.reload();
+render();
+</script>
+</body>
+</html>

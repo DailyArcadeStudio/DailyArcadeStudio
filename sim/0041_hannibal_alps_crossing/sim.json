@@ -1,0 +1,177 @@
+{
+  "title": "あなたがハンニバルだったら",
+  "lead": "あなたはカルタゴの若い将軍です。海はローマに押さえられています。象と5万の兵を連れて、どこから攻めますか。",
+  "axes": [
+    {
+      "label": "攻めに出るか、じっと構えるか",
+      "pos": "攻",
+      "neg": "守"
+    },
+    {
+      "label": "自分の軍だけで戦うか、人を頼るか",
+      "pos": "独",
+      "neg": "組"
+    }
+  ],
+  "history": "ハンニバルは紀元前218年の夏にスペインを出て、秋にアルプスを越えたと言われています。山にいたのは15日ほど。下りたときの兵はおよそ2万6千で、出発時の半分ほどでした。その後16年イタリアに居座りますが、本国からの増援は届かず、ザマで敗れたと伝わります。",
+  "scenes": [
+    {
+      "year": "前219年",
+      "situation": "あなたはスペインで軍を預かっています。目の前のサグントゥムという町は、ローマと手を結んでいます。町を攻めれば、ローマとの戦争になります。攻めなければ、ローマはスペインの中にくさびを打ったままです。本国の議会は、まだ何も言ってきません。",
+      "options": [
+        {
+          "text": "町を囲む。ローマが動く前に、スペインを自分の土台にしておく",
+          "a": 2,
+          "b": 1
+        },
+        {
+          "text": "手を出さない。本国の議会に相談し、外交で条約の線を引き直す",
+          "a": -2,
+          "b": -1
+        }
+      ]
+    },
+    {
+      "year": "前218年 春",
+      "situation": "戦争が始まりました。カルタゴの艦隊は、ローマの艦隊より数が少ないと言われています。海から兵を運べば早いですが、途中で捕まれば全部失います。陸なら遠回りで、間に大きな川と山があります。",
+      "options": [
+        {
+          "text": "海は捨てる。陸をまっすぐ、ローマの本国まで歩いていく",
+          "a": 2,
+          "b": 1
+        },
+        {
+          "text": "スペインを固め、海岸線を守りながら相手が来るのを待つ",
+          "a": -2,
+          "b": 0
+        }
+      ]
+    },
+    {
+      "year": "前218年 夏",
+      "situation": "スペインを出るとき、兵はおよそ10万。全員を連れていけば、道中の食料が持ちません。留守にするスペインも、手薄にはできません。ここで軍を分けるかどうかを決めます。",
+      "options": [
+        {
+          "text": "一部をスペインの守りに残し、自分は精鋭だけを連れて進む",
+          "a": 1,
+          "b": -1
+        },
+        {
+          "text": "数が力だ。全軍を連れていき、イタリアで一気に決める",
+          "a": 2,
+          "b": 2
+        }
+      ]
+    },
+    {
+      "year": "前218年 8月",
+      "situation": "ローヌ川に着きました。向こう岸には、地元の部族が並んで待っています。象も渡らせなければなりません。同じころ、ローマの執政官スキピオの軍が、海沿いに上陸したという知らせが入りました。",
+      "options": [
+        {
+          "text": "一隊を上流へ回して背後を突かせ、正面と挟んで一気に渡る",
+          "a": 2,
+          "b": 1
+        },
+        {
+          "text": "近くの部族に贈り物をして味方につけ、舟と案内を出してもらう",
+          "a": 0,
+          "b": -2
+        }
+      ]
+    },
+    {
+      "year": "前218年 9月",
+      "situation": "川を渡ったところで、スキピオの軍が近いと分かりました。ここで戦えば、山に入る前に決着がつくかもしれません。ただし勝っても、兵と時間は減ります。季節は、もう秋に向かっています。",
+      "options": [
+        {
+          "text": "戦わずに北へそれる。目的はこの軍ではなく、イタリアの中だ",
+          "a": -1,
+          "b": 1
+        },
+        {
+          "text": "ここで受けて立つ。上陸したばかりの敵を、平地で叩いておく",
+          "a": 2,
+          "b": 1
+        }
+      ]
+    },
+    {
+      "year": "前218年 10月",
+      "situation": "山に入りました。谷が細くなり、列が何キロにも伸びています。上の岩場に、地元の部族が集まっているのが見えました。彼らは、こちらが伸びきるのを待っているようです。",
+      "options": [
+        {
+          "text": "夜のうちに軽い兵を高い所へ登らせ、朝には上をこちらが取る",
+          "a": 2,
+          "b": 1
+        },
+        {
+          "text": "使者を送って通行料を払い、道案内を頼んで静かに通り抜ける",
+          "a": -1,
+          "b": -2
+        }
+      ]
+    },
+    {
+      "year": "前218年 10月末",
+      "situation": "峠に着きました。標高は2000メートルを超え、すでに雪です。兵の多くはアフリカやスペインの出身で、雪を見たことがない者もいます。動けなくなる者が出はじめました。引き返すなら、ここが最後です。",
+      "options": [
+        {
+          "text": "兵を集め、雲の切れ目から見えるイタリアの平野を指さして進む",
+          "a": 2,
+          "b": 1
+        },
+        {
+          "text": "春まで山のふもとまで下がり、部族の村で冬を越させてもらう",
+          "a": -2,
+          "b": -2
+        }
+      ]
+    },
+    {
+      "year": "前218年 11月",
+      "situation": "下りきりました。残った兵は、およそ2万6千。半分です。目の前の北イタリアには、ローマに土地を取られて怒っている部族がいます。ローマ軍は、まだこちらの到着を信じていないようです。",
+      "options": [
+        {
+          "text": "休まず進む。疲れていても、驚いている今のうちに戦いを仕掛ける",
+          "a": 2,
+          "b": 2
+        },
+        {
+          "text": "まず部族と手を組む。食料と兵を借りてから、ローマに向かう",
+          "a": 1,
+          "b": -2
+        }
+      ]
+    }
+  ],
+  "endings": {
+    "攻独": {
+      "tag": "ENDING 1",
+      "name": "誰も来ない方向から来た男",
+      "body": "もし、こうしていたら。あなたは攻め続け、最後まで自分の軍だけを信じました。山を半分の兵で下り、休まずローマ軍にぶつかります。奇襲は効きました。トレビア、トラシメヌス、カンナエ。2年で三度勝ち、カンナエでは包囲した形が今も教科書に載っています。ただ、あなたには攻城の道具がありません。ローマの城壁は高く、同盟した町も一つずつ剥がされていきます。兵は補充されないまま減っていく。強いのに、終われない。独りで勝ち続けることと、戦争に勝つことは、別のことでした。",
+      "image_prompt": "A Carthaginian general in bronze armour on horseback leading a ragged, half-strength army out of the Alpine foothills onto the plains of northern Italy at dawn, one surviving war elephant behind him, exhausted soldiers with battered shields, snow-capped mountains receding in the distance, cold clear autumn light, 19th century academic history painting, oil on canvas, cinematic composition, no text, no letters, no words, no writing, no signage",
+      "image": "img/攻独.jpg"
+    },
+    "攻組": {
+      "tag": "ENDING 2",
+      "name": "半分の軍で、16年",
+      "body": "これが、史実にいちばん近い道です。あなたは攻めの手を緩めず、同時に人を頼りました。山を下りてすぐ、ローマに不満を持つ北イタリアの部族と手を組みます。食料と兵が入り、半分になった軍がもう一度形になりました。そこから16年、あなたは敵の国の中に居座り続けます。カンナエのあと、南イタリアの町がいくつも離れていきました。ただ、本国からの増援は届きません。ローマはあなたを避けて、スペインとアフリカを取りにいきます。最後はザマで負けました。勝ち方は見事でした。それでも、戦争は本国が終わらせるものでした。",
+      "image_prompt": "A Carthaginian commander clasping hands with Gallic chieftains in fur cloaks and torcs outside a wooden hill village in northern Italy, carts of grain and fresh warriors arriving behind them, weary Carthaginian veterans resting by campfires, the Alps white on the far horizon, late autumn afternoon light, 19th century academic history painting, oil on canvas, no text, no letters, no words, no writing, no signage",
+      "image": "img/攻組.jpg"
+    },
+    "守独": {
+      "tag": "ENDING 3",
+      "name": "スペインを守り抜いた将軍",
+      "body": "もし、こうしていたら。あなたは山を越えず、自分の土地を自分の手で守りました。エブロ川の線に兵を並べ、銀山を押さえ、海岸の町を固めます。ローマは上陸を繰り返しますが、そのたびに押し返されました。戦争は遠いスペインの中だけで続き、イタリアの畑は荒れません。あなたの名は、たぶん教科書に一行しか残らなかったでしょう。ただ、カルタゴの兵は山で2万人を失わずに済みました。攻めないという選び方は、負けとは違います。その代わり、勝ちもしませんでした。",
+      "image_prompt": "A Carthaginian general in bronze armour inspecting a fortified river line in Spain, stone watchtowers and palisades along a wide river, spearmen drilling on the near bank, silver mine carts and mules on a hillside road behind, dry sunlit landscape with olive trees, 19th century academic history painting, oil on canvas, no text, no letters, no words, no writing, no signage",
+      "image": "img/守独.jpg"
+    },
+    "守組": {
+      "tag": "ENDING 4",
+      "name": "冬を待った隊列",
+      "body": "もし、こうしていたら。あなたは無理をせず、人の助けを借りました。峠の前で引き返し、ふもとの村で冬を越させてもらいます。兵は死なず、象も残りました。春、雪が解けた道を、案内をつけてゆっくり越えます。下りたときの軍は、まだ4万近くいたかもしれません。ただし、半年です。その間にローマは、あなたが来ると知りました。平野に兵が並び、北イタリアの部族は様子を見にまわります。奇襲という一番大きな武器を、あなたは冬と引きかえに手放しました。兵を惜しむと、驚きを失う。どちらかしか取れない場面でした。",
+      "image_prompt": "A Carthaginian army wintering in a valley village at the foot of the Alps, soldiers and local mountain villagers sharing fires outside timber huts, war elephants sheltered under a long wooden roof, snow on the peaks above and thawing mud in the valley, pale winter light, 19th century academic history painting, oil on canvas, no text, no letters, no words, no writing, no signage",
+      "image": "img/守組.jpg"
+    }
+  }
+}
