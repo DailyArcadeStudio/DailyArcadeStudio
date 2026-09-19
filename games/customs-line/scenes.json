@@ -1,0 +1,238 @@
+{
+  "id": "0048_customs_line",
+  "title": "カスタムズ・ライン",
+  "video_title": "怪しい人を止めてはいけない空港の話",
+  "lang": "ja",
+  "voice": "ja_female",
+  "scenes": [
+    {
+      "kind": "hook",
+      "clip": "audit",
+      "narration": "怪しい人を止めると、怒られる仕事があります。"
+    },
+    {
+      "kind": "image",
+      "prompt": "a small airport arrivals hall late at night, a single open customs inspection booth, one officer behind the counter, a long line of tired travellers with suitcases waiting, cold fluorescent light, realistic documentary photograph, cinematic, shallow depth of field, highly detailed",
+      "narration": "小さな空港に、深夜だけ開く税関の窓口があります。審査ブースは一つだけです。そこに立つ検査官を、ミナさんと呼ぶことにします。"
+    },
+    {
+      "kind": "image",
+      "prompt": "close-up of a customs officer's hands opening a dark travel bag on a metal counter, an ordinary traveller standing on the other side looking nervous, harsh overhead light, realistic photograph, cinematic, shallow depth of field, highly detailed",
+      "narration": "ミナさんは去年、たくさんの人を止めました。怪しいと思ったからです。ところが、ほとんどは何も持っていませんでした。"
+    },
+    {
+      "kind": "image",
+      "prompt": "a printed office notice pinned to a grey wall beside a customs booth, blurred and unreadable text, an officer's silhouette out of focus in the background, cold institutional lighting, realistic photograph, cinematic, muted colors, highly detailed",
+      "narration": "それで、上司から言われました。止めすぎです、と。今は白い人を止めても、点が引かれます。だから今夜も、ミナさんは見分けるしかありません。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "traveller",
+      "kicker": "審査する相手",
+      "title": "旅客",
+      "bullets": [
+        "一人ずつブースの前に立つ",
+        "**通す**か**止める**か、二つに一つ",
+        "持ち時間はゲージ一本ぶんだけ"
+      ],
+      "narration": "旅客は一人ずつ、ブースの前に立ちます。あなたがやることは二つだけです。通すか、止めるか。持ち時間はゲージ一本ぶん。迷っている時間はありません。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "bag",
+      "kicker": "唯一の手がかり",
+      "title": "カバンの縫い目",
+      "bullets": [
+        "**赤く光っていれば黒**。止める",
+        "光っていなければ白。通す",
+        "見るのはここだけ"
+      ],
+      "narration": "手がかりはカバンです。見てください。縫い目が赤く光っていたら、それが密輸の印です。光っていなければ白。通します。見るのは、ここだけです。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "smuggler",
+      "kicker": "ひっかけ",
+      "title": "密輸者",
+      "bullets": [
+        "汗をかく。目が泳ぐ。**でも全部演技**",
+        "白い人も同じように汗をかく",
+        "挙動を信じると、必ず外す"
+      ],
+      "narration": "ここが面白いところです。密輸者は汗をかきます。目も泳ぎます。でも、それは全部演技です。そうなんです。白い人もまったく同じ顔をします。挙動で決めると、必ず外します。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "gate_stop",
+      "kicker": "左",
+      "title": "別室ゲート",
+      "bullets": [
+        "赤いゲート。**左キー**か左スワイプ",
+        "白い人を送ると信用が減る",
+        "「迷ったら止める」は通用しない"
+      ],
+      "narration": "左を押すと、この赤いゲートが開きます。別室ゆきです。ただし、白い人をここに送ると信用が減ります。迷ったら止める、は通用しません。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "gate_pass",
+      "kicker": "右",
+      "title": "通過ゲート",
+      "bullets": [
+        "緑のゲート。**右キー**か右スワイプ",
+        "早く判断するほど点が高い",
+        "時間切れも誤判定と同じ扱い"
+      ],
+      "narration": "右は通過です。緑のゲートが開きます。早く決めるほど点が伸びます。そして、何もしないと時間切れ。これも誤判定と同じ扱いです。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "diplomat",
+      "kicker": "例外",
+      "title": "外交官",
+      "bullets": [
+        "**金色の旅券**を持っている",
+        "縫い目が光っていても通す",
+        "規則にたった一つだけ足された例外"
+      ],
+      "narration": "そして、例外が一人います。金色の旅券を持った外交官です。この人は、縫い目が赤く光っていても通します。ルールは一つだけ、と言いましたよね。そこに例外が一つ足されると、手が止まります。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "booth",
+      "kicker": "職場",
+      "title": "審査ブース",
+      "bullets": [
+        "幅は一人ぶん。**列は止まらない**",
+        "捌いた人数ぶん、持ち時間が縮む",
+        "信用は三つ。ゼロで終わり"
+      ],
+      "narration": "これが職場です。幅は一人ぶん。列は止まりません。捌けば捌くほど、一人あたりの持ち時間はじりじり縮みます。信用は三つ。ゼロになったら、そこで終わりです。"
+    },
+    {
+      "kind": "events",
+      "clip": "events",
+      "kicker": "予告なく起きること",
+      "title": "夜の窓口は静かではない",
+      "bullets": [
+        "**停電** — 非常灯だけ。縫い目が読めない",
+        "**団体客** — 列が詰まり、持ち時間が縮む",
+        "**抜き打ち監査** — 一回の失敗で信用が二つ飛ぶ"
+      ],
+      "narration": "夜の窓口は静かではありません。停電します。非常灯の赤だけになって、赤い縫い目が読めなくなります。団体客が来ると、列が一気に詰まります。そしてここからが本題です。抜き打ち監査。一回でも間違えると、信用が二つ飛びます。"
+    },
+    {
+      "kind": "death",
+      "clip": "death",
+      "kicker": "終わりかた",
+      "title": "終わるのは、いつも同じ理由",
+      "bullets": [
+        "信用がゼロになった瞬間に止まる",
+        "時間がゆっくり止まり、カメラが寄る",
+        "最後に、何人捌いたかが出る"
+      ],
+      "narration": "終わりかたはいつも同じです。信用がゼロになると、時間がゆっくり止まります。カメラが寄って、何人捌いたかが出ます。ミナさんはこの窓口に、一年立ちました。あなたは、たぶん三十人で信用を使い切ります。"
+    },
+    {
+      "kind": "outro",
+      "title": "概要欄のリンクから遊べます",
+      "subtitle": "チャンネル登録で毎日一本",
+      "narration": "ブラウザで無料で遊べます。概要欄のリンクからどうぞ。チャンネル登録もお願いします。毎日一本、新しいゲームを出しています。"
+    }
+  ],
+  "slug": "customs-line",
+  "channel": "Daily Arcade Studio",
+  "events": [
+    "blackout",
+    "rush",
+    "diplomat",
+    "audit"
+  ],
+  "short": [
+    {
+      "mark": "audit",
+      "lead": -0.3,
+      "dur": 9.0,
+      "headline": "一回の失敗で信用が二つ"
+    },
+    {
+      "mark": "blackout",
+      "lead": -0.5,
+      "dur": 8.0,
+      "headline": "縫い目が読めない"
+    },
+    {
+      "mark": "diplomat",
+      "lead": -0.5,
+      "dur": 8.0,
+      "headline": "金の旅券は通す"
+    },
+    {
+      "mark": "rush",
+      "lead": -0.5,
+      "dur": 7.0,
+      "headline": "列は止まらない"
+    },
+    {
+      "mark": "death",
+      "lead": -2.0,
+      "dur": 9.0,
+      "headline": "信用は三つだけ"
+    }
+  ],
+  "thumb": {
+    "hook": "止めても怒られる",
+    "sub": "赤い縫い目だけが印。ブラウザで無料。",
+    "frame_mark": "audit",
+    "frame_lead": 1.0
+  },
+  "short_v2": {
+    "cuts": [
+      {
+        "kind": "clip",
+        "mark": "audit",
+        "lead": -0.3,
+        "dur": 4.5,
+        "headline": "今日のゲーム",
+        "narration": "今日のゲームです。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "traveller",
+        "dur": 5.0,
+        "headline": "カスタムズ・ライン",
+        "narration": "あなたは深夜の空港で、税関の検査官をやります。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "bag",
+        "dur": 5.0,
+        "headline": "赤い縫い目",
+        "narration": "カバンの縫い目が赤く光っていたら密輸です。止めてください。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "diplomat",
+        "dur": 5.0,
+        "headline": "例外",
+        "narration": "ただし金色の旅券は例外です。光っていても通します。"
+      },
+      {
+        "kind": "clip",
+        "mark": "death",
+        "lead": -2.0,
+        "dur": 5.0,
+        "headline": "",
+        "narration": "白い人を止めても、信用は減ります。"
+      },
+      {
+        "kind": "clip",
+        "mark": "run2",
+        "lead": 1.0,
+        "dur": 4.5,
+        "cta": "概要欄のリンクから遊べます",
+        "narration": "ブラウザで無料で遊べます。リンクは概要欄です。"
+      }
+    ]
+  }
+}
