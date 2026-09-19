@@ -1,0 +1,234 @@
+{
+  "id": "0035_kite_string",
+  "title": "カイト・ストリング",
+  "video_title": "二人でやる仕事を、一人でやることになった",
+  "lang": "ja",
+  "voice": "am_adam",
+  "scenes": [
+    {
+      "kind": "hook",
+      "clip": "swap",
+      "narration": "糸は二本あります。手は二つありますが、引けるのは一本だけです。"
+    },
+    {
+      "kind": "image",
+      "prompt": "two large traditional kites high above a wide river bank at dusk, long strings descending to the ground, warm orange sky, small crowd of people watching from the grass below, cinematic wide shot, photorealistic, highly detailed",
+      "narration": "河原で、毎年小さな凧あげの催しがあります。目玉は、二つの凧を同時にあげることです。昔からずっと、二人でやってきました。片方ずつ持つからです。"
+    },
+    {
+      "kind": "image",
+      "prompt": "a man in his fifties standing alone on a riverbank at dusk, holding two wooden kite spools one in each hand, looking up, wind in his jacket, empty grass beside him, warm low sunlight, cinematic, photorealistic, highly detailed",
+      "narration": "ところが今年、相方が腰を痛めました。急に一人になりました。中止にすればよかったのですが、もう人が集まっていました。だから彼は、二本とも自分で持ちました。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "kite",
+      "kicker": "ひだりの凧",
+      "title": "凧",
+      "bullets": [
+        "風でいつも**少しずつ沈む**",
+        "糸を引けば上がる。離せば下がる",
+        "高いところほど**風に流される**"
+      ],
+      "narration": "これが凧です。放っておくと、ずっと沈み続けます。上がる方法は一つだけ。糸を引くことです。そして面白いのがここです。高く上げるほど、風をまともに受けて横に流されます。安全な場所はありません。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "kite2",
+      "kicker": "みぎの凧",
+      "title": "もう一つの凧",
+      "bullets": [
+        "同じ仕組み。**別の糸**",
+        "こちらも放っておけば沈む",
+        "左右は**同時に引けない**"
+      ],
+      "narration": "凧はもう一つあります。中身は同じです。沈み方も同じです。ただし糸は別々で、同時には引けません。片方を引いているあいだ、もう片方は落ちています。そうなんです。これがこのゲームの全部です。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "spool",
+      "kicker": "あなたの手",
+      "title": "糸巻き",
+      "bullets": [
+        "**押しているあいだだけ**引き続ける",
+        "引いた糸だけが張る",
+        "離した糸はすぐ**たるむ**"
+      ],
+      "narration": "手元にあるのは、この糸巻きです。押しているあいだだけ引きます。引いた糸は、ぴんと張ります。離したほうは、その場でたるみます。だから交互に引く。忙しいですが、やることはそれだけです。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "knot",
+      "kicker": "近づけすぎると",
+      "title": "もつれ",
+      "bullets": [
+        "凧が近づくと**糸がからむ**",
+        "からむと**両方いっぺんに沈む**",
+        "離せばほどける"
+      ],
+      "narration": "ここからが本題です。二つの凧が近づきすぎると、糸がからみます。こうなると、引いても引いても両方が沈みます。片方を助けに行ったら、もう片方が寄ってきて、からむ。よくやります。離せばほどけますが、ほどけるまでの数秒が長いです。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "bird",
+      "kicker": "邪魔をする",
+      "title": "カラス",
+      "bullets": [
+        "**三羽が時間差で**飛んでくる",
+        "飛んでいる凧の高さを狙う",
+        "当たると一気に落ちる"
+      ],
+      "narration": "河原にはカラスがいます。三羽が、少しずつ時間をずらして飛んできます。しかもちゃんと、凧が飛んでいる高さを狙ってきます。当たると一気に落ちます。カラスに悪気はありません。それが余計に腹が立ちます。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "storm",
+      "kicker": "片側だけ",
+      "title": "雷雲",
+      "bullets": [
+        "どちらか一方の**真上に居座る**",
+        "下の凧だけ余計に沈む",
+        "**もう片方は放っておける**"
+      ],
+      "narration": "雷雲も来ます。この雲がうまくできています。二つの凧の、どちらか片方の真上にだけ居座ります。その下の凧だけが、余計に沈みます。つまり片方に手をかけ続けることになります。もう片方も、当然落ちています。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "ground",
+      "kicker": "負ける場所",
+      "title": "地面",
+      "bullets": [
+        "**どちらか一方でも**触れたら終わり",
+        "高さの計は画面の下、左右に一つずつ",
+        "残り3割で**赤くなる**"
+      ],
+      "narration": "そして地面です。負け方はこれだけです。どちらか一方でも触れたら、その時点で終わりです。両方まとめて落ちる必要はありません。画面の下に、高さの計が二つ並んでいます。残り3割で赤くなります。赤くなったら、その色の凧を引いてください。"
+    },
+    {
+      "kind": "events",
+      "clip": "events",
+      "kicker": "河原で起きること",
+      "title": "風は待ってくれない",
+      "bullets": [
+        "**突風** — 二つとも横へ流される",
+        "**夜露** — 糸が重くなり、沈みが速くなる",
+        "**たすき掛け** — 左右の凧が入れ替わる"
+      ],
+      "narration": "催しのあいだ、風は待ってくれません。突風が来ると、二つとも同じ方向へ流されます。そのまま近づけば、もちろんからみます。夜露が降りると糸が重くなって、沈む速さが上がります。そして一番いやなのが、たすき掛けです。左右の凧がそっくり入れ替わります。操作は変わりません。手だけが逆になります。"
+    },
+    {
+      "kind": "death",
+      "clip": "death",
+      "kicker": "終わり方",
+      "title": "片方でいい",
+      "bullets": [
+        "時間が**ゆっくり止まる**",
+        "カメラが落ちたほうへ寄る",
+        "最後にスコアが出る"
+      ],
+      "narration": "終わりはいつも同じです。時間がゆっくり止まって、カメラが落ちたほうへ寄ります。見てください、もう片方はまだ飛んでいます。それでも終わりです。そして最後にスコアが出ます。あの人は、催しの最後まで二本とも上げ切りました。あなたは、たぶん30秒くらいです。"
+    },
+    {
+      "kind": "outro",
+      "title": "概要欄のリンクから遊べます",
+      "subtitle": "チャンネル登録で毎日1本",
+      "narration": "今すぐ遊べます。リンクは概要欄です。チャンネル登録をお願いします。明日も新しいゲームを出します。"
+    }
+  ],
+  "slug": "kite-string",
+  "channel": "Daily Arcade Studio",
+  "events": [
+    "gust",
+    "birds",
+    "storm",
+    "heavy",
+    "swap"
+  ],
+  "short": [
+    {
+      "mark": "swap",
+      "lead": -0.5,
+      "dur": 8.0,
+      "headline": "左右が入れ替わる"
+    },
+    {
+      "mark": "birds",
+      "lead": -0.5,
+      "dur": 8.0,
+      "headline": "カラスが狙ってくる"
+    },
+    {
+      "mark": "storm",
+      "lead": -0.3,
+      "dur": 7.0,
+      "headline": "片方だけ沈む"
+    },
+    {
+      "mark": "gust",
+      "lead": -0.5,
+      "dur": 7.0,
+      "headline": "近づけばからむ"
+    },
+    {
+      "mark": "death",
+      "lead": -2.0,
+      "dur": 9.0,
+      "headline": "片方落ちたら終わり"
+    }
+  ],
+  "thumb": {
+    "hook": "二本、同時に",
+    "sub": "凧は二つ。手は一本ずつ。ブラウザで無料。",
+    "frame_mark": "swap",
+    "frame_lead": 1.0
+  },
+  "short_v2": {
+    "cuts": [
+      {
+        "kind": "clip",
+        "mark": "swap",
+        "lead": -0.5,
+        "dur": 4.5,
+        "headline": "今日のゲーム",
+        "narration": "今日のゲームです。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "kite",
+        "dur": 5.0,
+        "headline": "カイト・ストリング",
+        "narration": "二人でやる凧あげを、一人でやる人の話です。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "spool",
+        "dur": 5.0,
+        "headline": "交互に引く",
+        "narration": "引いた糸だけ上がります。同時には引けません。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "knot",
+        "dur": 5.0,
+        "headline": "もつれ",
+        "narration": "凧が近づくと糸がからみます。両方いっぺんに沈みます。"
+      },
+      {
+        "kind": "clip",
+        "mark": "death",
+        "lead": -2.0,
+        "dur": 5.5,
+        "headline": "",
+        "narration": "片方でも地面に着いたら終わりです。"
+      },
+      {
+        "kind": "clip",
+        "mark": "run2",
+        "lead": 1.0,
+        "dur": 4.5,
+        "cta": "概要欄のリンクから遊べます",
+        "narration": "ブラウザで無料で遊べます。リンクは概要欄です。"
+      }
+    ]
+  }
+}

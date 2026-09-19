@@ -1,0 +1,1330 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>カイト・ストリング</title>
+<style>
+  html,body{margin:0;padding:0;overflow:hidden;background:#070a14;
+    font-family:'Hiragino Kaku Gothic ProN','Helvetica Neue',Arial,sans-serif;}
+  #ui{position:fixed;top:16px;left:0;right:0;text-align:center;color:#fff;z-index:10;pointer-events:none;}
+  #score{font-size:clamp(24px,5.6vw,34px);font-weight:800;text-shadow:0 2px 8px #000;}
+  #msg{font-size:clamp(13px,3.4vw,19px);margin-top:6px;opacity:.9;text-shadow:0 2px 6px #000;}
+
+  /* --- 二本の糸の巻き取り計: 画面下に左右ならべる --- */
+  #reels{position:fixed;left:50%;transform:translateX(-50%);
+    bottom:calc(14px + env(safe-area-inset-bottom,0px));
+    width:min(90vw,520px);z-index:11;pointer-events:none;color:#fff;
+    display:flex;gap:clamp(10px,3vw,26px);}
+  .reel{flex:1;text-align:center;}
+  .reel .lab{font-size:clamp(10px,2.8vw,13px);letter-spacing:.12em;opacity:.8;
+    margin-bottom:4px;text-shadow:0 2px 6px #000;white-space:nowrap;}
+  .reel .bar{height:clamp(12px,3.2vw,18px);border:2px solid #2b3f5e;border-radius:999px;
+    background:rgba(6,10,20,.8);overflow:hidden;}
+  .reel .fill{height:100%;width:50%;border-radius:999px;
+    background:linear-gradient(90deg,#ffd23b,#ff8a2b);transition:width .1s linear;}
+  .reel.warn .bar{border-color:#ff5a3b;animation:pulseBar .45s infinite alternate;}
+  .reel.warn .fill{background:linear-gradient(90deg,#ff5a3b,#ff2b3a);}
+  @keyframes pulseBar{from{box-shadow:0 0 0 rgba(255,90,59,0);}to{box-shadow:0 0 16px rgba(255,90,59,.85);}}
+  /* 押している間だけ光る。どちらを引いているか一目で分かるように */
+  .reel.pull .lab{color:#ffd23b;opacity:1;}
+  .reel.pull .bar{border-color:#ffd23b;}
+
+  #title{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:rgba(4,7,16,.76);z-index:20;color:#fff;transition:opacity .4s;padding:0 16px;box-sizing:border-box;}
+  #title h1{font-size:clamp(28px,8.4vw,58px);margin:0 0 8px;letter-spacing:2px;
+    text-shadow:0 4px 18px #ffd23b;text-align:center;}
+  #title p{font-size:clamp(12px,3.3vw,19px);opacity:.85;margin:4px 0;text-align:center;line-height:1.6;}
+  #title .btn{margin-top:26px;padding:14px 44px;font-size:clamp(18px,4.6vw,22px);font-weight:700;color:#2b1c00;
+    background:linear-gradient(180deg,#ffd970,#e0961a);border:none;border-radius:12px;cursor:pointer;
+    box-shadow:0 6px 24px rgba(255,210,59,.5);}
+  #title .btn:hover{transform:scale(1.05);}
+  .hidden{opacity:0;pointer-events:none;}
+  #back{position:fixed;top:14px;left:14px;z-index:30;text-decoration:none;
+    background:rgba(12,18,30,.72);color:#fff;
+    font:600 clamp(12px,3.2vw,15px)/1 'Hiragino Kaku Gothic ProN',Arial,sans-serif;
+    padding:0 14px;height:44px;display:flex;align-items:center;border-radius:12px;white-space:nowrap;}
+  #back:hover{background:rgba(30,42,62,.9);}
+  #mute{position:fixed;top:14px;right:14px;z-index:30;border:none;cursor:pointer;
+    background:rgba(12,18,30,.72);color:#fff;font-size:20px;line-height:1;
+    width:44px;height:44px;border-radius:12px;}
+  #mute:hover{background:rgba(30,42,62,.9);}
+  /* 端末に合う説明だけ出す */
+  .tc{display:none;}
+  @media (pointer:coarse){ .kb{display:none;} .tc{display:block;} }
+  @media (pointer:coarse){ #title .btn{padding:18px 48px;} }
+
+  /* --- イベントのバナー: 画面中央に叩きつける --- */
+  #banner{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    z-index:15;pointer-events:none;opacity:0;}
+  #banner .b{font-size:clamp(24px,6.6vw,62px);font-weight:900;letter-spacing:.06em;color:#fff;
+    padding:10px 4vw;max-width:94vw;text-align:center;transform:scale(2.4);opacity:0;
+    text-shadow:0 0 26px currentColor, 0 6px 20px #000;
+    border-top:5px solid currentColor;border-bottom:5px solid currentColor;}
+  #banner.go .b{animation:slam .62s cubic-bezier(.12,.85,.2,1) forwards;}
+  @keyframes slam{
+    0%  {transform:scale(2.4) rotate(-4deg);opacity:0;}
+    22% {transform:scale(1)   rotate(0deg); opacity:1;}
+    70% {transform:scale(1)   rotate(0deg); opacity:1;}
+    100%{transform:scale(1.12);opacity:0;}
+  }
+
+  /* --- 画面全体の色フラッシュ --- */
+  #flash{position:fixed;inset:0;z-index:14;pointer-events:none;opacity:0;background:#fff;}
+  #vignette{position:fixed;inset:0;z-index:13;pointer-events:none;opacity:0;
+    background:radial-gradient(ellipse at center,rgba(0,0,0,0) 32%,rgba(120,0,10,.85) 100%);}
+
+  /* --- K.O. 画面 --- */
+  #ko{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    z-index:22;pointer-events:none;opacity:0;color:#fff;transition:opacity .3s;}
+  #ko.on{opacity:1;}
+  #ko .koText{font-size:clamp(80px,24vw,180px);font-weight:900;letter-spacing:10px;color:#fff;
+    text-shadow:0 0 40px #ff8a2b,0 0 90px #ff5a3b,0 10px 30px #000;
+    transform:scale(3);opacity:0;}
+  #ko.on .koText{animation:koSlam .8s cubic-bezier(.1,.9,.2,1) forwards;}
+  @keyframes koSlam{
+    0%  {transform:scale(3) rotate(-8deg);opacity:0;}
+    30% {transform:scale(1) rotate(0deg);opacity:1;}
+    36% {transform:scale(1.06);}
+    100%{transform:scale(1);opacity:1;}
+  }
+  #ko .finalLabel{font-size:clamp(14px,3.6vw,21px);letter-spacing:5px;opacity:0;margin-top:6px;
+    text-shadow:0 2px 8px #000;}
+  #ko .finalScore{font-size:clamp(46px,13vw,80px);font-weight:800;opacity:0;text-shadow:0 4px 20px #000;}
+  #ko.on .finalLabel{animation:fadeUp .5s .75s forwards;}
+  #ko.on .finalScore{animation:fadeUp .5s .9s forwards;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+
+  /* --- あそびかた (?) --- */
+  #helpBtn{position:fixed;top:14px;right:66px;z-index:30;border:none;cursor:pointer;
+    background:rgba(12,18,30,.72);color:#fff;font:700 20px/1 'Helvetica Neue',Arial,sans-serif;
+    width:44px;height:44px;border-radius:12px;}
+  #helpBtn:hover{background:rgba(30,42,62,.9);}
+  #help{position:fixed;inset:0;z-index:40;display:none;align-items:center;
+    justify-content:center;background:rgba(3,5,12,.84);padding:20px;box-sizing:border-box;}
+  #help.on{display:flex;}
+  #help .box{background:#101726;border:1px solid #2b3550;border-radius:18px;
+    max-width:560px;width:100%;max-height:86vh;overflow:auto;padding:24px 24px 20px;
+    color:#e6edf3;font-family:'Hiragino Kaku Gothic ProN','Helvetica Neue',Arial,sans-serif;}
+  #help h2{margin:0 0 4px;font-size:clamp(19px,5vw,26px);}
+  #help .sub{color:#8b949e;font-size:clamp(11px,3vw,14px);margin:0 0 16px;line-height:1.5;}
+  #help h3{font-size:clamp(13px,3.4vw,15px);color:#ffd23b;margin:16px 0 6px;letter-spacing:.04em;}
+  #help ul{margin:0;padding-left:20px;}
+  #help li{font-size:clamp(12px,3.2vw,15px);line-height:1.7;margin:3px 0;}
+  #help b{color:#ffd23b;font-weight:700;}
+  #help .close{margin-top:20px;width:100%;padding:12px;border:none;border-radius:10px;
+    background:#2b3550;color:#fff;font-size:clamp(14px,3.6vw,16px);font-weight:700;cursor:pointer;}
+  #help .close:hover{background:#3a4668;}
+</style>
+</head>
+<body>
+<div id="ui"><div id="score">0</div><div id="msg"></div></div>
+<button id="helpBtn" title="あそびかた">?</button>
+<div id="help"><div class="box">
+  <h2>カイト・ストリング</h2>
+  <p class="sub">凧は二つ。糸も二本。地面に着いたら終わりです。</p>
+    <h3>凧</h3>
+    <ul>
+      <li>風でいつも <b>少しずつ沈みます</b>。放っておけば落ちます</li>
+      <li>糸を引くと <b>上がる</b>。離すと <b>下がる</b></li>
+      <li>左右は別の凧。<b>同時には引けません</b></li>
+    </ul>
+    <h3>糸</h3>
+    <ul>
+      <li>引いている糸だけが <b>張ります</b></li>
+      <li>張っていない糸は緩み、凧はそのまま落ちていきます</li>
+      <li>だから交互に引く。それがこのゲームの全部です</li>
+    </ul>
+    <h3>もつれ</h3>
+    <ul>
+      <li>二つの凧が <b>近づきすぎる</b> と糸がからみます</li>
+      <li>からむと両方 <b>いっぺんに沈む</b></li>
+      <li>離せばほどけます。近づけないことが一番の対策です</li>
+    </ul>
+    <h3>地面</h3>
+    <ul>
+      <li>どちらか一方でも <b>地面に触れたら終わり</b></li>
+      <li>高さの計は画面の下、左右に一つずつ</li>
+      <li>赤くなったら、その色の凧を引いてください</li>
+    </ul>
+  <button class="close">わかった</button>
+</div></div>
+<a id="back" href="../../" title="ゲーム一覧にもどる">‹ ゲーム一覧</a>
+<button id="mute" title="音を入切">🔊</button>
+<div id="vignette"></div>
+<div id="flash"></div>
+<div id="banner"><div class="b"></div></div>
+<div id="ko">
+  <div class="koText">K.O.</div>
+  <div class="finalLabel">さいしゅうスコア</div>
+  <div class="finalScore">0</div>
+</div>
+<div id="reels">
+  <div class="reel" id="reelL"><div class="lab">ひだりの凧</div><div class="bar"><div class="fill"></div></div></div>
+  <div class="reel" id="reelR"><div class="lab">みぎの凧</div><div class="bar"><div class="fill"></div></div></div>
+</div>
+<div id="title">
+  <h1>カイト・ストリング</h1>
+  <p>糸を引けば上がる。離せば落ちる。</p>
+  <p>二つの凧を、どちらも地面に着けないこと。</p>
+  <p class="kb">← / A : 左の糸を引く &nbsp;&nbsp; → / D : 右の糸を引く</p>
+  <p class="kb">押しているあいだ引き続けます</p>
+  <p class="tc">画面の左半分を押すと左の凧 &nbsp;/&nbsp; 右半分で右の凧</p>
+  <button class="btn" id="startBtn">スタート</button>
+</div>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+// ---------- url flags (declared first: sound and camera both read them) ----------
+const QS = new URLSearchParams(location.search);
+const AUTO = QS.get('auto')==='1';
+const SHOWCASE_Q = QS.get('showcase');
+// 録画は静かでないと使えないので、自動モードはすべて無音にする。
+const REC = QS.get('rec')==='1';   // 録音モード: 音を鳴らして拾う
+const SILENT = (AUTO || !!SHOWCASE_Q || QS.get('mute')==='1') && !REC;
+// 録画・showcase では「?」と「ゲーム一覧」を出さない（動画の邪魔になる）
+const NOCHROME = AUTO || !!SHOWCASE_Q || QS.get('nochrome')==='1';
+
+// ---------- renderer / scene ----------
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.shadowMap.enabled = true;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const SKY = new THREE.Color(0x121a30);
+scene.background = SKY.clone();
+scene.fog = new THREE.Fog(0x121a30, 40, 120);
+
+const camera = new THREE.PerspectiveCamera(56, innerWidth/innerHeight, .1, 300);
+
+// 縦持ちと横持ちの両方で成立させる。スマホを立てて持つと 16:9 よりずっと
+// 細いので、FOV を固定すると空も地面も画面から外れる。アスペクトが縦長に
+// なるほど縦 FOV を広げて、横方向の見え方をほぼ一定に保つ。
+const BASE_FOV = 56;
+function fitCamera(){
+  const aspect = innerWidth / innerHeight;
+  camera.aspect = aspect;
+  if(typeof SHOWCASE !== 'undefined' && SHOWCASE){
+    camera.fov = aspect < 1 ? 62 : 46;
+  } else {
+    // このゲームは縦に広い（地面から天井まで）。縦長の画面では横を
+    // 合わせきるより、上下が入ることのほうが大事なので上限を抑える。
+    const ref = 16/9;
+    camera.fov = aspect >= ref ? BASE_FOV
+      : Math.min(82, THREE.MathUtils.radToDeg(
+          2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(BASE_FOV)/2) * (ref/aspect))));
+  }
+  camera.__base = camera.fov;    // 突風イベントがここへ戻る
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+}
+addEventListener('resize', fitCamera);
+addEventListener('orientationchange', ()=>setTimeout(fitCamera, 120));
+
+// ---------- lights ----------
+const hemi = new THREE.HemisphereLight(0x8fb4ff, 0x20182c, 1.6);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xffe0b0, 2.2);
+sun.position.set(-8, 16, 10); sun.castShadow = true;
+sun.shadow.camera.left=-26; sun.shadow.camera.right=26;
+sun.shadow.camera.top=26; sun.shadow.camera.bottom=-26;
+scene.add(sun);
+
+// ---------- world: 地面と夕方の空 ----------
+const GROUND_Y = 0;              // ここに触れたら終わり
+const groundMat = new THREE.MeshStandardMaterial({color:0x1d2438, roughness:.95});
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(240, 200), groundMat);
+ground.rotation.x = -Math.PI/2; ground.position.set(0, GROUND_Y, -30);
+ground.receiveShadow = true; scene.add(ground);
+
+// 地面のきわを光らせる。「ここが死線」だと一目で分かる線
+const deathLine = new THREE.Mesh(new THREE.PlaneGeometry(240, .5),
+  new THREE.MeshBasicMaterial({color:0xff5a3b, transparent:true, opacity:.55}));
+deathLine.rotation.x = -Math.PI/2; deathLine.position.set(0, GROUND_Y+.02, 2);
+scene.add(deathLine);
+
+// 丘のシルエット（高さの基準になるので、奥行きを段に分けて置く）
+const hills = [];
+for(let i=0;i<16;i++){
+  const h = 2 + Math.random()*5;
+  const m = new THREE.Mesh(new THREE.ConeGeometry(4+Math.random()*6, h, 5),
+    new THREE.MeshStandardMaterial({color:0x151b2c, roughness:1}));
+  m.position.set((Math.random()-.5)*150, GROUND_Y+h/2-.6, -40-Math.random()*70);
+  scene.add(m); hills.push(m);
+}
+
+// 太陽（沈みかけ）。凧の高さを読むための背景の目印でもある
+const sunDisc = new THREE.Mesh(new THREE.CircleGeometry(9, 44),
+  new THREE.MeshBasicMaterial({color:0xffb45a}));
+sunDisc.position.set(-26, 12, -110); scene.add(sunDisc);
+
+// 雲。動きが見えると風が吹いている感じが出る
+const clouds = [];
+const cloudMat = new THREE.MeshStandardMaterial({color:0x2a3352, roughness:1,
+  transparent:true, opacity:.9});
+for(let i=0;i<18;i++){
+  const g = new THREE.Group();
+  const n = 2+Math.floor(Math.random()*3);
+  for(let k=0;k<n;k++){
+    const s = 2+Math.random()*3;
+    const b = new THREE.Mesh(new THREE.SphereGeometry(s, 10, 8), cloudMat);
+    b.position.set((k-n/2)*s*1.1, Math.random()*s*.4, Math.random()*2);
+    b.scale.y = .6; g.add(b);
+  }
+  g.position.set((Math.random()-.5)*130, 10+Math.random()*26, -50-Math.random()*50);
+  scene.add(g); clouds.push({group:g, sp:.6+Math.random()*1.4});
+}
+
+// 風向きを見せる紙片。ゲーム中つねに流れている
+const flecks = [];
+const fleckMat = new THREE.MeshBasicMaterial({color:0xbfd4ff, transparent:true, opacity:.35});
+for(let i=0;i<70;i++){
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(.22,.1), fleckMat);
+  m.position.set((Math.random()-.5)*90, 1+Math.random()*34, -8-Math.random()*60);
+  scene.add(m); flecks.push(m);
+}
+
+// ---------- 凧そのもの（プリミティブだけで作る） ----------
+const KITE_COL = [0xffd23b, 0x3bd6ff];       // 左は黄、右は水色
+const SPOOL_X  = [-9, 9];                     // 糸巻きの位置（地上）
+const SPOOL_Y  = 1.1, SPOOL_Z = 4;
+
+function buildKite(color){
+  const g = new THREE.Group();
+  const body = new THREE.MeshStandardMaterial({color, roughness:.5,
+    emissive:new THREE.Color(color).multiplyScalar(.12), side:THREE.DoubleSide});
+  const spar = new THREE.MeshStandardMaterial({color:0x2a2230, roughness:.7});
+
+  // ひし形の帆：正方形の板を 45 度ひねって、縦だけ伸ばす
+  const sail = new THREE.Mesh(new THREE.PlaneGeometry(2.3, 2.3), body);
+  sail.rotation.z = Math.PI/4; sail.scale.set(1, 1.5, 1);
+  sail.castShadow = true; g.add(sail);
+  // 帆の裏側にうすい影色の板を重ねて、厚みがあるように見せる
+  const back = new THREE.Mesh(new THREE.PlaneGeometry(2.3, 2.3),
+    new THREE.MeshStandardMaterial({color:new THREE.Color(color).multiplyScalar(.45),
+      roughness:.8, side:THREE.DoubleSide}));
+  back.rotation.z = Math.PI/4; back.scale.set(1,1.5,1); back.position.z = -.06; g.add(back);
+  // 骨（十字）
+  const v = new THREE.Mesh(new THREE.BoxGeometry(.08, 4.7, .08), spar);
+  v.position.z = .05; g.add(v);
+  const h = new THREE.Mesh(new THREE.BoxGeometry(3.2, .08, .08), spar);
+  h.position.set(0, .55, .05); g.add(h);
+
+  // しっぽ：小さな板をぶら下げる。風で揺れるので生きて見える
+  const tail = [];
+  for(let i=0;i<7;i++){
+    const t = new THREE.Mesh(new THREE.PlaneGeometry(.42,.28),
+      new THREE.MeshStandardMaterial({color:i%2 ? 0xf4f6ff : color,
+        roughness:.6, side:THREE.DoubleSide}));
+    t.position.set(0, -2.6 - i*.62, 0); g.add(t); tail.push(t);
+  }
+  return {group:g, tail, sail};
+}
+
+// 糸：巻きの位置から凧まで、たるみを持たせた折れ線で描く
+function buildString(color){
+  const pts = new Array(14).fill(0).map(()=>new THREE.Vector3());
+  const geo = new THREE.BufferGeometry().setFromPoints(pts);
+  const mat = new THREE.LineBasicMaterial({color, transparent:true, opacity:.85});
+  const line = new THREE.Line(geo, mat);
+  scene.add(line);
+  return {line, geo, mat, n:pts.length};
+}
+
+// 糸巻き（地上の手元）。showcase の被写体にもなる
+function buildSpool(color){
+  const g = new THREE.Group();
+  const wood = new THREE.MeshStandardMaterial({color:0x6b4a2e, roughness:.8});
+  const rim  = new THREE.MeshStandardMaterial({color, roughness:.4,
+    emissive:new THREE.Color(color).multiplyScalar(.2)});
+  const core = new THREE.Mesh(new THREE.CylinderGeometry(.42,.42,1.5,16), wood);
+  core.rotation.z = Math.PI/2; g.add(core);
+  for(const s of [1,-1]){
+    const d = new THREE.Mesh(new THREE.CylinderGeometry(.78,.78,.16,20), rim);
+    d.rotation.z = Math.PI/2; d.position.x = .76*s; g.add(d);
+  }
+  const handle = new THREE.Mesh(new THREE.BoxGeometry(.14,.14,.7), wood);
+  handle.position.set(.9, .5, 0); g.add(handle);
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  return g;
+}
+
+const kites = [0,1].map(i=>{
+  const k = buildKite(KITE_COL[i]);
+  scene.add(k.group);
+  const s = buildString(KITE_COL[i]);
+  const sp = buildSpool(KITE_COL[i]);
+  sp.position.set(SPOOL_X[i], SPOOL_Y, SPOOL_Z);
+  scene.add(sp);
+  // 凧の状態。y は高さ、x は横の位置、vy/vx は速度
+  return {...k, str:s, spool:sp, idx:i,
+          x:SPOOL_X[i]*.6, y:18, vx:0, vy:0, pull:false, slack:0, glow:0};
+});
+
+// 手元を照らす光。夕方なので凧そのものも少し光らせたい
+const heroLight = new THREE.PointLight(0xffd8a0, 60, 60);
+heroLight.position.set(0, 14, 16);
+scene.add(heroLight);
+
+// ---------- もつれ（tangle）の見た目：二本の糸が交わる点に出る結び目 ----------
+const knot = new THREE.Mesh(new THREE.TorusKnotGeometry(.55,.19,52,8),
+  new THREE.MeshStandardMaterial({color:0xff5a3b, roughness:.4, emissive:0x551005}));
+knot.visible = false; scene.add(knot);
+
+// ---------- 鳥（イベント）：凧をかすめて押し下げる ----------
+function buildBird(){
+  const g = new THREE.Group();
+  const mat = new THREE.MeshStandardMaterial({color:0x14161f, roughness:.9});
+  const body = new THREE.Mesh(new THREE.CapsuleGeometry(.24,.9,5,10), mat);
+  body.rotation.z = Math.PI/2; g.add(body);
+  const wings = [];
+  for(const s of [1,-1]){
+    const w = new THREE.Mesh(new THREE.BoxGeometry(.12, .06, 2.2), mat);
+    w.position.z = 1.15*s; g.add(w); wings.push(w);
+  }
+  const beak = new THREE.Mesh(new THREE.ConeGeometry(.12,.4,8),
+    new THREE.MeshStandardMaterial({color:0xffb45a, roughness:.5}));
+  beak.rotation.z = -Math.PI/2; beak.position.x = .78; g.add(beak);
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  return {group:g, wings};
+}
+const birds = [];
+for(let i=0;i<3;i++){
+  const b = buildBird(); b.group.visible=false; scene.add(b.group);
+  birds.push({...b, active:false, t:0, y:0, dir:1, sp:18});
+}
+
+// ---------- 雷雲（イベント）：下に来た凧を強く吸い下げる ----------
+const stormCloud = (()=>{
+  const g = new THREE.Group();
+  const mat = new THREE.MeshStandardMaterial({color:0x2a2036, roughness:1,
+    emissive:0x1a0c24});
+  for(let i=0;i<7;i++){
+    const s = 3+Math.random()*3.4;
+    const b = new THREE.Mesh(new THREE.SphereGeometry(s, 12, 9), mat);
+    b.position.set((i-3)*s*.85, Math.random()*1.6, (Math.random()-.5)*4);
+    b.scale.y = .62; g.add(b);
+  }
+  // 稲妻：細い板を折れ線状に並べる。光らせるだけなので影は落とさない
+  const bolt = new THREE.Group();
+  let by = 0;
+  for(let i=0;i<5;i++){
+    const seg = new THREE.Mesh(new THREE.BoxGeometry(.22, 2.2, .06),
+      new THREE.MeshBasicMaterial({color:0xfff3c0}));
+    seg.position.set((Math.random()-.5)*1.6, by-1.1, 0);
+    seg.rotation.z = (Math.random()-.5)*.9;
+    bolt.add(seg); by -= 2;
+  }
+  bolt.visible = false; g.add(bolt);
+  g.visible = false; scene.add(g);
+  return {group:g, bolt, active:false, x:0};
+})();
+
+// ---------- game state ----------
+let running=false, dead=false, t=0, score=0;
+let timeScale=1;                 // スローモーション
+let deadAt=0;                    // 終わった時刻（タップ再開の待ち）
+let shake=0;                     // カメラの揺れ
+let camZ=34, camZTarget=34;      // 死ぬとカメラが寄る
+let windX=0, windTarget=0;       // 横風。凧を左右に流す
+let gust=0;                      // 突風イベントの残り時間
+let sinkMul=1;                   // 沈む速さの倍率（イベントで上がる）
+let tangle=0;                    // もつれている強さ 0..1
+let nextEventAt=9;
+let eventQueue=[];
+let killer=null;                 // 最後に落ちた凧（K.O.の演出用）
+
+const scoreEl = document.getElementById('score');
+const msgEl = document.getElementById('msg');
+const titleEl = document.getElementById('title');
+const bannerEl = document.getElementById('banner');
+const bannerText = bannerEl.querySelector('.b');
+const flashEl = document.getElementById('flash');
+const vignetteEl = document.getElementById('vignette');
+const koEl = document.getElementById('ko');
+const koScoreEl = koEl.querySelector('.finalScore');
+const reelEls = [document.getElementById('reelL'), document.getElementById('reelR')];
+const fillEls = reelEls.map(e=>e.querySelector('.fill'));
+
+// ---------- 調整値 ----------
+const MAX_Y = 34;          // これ以上は上がらない（引き続けても天井がある）
+const SINK   = 3.3;        // 放っておいたときの沈む速さ
+const LIFT   = 7.4;        // 引いているときの上がる速さ
+const TANGLE_DIST = 7.0;   // これより近づくと糸がからむ
+
+// ---------- presentation helpers ----------
+function banner(text, color){
+  bannerText.textContent = text;
+  bannerText.style.color = color;
+  bannerEl.classList.remove('go');
+  void bannerEl.offsetWidth;      // CSS アニメを頭から流し直す
+  bannerEl.style.opacity = 1;
+  bannerEl.classList.add('go');
+}
+function flash(color, strength, ms){
+  flashEl.style.background = color;
+  flashEl.style.transition = 'none';
+  flashEl.style.opacity = strength;
+  requestAnimationFrame(()=>{
+    flashEl.style.transition = `opacity ${ms}ms ease-out`;
+    flashEl.style.opacity = 0;
+  });
+}
+
+// ---------- events ----------
+// どれも「同じ困り方」にならないよう、効き方を変えてある：
+//   gust   = 横に流される（位置の問題）
+//   birds  = 一点を叩かれる（タイミングの問題）
+//   storm  = 片側だけ重くなる（配分の問題）
+//   heavy  = 全体が重くなる（速さの問題）
+//   swap   = 左右が入れ替わる（手の問題）
+const EVENTS = {
+  gust(){
+    banner('突風', '#9ffff0');
+    gust = 5.0;
+    windTarget = (Math.random()<.5 ? -1 : 1) * 7.5;
+    flash('#9ffff0', .3, 420);
+    shake = Math.max(shake, .3);
+    return 5.5;
+  },
+  birds(){
+    banner('カラスの群れ', '#ff8a2b');
+    // 三羽を時間差で放つ。高さはいま飛んでいる凧のあたりを狙う
+    birds.forEach((b, i)=>{
+      setTimeout(()=>{
+        if(!running || dead) return;
+        const target = kites[i % 2];
+        b.active = true; b.group.visible = true;
+        b.dir = Math.random()<.5 ? 1 : -1;
+        b.y = THREE.MathUtils.clamp(target.y + (Math.random()-.5)*3, 4, MAX_Y);
+        b.group.position.set(b.dir>0 ? -44 : 44, b.y, -6);
+        b.sp = 20 + Math.random()*8;
+        if(!SILENT) SND.bird();
+      }, i*620);
+    });
+    return 5.0;
+  },
+  storm(){
+    banner('雷雲', '#c07bff');
+    stormCloud.active = true;
+    stormCloud.group.visible = true;
+    // どちらか一方の真上に居座る。そちらの凧だけ余計に沈む
+    stormCloud.x = kites[Math.random()<.5 ? 0 : 1].x;
+    stormCloud.group.position.set(stormCloud.x, MAX_Y + 5, -14);
+    return 7.0;
+  },
+  heavy(){
+    banner('夜露で糸が重い', '#ffd23b');
+    sinkMul = 1.75;                 // 両方いっぺんに沈みが速くなる
+    flash('#ffd23b', .22, 400);
+    return 6.0;
+  },
+  swap(){
+    banner('糸がたすき掛け', '#ff5a3b');
+    // 凧を左右そっくり入れ替える。操作は変わらないので手が逆になる
+    const a = kites[0], b = kites[1];
+    [a.x, b.x] = [b.x, a.x];
+    [a.vx, b.vx] = [b.vx, a.vx];
+    flash('#ff5a3b', .3, 380);
+    shake = Math.max(shake, .35);
+    return 4.5;
+  },
+};
+const EVENT_NAMES = Object.keys(EVENTS);
+window.__events = EVENT_NAMES.slice();
+
+// 録画・デバッグ用フック：名前を指定してイベントを起こす。
+// すでに終わっている run では false を返すので、撮影スクリプトは
+// K.O. 画面にイベントを撃ち込まずに次の run を待てる。
+window.__ev = name => {
+  if(!running || dead || !EVENTS[name]) return false;
+  const busy = EVENTS[name]();
+  if(!SILENT) SND.event();
+  nextEventAt = t + busy + 5;
+  return true;
+};
+window.__alive = () => running && !dead;
+window.__kill = () => { if(running && !dead){ killer = kites[0]; dead=true; gameOver(); } };
+window.__recStop = () => SND.recStop();
+window.__snd = () => ({enabled: SND.enabled, silent: SILENT});
+window.__probe = () => ({t:+t.toFixed(2), tangle:+tangle.toFixed(2),
+  y:[+kites[0].y.toFixed(2), +kites[1].y.toFixed(2)],
+  pull:[kites[0].pull, kites[1].pull], next:+nextEventAt.toFixed(2)});
+window.__fov = () => +camera.fov.toFixed(1);
+
+function refillEventQueue(){
+  eventQueue = EVENT_NAMES.slice();
+  for(let i=eventQueue.length-1;i>0;i--){       // run ごとに順番が変わるよう混ぜる
+    const j = Math.floor(Math.random()*(i+1));
+    [eventQueue[i],eventQueue[j]]=[eventQueue[j],eventQueue[i]];
+  }
+}
+function triggerEvent(){
+  if(!eventQueue.length) refillEventQueue();
+  const name = eventQueue.pop();
+  const busy = EVENTS[name]();
+  if(!SILENT) SND.event();
+  nextEventAt = t + busy + 5 + Math.random()*4;  // イベントの間に息をつがせる
+}
+
+// ---------- reset ----------
+function reset(){
+  kites.forEach((k,i)=>{
+    k.x = SPOOL_X[i]*.65; k.y = 20 + i*1.5;
+    k.vx = 0; k.vy = 0; k.pull = false; k.slack = 0; k.glow = 0;
+    k.group.position.set(k.x, k.y, -6);
+    k.group.rotation.set(0,0,0);
+    k.group.scale.set(1,1,1);
+    k.group.visible = true;
+    k.str.line.visible = true;
+  });
+  for(const b of birds){ b.active=false; b.group.visible=false; }
+  stormCloud.active=false; stormCloud.group.visible=false; stormCloud.bolt.visible=false;
+  knot.visible = false;
+  t=0; score=0; dead=false; killer=null;
+  timeScale=1; shake=0; camZ=34; camZTarget=34;
+  windX=0; windTarget=0; gust=0; sinkMul=1; tangle=0;
+  nextEventAt = 9;
+  refillEventQueue();
+  msgEl.textContent='';
+  scoreEl.textContent='0';
+  koEl.classList.remove('on');
+  vignetteEl.style.transition='opacity .3s'; vignetteEl.style.opacity=0;
+  camera.position.set(0, 14, camZ);
+  reelEls.forEach(e=>e.classList.remove('warn','pull'));
+}
+
+const startBtn = document.getElementById('startBtn');
+
+// ---------- sound: everything synthesised, no audio files ----------
+// 一枚の HTML で完結させる決まりを守りつつ、音がゲームに反応する：
+// ベースは速さについてきて、イベントで刺し、game over で全部を引っ込める。
+const SND = (() => {
+  let ctx = null, master = null, musicGain = null, on = true, started = false;
+  let step = 0, timer = null, tempo = 0.25;
+
+  // ペンタトニックは自分自身と喧嘩しないので、テンポが player の
+  // 速さにつれて動いても濁らない。
+  // minor pentatonic, driving — a chase that never lets up
+  const SCALE = [0, 3, 5, 7, 10];
+  const ROOT = 196;
+  const BASS = 'square', LEAD = 'sawtooth';
+  const hz = (deg, oct = 0) =>
+    ROOT * Math.pow(2, oct + Math.floor(deg / SCALE.length)) *
+    Math.pow(2, SCALE[((deg % SCALE.length) + SCALE.length) % SCALE.length] / 12);
+
+  function ensure() {
+    if (ctx) return ctx;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    ctx = new AC();
+    master = ctx.createGain();
+    master.gain.value = 0.32;
+    master.connect(ctx.destination);
+    musicGain = ctx.createGain();
+    musicGain.gain.value = 1;
+    musicGain.connect(master);
+    return ctx;
+  }
+
+
+  // ---- 録音用の分岐（?rec=1）----
+  // Playwright の録画には音声が入らないので、ゲーム自身に master バスを
+  // 録らせる。鳴っているものそのものなので映像と必ず同期する。
+  let recDest = null, recorder = null, recChunks = [];
+  function recStart() {
+    if (!ctx || recorder) return;
+    recDest = ctx.createMediaStreamDestination();
+    master.connect(recDest);
+    recorder = new MediaRecorder(recDest.stream, {mimeType: 'audio/webm'});
+    recorder.ondataavailable = e => { if (e.data.size) recChunks.push(e.data); };
+    recorder.start();
+  }
+  function recStop() {
+    return new Promise(res => {
+      if (!recorder) return res(null);
+      recorder.onstop = async () => {
+        const blob = new Blob(recChunks, {type: 'audio/webm'});
+        const buf = await blob.arrayBuffer();
+        res(Array.from(new Uint8Array(buf)));
+      };
+      recorder.stop();
+    });
+  }
+
+  function blip(freq, dur, type = 'square', vol = 0.25, dest = null, slideTo = null) {
+    if (!ctx || !on) return;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, ctx.currentTime);
+    if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, ctx.currentTime + dur);
+    // 短いアタックを入れておくと、どの音も頭でクリックしない
+    g.gain.setValueAtTime(0, ctx.currentTime);
+    g.gain.linearRampToValueAtTime(vol, ctx.currentTime + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
+    o.connect(g); g.connect(dest || master);
+    o.start(); o.stop(ctx.currentTime + dur + 0.02);
+  }
+
+  function noise(dur, vol = 0.2, hp = 800) {
+    if (!ctx || !on) return;
+    const n = Math.floor(ctx.sampleRate * dur);
+    const buf = ctx.createBuffer(1, n, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    const f = ctx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = hp;
+    const g = ctx.createGain(); g.gain.value = vol;
+    src.connect(f); f.connect(g); g.connect(master);
+    src.start();
+  }
+
+  // --- the loop: a walking bass plus an offbeat blip ---
+  function tick() {
+    if (!ctx || !on) return;
+    const bar = step % 16;
+    // straight driving pulse: bass on every beat, lead stabs offbeat
+    if (bar % 2 === 0) blip(hz(bar % 8 === 0 ? 0 : 1, -1), tempo * 1.1, BASS, 0.30, musicGain);
+    if (bar % 8 === 5) blip(hz(4, 0), tempo * 0.6, LEAD, 0.09, musicGain);
+    if (bar % 4 === 2) noise(0.04, 0.05, 5000);
+    step++;
+    timer = setTimeout(tick, tempo * 1000);
+  }
+
+  return {
+    // ユーザー操作の中から呼ぶこと。そうしないとブラウザに止められる
+    start() {
+      if (!ensure() || started) return;
+      if (ctx.state === 'suspended') ctx.resume();
+      started = true; step = 0; tick();
+    },
+    stop() { if (timer) { clearTimeout(timer); timer = null; } started = false; },
+    /** speed the music up with the game; 1 = starting pace */
+    setPace(mult) { tempo = Math.max(0.11, 0.25 / Math.max(0.2, mult)); },
+    duck(sec = 1.6) {                                      // for game over
+      if (!ctx) return;
+      musicGain.gain.cancelScheduledValues(ctx.currentTime);
+      musicGain.gain.setValueAtTime(musicGain.gain.value, ctx.currentTime);
+      musicGain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + sec);
+    },
+    unduck() {
+      if (!ctx) return;
+      musicGain.gain.cancelScheduledValues(ctx.currentTime);
+      musicGain.gain.setValueAtTime(0.0001, ctx.currentTime);
+      musicGain.gain.exponentialRampToValueAtTime(1, ctx.currentTime + 0.4);
+    },
+    // --- one-shots ---
+    // 音は互いにかぶらないよう、音域と形をはっきり分けてある。
+    // 糸を引く＝上がるピッチ、離す＝下がるピッチ。耳だけで状態が分かる。
+    pull(side)   { ensure(); blip(hz(side ? 3 : 1, 0), 0.10, LEAD, 0.15, null,
+                                  hz(side ? 6 : 4, 1)); },
+    release(side){ ensure(); blip(hz(side ? 5 : 3, 1), 0.09, 'triangle', 0.10, null,
+                                  hz(side ? 2 : 0, 0)); },
+    tangle() { ensure(); blip(120, 0.22, 'square', 0.20, null, 74);
+               noise(0.10, 0.10, 1400); },
+    untangle(){ ensure(); blip(hz(0,0), 0.16, 'triangle', 0.16, null, hz(4,1)); },
+    bird()   { ensure(); [0, 70].forEach((ms,i)=>
+                 setTimeout(()=> blip(1500 - i*260, 0.07, 'square', 0.12), ms)); },
+    warn()   { ensure(); blip(hz(1,0), 0.12, 'square', 0.16); },
+    event()  { ensure(); [0, 90, 180].forEach((ms, i) =>
+                 setTimeout(() => blip(hz(2 + i, 0), 0.18, 'sawtooth', 0.20), ms)); },
+    hit()    { ensure(); noise(0.35, 0.30, 200);
+               blip(180, 0.5, 'sawtooth', 0.28, null, 40); },
+    over()   { ensure(); [0, 140, 280, 460].forEach((ms, i) =>
+                 setTimeout(() => blip(hz(-i, -1), 0.42, 'triangle', 0.26), ms)); },
+    recStart() { ensure(); recStart(); },
+    recStop() { return recStop(); },
+    toggle() { on = !on; if (!on) { this.stop(); } else { this.start(); } return on; },
+    get enabled() { return on; },
+  };
+})();
+
+// --- 操作はすべてここを通す。キーボードとタッチがずれないようにするため ---
+function startRun(){
+  titleEl.classList.add('hidden'); reset(); running=true;
+  if(!SILENT){ SND.unduck(); SND.start(); if(REC) SND.recStart(); }
+}
+// side: 0 = 左の凧, 1 = 右の凧
+function pullOn(side){
+  const k = kites[side];
+  if(!running || dead || k.pull) return;
+  k.pull = true;
+  reelEls[side].classList.add('pull');
+  if(!SILENT) SND.pull(side);
+}
+function pullOff(side){
+  const k = kites[side];
+  if(!k.pull) return;
+  k.pull = false;
+  reelEls[side].classList.remove('pull');
+  if(running && !dead && !SILENT) SND.release(side);
+}
+
+const muteBtn = document.getElementById('mute');
+function toggleMute(){ muteBtn.textContent = SND.toggle() ? '🔊' : '🔇'; }
+muteBtn.addEventListener('click', toggleMute);
+muteBtn.addEventListener('touchend', e=>{ e.preventDefault(); toggleMute(); },
+                         {passive:false});
+if(SILENT) muteBtn.style.display='none';   // 自動モードは音を出さない
+addEventListener('keydown', e=>{ if(e.code==='KeyM') toggleMute(); });
+
+startBtn.addEventListener('click', startRun);
+// タッチでも必ず始まるようにする。click だけだと取りこぼす端末がある
+startBtn.addEventListener('touchend', e=>{ e.preventDefault(); startRun(); },
+                          {passive:false});
+
+addEventListener('keydown', e=>{
+  if(!running){
+    if(e.code==='Space'||e.code==='Enter'){
+      // K.O. のあとは少し読ませてから再開させる
+      if(!dead || Date.now()-deadAt > 1200) startRun();
+    }
+    return;
+  }
+  if(e.repeat) return;                      // 押しっぱなしの連打は無視
+  if(e.code==='ArrowLeft' ||e.code==='KeyA') pullOn(0);
+  if(e.code==='ArrowRight'||e.code==='KeyD') pullOn(1);
+});
+addEventListener('keyup', e=>{
+  if(e.code==='ArrowLeft' ||e.code==='KeyA') pullOff(0);
+  if(e.code==='ArrowRight'||e.code==='KeyD') pullOff(1);
+});
+// タブを離れたら両手を離す（押しっぱなしのまま固まらないように）
+addEventListener('blur', ()=>{ pullOff(0); pullOff(1); });
+
+// --- touch: 画面の左半分＝左の凧、右半分＝右の凧。押している間だけ引く ---
+// 見る人の多くはスマホから来るので、キーボード無しで成立させる。
+// 指を二本置けば両方引ける（ただし後述のとおり両引きは続かない）。
+(function(){
+  const canvas = renderer.domElement;
+  const touchSide = new Map();     // touch identifier -> side
+
+  function sideOf(x){ return x < innerWidth/2 ? 0 : 1; }
+
+  canvas.addEventListener('touchstart', e=>{
+    if(dead){
+      // K.O. のアニメを読ませてから、タップで再開
+      if(!AUTO && Date.now()-deadAt > 1500) startRun();
+      return;
+    }
+    if(!running){ startRun(); return; }
+    for(const t of e.changedTouches){
+      const s = sideOf(t.clientX);
+      touchSide.set(t.identifier, s);
+      pullOn(s);
+    }
+  }, {passive:true});
+
+  // 指を左右にすべらせたら、引く方も乗り換える
+  canvas.addEventListener('touchmove', e=>{
+    if(!running || dead) return;
+    for(const t of e.changedTouches){
+      if(!touchSide.has(t.identifier)) continue;
+      const s = sideOf(t.clientX), was = touchSide.get(t.identifier);
+      if(s !== was){
+        touchSide.set(t.identifier, s);
+        // その側に他の指が残っていなければ離す
+        if(![...touchSide.values()].includes(was)) pullOff(was);
+        pullOn(s);
+      }
+    }
+  }, {passive:true});
+
+  function endTouch(e){
+    for(const t of e.changedTouches){
+      if(!touchSide.has(t.identifier)) continue;
+      const s = touchSide.get(t.identifier);
+      touchSide.delete(t.identifier);
+      if(![...touchSide.values()].includes(s)) pullOff(s);
+    }
+  }
+  canvas.addEventListener('touchend', endTouch, {passive:true});
+  canvas.addEventListener('touchcancel', endTouch, {passive:true});
+
+  // タイトルは canvas の上にあるので、タップが canvas まで届かない。
+  // タイトル自身からも始められるようにする。
+  titleEl.addEventListener('touchend', e=>{
+    if(!running){ e.preventDefault(); startRun(); }
+  }, {passive:false});
+
+  // ゲーム中のタップをスクロールやダブルタップ拡大にさせない
+  canvas.addEventListener('touchmove', e=>e.preventDefault(), {passive:false});
+})();
+
+// autoplay mode for recording: ?auto=1
+// 録画では K.O. を長めに見せる: ?hold=9000
+const RETRY_MS = Math.max(1200, parseInt(QS.get('hold')||'4200', 10));
+// ?noev=1 はイベント無しの静かな run。ナレーションの下敷き用
+const NOEV = QS.get('noev')==='1';
+if(AUTO){ setTimeout(startRun, 1200); }   // startRun 経由にする（音/録音も始まる）
+
+// ---------- autopilot ----------
+// 人が考えることと同じ判断をする：低いほう・沈んでいるほうを引く。
+// 両方高ければ手を離して、もつれる前に距離をとる。
+let autoHold = 0;                 // いま握っている側を、少しの間は握り続ける
+function autoPilot(dt){
+  autoHold -= dt;
+  const [a, b] = kites;
+  // 「あと何秒で地面か」を見積もる。引いていなければ沈む一方
+  const danger = k => (k.y - GROUND_Y) / Math.max(.5, SINK*sinkMul + (tangle>.2?2.4:0));
+  const da = danger(a), db = danger(b);
+
+  // まず、どちらかが天井近くまで上がっていたら離す（引き続ける意味がない）
+  const want = [];
+  if(a.y < MAX_Y-2 && (da < db || b.y > MAX_Y-4)) want.push(0);
+  if(b.y < MAX_Y-2 && (db <= da || a.y > MAX_Y-4)) want.push(1);
+
+  // もつれているときは、上げるより先に離して距離をとりたい。
+  // ただし本当に低いほうは見捨てられないので、危ない側だけ引く。
+  let pick;
+  if(tangle > .25){
+    pick = da < db ? 0 : 1;
+    if(Math.min(da, db) > 3.2) pick = -1;      // 両方まだ余裕があるなら手を離す
+  } else {
+    pick = da < db ? 0 : 1;
+    // 危ないほうが十分高く、もう片方も余裕なら、あえて休む
+    if(Math.min(da,db) > 4.6 && Math.max(a.y,b.y) > MAX_Y-6) pick = -1;
+    if(pick>=0 && kites[pick].y > MAX_Y-2) pick = pick===0 ? 1 : 0;
+  }
+
+  // 手を切り替えすぎるとどちらも上がらないので、短い保持時間を入れる
+  if(autoHold > 0 && (kites[0].pull || kites[1].pull)){
+    const cur = kites[0].pull ? 0 : 1;
+    // いま握っていない側が本当に危ないときだけ、即座に乗り換える
+    const other = cur===0 ? 1 : 0;
+    if(danger(kites[other]) > 1.5) return;
+  }
+  autoHold = .18;
+
+  for(const s of [0,1]){
+    if(s === pick) pullOn(s); else pullOff(s);
+  }
+}
+
+// ---------- showcase mode ----------
+// 被写体を一つだけ暗い舞台に置いてターンテーブルに載せる。
+// ゲームで使っている実物のメッシュなので、説明と画面がずれない。
+const SHOWCASE = QS.get('showcase');
+const SUBJECTS = ['kite','kite2','spool','knot','bird','storm','ground'];
+window.__subjects = SUBJECTS.slice();
+const showcase = {group:null, pivot:null, spin:.55, label:'', flat:false};
+
+function buildShowcase(name){
+  const g = new THREE.Group();
+  let label = '', spin = .55, flat = false;
+  if(name==='kite'){
+    const k = buildKite(KITE_COL[0]); k.group.scale.set(1.1,1.1,1.1);
+    g.add(k.group); label = '凧（ひだり）'; spin = .6;
+  } else if(name==='kite2'){
+    const k = buildKite(KITE_COL[1]); k.group.scale.set(1.1,1.1,1.1);
+    g.add(k.group); label = '凧（みぎ）'; spin = .6;
+  } else if(name==='spool'){
+    const s = buildSpool(KITE_COL[0]); s.scale.set(2.4,2.4,2.4);
+    g.add(s); label = '糸巻き'; spin = .8;
+  } else if(name==='knot'){
+    const m = new THREE.Mesh(knot.geometry, knot.material.clone());
+    m.scale.set(2.6,2.6,2.6); g.add(m); label = 'もつれ'; spin = 1.0;
+  } else if(name==='bird'){
+    const b = buildBird(); b.group.scale.set(1.6,1.6,1.6);
+    b.wings[0].rotation.x = .5; b.wings[1].rotation.x = -.5;   // 羽ばたいた形で止める
+    g.add(b.group); label = 'カラス'; spin = .7;
+  } else if(name==='storm'){
+    const c = new THREE.Group();
+    const mat = new THREE.MeshStandardMaterial({color:0x2a2036, roughness:1, emissive:0x1a0c24});
+    for(let i=0;i<6;i++){
+      const s = 1.1+Math.random()*1.0;
+      const m = new THREE.Mesh(new THREE.SphereGeometry(s, 14, 10), mat);
+      m.position.set((i-2.5)*s*.9, Math.random()*.5, (Math.random()-.5)*1.2);
+      m.scale.y = .66; c.add(m);
+    }
+    const bolt = new THREE.Mesh(new THREE.BoxGeometry(.3, 2.4, .1),
+      new THREE.MeshBasicMaterial({color:0xfff3c0}));
+    bolt.position.y = -2.0; bolt.rotation.z = .3; c.add(bolt);
+    g.add(c); label = '雷雲'; spin = .45;
+  } else if(name==='ground'){
+    // 「触れたら終わり」の地面。丘と赤い線をひとまとめに見せる
+    const c = new THREE.Group();
+    const plate = new THREE.Mesh(new THREE.BoxGeometry(9, .5, 5),
+      new THREE.MeshStandardMaterial({color:0x1d2438, roughness:.95}));
+    c.add(plate);
+    const line = new THREE.Mesh(new THREE.BoxGeometry(9.1, .06, .5),
+      new THREE.MeshBasicMaterial({color:0xff5a3b}));
+    line.position.set(0, .28, 2.0); c.add(line);
+    for(let i=0;i<4;i++){
+      const h = .9+Math.random()*1.3;
+      const m = new THREE.Mesh(new THREE.ConeGeometry(.9, h, 5),
+        new THREE.MeshStandardMaterial({color:0x151b2c, roughness:1}));
+      m.position.set(-3+i*2+Math.random(), .25+h/2, -1.4-Math.random());
+      c.add(m);
+    }
+    g.add(c); label = '地面'; spin = .45;
+  }
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  scene.add(g);
+
+  // 被写体を原点にそろえ、バウンディングボックスに合わせてカメラを引く。
+  // こうすると大きさに関わらず、どの被写体も同じ収まり方になる。
+  const box = new THREE.Box3().setFromObject(g);
+  const size = box.getSize(new THREE.Vector3());
+  const mid = box.getCenter(new THREE.Vector3());
+  g.position.sub(mid);                       // 原点に centre
+  const reach = Math.max(size.x, size.y) * 0.5;
+  const fov = THREE.MathUtils.degToRad(camera.fov);
+  const dist = (reach / Math.tan(fov/2)) * 1.75 + 1.0;   // 1.75 = 余白
+  camera.position.set(0, size.y*0.10, dist);
+
+  // 文字を置く側を空けるために被写体を横へずらす。ずらす量は親に持たせる
+  // ――ずれた group をそのまま回すと、その場で回らず公転してしまう。
+  const bias = parseFloat(QS.get('sx') || '0');
+  const pivot = new THREE.Group();
+  pivot.position.x = -bias * reach * 1.15;
+  scene.add(pivot);
+  pivot.add(g);
+  showcase.group = g; showcase.pivot = pivot;
+  showcase.spin = spin; showcase.label = label; showcase.flat = flat;
+}
+
+fitCamera();          // ここまでで SHOWCASE は確定している
+if(SHOWCASE){
+  titleEl.classList.add('hidden');
+  buildShowcase(SHOWCASE);
+  scoreEl.textContent = '';
+  msgEl.textContent = QS.get('nolabel')==='1' ? '' : showcase.label;
+  msgEl.style.fontSize = 'clamp(18px,5vw,30px)';
+  msgEl.style.letterSpacing = '6px';
+  document.getElementById('reels').style.display = 'none';
+  // 何も置かない暗い舞台：画面には被写体だけ
+  ground.visible=false; deathLine.visible=false; sunDisc.visible=false;
+  for(const h of hills) h.visible=false;
+  for(const c of clouds) c.group.visible=false;
+  for(const f of flecks) f.visible=false;
+  for(const k of kites){ k.group.visible=false; k.str.line.visible=false; k.spool.visible=false; }
+  knot.visible=false;
+  scene.fog = null;
+  scene.background = new THREE.Color(0x0b0d16);
+  heroLight.position.set(2.6, 3.2, 4.2);
+  heroLight.intensity = 140;
+  hemi.intensity = 3.4;
+  sun.intensity = 4.2; sun.position.set(2.5, 6, 6);
+  // 反対側からの補助光。奥の面が真っ黒にならないように
+  const fill = new THREE.PointLight(0x88aaff, 45, 26);
+  fill.position.set(-4.5, 2.4, 3.6); scene.add(fill);
+}
+// 撮影スクリプトがターンテーブルを回し、被写体を差し替えられるように
+window.__showcase = name => {
+  if(showcase.pivot) scene.remove(showcase.pivot);   // pivot が group を持っている
+  buildShowcase(name);
+  msgEl.textContent = showcase.label;
+};
+
+// ---------- 糸の描き直し ----------
+// 引いているときはぴんと張った直線、離しているときは垂れた曲線。
+// 「いま張っているのはどちらか」が画面だけで読めることが大事。
+const _v = new THREE.Vector3();
+function updateString(k){
+  const n = k.str.n;
+  const pos = k.str.geo.attributes.position;
+  const ax = SPOOL_X[k.idx], ay = SPOOL_Y, az = SPOOL_Z;
+  const bx = k.group.position.x, by = k.group.position.y - 2.4, bz = k.group.position.z;
+  const sag = k.slack * 5.0;                 // たるみの深さ
+  for(let i=0;i<n;i++){
+    const u = i/(n-1);
+    // 直線を引いてから、中央がいちばん下がる形でたるませる
+    const x = ax + (bx-ax)*u;
+    const y = ay + (by-ay)*u - Math.sin(u*Math.PI)*sag;
+    const z = az + (bz-az)*u;
+    pos.setXYZ(i, x, y, z);
+  }
+  pos.needsUpdate = true;
+  k.str.geo.computeBoundingSphere();
+  // 張っている糸は明るく、たるんだ糸はくすむ
+  k.str.mat.opacity = .35 + (1-k.slack)*.55;
+}
+
+// ---------- loop ----------
+const clock = new THREE.Clock();
+function tick(){
+  requestAnimationFrame(tick);
+  const raw = Math.min(clock.getDelta(), .05);
+  const dt = raw * timeScale;
+
+  if(SHOWCASE){
+    if(showcase.group){
+      if(showcase.flat) showcase.group.rotation.z += raw*showcase.spin;
+      else showcase.group.rotation.y += raw*showcase.spin;
+    }
+    camera.lookAt(0, 0, 0);        // 被写体はずれていても、カメラは軸上のまま
+    renderer.render(scene, camera);
+    return;
+  }
+
+  // 背景は死んでいる間も動かす（止まると絵が死ぬ）
+  for(const c of clouds){
+    c.group.position.x += c.sp*raw*(1 + windX*.08);
+    if(c.group.position.x > 80) c.group.position.x = -80;
+    if(c.group.position.x < -80) c.group.position.x = 80;
+  }
+  for(const f of flecks){
+    f.position.x += (6 + windX*1.3)*raw;
+    f.position.y -= 1.4*raw;
+    f.rotation.z += raw*3;
+    if(f.position.x > 46 || f.position.y < 0){
+      f.position.set(-46, 2+Math.random()*32, -8-Math.random()*60);
+    }
+  }
+
+  if(running && !dead){
+    t += dt;
+    // スコアは生きているあいだ増え続ける。二つとも高いほど速く増える
+    const heightBonus = (kites[0].y + kites[1].y) / (MAX_Y*2);
+    score += dt * (22 + heightBonus*38);
+    scoreEl.textContent = Math.floor(score);
+    // 音楽は経過時間についてくる。長生きするほど急かされる
+    if(!SILENT) SND.setPace(1 + t*0.022);
+    if(AUTO) autoPilot(raw);
+
+    // --- events ---
+    if(t > nextEventAt && !NOEV) triggerEvent();
+
+    // 突風：横風が吹き、カメラの画角も少し広がる
+    if(gust>0){
+      gust -= dt;
+      camera.fov += (camera.__base*1.08 - camera.fov)*Math.min(1,dt*4);
+      camera.updateProjectionMatrix();
+      if(gust<=0) windTarget = 0;
+    } else if(camera.fov > camera.__base + .05){
+      camera.fov += (camera.__base - camera.fov)*Math.min(1,dt*3);
+      camera.updateProjectionMatrix();
+    }
+    windX += (windTarget - windX)*Math.min(1, dt*1.4);
+    // 常時かかる弱い揺らぎ。まっすぐ上がらないのはこれのせい
+    const drift = Math.sin(t*.7)*1.6 + Math.sin(t*1.9+1.3)*.9;
+
+    // 夜露（heavy）はだんだん元に戻る
+    if(sinkMul > 1) sinkMul = Math.max(1, sinkMul - dt*.14);
+
+    // --- カラス：横切りながら、近くの凧を叩き落とす ---
+    for(const b of birds){
+      if(!b.active) continue;
+      b.t += raw;
+      b.group.position.x += b.dir*b.sp*raw;
+      b.group.position.y = b.y + Math.sin(b.t*4)*.8;
+      b.group.rotation.y = b.dir>0 ? 0 : Math.PI;
+      const flap = Math.sin(b.t*16);
+      b.wings[0].rotation.x =  flap*.7;
+      b.wings[1].rotation.x = -flap*.7;
+      for(const k of kites){
+        const d = Math.hypot(k.group.position.x - b.group.position.x,
+                             k.y - b.group.position.y);
+        if(d < 3.4){
+          k.vy -= 26*raw;                 // すれ違いざまに押し下げる
+          k.glow = Math.max(k.glow, .5);
+        }
+      }
+      if(Math.abs(b.group.position.x) > 50){ b.active=false; b.group.visible=false; }
+    }
+
+    // --- 雷雲：真下に来た凧だけを強く吸い下げる ---
+    if(stormCloud.active){
+      stormCloud.group.position.y = MAX_Y + 4 + Math.sin(t*1.2)*.8;
+      // ゆっくり横に流れるので、下に居続けるかどうかは player 次第
+      stormCloud.x += windX*raw*.35 + Math.sin(t*.55)*raw*2.4;
+      stormCloud.x = THREE.MathUtils.clamp(stormCloud.x, -18, 18);
+      stormCloud.group.position.x = stormCloud.x;
+      let struck = false;
+      for(const k of kites){
+        if(Math.abs(k.group.position.x - stormCloud.x) < 7){
+          k.vy -= 9*dt;
+          struck = true;
+        }
+      }
+      // 稲妻は当たっている間だけ、ちらつかせる
+      stormCloud.bolt.visible = struck && Math.sin(t*22) > .3;
+      stormCloud.bolt.position.y = -6;
+    }
+
+    // --- 凧そのものの動き ---
+    let lowWarn = [false,false];
+    for(const k of kites){
+      // 上下：引けば上がり、離せば沈む。もつれていると余計に沈む
+      const sink = SINK*sinkMul + tangle*3.2;
+      if(k.pull){
+        k.vy += (LIFT - k.vy)*Math.min(1, dt*5.0);
+        k.slack += (0 - k.slack)*Math.min(1, dt*8);      // 糸が張る
+        // 引いていると、糸に引かれて手元の方向へ寄る
+        k.vx += (SPOOL_X[k.idx]*.55 - k.x)*dt*1.5;
+      } else {
+        k.vy += (-sink - k.vy)*Math.min(1, dt*3.0);
+        k.slack += (1 - k.slack)*Math.min(1, dt*3);      // 糸がたるむ
+      }
+      // 天井：これ以上は上がらないので、引き続けるだけでは勝てない
+      if(k.y > MAX_Y && k.vy > 0) k.vy *= .3;
+      k.y += k.vy*dt;
+
+      // 左右：風と揺らぎで流される。高いほど風を受ける
+      const exposure = .35 + (k.y/MAX_Y)*.85;
+      k.vx += (windX*exposure + drift*.35 - k.vx*1.6)*dt*2.2;
+      k.x += k.vx*dt;
+      k.x = THREE.MathUtils.clamp(k.x, -22, 22);
+
+      k.group.position.set(k.x, k.y, -6 - (k.y/MAX_Y)*3);
+      // 姿勢：横に流れるほど傾き、引いているときは上を向く
+      k.group.rotation.z = THREE.MathUtils.clamp(-k.vx*.05, -.5, .5);
+      k.group.rotation.x = THREE.MathUtils.clamp(-k.vy*.03, -.35, .35);
+      // しっぽ：時間差で揺れるので、一本の帯のように見える
+      k.tail.forEach((seg, i)=>{
+        const ph = t*4 - i*.5;
+        seg.position.x = Math.sin(ph)*(.25 + i*.09) - k.vx*.06*(i+1)*.12;
+        seg.rotation.z = Math.sin(ph)*.4;
+      });
+      if(k.glow > 0) k.glow = Math.max(0, k.glow - raw*1.6);
+
+      // 高さの計。残り 30% で赤くする
+      const frac = THREE.MathUtils.clamp(k.y / MAX_Y, 0, 1);
+      fillEls[k.idx].style.width = (frac*100).toFixed(1)+'%';
+      lowWarn[k.idx] = frac < .30;
+
+      updateString(k);
+    }
+
+    // 警告音は、初めて赤に入った瞬間だけ鳴らす（鳴りっぱなしは耳に残らない）
+    for(let i=0;i<2;i++){
+      const was = reelEls[i].classList.contains('warn');
+      if(lowWarn[i] !== was){
+        reelEls[i].classList.toggle('warn', lowWarn[i]);
+        if(lowWarn[i] && !SILENT) SND.warn();
+      }
+    }
+
+    // --- もつれ：二つの凧が近づきすぎると糸がからむ ---
+    const dx = kites[0].group.position.x - kites[1].group.position.x;
+    const dy = kites[0].y - kites[1].y;
+    const dist = Math.hypot(dx, dy);
+    const wasTangled = tangle > .25;
+    if(dist < TANGLE_DIST){
+      tangle = Math.min(1, tangle + dt*(1 - dist/TANGLE_DIST)*2.2);
+    } else {
+      tangle = Math.max(0, tangle - dt*1.1);
+    }
+    const isTangled = tangle > .25;
+    if(isTangled !== wasTangled && !SILENT){
+      isTangled ? SND.tangle() : SND.untangle();
+    }
+    // からんでいると、互いに引き寄せられる（自分では解けない、離すしかない）
+    if(tangle > 0){
+      const pull = tangle*1.6*dt;
+      kites[0].vx -= Math.sign(dx)*pull*4;
+      kites[1].vx += Math.sign(dx)*pull*4;
+    }
+    // 結び目を糸の交点あたりに置く
+    knot.visible = tangle > .15;
+    if(knot.visible){
+      knot.position.set((kites[0].group.position.x + kites[1].group.position.x)/2,
+                        (kites[0].y + kites[1].y)/2 - 2.0, -6);
+      knot.scale.setScalar(.6 + tangle*.9);
+      knot.rotation.x += raw*2.2; knot.rotation.y += raw*3.1;
+      knot.material.opacity = tangle;
+    }
+
+    // --- 地面に触れたら終わり ---
+    for(const k of kites){
+      if(k.y <= GROUND_Y + 1.2){
+        killer = k; dead = true; gameOver(); break;
+      }
+    }
+
+    // 手元の光は、二つの凧の中間を照らす
+    heroLight.position.set((kites[0].x + kites[1].x)/2, 16, 18);
+    // 死線は player が低いほど強く光る
+    const lowest = Math.min(kites[0].y, kites[1].y);
+    deathLine.material.opacity = .3 + (1 - THREE.MathUtils.clamp(lowest/14,0,1))*.6;
+  }
+
+  // --- 死んだあとの演出：スローになり、落ちた凧がくずおれる ---
+  if(dead){
+    timeScale += (0 - timeScale)*Math.min(1, raw*1.1);
+    if(killer){
+      killer.group.rotation.z += raw*3.0;
+      killer.group.position.y = Math.max(GROUND_Y+.3, killer.group.position.y - raw*3);
+      updateString(killer);
+    }
+  }
+
+  // --- カメラ（死んでいる間も動く。寄りと揺れを見せたいので） ---
+  camZ += (camZTarget - camZ)*Math.min(1, raw*2.4);
+  const midX = (kites[0].group.position.x + kites[1].group.position.x)/2;
+  const midY = (kites[0].group.position.y + kites[1].group.position.y)/2;
+  // 二つの凧が離れているほど引く。両方を画面に収めるため
+  const spread = Math.abs(kites[0].group.position.x - kites[1].group.position.x);
+  const want = camZ + spread*.42;
+  camera.position.x += (midX*.35 - camera.position.x)*Math.min(1, raw*2.2);
+  // 縦は上げすぎない。両方の凧が高く上がったときでも、地面と死線は
+  // 必ず画面に残す――触れたら終わるものが見えないのでは判断できない。
+  const camYWant = Math.min(midY*.42 + 4.5, 11.5);
+  camera.position.y += (camYWant - camera.position.y)*Math.min(1, raw*2.0);
+  camera.position.z += (want - camera.position.z)*Math.min(1, raw*2.2);
+  if(shake>0){
+    shake = Math.max(0, shake - raw*.9);
+    camera.position.x += (Math.random()-.5)*shake*3;
+    camera.position.y += (Math.random()-.5)*shake*3;
+  }
+  camera.lookAt(midX*.5, THREE.MathUtils.clamp(midY*.7, 6, 15), -8);
+
+  renderer.render(scene, camera);
+}
+
+function gameOver(){
+  running=false; deadAt=Date.now();
+  pullOff(0); pullOff(1);
+  if(!SILENT){ SND.hit(); SND.duck(1.6); setTimeout(()=>SND.over(), 700); }
+  // 当たった瞬間の手応え：赤いフラッシュ、赤いふち、揺れ、カメラが寄る
+  flash('#ff2b3a', .8, 500);
+  vignetteEl.style.transition='opacity .5s'; vignetteEl.style.opacity=1;
+  shake = .9;
+  camZTarget = 17;
+  const finalScore = Math.floor(score);
+  koScoreEl.textContent = finalScore;
+  msgEl.textContent = '';
+  reelEls.forEach(e=>e.classList.remove('pull'));
+  setTimeout(()=>{ koEl.classList.add('on'); }, 620);   // スローが効いてから K.O.
+  if(AUTO){ setTimeout(()=>{ reset(); running=true;
+                             if(!SILENT) SND.unduck(); }, RETRY_MS); }
+  else setTimeout(()=>{
+    msgEl.textContent = matchMedia('(pointer:coarse)').matches
+      ? 'タップでもう一度' : 'スペースでもう一度';
+  }, 1800);
+}
+tick();
+
+// --- あそびかた (?) : ルールを見せる。録画中は出さない ---
+(function(){
+  const btn = document.getElementById('helpBtn');
+  const panel = document.getElementById('help');
+  if(!btn || !panel) return;
+  if(NOCHROME){                      // 録画・showcase では画面から消す
+    btn.style.display = 'none';
+    const back = document.getElementById('back');
+    if(back) back.style.display = 'none';
+    return;
+  }
+  const open = () => { panel.classList.add('on'); };
+  const close = () => { panel.classList.remove('on'); };
+  btn.addEventListener('click', open);
+  btn.addEventListener('touchend', e => { e.preventDefault(); open(); }, {passive:false});
+  panel.addEventListener('click', e => { if(e.target === panel) close(); });
+  panel.querySelector('.close').addEventListener('click', close);
+  panel.querySelector('.close').addEventListener('touchend',
+    e => { e.preventDefault(); close(); }, {passive:false});
+  addEventListener('keydown', e => {
+    if(e.code === 'Escape') close();
+    else if(e.key === '?' || (e.code === 'Slash' && e.shiftKey)) open();
+  });
+})();
+</script>
+</body>
+</html>
