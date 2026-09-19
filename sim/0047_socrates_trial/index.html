@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>あなたがソクラテスだったら</title>
+<meta property="og:title" content="あなたがソクラテスだったら">
+<meta property="og:description" content="あなたは70歳の哲学者です。アテネの法廷に立たされています。裁くのは、くじで選ばれた501人の市民。求められている刑は、死刑です。">
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;background:#0b0e14;color:#e6edf3;
+       font-family:-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;
+       line-height:1.75;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+  .wrap{max-width:600px;margin:0 auto;padding:22px 18px 60px}
+  h1{font-size:clamp(21px,5.6vw,29px);margin:6px 0 8px;line-height:1.4}
+  .lead{color:#8b949e;font-size:14.5px;margin:0 0 20px}
+  .prog{position:sticky;top:0;background:#0b0e14;padding:10px 0 12px;z-index:5}
+  .bar{height:4px;background:#1c2333;border-radius:2px;overflow:hidden}
+  .bar i{display:block;height:100%;background:#d4a544;width:0;transition:width .3s}
+  .count{font-size:12.5px;color:#8b949e;margin-top:6px;letter-spacing:.04em}
+  .scene{background:#121722;border:1px solid #222b3d;border-radius:14px;
+          padding:20px 18px;margin:0 0 16px}
+  .year{color:#d4a544;font-size:12.5px;letter-spacing:.1em;margin:0 0 8px}
+  .sit{font-size:16px;margin:0 0 18px;color:#dbe3ec}
+  .opts{display:grid;gap:10px}
+  .opt{border:1px solid #2b3550;background:#161d2b;color:#e6edf3;border-radius:11px;
+        padding:15px 16px;font-size:15.5px;cursor:pointer;text-align:left;
+        font-family:inherit;line-height:1.6;transition:.15s}
+  .opt:hover{border-color:#d4a544}
+  .opt:active{transform:scale(.985)}
+  .log{margin:0 0 20px}
+  .logi{border-left:2px solid #2b3550;padding:2px 0 2px 14px;margin:0 0 10px;
+         font-size:13.5px;color:#7d8796}
+  .logi b{color:#b3bdcc;font-weight:600}
+  #end{display:none} #end.on{display:block}
+  .eimg{width:100%;border-radius:14px;display:block;margin:0 0 18px;background:#121722}
+  .etag{color:#d4a544;font-size:13px;letter-spacing:.09em;margin:0 0 4px}
+  .ename{font-size:clamp(23px,6.4vw,32px);margin:0 0 14px;line-height:1.35}
+  .ebody{font-size:15.5px;color:#c9d1d9;margin:0 0 20px;white-space:pre-wrap}
+  .fact{background:#121722;border-left:3px solid #58a6ff;border-radius:0 10px 10px 0;
+         padding:14px 16px;margin:0 0 20px;font-size:14.5px;color:#c9d1d9}
+  .fact b{color:#58a6ff;display:block;margin-bottom:5px;font-size:12.5px;
+           letter-spacing:.08em}
+  .warn{color:#6e7681;font-size:12.5px;margin:18px 0 0;padding:12px 14px;
+         border:1px dashed #2b3550;border-radius:10px}
+  .share{display:grid;gap:10px;margin:22px 0}
+  .share a,.share button{display:block;text-align:center;padding:14px;border-radius:12px;
+        text-decoration:none;font-weight:700;font-size:15px;border:1px solid #2b3550;
+        background:#161d2b;color:#e6edf3;cursor:pointer;font-family:inherit}
+  .back{display:inline-block;margin-top:6px;color:#8b949e;font-size:14px}
+  footer{margin-top:32px;color:#6e7681;font-size:12.5px;text-align:center}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div id="sim">
+  <h1>あなたがソクラテスだったら</h1>
+  <p class="lead">あなたは70歳の哲学者です。アテネの法廷に立たされています。裁くのは、くじで選ばれた501人の市民。求められている刑は、死刑です。</p>
+  <div class="prog"><div class="bar"><i id="pbar"></i></div>
+    <div class="count"><span id="pnum">1</span> / 8</div></div>
+  <div class="log" id="log"></div>
+  <div class="scene" id="scene"></div>
+</div>
+
+<div id="end">
+  <img class="eimg" id="eimg" alt="">
+  <p class="etag" id="etag"></p>
+  <h1 class="ename" id="ename"></h1>
+  <p class="ebody" id="ebody"></p>
+  <div class="fact" id="fact"></div>
+  <div class="share">
+    <a id="tw" target="_blank" rel="noopener">結果をXに投稿する</a>
+    <button id="again">やり直す</button>
+  </div>
+  <a class="back" href="../">ほかのシミュレータを見る</a>
+  <p class="warn">これはシミュレータです。あなたの選択によっては史実と異なる結末になります。
+  実際に起きたことは上の「史実」の欄をご覧ください。</p>
+</div>
+
+<footer>MosukeStudio</footer>
+</div>
+
+<script>
+const DATA = {"title": "あなたがソクラテスだったら", "lead": "あなたは70歳の哲学者です。アテネの法廷に立たされています。裁くのは、くじで選ばれた501人の市民。求められている刑は、死刑です。", "axes": [{"label": "信じたことを曲げないか、生き延びる道を探すか", "pos": "貫", "neg": "折"}, {"label": "ひとりで立つか、人の力を借りるか", "pos": "独", "neg": "頼"}], "history": "紀元前399年、ソクラテスは501人の陪審に裁かれたと言われています。有罪は280対221ほど。刑を決める2回目で彼は「公費で食事を」と言い、死刑票はむしろ増えたと伝わります。逃亡もできましたが残り、毒を飲んだとされます。", "scenes": [{"year": "前399年 訴えの直後", "situation": "メレトスという男が、あなたを訴えました。神々を敬わない。若者をだめにした。アテネでは、裁判を待たずに街を出ることができます。出ていけば、それで終わりです。友人たちは、もう荷物の話をしています。", "options": [{"text": "残って法廷に立つ。逃げれば、訴えを認めたことになる", "a": 2, "b": 1}, {"text": "静かに街を出る。生きていれば、どこでも問い続けられる", "a": -2, "b": -1}]}, {"year": "前399年 裁判の前日", "situation": "アテネには、弁論を書いて売る職人がいます。リュシアスという名人が、あなたのために原稿を用意したと言われています。読み上げれば、涙を誘う立派な弁論になります。あなたはこれまで、そういう飾った言葉を批判してきました。", "options": [{"text": "原稿は断る。いつも通り、市場で話すように自分の言葉で話す", "a": 2, "b": 2}, {"text": "受け取って読む。形だけでも、陪審が聞き慣れた形に合わせる", "a": -1, "b": -2}]}, {"year": "前399年 法廷 冒頭", "situation": "持ち時間は、水時計ひとつ分。長くはありません。あなたには昔から、アリストファネスの喜劇で笑いものにされてきた古い評判があります。空を研究する変な老人、という像です。訴えの中身より、この評判のほうが陪審の頭に残っています。", "options": [{"text": "古い評判から正面で潰す。デルポイの神託の話をして、なぜ嫌われたかを説明する", "a": 2, "b": 0}, {"text": "評判には触れない。訴えの2つだけに答え、短く終える", "a": -1, "b": 0}]}, {"year": "前399年 法廷 反対尋問", "situation": "訴えた側のメレトスが、目の前にいます。アテネの法廷では、被告が相手に質問できます。彼の言い分は、よく聞くと食い違っています。若者をだめにしたのはあなた一人だ、と言いながら、神を信じていないとも言う。突けば、彼は答えられなくなるでしょう。", "options": [{"text": "いつものやり方で質問する。矛盾を、陪審の前で本人に認めさせる", "a": 2, "b": 1}, {"text": "尋問はしない。恥をかかせれば、その恨みは票になって返ってくる", "a": -1, "b": -1}]}, {"year": "前399年 法廷 弁論の山場", "situation": "陪審の顔が見えます。やめると言えば、たぶん済む場面です。もう街で若者に質問しない、と約束すれば、多くの人は矛を収めるでしょう。でもあなたは、問うことが神から与えられた仕事だと言ってきました。", "options": [{"text": "やめないと言い切る。息をしているかぎり、問い続けると宣言する", "a": 2, "b": 1}, {"text": "しばらく控えると言う。約束はするが、心の中では捨てない", "a": -2, "b": 0}]}, {"year": "前399年 1回目の投票のあと", "situation": "結果が出ました。有罪280、無罪221ほど。差はおよそ60票です。30人が気を変えていれば、無罪でした。会場は、思ったより割れています。ここで何を言うかで、残り半分の空気が決まります。", "options": [{"text": "この票差を指摘する。思ったより少ない差だと言い、あと少しだと訴える", "a": 1, "b": -1}, {"text": "数には触れない。票の多さも少なさも、正しさとは関係ないと言う", "a": 2, "b": 1}]}, {"year": "前399年 刑の提案", "situation": "アテネでは、刑も投票で決めます。訴えた側は死刑を出しました。被告も自分の刑を出せます。陪審はどちらか一方を選ぶだけで、間を取ることはできません。あなたの弟子たちは、罰金を出すから真面目な額を言ってくれと頼んでいます。", "options": [{"text": "褒賞を求める。街のためになったのだから、公費で食事をさせろと言う", "a": 2, "b": 2}, {"text": "弟子が用意する罰金を出す。名前も並べ、彼らに保証させる", "a": -2, "b": -2}]}, {"year": "前399年 牢の中", "situation": "死刑が決まりました。ただ、祭りのために処刑は先送りになっています。友人のクリトンが来ました。看守は買収済み、船も馬も用意した、テッサリアなら受け入れてくれる、と。逃げれば、たぶん誰も追ってきません。", "options": [{"text": "残る。自分が守れと言ってきた法を、自分で破ることはできない", "a": 2, "b": 1}, {"text": "友人の手を取る。生きていれば、子どもも育てられるし、問い続けられる", "a": -2, "b": -2}]}], "endings": {"貫独": {"tag": "ENDING 1", "name": "毒杯を持った手は、震えなかった", "body": "これが、史実にいちばん近い道です。あなたは何ひとつ曲げず、誰の手も借りませんでした。買ってきた弁論を断り、メレトスを尋問し、やめるとは言わなかった。そして刑の提案で、公費で食事をさせろと言った。会場は荒れ、死刑票は有罪票より増えたと伝えられています。牢を訪ねた友人にも、逃げないと答えました。約70歳で毒を飲んだとされます。負けた裁判です。ただ、この日のあなたの話は弟子が書き残し、2400年読まれ続けました。アテネのほうが、ずっと長く責められることになります。", "image_prompt": "An elderly bearded Greek philosopher sitting upright on a stone prison bed, calmly raising a shallow clay cup to his lips, weeping friends turning their faces away in the dim cell, a single barred window letting in pale evening light, ancient Athens, 19th century academic history painting, oil on canvas, solemn and restrained, no text, no letters, no words, no writing, no signage", "image": "img/貫独.jpg"}, "貫頼": {"tag": "ENDING 2", "name": "弟子たちが払った罰金", "body": "もし、こうしていたら。あなたは言うべきことは全部言いました。神託の話もした。やめないとも言った。ただ最後の刑の提案だけ、弟子たちの手を取ります。プラトンたちが立ち上がり、銀30ムナを保証すると申し出た。陪審は、それなら、と罰金を選びます。あなたは生き延びました。でも街の空気は変わりません。若者はもう、あなたの周りに集まらない。罰金を払った哲学者、という名前だけが残ります。あなたは市場に出続けますが、以前ほど誰も足を止めなくなりました。命は助かり、言葉の重さだけが少し軽くなりました。", "image_prompt": "An elderly Greek philosopher standing in an open-air Athenian court while several young men in fine robes rise from the benches with purses of silver in their hands, jurors murmuring and turning to look, bright midday Mediterranean light on marble, 19th century academic history painting, oil on canvas, no text, no letters, no words, no writing, no signage", "image": "img/貫頼.jpg"}, "折独": {"tag": "ENDING 3", "name": "問わない老人", "body": "もし、こうしていたら。あなたは誰にも頼らず、自分の判断だけで身を引きました。法廷では余計なことを言わず、訴えの2つにだけ短く答える。もう若者に質問はしないと約束し、静かに頭を下げた。陪審は、老人を殺すほどでもないと考えます。あなたは家に帰りました。そして本当に、問うのをやめます。市場を歩いても、誰にも声をかけない。数年後に静かに亡くなったあなたを、街の人は覚えていませんでした。書き残す弟子も、もういません。生き延びるという選び方は、負けとは違います。ただ、あなたがあなたである時間は、法廷で終わっていました。", "image_prompt": "A stooped elderly bearded Greek man in a plain worn tunic walking alone through an emptying Athenian marketplace at dusk, merchants packing up stalls, young men talking in a group without noticing him, long shadows across the stones, 19th century academic history painting, oil on canvas, melancholy, no text, no letters, no words, no writing, no signage", "image": "img/折独.jpg"}, "折頼": {"tag": "ENDING 4", "name": "テッサリアへ渡る船", "body": "もし、こうしていたら。あなたは曲げることを選び、友人の手も取りました。書いてもらった弁論を読み、余計な尋問はせず、弟子の用意した罰金を出す。それでも死刑が決まったなら、夜の船に乗ります。クリトンの馬車でテッサリアへ。あなたは80歳まで生きたかもしれません。ただ、外国の町であなたは客人です。法を守れと説いてきた人が、自分の街の判決から逃げた。その一点を、誰かが必ず言います。あなたの問いは残りますが、それを支えていた背骨が一本抜けている。助かった命と、失った説得力。どちらが重いかは、決められません。", "image_prompt": "An elderly bearded Greek philosopher wrapped in a dark cloak being helped aboard a small boat at a moonlit Athenian harbour by two anxious younger men, oars ready, the city's temple roofs dark on the hill behind, night sea and torchlight, 19th century academic history painting, oil on canvas, tense and quiet, no text, no letters, no words, no writing, no signage", "image": "img/折頼.jpg"}}};
+let i = 0;
+const score = [0, 0];
+const picks = [];
+
+const sceneEl = document.getElementById('scene');
+const logEl = document.getElementById('log');
+
+function render() {
+  const s = DATA.scenes[i];
+  document.getElementById('pnum').textContent = i + 1;
+  document.getElementById('pbar').style.width = (i / DATA.scenes.length * 100) + '%';
+  sceneEl.innerHTML = `<p class="year">${s.year}</p><p class="sit">${s.situation}</p>`;
+  const box = document.createElement('div');
+  box.className = 'opts';
+  s.options.forEach(o => {
+    const b = document.createElement('button');
+    b.className = 'opt';
+    b.textContent = o.text;
+    b.onclick = () => choose(o);
+    box.appendChild(b);
+  });
+  sceneEl.appendChild(box);
+}
+
+function choose(o) {
+  score[0] += o.a || 0;
+  score[1] += o.b || 0;
+  picks.push(o.text);
+  const d = document.createElement('div');
+  d.className = 'logi';
+  d.innerHTML = `<b>${DATA.scenes[i].year}</b> ${o.text}`;
+  logEl.appendChild(d);
+  i++;
+  if (i < DATA.scenes.length) { render(); scrollTo(0, 0); }
+  else finish();
+}
+
+function finish() {
+  // 2軸の符号で4象限 → 4つの結末
+  const key = (score[0] >= 0 ? DATA.axes[0].pos : DATA.axes[0].neg)
+            + (score[1] >= 0 ? DATA.axes[1].pos : DATA.axes[1].neg);
+  const e = DATA.endings[key] || DATA.endings[Object.keys(DATA.endings)[0]];
+  document.getElementById('eimg').src = e.image;
+  document.getElementById('eimg').alt = e.name;
+  document.getElementById('etag').textContent = e.tag || 'ENDING';
+  document.getElementById('ename').textContent = e.name;
+  document.getElementById('ebody').textContent = e.body;
+  document.getElementById('fact').innerHTML =
+    `<b>史実では</b>${DATA.history}`;
+  const txt = encodeURIComponent(
+    `${DATA.title}\n私の結末は「${e.name}」でした。\n`);
+  document.getElementById('tw').href =
+    `https://twitter.com/intent/tweet?text=${txt}&url=${encodeURIComponent(location.href)}`;
+  document.getElementById('sim').style.display = 'none';
+  document.getElementById('end').classList.add('on');
+  scrollTo(0, 0);
+}
+
+document.getElementById('again').onclick = () => location.reload();
+render();
+</script>
+</body>
+</html>

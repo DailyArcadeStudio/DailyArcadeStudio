@@ -1,0 +1,1330 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>カスタムズ・ライン</title>
+<style>
+  html,body{margin:0;padding:0;overflow:hidden;background:#080b12;
+    font-family:'Hiragino Kaku Gothic ProN','Helvetica Neue',Arial,sans-serif;}
+  #ui{position:fixed;top:16px;left:0;right:0;text-align:center;color:#fff;z-index:10;pointer-events:none;}
+  #score{font-size:clamp(24px,6vw,34px);font-weight:800;text-shadow:0 2px 8px #000;}
+  #msg{font-size:clamp(13px,3.6vw,19px);margin-top:6px;opacity:.9;text-shadow:0 2px 6px #000;}
+  #title{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:rgba(5,7,14,.76);z-index:20;color:#fff;transition:opacity .4s;padding:0 16px;box-sizing:border-box;}
+  #title h1{font-size:clamp(28px,9vw,58px);margin:0 0 10px;letter-spacing:2px;
+    text-shadow:0 4px 18px #2fd0c0;text-align:center;}
+  #title p{font-size:clamp(12px,3.4vw,19px);opacity:.88;margin:4px 0;text-align:center;line-height:1.6;}
+  #title .btn{margin-top:26px;padding:14px 44px;font-size:clamp(18px,5vw,22px);font-weight:700;color:#04231f;
+    background:linear-gradient(180deg,#48e7cd,#16a08c);border:none;border-radius:12px;cursor:pointer;
+    box-shadow:0 6px 24px rgba(47,208,192,.45);}
+  #title .btn:hover{transform:scale(1.05);}
+  .hidden{opacity:0;pointer-events:none;}
+  #back{position:fixed;top:14px;left:14px;z-index:30;text-decoration:none;
+    background:rgba(12,16,26,.72);color:#fff;
+    font:600 clamp(12px,3.4vw,15px)/1 'Hiragino Kaku Gothic ProN','Helvetica Neue',Arial,sans-serif;
+    padding:0 14px;height:44px;display:flex;align-items:center;border-radius:12px;white-space:nowrap;}
+  #back:hover{background:rgba(30,38,56,.9);}
+  #mute{position:fixed;top:14px;right:14px;z-index:30;border:none;cursor:pointer;
+    background:rgba(12,16,26,.72);color:#fff;font-size:20px;line-height:1;
+    width:44px;height:44px;border-radius:12px;}
+  #mute:hover{background:rgba(30,38,56,.9);}
+  /* show the hint that matches the device */
+  .tc{display:none;}
+  @media (pointer:coarse){ .kb{display:none;} .tc{display:block;} }
+  /* a finger-sized START button on touch devices */
+  @media (pointer:coarse){ #title .btn{padding:18px 52px;} }
+
+  /* --- 信用メーター: 誤判定するたび減る --- */
+  /* 信用メーターはカウンターの手前に浮かせる。横並びにして高さを取らない。 */
+  #trust{position:fixed;left:0;right:0;bottom:calc(14px + env(safe-area-inset-bottom,0px));
+    z-index:10;pointer-events:none;display:flex;align-items:center;justify-content:center;gap:10px;}
+  #trust .lbl{font-size:clamp(10px,2.8vw,13px);letter-spacing:.2em;color:#cfe0f0;
+    text-shadow:0 2px 6px #000,0 0 10px #000;}
+  #trust .pips{display:flex;gap:8px;}
+  #trust .pip{width:clamp(22px,6vw,32px);height:8px;border-radius:4px;background:#2fd0c0;
+    box-shadow:0 0 12px rgba(47,208,192,.7);transition:background .25s,box-shadow .25s,opacity .25s;}
+  #trust .pip.off{background:#243042;box-shadow:none;opacity:.55;}
+
+  /* --- 判定の振り分けラベル（左右にどちらの操作か出す） --- */
+  #verdicts{position:fixed;inset:0;z-index:9;pointer-events:none;
+    display:flex;align-items:center;justify-content:space-between;opacity:.32;
+    transition:opacity .3s;}
+  /* ID セレクタのほうが .hidden より強いので、同じ強さで打ち消す */
+  #verdicts.hidden{opacity:0;}
+  #verdicts div{font-size:clamp(11px,3vw,16px);font-weight:800;letter-spacing:.12em;
+    padding:0 clamp(6px,2.4vw,16px);text-shadow:0 2px 8px #000;}
+  #vLeft{color:#ff5566;} #vRight{color:#48e7cd;}
+
+  /* --- event banner: slams into the middle of the screen --- */
+  #banner{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    z-index:15;pointer-events:none;opacity:0;}
+  #banner .b{font-size:clamp(24px,7.4vw,66px);font-weight:900;letter-spacing:.06em;color:#fff;
+    padding:10px 4vw;max-width:94vw;text-align:center;transform:scale(2.4);opacity:0;
+    text-shadow:0 0 26px currentColor, 0 6px 20px #000;
+    border-top:5px solid currentColor;border-bottom:5px solid currentColor;}
+  #banner.go .b{animation:slam .62s cubic-bezier(.12,.85,.2,1) forwards;}
+  @keyframes slam{
+    0%  {transform:scale(2.4) rotate(-4deg);opacity:0;}
+    22% {transform:scale(1)   rotate(0deg); opacity:1;}
+    70% {transform:scale(1)   rotate(0deg); opacity:1;}
+    100%{transform:scale(1.12);opacity:0;}
+  }
+
+  /* --- full-screen colour flashes --- */
+  #flash{position:fixed;inset:0;z-index:14;pointer-events:none;opacity:0;background:#fff;}
+  #vignette{position:fixed;inset:0;z-index:13;pointer-events:none;opacity:0;
+    background:radial-gradient(ellipse at center,rgba(0,0,0,0) 32%,rgba(120,0,10,.85) 100%);}
+
+  /* --- K.O. screen --- */
+  #ko{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    z-index:22;pointer-events:none;opacity:0;color:#fff;transition:opacity .3s;}
+  #ko.on{opacity:1;}
+  #ko .koText{font-size:clamp(86px,24vw,180px);font-weight:900;letter-spacing:10px;color:#fff;
+    text-shadow:0 0 40px #ff3b4a,0 0 90px #ff3b4a,0 10px 30px #000;
+    transform:scale(3);opacity:0;}
+  #ko.on .koText{animation:koSlam .8s cubic-bezier(.1,.9,.2,1) forwards;}
+  @keyframes koSlam{
+    0%  {transform:scale(3) rotate(-8deg);opacity:0;}
+    30% {transform:scale(1) rotate(0deg);opacity:1;}
+    36% {transform:scale(1.06);}
+    100%{transform:scale(1);opacity:1;}
+  }
+  #ko .finalLabel{font-size:clamp(13px,4vw,22px);letter-spacing:4px;opacity:0;margin-top:6px;
+    text-shadow:0 2px 8px #000;}
+  #ko .finalScore{font-size:clamp(42px,13vw,80px);font-weight:800;opacity:0;text-shadow:0 4px 20px #000;}
+  #ko.on .finalLabel{animation:fadeUp .5s .75s forwards;}
+  #ko.on .finalScore{animation:fadeUp .5s .9s forwards;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+
+  /* --- help (?) --- */
+  #helpBtn{position:fixed;top:14px;right:66px;z-index:30;border:none;cursor:pointer;
+    background:rgba(12,16,26,.72);color:#fff;font:700 20px/1 'Helvetica Neue',Arial,sans-serif;
+    width:44px;height:44px;border-radius:12px;}
+  #helpBtn:hover{background:rgba(30,38,56,.9);}
+  #help{position:fixed;inset:0;z-index:40;display:none;align-items:center;
+    justify-content:center;background:rgba(4,6,12,.82);padding:20px;}
+  #help.on{display:flex;}
+  #help .box{background:#0f1622;border:1px solid #23415c;border-radius:18px;
+    max-width:560px;width:100%;max-height:86vh;overflow:auto;padding:26px 28px 22px;
+    color:#e6edf3;font-family:'Hiragino Kaku Gothic ProN','Helvetica Neue',Arial,sans-serif;}
+  #help h2{margin:0 0 4px;font-size:clamp(19px,5.4vw,26px);}
+  #help .sub{color:#8b949e;font-size:clamp(12px,3.4vw,14px);margin:0 0 18px;line-height:1.6;}
+  #help h3{font-size:clamp(13px,3.8vw,15px);color:#48e7cd;margin:18px 0 6px;letter-spacing:.04em;}
+  #help ul{margin:0;padding-left:20px;}
+  #help li{font-size:clamp(13px,3.7vw,15px);line-height:1.7;margin:3px 0;}
+  #help b{color:#48e7cd;font-weight:700;}
+  #help .close{margin-top:20px;width:100%;padding:12px;border:none;border-radius:10px;
+    background:#23415c;color:#fff;font-size:16px;font-weight:700;cursor:pointer;}
+  #help .close:hover{background:#31597c;}
+
+  /* 横向きの電話は縦の余白がない。HUD を詰めて重なりを避ける。 */
+  @media (max-height:520px){
+    #ui{top:8px;}
+    #score{font-size:22px;text-align:right;padding-right:124px;}
+    #msg{text-align:right;padding-right:124px;font-size:12px;margin-top:2px;}
+    #trust{bottom:8px;gap:3px;}
+    #trust .pip{height:6px;}
+  }
+</style>
+</head>
+<body>
+<div id="ui"><div id="score">0</div><div id="msg"></div></div>
+<div id="verdicts"><div id="vLeft">◀ 止める</div><div id="vRight">通す ▶</div></div>
+<div id="trust"><div class="lbl">信用</div><div class="pips"></div></div>
+<button id="helpBtn" title="あそびかた">?</button>
+<div id="help"><div class="box">
+  <h2>カスタムズ・ライン</h2>
+  <p class="sub">審査ブースは一人分の幅しかない。列は止まらない。</p>
+    <h3>あなたの仕事</h3>
+    <ul>
+      <li>旅客が一人ずつブースに立つ。<b>通す</b>か<b>止める</b>かを選ぶ</li>
+      <li>持ち時間はゲージ一本ぶん。<b>切れたら誤判定</b>と同じ扱い</li>
+      <li>正しく捌くほどスコアが伸び、列は速くなる</li>
+    </ul>
+    <h3>密輸の見分けかた</h3>
+    <ul>
+      <li>カバンの<b>赤い縫い目が光っている</b>者は黒。止める</li>
+      <li>光っていなければ白。<b>通す</b>。止めれば誤判定</li>
+      <li>汗や挙動はただの演技。<b>縫い目だけを見る</b></li>
+    </ul>
+    <h3>操作</h3>
+    <ul>
+      <li>キーボード: <b>← 止める</b> / <b>→ 通す</b></li>
+      <li>スマホ: <b>左スワイプで止める</b> / <b>右スワイプで通す</b></li>
+      <li>迷ったら止める、は通用しない。白を止めても信用は減る</li>
+    </ul>
+    <h3>予告なく起きること</h3>
+    <ul>
+      <li><b>停電</b>: 非常灯だけになり、縫い目が見づらくなる</li>
+      <li><b>団体客</b>: 列が一気に詰まり、持ち時間が縮む</li>
+      <li><b>外交官</b>: 金色の旅券。<b>中身に関係なく通す</b></li>
+      <li><b>抜き打ち監査</b>: 一度でも間違えれば信用が二つ飛ぶ</li>
+    </ul>
+  <button class="close">わかった</button>
+</div></div>
+<a id="back" href="../../" title="ゲーム一覧にもどる">‹ ゲーム一覧</a>
+<button id="mute" title="音のオン・オフ">🔊</button>
+<div id="vignette"></div>
+<div id="flash"></div>
+<div id="banner"><div class="b"></div></div>
+<div id="ko">
+  <div class="koText">K.O.</div>
+  <div class="finalLabel">さいしゅうスコア</div>
+  <div class="finalScore">0</div>
+</div>
+<div id="title">
+  <h1>カスタムズ・ライン</h1>
+  <p>赤く光る縫い目だけが、密輸の印。</p>
+  <p class="kb">← : 止める &nbsp;&nbsp; → : 通す</p>
+  <p class="tc">左スワイプ : 止める &nbsp;&nbsp; 右スワイプ : 通す</p>
+  <button class="btn" id="startBtn">スタート</button>
+</div>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+// ---------- url flags (declared first: sound and camera both read them) ----------
+const QS = new URLSearchParams(location.search);
+const AUTO = QS.get('auto')==='1';
+const SHOWCASE_Q = QS.get('showcase');
+// Recording must produce clean footage, so every automated mode is muted.
+const REC = QS.get('rec')==='1';   // 録音モード: 音を鳴らして拾う
+const SILENT = (AUTO || !!SHOWCASE_Q || QS.get('mute')==='1') && !REC;
+// 録画・showcase では「?」と「ゲーム一覧」を出さない（動画の邪魔になる）
+const NOCHROME = AUTO || !!SHOWCASE_Q || QS.get('nochrome')==='1';
+
+// ---------- renderer / scene ----------
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.shadowMap.enabled = true;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const SKY = new THREE.Color(0x0c1220);
+scene.background = SKY.clone();
+scene.fog = new THREE.Fog(0x0c1220, 26, 74);
+
+const CAM_Z = 4.3;               // 平常時のカメラ距離。ブースの真正面に立つ距離。
+const camera = new THREE.PerspectiveCamera(54, innerWidth/innerHeight, .1, 140);
+
+// Portrait and landscape both have to work. A phone held upright is far
+// narrower than 16:9, and with a fixed FOV the booth and the gates fall
+// outside the frame — so widen the vertical FOV as the screen gets taller.
+//
+// ただしこのゲームの被写体は「一人の旅客のカバン」一点なので、画角を広げる
+// だけだと旅客が小さくなり、肝心の縫い目が読めなくなる。広げた分はカメラを
+// 前に出して埋め合わせる（camZoom）。上限を 78° に抑えているのも同じ理由。
+const BASE_FOV = 54;
+let camZoom = 1;                 // 1 = 基準距離。縦長ほど小さく（＝寄る）。
+function fitCamera(){
+  const aspect = innerWidth / innerHeight;
+  camera.aspect = aspect;
+  if(typeof SHOWCASE !== 'undefined' && SHOWCASE){
+    camera.fov = aspect < 1 ? 62 : 46;
+    camZoom = 1;
+  } else {
+    // keep the horizontal field roughly constant across aspect ratios
+    const ref = 16/9;
+    camera.fov = aspect >= ref ? BASE_FOV
+      : Math.min(78, THREE.MathUtils.radToDeg(
+          2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(BASE_FOV)/2) * (ref/aspect))));
+    // 画角が広がったぶんだけ寄る。旅客の見かけの大きさがほぼ一定になる。
+    const spread = Math.tan(THREE.MathUtils.degToRad(camera.fov)/2) /
+                   Math.tan(THREE.MathUtils.degToRad(BASE_FOV)/2);
+    camZoom = THREE.MathUtils.clamp(1/spread, 0.52, 1);
+  }
+  camera.__base = camera.fov;    // 団体客イベントが寄ったあと、ここへ戻す
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+}
+addEventListener('resize', fitCamera);
+addEventListener('orientationchange', ()=>setTimeout(fitCamera, 120));
+
+// ---------- lights ----------
+const hemi = new THREE.HemisphereLight(0x9fc8ff, 0x141020, 0.55);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xffffff, 0.85);
+sun.position.set(5, 14, 8); sun.castShadow = true;
+sun.shadow.camera.left=-16; sun.shadow.camera.right=16;
+sun.shadow.camera.top=16; sun.shadow.camera.bottom=-16;
+scene.add(sun);
+// ブースの上の蛍光灯。審査中の旅客を照らす主光源。
+// 審査位置のすぐ上に低く吊る。距離減衰があるので、遠いと旅客まで光が届かない。
+const BOOTH_INT = 55;
+const boothLight = new THREE.PointLight(0xeaf4ff, BOOTH_INT, 14);
+boothLight.position.set(0, 3.4, 1.8);
+scene.add(boothLight);
+// カバンを持つ右手側から当てる補助光。縫い目を読ませるのが仕事。
+const BAG_INT = 22;
+const bagLight = new THREE.PointLight(0xfff0dd, BAG_INT, 8);
+bagLight.position.set(1.7, 1.5, 1.9);
+scene.add(bagLight);
+// 非常灯（停電のときだけ点く赤）
+const emergencyLight = new THREE.PointLight(0xff3344, 0, 30);
+emergencyLight.position.set(0, 3.2, 2.2);
+scene.add(emergencyLight);
+
+// ---------- 空港のホール ----------
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(56, 220),
+  new THREE.MeshStandardMaterial({color:0x2b3346, roughness:.95, metalness:0}));
+floor.rotation.x = -Math.PI/2; floor.position.z = -80; floor.receiveShadow = true;
+scene.add(floor);
+
+// 旅客が歩いてくる誘導ライン
+const guideLines = [];
+for(const x of [-1.9, 1.9]){
+  const l = new THREE.Mesh(new THREE.PlaneGeometry(.07, 220),
+    new THREE.MeshBasicMaterial({color:0x2fd0c0, transparent:true, opacity:.3}));
+  l.rotation.x = -Math.PI/2; l.position.set(x, .012, -80);
+  scene.add(l); guideLines.push(l);
+}
+
+// 審査ブース。カメラの手前に板を置くと、どの画角でも画面の下半分が壁に
+// なってしまい、持ち時間リングまで隠れる。そこでカウンターは置かず、
+// 「両脇の仕切り」と「頭上の庇」だけでブースの内側にいることを示す。
+// どれも視線の外周にあるので、旅客とカバンには決してかぶらない。
+const deskGroup = new THREE.Group();
+{
+  const panelMat = new THREE.MeshStandardMaterial({color:0x1b2436, roughness:.95, metalness:0});
+  const glowMat = new THREE.MeshBasicMaterial({color:0x2fd0c0, transparent:true, opacity:.5});
+  for(const s of [-1, 1]){
+    // 左右の仕切り板。画面の両端に縦の柱として立つ。
+    const panel = new THREE.Mesh(new THREE.BoxGeometry(.34, 4.2, 2.6), panelMat);
+    panel.position.set(s*3.5, 2.1, 0);
+    // 仕切りの内側を走る発光ライン
+    const edge = new THREE.Mesh(new THREE.BoxGeometry(.05, 4.0, .05), glowMat);
+    edge.position.set(s*3.32, 2.1, -1.25);
+    deskGroup.add(panel, edge);
+  }
+  // 頭上の庇。上端をわずかに締めて、覗き窓のような構図にする。
+  const hood = new THREE.Mesh(new THREE.BoxGeometry(7.3, .3, 2.6), panelMat);
+  hood.position.set(0, 4.1, 0);
+  deskGroup.add(hood);
+  deskGroup.position.set(0, 0, CAM_Z - 0.9);
+  scene.add(deskGroup);
+}
+
+// 審査位置の床マーク。ここに立った旅客が判定対象。
+const standMark = new THREE.Mesh(new THREE.RingGeometry(.62, .82, 36),
+  new THREE.MeshBasicMaterial({color:0x2fd0c0, transparent:true, opacity:.55,
+    side:THREE.DoubleSide}));
+standMark.rotation.x = -Math.PI/2; standMark.position.set(0, .02, 0);
+scene.add(standMark);
+
+// 左右のゲート。通した／止めた旅客がそれぞれ出ていく先。
+function buildGate(sign, color){
+  const g = new THREE.Group();
+  const mat = new THREE.MeshStandardMaterial({color, roughness:.5, emissive:color,
+    emissiveIntensity:.35});
+  for(const s of [-1, 1]){
+    const post = new THREE.Mesh(new THREE.BoxGeometry(.3, 3.4, .3), mat);
+    post.position.set(s*1.3, 1.7, 0); g.add(post);
+  }
+  const bar = new THREE.Mesh(new THREE.BoxGeometry(2.9, .32, .3), mat);
+  bar.position.y = 3.3; g.add(bar);
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  g.position.set(sign*6.6, 0, 1.2);
+  g.rotation.y = -sign*Math.PI/5;
+  scene.add(g);
+  return g;
+}
+const gateStop = buildGate(-1, 0xff3b4a);   // 左: 止める
+const gatePass = buildGate( 1, 0x2fd0c0);   // 右: 通す
+
+// 奥のターミナル壁（視線の突き当たり）と看板
+const hallWall = new THREE.Mesh(new THREE.BoxGeometry(56, 16, 1),
+  new THREE.MeshStandardMaterial({color:0x151d2e, roughness:.9}));
+hallWall.position.set(0, 8, -62); scene.add(hallWall);
+const signBoard = new THREE.Mesh(new THREE.BoxGeometry(14, 2.2, .3),
+  new THREE.MeshBasicMaterial({color:0x123d3a}));
+signBoard.position.set(0, 5.2, -60); scene.add(signBoard);
+// 看板の発光バー（文字の代わり。プリミティブだけで空港らしさを出す）
+const signBars = [];
+for(let i=0;i<5;i++){
+  const b = new THREE.Mesh(new THREE.BoxGeometry(1.7, .5, .1),
+    new THREE.MeshBasicMaterial({color:0x2fd0c0}));
+  b.position.set(-4.8 + i*2.4, 5.2, -59.8); scene.add(b); signBars.push(b);
+}
+
+// 天井の蛍光灯列。奥へ続く空間の深さを出す。
+// 手前の数本はスコア表示に重なるので置かない（十分奥から始める）。
+// 遠いほど暗くして、明るい帯が画面上部で主張しないようにする。
+const ceilLights = [];
+for(let i=0;i<14;i++){
+  const m = new THREE.Mesh(new THREE.BoxGeometry(9, .2, 1.1),
+    new THREE.MeshBasicMaterial({color:0x8ea6c4}));
+  m.position.set(0, 13.0, -i*9 - 34); scene.add(m); ceilLights.push(m);
+}
+
+// ---------- 旅客（プリミティブのみで組む） ----------
+// 密輸の印は「カバンの縫い目が赤く光る」ただ一点。汗や挙動はフェイク。
+const COAT_COLORS = [0x4a5b7d, 0x7d4a52, 0x4a7d63, 0x6b5b8f, 0x8f7a4a, 0x3f5560];
+const SKIN_COLORS = [0xe8c19e, 0xc98f63, 0x8d5b3b, 0xf0d4b6, 0x5e3a26];
+const BAG_COLORS  = [0x2e3a4f, 0x50382c, 0x3c3050, 0x24443c, 0x4a4438];
+
+const seamMatProto = new THREE.MeshBasicMaterial({color:0xff2b3a});
+
+function buildTraveller(opts={}){
+  const g = new THREE.Group();
+  const coat = new THREE.MeshStandardMaterial({
+    color: opts.coat ?? COAT_COLORS[Math.floor(Math.random()*COAT_COLORS.length)],
+    roughness:.75});
+  const skin = new THREE.MeshStandardMaterial({
+    color: opts.skin ?? SKIN_COLORS[Math.floor(Math.random()*SKIN_COLORS.length)],
+    roughness:.6});
+
+  const torso = new THREE.Mesh(new THREE.CapsuleGeometry(.36, .62, 6, 14), coat);
+  torso.position.y = 1.18; g.add(torso);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(.28, 22, 16), skin);
+  head.position.y = 1.86; g.add(head);
+  // 髪 — 頭の上半分にかぶせるだけ
+  const hair = new THREE.Mesh(new THREE.SphereGeometry(.295, 20, 14, 0, Math.PI*2, 0, Math.PI*0.62),
+    new THREE.MeshStandardMaterial({color:0x1a1720, roughness:.9}));
+  hair.position.y = 1.87; g.add(hair);
+  const white = new THREE.MeshBasicMaterial({color:0xf3f7ff});
+  const dark  = new THREE.MeshBasicMaterial({color:0x12141c});
+  const eyes = [];
+  for(const s of [1,-1]){
+    const e = new THREE.Mesh(new THREE.SphereGeometry(.052,10,8), white);
+    e.scale.set(1,1.15,.45); e.position.set(.105*s, 1.90, .245); g.add(e);
+    const p = new THREE.Mesh(new THREE.SphereGeometry(.026,8,6), dark);
+    p.position.set(.105*s, 1.90, .272); g.add(p); eyes.push(p);
+  }
+  // 腕と脚
+  const limbMat = coat;
+  const mkLimb=(x,y,len,mat)=>{
+    const m = new THREE.Mesh(new THREE.CapsuleGeometry(.095, len, 6, 10), mat);
+    m.position.set(x,y,0); return m;
+  };
+  const armL = mkLimb(.44, 1.28, .42, limbMat), armR = mkLimb(-.44, 1.28, .42, limbMat);
+  const trouser = new THREE.MeshStandardMaterial({color:0x232a3a, roughness:.85});
+  const legL = mkLimb(.16, .42, .5, trouser), legR = mkLimb(-.16, .42, .5, trouser);
+  g.add(armL, armR, legL, legR);
+
+  // --- カバン: ここが判定のすべて ---
+  const bag = new THREE.Group();
+  const bagBody = new THREE.Mesh(new THREE.BoxGeometry(.82, .66, .40),
+    new THREE.MeshStandardMaterial({
+      color: opts.bagColor ?? BAG_COLORS[Math.floor(Math.random()*BAG_COLORS.length)],
+      roughness:.85}));
+  bag.add(bagBody);
+  const handle = new THREE.Mesh(new THREE.TorusGeometry(.19, .036, 8, 18, Math.PI),
+    new THREE.MeshStandardMaterial({color:0x14181f, roughness:.6}));
+  handle.position.y = .33; bag.add(handle);
+  // 縫い目 — 黒のときだけ発光させる。平常時はほぼ見えない暗い線。
+  // この光がゲーム唯一の手がかりなので、太く・面で見えるようにする。
+  const seamMat = seamMatProto.clone();
+  seamMat.transparent = true; seamMat.opacity = 0;
+  const seams = [];
+  for(const sy of [.23, -.23]){
+    const s = new THREE.Mesh(new THREE.BoxGeometry(.86, .085, .44), seamMat);
+    s.position.y = sy; bag.add(s); seams.push(s);
+  }
+  const seamV = new THREE.Mesh(new THREE.BoxGeometry(.085, .70, .44), seamMat);
+  bag.add(seamV); seams.push(seamV);
+  // カバンは体の外側に張り出させる。胴体に隠れると判定できない。
+  bag.position.set(.80, .78, .26);
+  g.add(bag);
+
+  // 旅券 — 手に持たせる。外交官イベントでは金色になる。
+  const passMat = new THREE.MeshStandardMaterial({color:0x1d3f6b, roughness:.6,
+    emissive:0x000000});
+  const passport = new THREE.Mesh(new THREE.BoxGeometry(.22, .30, .04), passMat);
+  passport.position.set(-.5, 1.12, .2); passport.rotation.z = .25;
+  g.add(passport);
+
+  // 汗 — 挙動のフェイク。黒とは無関係にランダムで出る。
+  const sweatMat = new THREE.MeshBasicMaterial({color:0x9fe8ff, transparent:true, opacity:0});
+  const sweat = [];
+  for(let i=0;i<3;i++){
+    const d = new THREE.Mesh(new THREE.SphereGeometry(.045, 8, 6), sweatMat);
+    d.position.set((i-1)*.13, 1.96, .2); g.add(d); sweat.push(d);
+  }
+
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  return {group:g, armL, armR, legL, legR, bag, seamMat, seams,
+          passport, passMat, sweatMat, eyes, head, torso};
+}
+
+// ---------- game state ----------
+let running=false, dead=false, t=0, score=0;
+let timeScale=1;                 // slow-motion multiplier
+let deadAt=0;                    // when the run ended (touch retry gate)
+let shake=0;                     // camera shake amount
+let camDist=CAM_Z, camDistTarget=CAM_Z;   // death zoom pulls the camera in
+let trust=3;                     // 信用。0 で終わり
+let queue=[];                    // 列に並んでいる旅客（先頭が審査中）
+let judged=[];                   // 判定済みでゲートへ歩いている旅客
+let clearedCount=0;              // 正しく捌いた人数
+let deskTimer=0, deskLimit=4.2;  // 先頭の旅客に残された持ち時間
+let arrived=false;               // 先頭がマークに到達したか（ゲージはそこから）
+let blackout=0;                  // >0 のあいだ停電
+let rush=0;                      // >0 のあいだ団体客（持ち時間が縮む）
+let diplomat=0;                  // >0 のあいだ外交官（金の旅券は無条件で通す）
+let audit=0;                     // >0 のあいだ抜き打ち監査（誤判定 -2）
+let nextEventAt=9;               // seconds until the first event
+let eventQueue=[];               // event names not yet used in this run
+let lastVerdict='';              // 直前の判定（HUD 表示用）
+const scoreEl = document.getElementById('score');
+const msgEl = document.getElementById('msg');
+const titleEl = document.getElementById('title');
+const bannerEl = document.getElementById('banner');
+const bannerText = bannerEl.querySelector('.b');
+const flashEl = document.getElementById('flash');
+const vignetteEl = document.getElementById('vignette');
+const koEl = document.getElementById('ko');
+const koScoreEl = koEl.querySelector('.finalScore');
+const pipsEl = document.querySelector('#trust .pips');
+const verdictsEl = document.getElementById('verdicts');
+const MAX_TRUST = 3;
+
+// 信用ピップを作っておき、減るたびに消灯させる
+for(let i=0;i<MAX_TRUST;i++){
+  const p = document.createElement('div'); p.className='pip'; pipsEl.appendChild(p);
+}
+function paintTrust(){
+  [...pipsEl.children].forEach((p,i)=>p.classList.toggle('off', i >= trust));
+}
+
+// 持ち時間ゲージはブース床のリングそのもの。数字を増やさず画面で読ませる。
+const timerRing = new THREE.Mesh(
+  new THREE.RingGeometry(.9, 1.12, 48, 1, Math.PI/2, Math.PI*2),
+  new THREE.MeshBasicMaterial({color:0x48e7cd, transparent:true, opacity:.9,
+    side:THREE.DoubleSide}));
+timerRing.rotation.x = -Math.PI/2; timerRing.position.set(0, .03, 0);
+scene.add(timerRing);
+
+// ---------- presentation helpers ----------
+function banner(text, color){
+  bannerText.textContent = text;
+  bannerText.style.color = color;
+  bannerEl.classList.remove('go');
+  void bannerEl.offsetWidth;      // restart the CSS animation
+  bannerEl.style.opacity = 1;
+  bannerEl.classList.add('go');
+}
+function flash(color, strength, ms){
+  flashEl.style.background = color;
+  flashEl.style.transition = 'none';
+  flashEl.style.opacity = strength;
+  requestAnimationFrame(()=>{
+    flashEl.style.transition = `opacity ${ms}ms ease-out`;
+    flashEl.style.opacity = 0;
+  });
+}
+
+// ---------- 旅客の生成と列の管理 ----------
+const QUEUE_GAP = 2.6;           // 列の間隔
+// 黒／白は毎回コインを投げると偏る。実際 10 人続けて白ということが起き、
+// 「とりあえず右」で通ってしまう。そこで 4 人ひと組の袋から引く方式にして、
+// 「しばらく黒が来ない」も「黒が続きすぎる」も起こらないようにする。
+let guiltBag = [];
+function nextGuilty(){
+  if(!guiltBag.length){
+    // 進むほど 4 人中の黒を 1 → 2 人に増やす（序盤はやさしく、あとで五分）
+    const guilties = clearedCount < 12 ? 1 : 2;
+    guiltBag = [true,true,false,false].fill(false);
+    for(let i=0;i<guilties;i++) guiltBag[i] = true;
+    for(let i=guiltBag.length-1;i>0;i--){
+      const j = Math.floor(Math.random()*(i+1));
+      [guiltBag[i],guiltBag[j]] = [guiltBag[j],guiltBag[i]];
+    }
+  }
+  return guiltBag.pop();
+}
+
+function spawnTraveller(){
+  const tr = buildTraveller();
+  tr.guilty = nextGuilty();
+  tr.sweaty = Math.random() < .35;          // 汗はフェイク。黒と相関しない
+  tr.vip = false;                           // 外交官イベントでだけ true
+  tr.seamGlow = 0;                          // 縫い目の現在の発光量
+  tr.walkPhase = Math.random()*6.28;
+  tr.slot = queue.length;                   // 列の何番目か
+  const z = -4 - tr.slot*QUEUE_GAP;
+  tr.group.position.set((Math.random()-.5)*.5, 0, z);
+  tr.targetZ = z;
+  scene.add(tr.group);
+  queue.push(tr);
+}
+
+function refillQueue(){
+  const want = rush>0 ? 7 : 5;
+  while(queue.length < want) spawnTraveller();
+  // 並び直し: 先頭は審査位置 z=0、以降は後ろへ等間隔
+  queue.forEach((tr,i)=>{ tr.slot = i; tr.targetZ = i===0 ? 0 : -3.2 - (i-1)*QUEUE_GAP; });
+}
+
+// 判定 — ここがゲームの中心。true=通す, false=止める
+function judge(pass){
+  if(!running || dead) return;
+  const tr = queue[0];
+  if(!tr || !arrived) return;              // まだ立っていない相手は裁けない
+  queue.shift();
+  const correct = tr.vip ? pass : (pass !== tr.guilty);
+  tr.leaving = pass ? 1 : -1;              // 1=右ゲート, -1=左ゲート
+  tr.leaveT = 0;
+  tr.correct = correct;
+  judged.push(tr);
+  if(correct){
+    clearedCount++;
+    score += 100 + Math.max(0, Math.floor(deskTimer*20));  // 早いほど加点
+    lastVerdict = pass ? '通した' : '止めた';
+    if(!SILENT) pass ? SND.pass() : SND.stop();
+    // 正解の合図はゲート側の発光
+    const gate = pass ? gatePass : gateStop;
+    gate.traverse(o=>{ if(o.material && o.material.emissiveIntensity!==undefined)
+      o.material.emissiveIntensity = 1.4; });
+  } else {
+    loseTrust(audit>0 ? 2 : 1, tr.guilty && !pass ? '見逃した' : '誤認');
+  }
+  arrived = false;
+  refillQueue();
+  resetDeskTimer();
+}
+
+function loseTrust(n, why){
+  trust -= n;
+  paintTrust();
+  lastVerdict = why;
+  flash('#ff2b3a', .45, 380);
+  shake = Math.max(shake, .35);
+  if(!SILENT) SND.wrong();
+  if(trust <= 0 && !dead){ dead = true; gameOver(); }
+}
+
+function resetDeskTimer(){
+  // 捌いた人数と団体客イベントで、持ち時間はじりじり縮む
+  const base = 4.4 - Math.min(2.1, clearedCount*.035);
+  deskLimit = Math.max(1.5, rush>0 ? base*.62 : base);
+  deskTimer = deskLimit;
+}
+
+// ---------- events ----------
+const EVENTS = {
+  // 停電: 主照明が落ち、非常灯の赤だけになる。縫い目が読みにくい。
+  blackout(){
+    banner('停電', '#9b6bff');
+    blackout = 6.0;
+    flash('#000000', .7, 300);
+    return 6.5;
+  },
+  // 団体客: 列が一気に詰まり、持ち時間が縮む。カメラも少し寄る。
+  rush(){
+    banner('団体客', '#ffd23b');
+    rush = 8.0;
+    refillQueue();
+    shake = Math.max(shake, .25);
+    return 8.5;
+  },
+  // 外交官: 金色の旅券を持つ旅客が混じる。中身に関係なく通す。
+  // 「縫い目が光っていれば止める」という唯一の規則に、例外を一つだけ足す。
+  diplomat(){
+    banner('外交官', '#ffcf4a');
+    diplomat = 9.0;
+    for(const tr of queue){
+      if(Math.random() < .5) makeVip(tr);   // 旅券が金色に変わる
+    }
+    flash('#ffcf4a', .3, 420);
+    return 9.5;
+  },
+  // 抜き打ち監査: 誤判定のペナルティが二倍になる。
+  audit(){
+    banner('抜き打ち監査', '#ff5566');
+    audit = 9.0;
+    vignetteEl.style.transition='opacity .4s'; vignetteEl.style.opacity=.45;
+    return 9.5;
+  },
+};
+function makeVip(tr){
+  tr.vip = true;
+  tr.passMat.color.setHex(0xffcf4a);
+  tr.passMat.emissive.setHex(0x805f10);
+}
+
+const EVENT_NAMES = Object.keys(EVENTS);
+// recording/debug hook: fire a named event on cue (used by the capture script)
+// returns false if the run is already over, so a capture script can wait
+// for the next run instead of firing an event onto the K.O. screen
+window.__ev = name => {
+  if(!running || dead || !EVENTS[name]) return false;
+  const busy = EVENTS[name]();
+  if(!SILENT) SND.event(); nextEventAt = t + busy + 5; return true;
+};
+window.__alive = () => running && !dead;
+window.__kill = () => { if(running && !dead){ dead=true; gameOver(); } };
+window.__recStop = () => SND.recStop();
+window.__snd = () => ({enabled: SND.enabled, silent: SILENT});
+window.__fov = () => +camera.fov.toFixed(1);
+window.__trust = () => trust;
+window.__probe = () => ({t:+t.toFixed(2), trust, cleared:clearedCount,
+  timer:+deskTimer.toFixed(2), arrived, queue:queue.length,
+  guilty: queue[0] ? !!queue[0].guilty : null, next:+nextEventAt.toFixed(2)});
+// 録画ツールが名前で参照する。中身は英語のまま。
+window.__events = EVENT_NAMES.slice();
+
+function refillEventQueue(){
+  eventQueue = EVENT_NAMES.slice();
+  for(let i=eventQueue.length-1;i>0;i--){        // shuffle so the order varies per run
+    const j = Math.floor(Math.random()*(i+1));
+    [eventQueue[i],eventQueue[j]]=[eventQueue[j],eventQueue[i]];
+  }
+}
+
+function triggerEvent(){
+  if(!eventQueue.length) refillEventQueue();
+  const name = eventQueue.pop();
+  const busy = EVENTS[name]();
+  if(!SILENT) SND.event();
+  nextEventAt = t + busy + 5 + Math.random()*4;  // breathing room between events
+}
+
+// ---------- reset ----------
+function reset(){
+  for(const tr of queue) scene.remove(tr.group);
+  for(const tr of judged) scene.remove(tr.group);
+  queue.length = 0; judged.length = 0;
+  t=0; score=0; dead=false; trust=MAX_TRUST; clearedCount=0;
+  guiltBag.length = 0;             // 黒／白の袋も引き直す
+  timeScale=1; shake=0; camDist=CAM_Z; camDistTarget=CAM_Z;
+  blackout=0; rush=0; diplomat=0; audit=0; arrived=false;
+  lastVerdict='';
+  nextEventAt = 9;
+  refillEventQueue();
+  refillQueue();
+  resetDeskTimer();
+  paintTrust();
+  msgEl.textContent='';
+  scoreEl.textContent='0';
+  koEl.classList.remove('on');
+  verdictsEl.classList.remove('hidden');
+  vignetteEl.style.transition='opacity .3s'; vignetteEl.style.opacity=0;
+  // 照明を平常に戻す
+  hemi.intensity=0.55; sun.intensity=0.85;
+  boothLight.intensity=BOOTH_INT; bagLight.intensity=BAG_INT;
+  emergencyLight.intensity=0;
+  scene.background.copy(SKY); scene.fog.color.copy(SKY);
+  for(const m of ceilLights) m.visible = true;
+  camera.position.set(0, 2.15, CAM_Z);
+}
+
+const startBtn = document.getElementById('startBtn');
+
+// ---------- sound: everything synthesised, no audio files ----------
+// Keeps the single-HTML rule (nothing to download) and lets the music
+// react to play: the bass line speeds up with the game, events drop a
+// stinger, and the whole thing ducks out on a game over.
+const SND = (() => {
+  let ctx = null, master = null, musicGain = null, on = true, started = false;
+  let step = 0, timer = null, tempo = 0.25;
+
+  // A pentatonic scale never sounds wrong against itself, which matters
+  // when the tempo drifts with the player's speed.
+  // minor pentatonic, driving — a chase that never lets up
+  const SCALE = [0, 3, 5, 7, 10];
+  const ROOT = 196;
+  const BASS = 'square', LEAD = 'sawtooth';
+  const hz = (deg, oct = 0) =>
+    ROOT * Math.pow(2, oct + Math.floor(deg / SCALE.length)) *
+    Math.pow(2, SCALE[((deg % SCALE.length) + SCALE.length) % SCALE.length] / 12);
+
+  function ensure() {
+    if (ctx) return ctx;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    ctx = new AC();
+    master = ctx.createGain();
+    master.gain.value = 0.32;
+    master.connect(ctx.destination);
+    musicGain = ctx.createGain();
+    musicGain.gain.value = 1;
+    musicGain.connect(master);
+    return ctx;
+  }
+
+
+  // ---- 録音用の分岐（?rec=1）----
+  // Playwright の録画には音声が入らないので、ゲーム自身に master バスを
+  // 録らせる。鳴っているものそのものなので映像と必ず同期する。
+  let recDest = null, recorder = null, recChunks = [];
+  function recStart() {
+    if (!ctx || recorder) return;
+    recDest = ctx.createMediaStreamDestination();
+    master.connect(recDest);
+    recorder = new MediaRecorder(recDest.stream, {mimeType: 'audio/webm'});
+    recorder.ondataavailable = e => { if (e.data.size) recChunks.push(e.data); };
+    recorder.start();
+  }
+  function recStop() {
+    return new Promise(res => {
+      if (!recorder) return res(null);
+      recorder.onstop = async () => {
+        const blob = new Blob(recChunks, {type: 'audio/webm'});
+        const buf = await blob.arrayBuffer();
+        res(Array.from(new Uint8Array(buf)));
+      };
+      recorder.stop();
+    });
+  }
+
+  function blip(freq, dur, type = 'square', vol = 0.25, dest = null, slideTo = null) {
+    if (!ctx || !on) return;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, ctx.currentTime);
+    if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, ctx.currentTime + dur);
+    // a short attack stops every note from clicking
+    g.gain.setValueAtTime(0, ctx.currentTime);
+    g.gain.linearRampToValueAtTime(vol, ctx.currentTime + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
+    o.connect(g); g.connect(dest || master);
+    o.start(); o.stop(ctx.currentTime + dur + 0.02);
+  }
+
+  function noise(dur, vol = 0.2, hp = 800) {
+    if (!ctx || !on) return;
+    const n = Math.floor(ctx.sampleRate * dur);
+    const buf = ctx.createBuffer(1, n, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    const f = ctx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = hp;
+    const g = ctx.createGain(); g.gain.value = vol;
+    src.connect(f); f.connect(g); g.connect(master);
+    src.start();
+  }
+
+  // --- the loop: a walking bass plus an offbeat blip ---
+  function tick() {
+    if (!ctx || !on) return;
+    const bar = step % 16;
+    // straight driving pulse: bass on every beat, lead stabs offbeat
+    if (bar % 2 === 0) blip(hz(bar % 8 === 0 ? 0 : 1, -1), tempo * 1.1, BASS, 0.30, musicGain);
+    if (bar % 8 === 5) blip(hz(4, 0), tempo * 0.6, LEAD, 0.09, musicGain);
+    if (bar % 4 === 2) noise(0.04, 0.05, 5000);
+    step++;
+    timer = setTimeout(tick, tempo * 1000);
+  }
+
+  return {
+    // must be called from a user gesture — browsers block audio otherwise
+    start() {
+      if (!ensure() || started) return;
+      if (ctx.state === 'suspended') ctx.resume();
+      started = true; step = 0; tick();
+    },
+    stop() { if (timer) { clearTimeout(timer); timer = null; } started = false; },
+    /** speed the music up with the game; 1 = starting pace */
+    setPace(mult) { tempo = Math.max(0.11, 0.25 / Math.max(0.2, mult)); },
+    duck(sec = 1.6) {                                      // for game over
+      if (!ctx) return;
+      musicGain.gain.cancelScheduledValues(ctx.currentTime);
+      musicGain.gain.setValueAtTime(musicGain.gain.value, ctx.currentTime);
+      musicGain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + sec);
+    },
+    unduck() {
+      if (!ctx) return;
+      musicGain.gain.cancelScheduledValues(ctx.currentTime);
+      musicGain.gain.setValueAtTime(0.0001, ctx.currentTime);
+      musicGain.gain.exponentialRampToValueAtTime(1, ctx.currentTime + 0.4);
+    },
+    // --- one-shots ---
+    // 「通す」= 上向きのスタンプ二連、「止める」= 低い一撃。左右で音が逆になる。
+    pass()  { ensure(); blip(hz(2, 0), 0.07, 'square', 0.22, null, hz(4, 0));
+              setTimeout(() => blip(hz(5, 0), 0.14, LEAD, 0.16), 70); },
+    stop()  { ensure(); noise(0.05, 0.16, 300);
+              blip(hz(0, -1), 0.20, BASS, 0.26, null, hz(0, -1) * 0.55); },
+    // 誤判定 — 短いブザー。ヒット音とは別物として聞こえるよう二度鳴らす。
+    wrong() { ensure(); [0, 130].forEach(ms =>
+                setTimeout(() => blip(116, 0.16, 'sawtooth', 0.26), ms)); },
+    // 旅客が審査位置に立った合図
+    step()  { ensure(); blip(hz(1, -1), 0.05, BASS, 0.10); },
+    // 持ち時間が残り僅か
+    warn()  { ensure(); blip(hz(4, 1), 0.06, 'triangle', 0.14); },
+    event() { ensure(); [0, 90, 180].forEach((ms, i) =>
+                setTimeout(() => blip(hz(2 + i, 0), 0.18, 'sawtooth', 0.20), ms)); },
+    hit()   { ensure(); noise(0.35, 0.30, 200);
+              blip(180, 0.5, 'sawtooth', 0.28, null, 40); },
+    over()  { ensure(); [0, 140, 280, 460].forEach((ms, i) =>
+                setTimeout(() => blip(hz(-i, -1), 0.42, 'triangle', 0.26), ms)); },
+    recStart() { ensure(); recStart(); },
+    recStop() { return recStop(); },
+    toggle() { on = !on; if (!on) { this.stop(); } else { this.start(); } return on; },
+    get enabled() { return on; },
+  };
+})();
+
+// --- one place for every action, so touch and keyboard stay in step ---
+function startRun(){
+  titleEl.classList.add('hidden'); reset(); running=true;
+  if(!SILENT){ SND.unduck(); SND.start(); if(REC) SND.recStart(); }
+}
+function actStop(){ judge(false); }    // 左: 止める
+function actPass(){ judge(true);  }    // 右: 通す
+
+const muteBtn = document.getElementById('mute');
+function toggleMute(){ muteBtn.textContent = SND.toggle() ? '🔊' : '🔇'; }
+muteBtn.addEventListener('click', toggleMute);
+muteBtn.addEventListener('touchend', e=>{ e.preventDefault(); toggleMute(); },
+                         {passive:false});
+if(SILENT) muteBtn.style.display='none';   // automated modes have no audio
+addEventListener('keydown', e=>{ if(e.code==='KeyM') toggleMute(); });
+
+startBtn.addEventListener('click', startRun);
+// a touch on the button must start too — click alone is unreliable on touch
+startBtn.addEventListener('touchend', e=>{ e.preventDefault(); startRun(); },
+                          {passive:false});
+
+addEventListener('keydown', e=>{
+  if(!running){
+    if(e.code==='Space'||e.code==='Enter') startRun();
+    return;
+  }
+  if(e.code==='ArrowLeft'||e.code==='KeyA')  actStop();
+  if(e.code==='ArrowRight'||e.code==='KeyD') actPass();
+});
+
+// --- touch: 左右スワイプが、そのまま左右の判定になる ---
+// Most viewers arrive from a phone, so the game has to be playable
+// without a keyboard. 指の動きと、旅客が出ていく向きが一致する。
+(function(){
+  let sx=0, sy=0, st=0, moved=false;
+  const SWIPE = 26;          // px before a drag counts as a swipe
+  const canvas = renderer.domElement;
+
+  canvas.addEventListener('touchstart', e=>{
+    const tp = e.changedTouches[0];
+    sx=tp.clientX; sy=tp.clientY; st=Date.now(); moved=false;
+  }, {passive:true});
+
+  canvas.addEventListener('touchmove', e=>{
+    if(moved || !running || dead) return;
+    const tp = e.changedTouches[0];
+    const dx = tp.clientX-sx, dy = tp.clientY-sy;
+    if(Math.abs(dx) > SWIPE && Math.abs(dx) > Math.abs(dy)){
+      dx < 0 ? actStop() : actPass();
+      moved = true;                       // one verdict per swipe
+    }
+  }, {passive:true});
+
+  canvas.addEventListener('touchend', e=>{
+    if(dead){
+      // give the K.O. animation time to read, then a tap retries
+      if(!AUTO && Date.now()-deadAt > 1500) startRun();
+      return;
+    }
+    if(!running){ startRun(); return; }
+    // スワイプにならなかった短いタップは、画面のどちら側かで判定する。
+    // （片手で親指しか使えない人向けの逃げ道。操作は左右のまま。）
+    if(!moved && Date.now()-st < 350){
+      const tp = e.changedTouches[0];
+      tp.clientX < innerWidth*0.5 ? actStop() : actPass();
+    }
+  }, {passive:true});
+
+  // The title overlay sits above the canvas, so a tap anywhere on it never
+  // reaches the canvas handler. Start from the overlay itself.
+  titleEl.addEventListener('touchend', e=>{
+    if(!running){ e.preventDefault(); startRun(); }
+  }, {passive:false});
+
+  // stop the browser treating game taps as scroll / double-tap zoom
+  canvas.addEventListener('touchmove', e=>e.preventDefault(), {passive:false});
+})();
+
+// autoplay mode for recording: ?auto=1
+// recording holds the K.O. longer than play does: ?hold=9000
+const RETRY_MS = Math.max(1200, parseInt(QS.get('hold')||'4200', 10));
+// ?noev=1 records a calm run with no events, for narration beds
+const NOEV = QS.get('noev')==='1';
+if(AUTO){ setTimeout(startRun, 1200); }   // startRun 経由にする（音/録音も始まる）
+
+// ---------- autopilot ----------
+// 人間らしく「少し見てから」裁く。即断だと画面で何が起きたか読めない。
+let autoHold = 0;
+function autoPilot(dt){
+  if(!arrived){ autoHold = 0.35 + Math.random()*0.45; return; }
+  autoHold -= dt;
+  if(autoHold > 0) return;
+  const tr = queue[0];
+  if(!tr) return;
+  // 判定基準はプレイヤーと同じ: VIP は通す、縫い目が光っていれば止める。
+  // 停電中は少しだけ間違える（そのほうが映像として自然）。
+  let guilty = tr.guilty;
+  if(blackout > 0 && Math.random() < .12) guilty = !guilty;
+  tr.vip || !guilty ? actPass() : actStop();
+  autoHold = 0.3 + Math.random()*0.4;
+}
+
+// ---------- showcase mode ----------
+// Puts one object on a turntable against a dark stage so the video can
+// talk about it while the real thing is on screen. Uses the game's own
+// meshes, so what the narration describes is exactly what ships.
+const SHOWCASE = QS.get('showcase');
+const showcase = {group:null, spin:.55, label:''};
+// 録画ツールが名前で参照するので、識別子は英語のまま。
+window.__subjects = ['traveller','smuggler','bag','diplomat','booth','gate_pass','gate_stop'];
+
+function buildShowcase(name){
+  const g = new THREE.Group();
+  let label = '', spin = .55;
+  if(name==='traveller'){
+    const tr = buildTraveller({coat:0x4a5b7d, bagColor:0x2e3a4f});
+    tr.group.scale.set(1.15,1.15,1.15);
+    g.add(tr.group); label = '旅客'; spin = .5;
+    tr.armL.rotation.x = .18; tr.armR.rotation.x = -.18;
+  } else if(name==='smuggler'){
+    const tr = buildTraveller({coat:0x5b3a42, bagColor:0x33232a});
+    tr.group.scale.set(1.15,1.15,1.15);
+    tr.seamMat.opacity = 1;                  // 縫い目を全開で見せる
+    tr.sweatMat.opacity = .85;
+    g.add(tr.group); label = '密輸者'; spin = .5;
+  } else if(name==='bag'){
+    // カバンだけを大きく。判定の唯一の手がかりなので単体で見せる。
+    const tr = buildTraveller({bagColor:0x33232a});
+    tr.seamMat.opacity = 1;
+    tr.bag.position.set(0,0,0);
+    tr.bag.scale.set(3.4,3.4,3.4);
+    g.add(tr.bag); label = 'カバンの縫い目'; spin = .8;
+  } else if(name==='diplomat'){
+    const tr = buildTraveller({coat:0x3b3550, bagColor:0x2a2438});
+    makeVip(tr);
+    tr.group.scale.set(1.15,1.15,1.15);
+    g.add(tr.group); label = '外交官'; spin = .5;
+  } else if(name==='booth'){
+    const top = new THREE.Mesh(new THREE.BoxGeometry(7.4, .26, 2.0),
+      new THREE.MeshStandardMaterial({color:0x36445e, roughness:.55, metalness:.25}));
+    top.position.y = 1.32;
+    const front = new THREE.Mesh(new THREE.BoxGeometry(7.4, 1.3, .3),
+      new THREE.MeshStandardMaterial({color:0x1d2738, roughness:.8}));
+    front.position.set(0, .65, .9);
+    const stripe = new THREE.Mesh(new THREE.BoxGeometry(7.0, .12, .06),
+      new THREE.MeshBasicMaterial({color:0x2fd0c0}));
+    stripe.position.set(0, 1.02, 1.07);
+    g.add(top, front, stripe); label = '審査ブース'; spin = .4;
+  } else if(name==='gate_pass' || name==='gate_stop'){
+    const pass = name==='gate_pass';
+    const color = pass ? 0x2fd0c0 : 0xff3b4a;
+    const mat = new THREE.MeshStandardMaterial({color, roughness:.5, emissive:color,
+      emissiveIntensity:.45});
+    for(const s of [-1, 1]){
+      const post = new THREE.Mesh(new THREE.BoxGeometry(.3, 3.4, .3), mat);
+      post.position.set(s*1.3, 1.7, 0); g.add(post);
+    }
+    const bar = new THREE.Mesh(new THREE.BoxGeometry(2.9, .32, .3), mat);
+    bar.position.y = 3.3; g.add(bar);
+    label = pass ? '通過ゲート' : '別室ゲート'; spin = .45;
+  }
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  scene.add(g);
+
+  // Centre the subject on the origin and pull the camera back to fit it,
+  // so every object is framed the same way regardless of its size.
+  const box = new THREE.Box3().setFromObject(g);
+  const size = box.getSize(new THREE.Vector3());
+  const mid = box.getCenter(new THREE.Vector3());
+  g.position.sub(mid);                       // sit centred at the origin
+  const reach = Math.max(size.x, size.y) * 0.5;
+  const fov = THREE.MathUtils.degToRad(camera.fov);
+  const dist = (reach / Math.tan(fov/2)) * 1.75 + 1.0;   // 1.75 = breathing room
+  camera.position.set(0, size.y*0.10, dist);
+
+  // Slide the subject sideways so a text panel can own the other half.
+  // The offset lives on a parent so the turntable still spins in place —
+  // rotating an offset group would make it orbit instead.
+  const bias = parseFloat(QS.get('sx') || '0');
+  const pivot = new THREE.Group();
+  pivot.position.x = -bias * reach * 1.15;
+  scene.add(pivot);
+  pivot.add(g);
+  showcase.group = g; showcase.pivot = pivot;
+  showcase.spin = spin; showcase.label = label;
+}
+
+fitCamera();          // SHOWCASE is known by here
+if(SHOWCASE){
+  titleEl.classList.add('hidden');
+  buildShowcase(SHOWCASE);
+  scoreEl.textContent = '';
+  msgEl.textContent = QS.get('nolabel')==='1' ? '' : showcase.label;
+  msgEl.style.fontSize = 'clamp(18px,5vw,30px)';
+  msgEl.style.letterSpacing = '6px';
+  // a plain dark stage: nothing on screen but the subject
+  floor.visible = false; hallWall.visible = false; signBoard.visible = false;
+  deskGroup.visible = false; standMark.visible = false; timerRing.visible = false;
+  gateStop.visible = false; gatePass.visible = false;
+  for(const l of guideLines) l.visible = false;
+  for(const b of signBars) b.visible = false;
+  for(const m of ceilLights) m.visible = false;
+  document.getElementById('trust').style.display = 'none';
+  verdictsEl.style.display = 'none';
+  scene.fog = null;
+  scene.background = new THREE.Color(0x0a0e18);
+  boothLight.position.set(2.6, 3.2, 4.2);
+  boothLight.intensity = 140;
+  boothLight.distance = 26;          // showcase は被写体が大きいので届かせる
+  bagLight.intensity = 0;            // ゲーム用の手元灯は showcase では邪魔
+  emergencyLight.intensity = 0;
+  hemi.intensity = 3.2;
+  sun.intensity = 3.8; sun.position.set(2.5, 6, 6);
+  // a second light from the other side so the far face is not pure black
+  const fill = new THREE.PointLight(0x88aaff, 45, 26);
+  fill.position.set(-4.5, 2.4, 3.6); scene.add(fill);
+}
+// let the capture script drive the turntable and swap subjects
+window.__showcase = name => {
+  if(showcase.pivot) scene.remove(showcase.pivot);   // pivot owns the group
+  buildShowcase(name);
+  msgEl.textContent = showcase.label;
+};
+
+// ---------- loop ----------
+const clock = new THREE.Clock();
+let warnBeep = 0;                 // 残り時間の警告音の間隔カウンタ
+function tick(){
+  requestAnimationFrame(tick);
+  const raw = Math.min(clock.getDelta(), .05);
+  const dt = raw * timeScale;
+
+  if(SHOWCASE){
+    if(showcase.group) showcase.group.rotation.y += raw*showcase.spin;
+    camera.lookAt(0, 0, 0);        // subject is offset, camera stays on axis
+    renderer.render(scene, camera);
+    return;
+  }
+
+  if(running && !dead){
+    t += dt;
+    scoreEl.textContent = Math.floor(score);
+    // 列の回転が速いほど音楽も速くなる
+    if(!SILENT) SND.setPace(1 + clearedCount*0.012 + (rush>0?0.35:0));
+    if(AUTO) autoPilot(dt);
+
+    // --- events ---
+    if(t > nextEventAt && !NOEV) triggerEvent();
+    if(rush>0){
+      rush -= dt;
+      // 団体客のあいだはカメラがわずかに寄り、圧迫感を出す
+      camera.fov += (camera.__base*0.93 - camera.fov)*Math.min(1,dt*3);
+      camera.updateProjectionMatrix();
+      if(rush<=0) resetDeskTimer();
+    } else if(Math.abs(camera.fov - camera.__base) > 0.05){
+      camera.fov += (camera.__base - camera.fov)*Math.min(1,dt*3);
+      camera.updateProjectionMatrix();
+    }
+    if(diplomat>0) diplomat -= dt;
+    if(audit>0){
+      audit -= dt;
+      if(audit<=0){ vignetteEl.style.transition='opacity .5s'; vignetteEl.style.opacity=0; }
+    }
+
+    // 停電: 主照明を落として非常灯だけにする
+    if(blackout>0){
+      blackout -= dt;
+      const k = blackout > .5 ? 0 : 1 - blackout/.5;      // 終わりぎわに戻す
+      hemi.intensity = 0.55*(.18 + .82*k);
+      sun.intensity = 0.85*k;
+      boothLight.intensity = BOOTH_INT*(.12 + .88*k);
+      bagLight.intensity = BAG_INT*(.15 + .85*k);
+      emergencyLight.intensity = 55*(1-k);
+      // 非常灯はゆっくり明滅する
+      emergencyLight.intensity *= .75 + .25*Math.sin(t*7);
+      for(const m of ceilLights) m.visible = k > .4;
+      scene.background.copy(SKY).multiplyScalar(.2 + .8*k);
+      scene.fog.color.copy(scene.background);
+      if(blackout<=0){
+        hemi.intensity=0.55; sun.intensity=0.85;
+        boothLight.intensity=BOOTH_INT; bagLight.intensity=BAG_INT;
+        emergencyLight.intensity=0;
+        scene.background.copy(SKY); scene.fog.color.copy(SKY);
+        for(const m of ceilLights) m.visible = true;
+      }
+    }
+
+    // --- 列を前へ送る ---
+    for(let i=0;i<queue.length;i++){
+      const tr = queue[i];
+      const dz = tr.targetZ - tr.group.position.z;
+      const walking = Math.abs(dz) > .03;
+      if(walking){
+        tr.group.position.z += Math.sign(dz)*Math.min(Math.abs(dz), 3.4*dt);
+        tr.group.position.x += (0 - tr.group.position.x)*Math.min(1, dt*3);
+        // 歩き: 手脚を振る
+        tr.walkPhase += dt*9;
+        const w = Math.sin(tr.walkPhase);
+        tr.armL.rotation.x =  w*.55; tr.armR.rotation.x = -w*.55;
+        tr.legL.rotation.x = -w*.6;  tr.legR.rotation.x =  w*.6;
+        tr.group.position.y = Math.abs(Math.sin(tr.walkPhase))*.045;
+      } else {
+        // 立ち止まり: 呼吸ぶんだけ揺らす
+        tr.armL.rotation.x *= 1 - Math.min(1, dt*5);
+        tr.armR.rotation.x *= 1 - Math.min(1, dt*5);
+        tr.legL.rotation.x *= 1 - Math.min(1, dt*5);
+        tr.legR.rotation.x *= 1 - Math.min(1, dt*5);
+        tr.group.position.y = Math.sin(t*2.2 + tr.walkPhase)*.014;
+      }
+      // 縫い目の発光。黒なら脈打ち、白なら消えたまま。
+      const want = tr.guilty ? .55 + .45*Math.sin(t*3.4 + tr.walkPhase) : 0;
+      // 停電中は光が弱く見える（読みにくさがそのまま難度になる）
+      const dim = blackout > .5 ? .42 : 1;
+      tr.seamGlow += (want*dim - tr.seamGlow)*Math.min(1, dt*6);
+      tr.seamMat.opacity = tr.seamGlow;
+      // 汗はフェイク。先頭に立つと出る。
+      const sweatWant = (i===0 && tr.sweaty) ? .8 : 0;
+      tr.sweatMat.opacity += (sweatWant - tr.sweatMat.opacity)*Math.min(1, dt*3);
+      // VIP の旅券はゆっくり明滅させ、金色だと分かるようにする
+      if(tr.vip) tr.passMat.emissive.setHex(0x805f10)
+        .multiplyScalar(.6 + .4*Math.sin(t*4));
+    }
+
+    // 先頭がマークに着いたら、そこから持ち時間が走り出す
+    const head = queue[0];
+    if(head && !arrived && Math.abs(head.group.position.z) < .12){
+      arrived = true; warnBeep = 0;
+      resetDeskTimer();
+      if(!SILENT) SND.step();
+    }
+    if(head) head.group.rotation.y = arrived ? Math.sin(t*1.6)*.12 : 0;
+
+    // --- 持ち時間 ---
+    if(arrived){
+      deskTimer -= dt;
+      // 残りをリングの角度で見せる
+      const frac = Math.max(0, deskTimer/deskLimit);
+      timerRing.geometry.dispose();
+      timerRing.geometry = new THREE.RingGeometry(.9, 1.12, 48, 1,
+        Math.PI/2, Math.PI*2*frac);
+      timerRing.material.color.setHex(frac < .3 ? 0xff3b4a : frac < .6 ? 0xffd23b : 0x48e7cd);
+      // 残り僅かで警告音。間隔が詰まって焦りが出る。
+      if(frac < .35){
+        warnBeep -= dt;
+        if(warnBeep <= 0){ if(!SILENT) SND.warn(); warnBeep = .18 + frac*.9; }
+      }
+      if(deskTimer <= 0){
+        // 時間切れ: 判定しなかったのと同じ罰。旅客はそのまま押し流される。
+        const tr = queue.shift();
+        if(tr){ tr.leaving = 1; tr.leaveT = 0; tr.correct = false; judged.push(tr); }
+        arrived = false;
+        loseTrust(audit>0 ? 2 : 1, '時間切れ');
+        refillQueue();
+        resetDeskTimer();
+      }
+    } else {
+      timerRing.material.color.setHex(0x2b3a4c);
+    }
+
+    // マークは先頭を待っているあいだ脈打つ
+    standMark.material.opacity = .35 + .25*Math.sin(t*4);
+
+    // --- 判定済みの旅客がゲートへ歩く ---
+    for(let i=judged.length-1;i>=0;i--){
+      const tr = judged[i];
+      tr.leaveT += dt;
+      const s = tr.leaving;
+      tr.group.position.x += s*4.6*dt;
+      tr.group.position.z += 1.1*dt;
+      tr.group.rotation.y += (s*Math.PI/2 - tr.group.rotation.y)*Math.min(1, dt*5);
+      tr.walkPhase += dt*11;
+      const w = Math.sin(tr.walkPhase);
+      tr.armL.rotation.x = w*.7; tr.armR.rotation.x = -w*.7;
+      tr.legL.rotation.x = -w*.75; tr.legR.rotation.x = w*.75;
+      // 誤判定の相手は赤く沈んでいく（何を間違えたかが目で分かる）
+      if(!tr.correct) tr.seamMat.opacity = Math.min(1, tr.seamMat.opacity + dt*2.2);
+      if(tr.leaveT > 2.4){ scene.remove(tr.group); judged.splice(i,1); }
+    }
+
+    // ゲートの発光は判定のたびに跳ね、すぐ戻る
+    for(const gate of [gatePass, gateStop]){
+      gate.traverse(o=>{
+        if(o.material && o.material.emissiveIntensity !== undefined){
+          o.material.emissiveIntensity += (.35 - o.material.emissiveIntensity)*Math.min(1, dt*3);
+        }
+      });
+    }
+
+    // HUD
+    msgEl.textContent = lastVerdict ? `${lastVerdict}　/　通過 ${clearedCount}人` :
+      '赤い縫い目を探す';
+  }
+
+  // --- death sequence: slow-mo unwinds, camera pushes in ---
+  if(dead){
+    timeScale += (0 - timeScale)*Math.min(1, raw*1.1);
+    // 列がその場で凍りつく。ブースの上の照明だけが残る。
+    for(const tr of queue) tr.group.rotation.y += raw*.5;
+  }
+
+  // --- camera (runs even while dead, so the zoom and shake still play) ---
+  camDist += (camDistTarget - camDist)*Math.min(1, raw*2.4);
+  // camZoom は縦長画面ぶんの寄り。広げた画角を距離で打ち消す。
+  const z = camDist*camZoom;
+  camera.position.z = z;
+  // 審査官の目線。カバンの高さ（y≈1.0）を正面に据えるため低く構える。
+  camera.position.y = 2.15*camZoom - (CAM_Z-camDist)*.16;
+  if(shake>0){
+    shake = Math.max(0, shake - raw*.9);
+    camera.position.x += (Math.random()-.5)*shake;
+    camera.position.y += (Math.random()-.5)*shake;
+  } else {
+    camera.position.x += (0 - camera.position.x)*Math.min(1, raw*4);
+  }
+  camera.lookAt(0, 1.18, -0.6);
+
+  renderer.render(scene, camera);
+}
+
+function gameOver(){
+  running=false; deadAt=Date.now();
+  if(!SILENT){ SND.hit(); SND.duck(1.6); setTimeout(()=>SND.over(), 700); }
+  // hit feedback: red flash, red vignette, hard shake, camera punches in
+  flash('#ff2b3a', .8, 500);
+  vignetteEl.style.transition='opacity .5s'; vignetteEl.style.opacity=1;
+  shake = .9;
+  camDistTarget = 3.1;
+  trust = 0; paintTrust();
+  const finalScore = Math.floor(score);
+  koScoreEl.textContent = finalScore;
+  msgEl.textContent = '';
+  // 左右の判定ラベルは K.O. の裏で邪魔になるので引っ込める
+  verdictsEl.classList.add('hidden');
+  setTimeout(()=>{ koEl.classList.add('on'); }, 620);   // K.O. lands after the slow-mo
+  if(AUTO){ setTimeout(()=>{ reset(); running=true;
+                             if(!SILENT) SND.unduck(); }, RETRY_MS); }
+  else setTimeout(()=>{
+    msgEl.textContent = matchMedia('(pointer:coarse)').matches
+      ? 'タップでもう一度' : 'スペースでもう一度';
+  }, 1800);
+}
+tick();
+
+// --- help (?) : ルールを見せる。録画中は出さない ---
+(function(){
+  const btn = document.getElementById('helpBtn');
+  const panel = document.getElementById('help');
+  if(!btn || !panel) return;
+  if(NOCHROME){                      // 録画・showcase では画面から消す
+    btn.style.display = 'none';
+    const back = document.getElementById('back');
+    if(back) back.style.display = 'none';
+    return;
+  }
+  const open = () => { panel.classList.add('on'); };
+  const close = () => { panel.classList.remove('on'); };
+  btn.addEventListener('click', open);
+  btn.addEventListener('touchend', e => { e.preventDefault(); open(); }, {passive:false});
+  panel.addEventListener('click', e => { if(e.target === panel) close(); });
+  panel.querySelector('.close').addEventListener('click', close);
+  panel.querySelector('.close').addEventListener('touchend',
+    e => { e.preventDefault(); close(); }, {passive:false});
+  addEventListener('keydown', e => {
+    if(e.code === 'Escape') close();
+    else if(e.key === '?' || (e.code === 'Slash' && e.shiftKey)) open();
+  });
+})();
+</script>
+</body>
+</html>
