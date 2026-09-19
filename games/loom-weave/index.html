@@ -1,0 +1,1262 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ルーム・ウィーブ</title>
+<style>
+  html,body{margin:0;padding:0;overflow:hidden;background:#0a0a12;font-family:'Hiragino Kaku Gothic ProN','Helvetica Neue',Arial,sans-serif;}
+  #ui{position:fixed;top:16px;left:0;right:0;text-align:center;color:#fff;z-index:10;pointer-events:none;}
+  #score{font-size:clamp(24px,6vw,34px);font-weight:800;text-shadow:0 2px 8px #000;}
+  #msg{font-size:clamp(14px,3.6vw,20px);margin-top:6px;opacity:.9;text-shadow:0 2px 6px #000;}
+  #title{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:rgba(6,6,14,.72);z-index:20;color:#fff;transition:opacity .4s;}
+  #title h1{font-size:clamp(30px,9vw,58px);margin:0 0 8px;letter-spacing:2px;text-shadow:0 4px 18px #ffa53b;}
+  #title p{font-size:clamp(12px,3.3vw,19px);opacity:.85;margin:4px 0;padding:0 14px;text-align:center;}
+  #title .btn{margin-top:26px;padding:14px 44px;font-size:clamp(18px,5vw,22px);font-weight:700;color:#fff;
+    background:linear-gradient(180deg,#ffa53b,#c46410);border:none;border-radius:12px;cursor:pointer;
+    box-shadow:0 6px 24px rgba(255,165,59,.5);}
+  #title .btn:hover{transform:scale(1.05);}
+  .hidden{opacity:0;pointer-events:none;}
+  #back{position:fixed;top:14px;left:14px;z-index:30;text-decoration:none;
+    background:rgba(12,16,26,.72);color:#fff;font:600 15px/1 'Hiragino Kaku Gothic ProN','Helvetica Neue',Arial,sans-serif;
+    padding:0 16px;height:44px;display:flex;align-items:center;border-radius:12px;}
+  #back:hover{background:rgba(30,38,56,.9);}
+  #mute{position:fixed;top:14px;right:14px;z-index:30;border:none;cursor:pointer;
+    background:rgba(12,16,26,.72);color:#fff;font-size:20px;line-height:1;
+    width:44px;height:44px;border-radius:12px;}
+  #mute:hover{background:rgba(30,38,56,.9);}
+  /* show the hint that matches the device */
+  .tc{display:none;}
+  @media (pointer:coarse){ .kb{display:none;} .tc{display:block;} }
+  /* a finger-sized START button on touch devices */
+  @media (pointer:coarse){ #title .btn{padding:18px 56px;} }
+
+  /* --- pattern card ---
+     The card is UI, not scenery: as a 3D object it tangled with the loom's
+     own coloured bars and needed frustum maths to stay in frame. As a fixed
+     HUD strip it is readable at every aspect ratio, for free. */
+  #cardWrap{position:fixed;left:0;right:0;z-index:12;display:flex;
+    justify-content:center;pointer-events:none;top:clamp(56px,9.5vh,88px);}
+  #card{display:flex;justify-content:center;align-items:center;
+    gap:clamp(5px,1.4vw,12px);padding:clamp(6px,1.4vw,11px) clamp(9px,2vw,16px);
+    max-width:96vw;border-radius:clamp(10px,2.4vw,18px);
+    background:rgba(8,6,14,.72);box-shadow:0 4px 22px rgba(0,0,0,.55);
+    transition:transform .18s;}
+  #card .chip{width:clamp(28px,8.5vw,58px);height:clamp(28px,8.5vw,58px);
+    border-radius:clamp(6px,1.6vw,12px);flex:0 0 auto;
+    box-shadow:0 0 14px currentColor,0 3px 10px rgba(0,0,0,.6);
+    background:currentColor;transition:opacity .25s,transform .25s,filter .25s;}
+  /* the step you owe right now pulses, so there is always a next thing */
+  #card .chip.next{animation:chipPulse .8s ease-in-out infinite;}
+  @keyframes chipPulse{0%,100%{transform:scale(1);}50%{transform:scale(1.18);}}
+  /* a used chip goes flat and dim, so the eye skips straight past it */
+  #card .chip.done{opacity:.22;transform:scale(.62);box-shadow:none;filter:grayscale(1);}
+  /* 霧: the colours are hidden, the order has to be held in the head */
+  #card.fog .chip:not(.done){color:#5a5a68 !important;box-shadow:none;}
+  /* 逆織り: the card flips and is read from the other end. The flip itself
+     is applied inline (it composes with the hourglass lean), so this rule
+     only has to make the chips' own glow survive the mirror. */
+  #card.rev .chip{box-shadow:0 0 18px currentColor,0 3px 10px rgba(0,0,0,.6);}
+  /* the hourglass: a bar under the card draining toward empty */
+  #hg{position:fixed;left:50%;transform:translateX(-50%);z-index:12;
+    top:clamp(102px,17vh,158px);width:clamp(120px,36vw,260px);height:6px;
+    border-radius:3px;background:rgba(255,255,255,.14);pointer-events:none;opacity:0;}
+  #hg .fill{height:100%;border-radius:3px;background:#ffa53b;width:100%;
+    transform-origin:left center;}
+
+  /* --- event banner: slams into the middle of the screen --- */
+  #banner{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    z-index:15;pointer-events:none;opacity:0;}
+  #banner .b{font-size:clamp(24px,7vw,64px);font-weight:900;letter-spacing:.06em;color:#fff;
+    padding:10px 4vw;max-width:94vw;text-align:center;transform:scale(2.4);opacity:0;
+    text-shadow:0 0 26px currentColor, 0 6px 20px #000;
+    border-top:5px solid currentColor;border-bottom:5px solid currentColor;}
+  #banner.go .b{animation:slam .62s cubic-bezier(.12,.85,.2,1) forwards;}
+  @keyframes slam{
+    0%  {transform:scale(2.4) rotate(-4deg);opacity:0;}
+    22% {transform:scale(1)   rotate(0deg); opacity:1;}
+    70% {transform:scale(1)   rotate(0deg); opacity:1;}
+    100%{transform:scale(1.12);opacity:0;}
+  }
+
+  /* --- full-screen colour flashes --- */
+  #flash{position:fixed;inset:0;z-index:14;pointer-events:none;opacity:0;background:#fff;}
+  #vignette{position:fixed;inset:0;z-index:13;pointer-events:none;opacity:0;
+    background:radial-gradient(ellipse at center,rgba(0,0,0,0) 32%,rgba(120,0,10,.85) 100%);}
+
+  /* --- K.O. screen --- */
+  #ko{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    z-index:22;pointer-events:none;opacity:0;color:#fff;transition:opacity .3s;}
+  #ko.on{opacity:1;}
+  #ko .koText{font-size:clamp(84px,24vw,180px);font-weight:900;letter-spacing:10px;color:#fff;
+    text-shadow:0 0 40px #ff5a2b,0 0 90px #ff5a2b,0 10px 30px #000;
+    transform:scale(3);opacity:0;}
+  #ko.on .koText{animation:koSlam .8s cubic-bezier(.1,.9,.2,1) forwards;}
+  @keyframes koSlam{
+    0%  {transform:scale(3) rotate(-8deg);opacity:0;}
+    30% {transform:scale(1) rotate(0deg);opacity:1;}
+    36% {transform:scale(1.06);}
+    100%{transform:scale(1);opacity:1;}
+  }
+  #ko .finalLabel{font-size:clamp(14px,4vw,22px);letter-spacing:4px;opacity:0;margin-top:6px;text-shadow:0 2px 8px #000;}
+  #ko .finalScore{font-size:clamp(44px,13vw,80px);font-weight:800;opacity:0;text-shadow:0 4px 20px #000;}
+  #ko.on .finalLabel{animation:fadeUp .5s .75s forwards;}
+  #ko.on .finalScore{animation:fadeUp .5s .9s forwards;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:none;}}
+
+  /* --- help (?) --- */
+  #helpBtn{position:fixed;top:14px;right:66px;z-index:30;border:none;cursor:pointer;
+    background:rgba(12,16,26,.72);color:#fff;font:700 20px/1 'Helvetica Neue',Arial,sans-serif;
+    width:44px;height:44px;border-radius:12px;}
+  #helpBtn:hover{background:rgba(30,38,56,.9);}
+  #help{position:fixed;inset:0;z-index:40;display:none;align-items:center;
+    justify-content:center;background:rgba(4,6,12,.82);padding:20px;}
+  #help.on{display:flex;}
+  #help .box{background:#141019;border:1px solid #50392b;border-radius:18px;
+    max-width:560px;width:100%;max-height:86vh;overflow:auto;padding:26px 28px 22px;
+    color:#e9e2d8;font-family:'Hiragino Kaku Gothic ProN','Helvetica Neue',Arial,sans-serif;}
+  #help h2{margin:0 0 4px;font-size:clamp(20px,5.5vw,26px);}
+  #help .sub{color:#a08e7c;font-size:clamp(12px,3.4vw,14px);margin:0 0 18px;}
+  #help h3{font-size:clamp(13px,3.8vw,15px);color:#ffa53b;margin:18px 0 6px;letter-spacing:.04em;}
+  #help ul{margin:0;padding-left:20px;}
+  #help li{font-size:clamp(13px,3.7vw,15px);line-height:1.7;margin:3px 0;}
+  #help b{color:#ffa53b;font-weight:700;}
+  #help .close{margin-top:20px;width:100%;padding:12px;border:none;border-radius:10px;
+    background:#50392b;color:#fff;font-size:16px;font-weight:700;cursor:pointer;}
+  #help .close:hover{background:#6d4f3a;}
+
+  /* Short screens (a phone in landscape) have no vertical room to stack the
+     score above the card. Move the score out of the way instead of letting
+     the two collide, and pull the whole HUD tight. */
+  @media (max-height:520px){
+    #ui{top:8px;}
+    #score{font-size:22px;text-align:left;padding-left:72px;}
+    #msg{text-align:left;padding-left:72px;font-size:13px;margin-top:2px;}
+    #cardWrap{top:6px;}
+    #card{gap:5px;padding:5px 8px;}
+    #card .chip{width:26px;height:26px;border-radius:7px;}
+    #hg{top:44px;height:5px;width:min(42vw,220px);}
+  }
+</style>
+</head>
+<body>
+<div id="ui"><div id="score">0</div><div id="msg"></div></div>
+<div id="cardWrap"><div id="card"></div></div>
+<div id="hg"><div class="fill"></div></div>
+<button id="helpBtn" title="あそびかた">?</button>
+<div id="help"><div class="box">
+  <h2>ルーム・ウィーブ</h2>
+  <p class="sub">杼（ひ）を、正しい順に通す。順番を外すと柄が崩れる。</p>
+    <h3>織り手</h3>
+    <ul><li>やることは<b>ひとつだけ</b>。杼を渡す口を選ぶ</li><li>選ぶ口は<b>四つ</b>。色で見分ける</li><li>手はひとつ。口は四つ。<b>迷える時間はない</b></li></ul>
+    <h3>柄の札（パターンカード）</h3>
+    <ul><li>画面の上に<b>これから通す順番</b>が並ぶ</li><li>左から順に、<b>その色の口</b>を選ぶ</li><li>通すたび札がひとつ減る。<b>最後まで通せば一枚完成</b></li></ul>
+    <h3>綜絖（そうこう）の口</h3>
+    <ul><li>四本の経糸（たていと）が開いてできる<b>すきま</b></li><li>選んだ口だけが開く。<b>開いていない口に杼は通らない</b></li><li>順番を間違えると<b>その場で糸が切れる</b></li></ul>
+    <h3>砂時計</h3>
+    <ul><li>札の一手ごとに<b>持ち時間</b>がある</li><li>札が進むほど短くなる。<b>考え込む余裕はない</b></li><li>切れたら、間違えたのと同じ扱い</li></ul>
+    <h3>起こること</h3>
+    <ul><li><b>逆織り</b> : 札を右から読む羽目になる</li><li><b>霧</b> : 札の色が一瞬で隠れる。覚えておくこと</li><li><b>早打ち</b> : 持ち時間が半分になる</li><li><b>長札</b> : ふだんより長い柄が一枚来る</li></ul>
+  <button class="close">わかった</button>
+</div></div>
+<a id="back" href="../../" title="ゲーム一覧にもどる">‹ ゲーム一覧</a>
+<button id="mute" title="音のオン / オフ">🔊</button>
+<div id="vignette"></div>
+<div id="flash"></div>
+<div id="banner"><div class="b"></div></div>
+<div id="ko">
+  <div class="koText">K.O.</div>
+  <div class="finalLabel">さいしゅうスコア</div>
+  <div class="finalScore">0</div>
+</div>
+<div id="title">
+  <h1>ルーム・ウィーブ</h1>
+  <p>杼（ひ）を、札のとおりの順に通す。</p>
+  <p class="kb">1 2 3 4 / ← → : 口をえらぶ　　スペース : 杼を通す</p>
+  <p class="tc">通したい口をタップ　　左右スワイプでも選べます</p>
+  <button class="btn" id="startBtn">スタート</button>
+</div>
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+// ---------- url flags (declared first: sound and camera both read them) ----------
+const QS = new URLSearchParams(location.search);
+const AUTO = QS.get('auto')==='1';
+const SHOWCASE_Q = QS.get('showcase');
+// Recording must produce clean footage, so every automated mode is muted.
+const REC = QS.get('rec')==='1';   // 録音モード: 音を鳴らして拾う
+const SILENT = (AUTO || !!SHOWCASE_Q || QS.get('mute')==='1') && !REC;
+// 録画・showcase では「?」と「ゲーム一覧」を出さない（動画の邪魔になる）
+const NOCHROME = AUTO || !!SHOWCASE_Q || QS.get('nochrome')==='1';
+
+// ---------- renderer / scene ----------
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.shadowMap.enabled = true;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const SKY = new THREE.Color(0x120d18);
+scene.background = SKY.clone();
+scene.fog = new THREE.Fog(0x120d18, 20, 52);
+
+const camera = new THREE.PerspectiveCamera(50, innerWidth/innerHeight, .1, 120);
+
+// Portrait and landscape both have to work. A phone held upright is far
+// narrower than 16:9, and with a fixed FOV the four sheds fall outside the
+// frame — so widen the vertical FOV as the screen gets taller.
+const BASE_FOV = 50;
+// where the camera sits when nothing is animating it (the death zoom moves it)
+const CAM_REST_Z = 15.5;
+// half the size of the box the camera must frame: the loom plus a little air.
+// The vertical half is measured about LOOK_Y, the point the camera aims at.
+const LOOM_HALF_W = 7.4, LOOM_HALF_H = 5.4;
+// the resting distance fitCamera() settles on for the current aspect ratio
+let camRest = CAM_REST_Z;
+// what the camera aims at: keeps the loom low in frame, leaving the top
+// band of the screen to the pattern card
+const LOOK_Y = 1.6;
+// the camera sits a little above what it aims at, for a slight downward look
+const CAM_REST_Y = LOOK_Y + 1.6;
+function fitCamera(){
+  const aspect = innerWidth / innerHeight;
+  camera.aspect = aspect;
+  if(typeof SHOWCASE !== 'undefined' && SHOWCASE){
+    camera.fov = aspect < 1 ? 62 : 46;
+    camera.__base = camera.fov;
+    camera.updateProjectionMatrix();
+    renderer.setSize(innerWidth, innerHeight);
+    return;
+  }
+  // A phone held upright is far narrower than 16:9, so a fixed FOV pushes the
+  // four sheds out of frame. Widen the vertical FOV as the screen gets taller.
+  const ref = 16/9;
+  camera.fov = aspect >= ref ? BASE_FOV
+    : Math.min(92, THREE.MathUtils.radToDeg(
+        2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(BASE_FOV)/2) * (ref/aspect))));
+  camera.__base = camera.fov;    // 早打ち（RUSH）が戻る先
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+
+  // Then place the camera so the loom actually FILLS that frame. Widening the
+  // FOV alone keeps the loom on screen but leaves it small and marooned in the
+  // middle of a tall phone. Solve the distance for whichever axis is tighter.
+  const halfFov = THREE.MathUtils.degToRad(camera.fov)/2;
+  const distV = LOOM_HALF_H / Math.tan(halfFov);
+  const distH = LOOM_HALF_W / (Math.tan(halfFov) * aspect);
+  camRest = THREE.MathUtils.clamp(Math.max(distV, distH) + 1.0, 8, 26);
+
+  // On the first call the game-state bindings below do not exist yet
+  if(typeof camDist === 'undefined') return;
+  camDistTarget = camRest;
+  if(!running || dead) camDist = camRest;
+}
+
+addEventListener('resize', fitCamera);
+addEventListener('orientationchange', ()=>setTimeout(fitCamera, 120));
+
+// ---------- lights ----------
+const hemi = new THREE.HemisphereLight(0xffd6a0, 0x241428, 1.1);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xfff0d8, 2.2);
+sun.position.set(5, 12, 8); sun.castShadow = true;
+sun.shadow.camera.left=-14; sun.shadow.camera.right=14;
+sun.shadow.camera.top=14; sun.shadow.camera.bottom=-14;
+scene.add(sun);
+
+// ---------- the loom ----------
+// Four sheds side by side. Each shed is a pair of warp threads that part
+// to open a gap; the shuttle only passes through the gap that is open.
+const SHEDS = 4;
+// the height the sheds part at — the shuttle flies through this, so the two
+// must never drift apart
+const SHED_Y = 1.2;
+// how far the warp runs above and below the shed opening
+const WARP_H = 4.3;
+const SHED_X = [-4.2, -1.4, 1.4, 4.2];    // centre of each shed
+const SHED_COL = [0xff5a2b, 0x3bd6ff, 0xffd23b, 0x9b6bff];  // 朱 / 藍 / 黄 / 紫
+const SHED_NAME = ['朱', '藍', '黄', '紫'];
+
+// the frame of the loom: two uprights and a beam
+const woodMat = new THREE.MeshStandardMaterial({color:0x5a3a24, roughness:.8});
+for(const sx of [-6.4, 6.4]){
+  const post = new THREE.Mesh(new THREE.BoxGeometry(.5, 11, .5), woodMat);
+  post.position.set(sx, 1.0, -1.2); post.castShadow = true; scene.add(post);
+}
+const beam = new THREE.Mesh(new THREE.BoxGeometry(13.6, .55, .55), woodMat);
+beam.position.set(0, 6.3, -1.2); beam.castShadow = true; scene.add(beam);
+
+// the cloth already woven, rolling away below the sheds
+const clothMat = new THREE.MeshStandardMaterial({color:0x2a2036, roughness:.95});
+const cloth = new THREE.Mesh(new THREE.PlaneGeometry(13, 26), clothMat);
+cloth.rotation.x = -Math.PI/2.32;
+cloth.position.set(0, -2.1, 4.0);
+cloth.receiveShadow = true;
+scene.add(cloth);
+
+// Each woven row is a thin bar laid onto the cloth, in the colour of the
+// shed it went through — the pattern the player is building is visible.
+const weftRows = [];
+function addWeftRow(colorHex){
+  const m = new THREE.Mesh(new THREE.BoxGeometry(11.4, .16, .42),
+    new THREE.MeshStandardMaterial({color:colorHex, roughness:.55,
+      emissive:colorHex, emissiveIntensity:.25}));
+  // sit it on the sloped cloth just under the sheds, then let it slide away
+  m.rotation.x = -Math.PI/2.32;
+  m.position.set(0, -.5, .6);
+  m.castShadow = true;
+  scene.add(m);
+  weftRows.push({mesh:m, age:0});
+}
+
+// ---------- shed geometry ----------
+// A shed is drawn as two slanted warp threads. `open` (0..1) parts them.
+const warpMat = [];
+const sheds = [];
+function buildShed(i){
+  const g = new THREE.Group();
+  const col = SHED_COL[i];
+  const mat = new THREE.MeshStandardMaterial({color:col, roughness:.45,
+    emissive:col, emissiveIntensity:.18});
+  warpMat.push(mat);
+  // Six warp threads per shed: the top half lifts, the bottom half stays.
+  // WARP_H stops just under the heddle bar so no thread reaches up into the
+  // band of screen the pattern card occupies.
+  const upper = new THREE.Group(), lower = new THREE.Group();
+  for(let k=0;k<6;k++){
+    const x = (k - 2.5) * .36;
+    const a = new THREE.Mesh(new THREE.BoxGeometry(.07, WARP_H, .07), mat);
+    a.position.set(x, WARP_H/2, 0); a.castShadow = true; upper.add(a);
+    const b = new THREE.Mesh(new THREE.BoxGeometry(.07, WARP_H, .07), mat);
+    b.position.set(x, -WARP_H/2, 0); b.castShadow = true; lower.add(b);
+  }
+  g.add(upper, lower);
+  // the heddle bar: a solid plate the player's eye can lock onto
+  const bar = new THREE.Mesh(new THREE.BoxGeometry(2.3, .34, .34),
+    new THREE.MeshStandardMaterial({color:col, roughness:.3,
+      emissive:col, emissiveIntensity:.5}));
+  bar.position.y = 4.5; bar.castShadow = true; g.add(bar);
+  // a dark backing plate so the open gap reads against the background
+  const back = new THREE.Mesh(new THREE.PlaneGeometry(2.5, 3.0),
+    new THREE.MeshBasicMaterial({color:0x000000, transparent:true, opacity:.35}));
+  back.position.set(0, 0, -.6); g.add(back);
+  g.position.set(SHED_X[i], SHED_Y, 0);
+  scene.add(g);
+  sheds.push({group:g, upper, lower, bar, mat, open:0, target:0, glow:0});
+}
+for(let i=0;i<SHEDS;i++) buildShed(i);
+
+// ---------- the shuttle ----------
+function buildShuttle(){
+  const g = new THREE.Group();
+  const bodyMat = new THREE.MeshStandardMaterial({color:0x8a5a2e, roughness:.5, metalness:.15});
+  const tipMat  = new THREE.MeshStandardMaterial({color:0xd8dce8, metalness:.9, roughness:.2});
+  const yarnMat = new THREE.MeshStandardMaterial({color:0xfff0d8, roughness:.9});
+  // a boat-shaped body: a stretched capsule reads as a shuttle from any angle
+  const body = new THREE.Mesh(new THREE.CapsuleGeometry(.34, 1.5, 8, 16), bodyMat);
+  body.rotation.z = Math.PI/2; g.add(body);
+  for(const s of [1,-1]){
+    const tip = new THREE.Mesh(new THREE.ConeGeometry(.3, .8, 14), tipMat);
+    tip.rotation.z = -s*Math.PI/2; tip.position.x = s*1.3; g.add(tip);
+  }
+  // the bobbin of yarn sitting in the hollow
+  const bobbin = new THREE.Mesh(new THREE.CylinderGeometry(.26,.26,1.0,14), yarnMat);
+  bobbin.rotation.z = Math.PI/2; bobbin.position.y = .12; g.add(bobbin);
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  return {group:g, bobbin, body};
+}
+const shuttle = buildShuttle();
+scene.add(shuttle.group);
+// the shuttle carries its own light so it stays readable through 霧 (FOG)
+const heroLight = new THREE.PointLight(0xffd9a0, 26, 22);
+scene.add(heroLight);
+
+// The thread trailing off the shuttle: a line that follows it, so a throw
+// visibly leaves something behind.
+const trailGeo = new THREE.BufferGeometry();
+const TRAIL_N = 24;
+trailGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(TRAIL_N*3), 3));
+const trail = new THREE.Line(trailGeo,
+  new THREE.LineBasicMaterial({color:0xfff0d8, transparent:true, opacity:.75}));
+scene.add(trail);
+const trailPts = new Array(TRAIL_N).fill(0).map(()=>new THREE.Vector3());
+
+// ---------- pattern card (a fixed HUD strip) ----------
+// The card is the whole game: it tells you which shed comes next. It is
+// drawn in the DOM rather than the scene — as a 3D object it tangled with
+// the loom's own coloured bars and had to be re-fitted to the frustum on
+// every resize. As HUD it is legible on any screen with no maths at all.
+const cardEl = document.getElementById('card');
+const hgEl = document.getElementById('hg');
+const hgFill = hgEl.querySelector('.fill');
+const chips = [];       // one element per step of the card
+function clearChips(){
+  cardEl.textContent = '';
+  chips.length = 0;
+}
+function buildChips(pattern){
+  clearChips();
+  for(let i=0;i<pattern.length;i++){
+    const d = document.createElement('div');
+    d.className = 'chip';
+    // `currentColor` drives both the fill and the glow, so 霧 can grey out
+    // a chip by overriding one property
+    d.style.color = '#' + SHED_COL[pattern[i]].toString(16).padStart(6,'0');
+    cardEl.appendChild(d);
+    chips.push({el:d, idx:pattern[i], done:false});
+  }
+  paintChips();
+}
+/** reflect step / done / fog state onto the card */
+function paintChips(){
+  const nextI = reverse ? pattern.length-1-step : step;
+  for(let i=0;i<chips.length;i++){
+    const c = chips[i];
+    c.el.classList.toggle('done', c.done);
+    c.el.classList.toggle('next', !c.done && i===nextI && step<pattern.length);
+  }
+  cardEl.classList.toggle('fog', fog>0);
+  cardEl.classList.toggle('rev', reverse);
+}
+
+// ---------- game state ----------
+let running=false, dead=false, t=0, score=0;
+let sel=0;                       // which shed is currently selected
+let pattern=[], step=0;          // the card, and how far through it we are
+let cardsDone=0;                 // completed cards this run
+let stepTime=0, stepLimit=2.6;   // hourglass for the current step
+let throwT=-1, throwFrom=0, throwTo=0, throwCol=0xffffff;  // shuttle flight
+let reverse=false;               // 逆織り: read the card right-to-left
+let fog=0;                       // 霧: chips hide their colour
+let rush=0;                      // 早打ち: half the time per step
+let longCard=false;              // 長札: next card is longer
+let timeScale=1;                 // slow-motion multiplier
+let deadAt=0;                    // when the run ended (touch retry gate)
+let cardFall=0;                  // how far the card has slid away on death
+let shake=0;                     // camera shake amount
+var camDist=camRest, camDistTarget=camRest;   // death zoom pulls the camera in
+let nextEventAt=10;              // seconds until the first event
+let eventQueue=[];               // event names not yet used in this run
+const scoreEl = document.getElementById('score');
+const msgEl = document.getElementById('msg');
+const titleEl = document.getElementById('title');
+const bannerEl = document.getElementById('banner');
+const bannerText = bannerEl.querySelector('.b');
+const flashEl = document.getElementById('flash');
+const vignetteEl = document.getElementById('vignette');
+const koEl = document.getElementById('ko');
+const koScoreEl = koEl.querySelector('.finalScore');
+
+// ---------- presentation helpers ----------
+function banner(text, color){
+  bannerText.textContent = text;
+  bannerText.style.color = color;
+  bannerEl.classList.remove('go');
+  void bannerEl.offsetWidth;      // restart the CSS animation
+  bannerEl.style.opacity = 1;
+  bannerEl.classList.add('go');
+}
+function flash(color, strength, ms){
+  flashEl.style.background = color;
+  flashEl.style.transition = 'none';
+  flashEl.style.opacity = strength;
+  requestAnimationFrame(()=>{
+    flashEl.style.transition = `opacity ${ms}ms ease-out`;
+    flashEl.style.opacity = 0;
+  });
+}
+
+// ---------- the card ----------
+// Length grows slowly with the run, so the memory load ramps.
+function newCard(){
+  let n = 3 + Math.min(3, Math.floor(cardsDone/3));
+  if(longCard){ n = Math.min(7, n+2); longCard = false; }
+  pattern = [];
+  for(let i=0;i<n;i++){
+    // avoid the same shed twice in a row — a repeat reads as "nothing changed"
+    let v; do { v = Math.floor(Math.random()*SHEDS); } while(i>0 && v===pattern[i-1]);
+    pattern.push(v);
+  }
+  step = 0;
+  buildChips(pattern);
+  // the hourglass tightens as the run goes on, but never below a fair floor
+  stepLimit = Math.max(1.0, 2.6 - cardsDone*0.09);
+  stepTime = 0;
+}
+
+/** which shed the card is asking for right now (逆織り reads from the end) */
+function wanted(){
+  if(step >= pattern.length) return -1;
+  return reverse ? pattern[pattern.length-1-step] : pattern[step];
+}
+
+// ---------- events ----------
+const EVENTS = {
+  reverse(){
+    banner('逆織り', '#9b6bff');
+    reverse = true;
+    flash('#9b6bff', .3, 380);
+    shake = Math.max(shake, .25);
+    return 9;                          // how long the run stays reversed
+  },
+  fog(){
+    banner('霧', '#8fb8d8');
+    fog = 5.5;
+    return 6;
+  },
+  rush(){
+    banner('早打ち', '#ff5a2b');
+    rush = 6.0;
+    flash('#ff8a4a', .32, 400);
+    return 6.5;
+  },
+  longcard(){
+    banner('長札', '#ffd23b');
+    longCard = true;
+    // hand it over immediately so the long card is what the banner announced
+    newCard();
+    return 8;
+  },
+};
+const EVENT_NAMES = Object.keys(EVENTS);
+// recording/debug hook: fire a named event on cue (used by the capture script)
+// returns false if the run is already over, so a capture script can wait
+// for the next run instead of firing an event onto the K.O. screen
+window.__ev = name => {
+  if(!running || dead || !EVENTS[name]) return false;
+  const busy = EVENTS[name]();
+  if(!SILENT) SND.event(); nextEventAt = t + busy + 5; return true;
+};
+window.__alive = () => running && !dead;
+window.__kill = () => { if(running && !dead){ breakWeave(); } };
+window.__recStop = () => SND.recStop();
+window.__snd = () => ({enabled: SND.enabled, silent: SILENT});
+window.__fov = () => +camera.fov.toFixed(1);
+window.__events = EVENT_NAMES.slice();
+window.__probe = () => ({t:+t.toFixed(2), sel, step, want:wanted(),
+  pat:pattern.slice(), cards:cardsDone, rev:reverse, next:+nextEventAt.toFixed(2)});
+
+function refillEventQueue(){
+  eventQueue = EVENT_NAMES.slice();
+  for(let i=eventQueue.length-1;i>0;i--){        // shuffle so the order varies per run
+    const j = Math.floor(Math.random()*(i+1));
+    [eventQueue[i],eventQueue[j]]=[eventQueue[j],eventQueue[i]];
+  }
+}
+
+function triggerEvent(){
+  if(!eventQueue.length) refillEventQueue();
+  const name = eventQueue.pop();
+  const busy = EVENTS[name]();
+  if(!SILENT) SND.event();
+  nextEventAt = t + busy + 5 + Math.random()*4;  // breathing room between events
+}
+
+// ---------- reset ----------
+function reset(){
+  for(const w of weftRows) scene.remove(w.mesh);
+  weftRows.length = 0;
+  clearChips();
+  t=0; score=0; dead=false; sel=0; cardsDone=0;
+  throwT=-1; reverse=false; fog=0; rush=0; longCard=false;
+  timeScale=1; shake=0; camDist=camRest; camDistTarget=camRest;
+  cardEl.classList.remove('fog','rev');
+  cardEl.style.transform = ''; cardFall = 0;
+  hgEl.style.opacity = 0;
+  for(const s of sheds){ s.open=0; s.target=0; s.glow=0; }
+  shuttle.group.position.set(SHED_X[0]-3.2, SHED_Y, 1.1);
+  shuttle.group.rotation.set(0,0,0);
+  shuttle.group.scale.set(1,1,1);
+  for(const p of trailPts) p.copy(shuttle.group.position);
+  nextEventAt = 10;
+  refillEventQueue();
+  msgEl.textContent='';
+  koEl.classList.remove('on');
+  vignetteEl.style.transition='opacity .3s'; vignetteEl.style.opacity=0;
+  newCard();
+}
+
+const startBtn = document.getElementById('startBtn');
+
+// ---------- sound: everything synthesised, no audio files ----------
+// Keeps the single-HTML rule (nothing to download) and lets the music
+// react to play: the bass line speeds up with the game, events drop a
+// stinger, and the whole thing ducks out on a game over.
+const SND = (() => {
+  let ctx = null, master = null, musicGain = null, on = true, started = false;
+  let step = 0, timer = null, tempo = 0.25;
+
+  // A pentatonic scale never sounds wrong against itself, which matters
+  // when the tempo drifts with the player's speed.
+  // minor pentatonic, driving — a chase that never lets up
+  const SCALE = [0, 3, 5, 7, 10];
+  const ROOT = 196;
+  const BASS = 'square', LEAD = 'sawtooth';
+  const hz = (deg, oct = 0) =>
+    ROOT * Math.pow(2, oct + Math.floor(deg / SCALE.length)) *
+    Math.pow(2, SCALE[((deg % SCALE.length) + SCALE.length) % SCALE.length] / 12);
+
+  function ensure() {
+    if (ctx) return ctx;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    ctx = new AC();
+    master = ctx.createGain();
+    master.gain.value = 0.32;
+    master.connect(ctx.destination);
+    musicGain = ctx.createGain();
+    musicGain.gain.value = 1;
+    musicGain.connect(master);
+    return ctx;
+  }
+
+
+  // ---- 録音用の分岐（?rec=1）----
+  // Playwright の録画には音声が入らないので、ゲーム自身に master バスを
+  // 録らせる。鳴っているものそのものなので映像と必ず同期する。
+  let recDest = null, recorder = null, recChunks = [];
+  function recStart() {
+    if (!ctx || recorder) return;
+    recDest = ctx.createMediaStreamDestination();
+    master.connect(recDest);
+    recorder = new MediaRecorder(recDest.stream, {mimeType: 'audio/webm'});
+    recorder.ondataavailable = e => { if (e.data.size) recChunks.push(e.data); };
+    recorder.start();
+  }
+  function recStop() {
+    return new Promise(res => {
+      if (!recorder) return res(null);
+      recorder.onstop = async () => {
+        const blob = new Blob(recChunks, {type: 'audio/webm'});
+        const buf = await blob.arrayBuffer();
+        res(Array.from(new Uint8Array(buf)));
+      };
+      recorder.stop();
+    });
+  }
+
+  function blip(freq, dur, type = 'square', vol = 0.25, dest = null, slideTo = null) {
+    if (!ctx || !on) return;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, ctx.currentTime);
+    if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, ctx.currentTime + dur);
+    // a short attack stops every note from clicking
+    g.gain.setValueAtTime(0, ctx.currentTime);
+    g.gain.linearRampToValueAtTime(vol, ctx.currentTime + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + dur);
+    o.connect(g); g.connect(dest || master);
+    o.start(); o.stop(ctx.currentTime + dur + 0.02);
+  }
+
+  function noise(dur, vol = 0.2, hp = 800) {
+    if (!ctx || !on) return;
+    const n = Math.floor(ctx.sampleRate * dur);
+    const buf = ctx.createBuffer(1, n, ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    const f = ctx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = hp;
+    const g = ctx.createGain(); g.gain.value = vol;
+    src.connect(f); f.connect(g); g.connect(master);
+    src.start();
+  }
+
+  // --- the loop: a walking bass plus an offbeat blip ---
+  function tick() {
+    if (!ctx || !on) return;
+    const bar = step % 16;
+    // straight driving pulse: bass on every beat, lead stabs offbeat
+    if (bar % 2 === 0) blip(hz(bar % 8 === 0 ? 0 : 1, -1), tempo * 1.1, BASS, 0.30, musicGain);
+    if (bar % 8 === 5) blip(hz(4, 0), tempo * 0.6, LEAD, 0.09, musicGain);
+    if (bar % 4 === 2) noise(0.04, 0.05, 5000);
+    step++;
+    timer = setTimeout(tick, tempo * 1000);
+  }
+
+  return {
+    // must be called from a user gesture — browsers block audio otherwise
+    start() {
+      if (!ensure() || started) return;
+      if (ctx.state === 'suspended') ctx.resume();
+      started = true; step = 0; tick();
+    },
+    stop() { if (timer) { clearTimeout(timer); timer = null; } started = false; },
+    /** speed the music up with the game; 1 = starting pace */
+    setPace(mult) { tempo = Math.max(0.11, 0.25 / Math.max(0.2, mult)); },
+    duck(sec = 1.6) {                                      // for game over
+      if (!ctx) return;
+      musicGain.gain.cancelScheduledValues(ctx.currentTime);
+      musicGain.gain.setValueAtTime(musicGain.gain.value, ctx.currentTime);
+      musicGain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + sec);
+    },
+    unduck() {
+      if (!ctx) return;
+      musicGain.gain.cancelScheduledValues(ctx.currentTime);
+      musicGain.gain.setValueAtTime(0.0001, ctx.currentTime);
+      musicGain.gain.exponentialRampToValueAtTime(1, ctx.currentTime + 0.4);
+    },
+    // --- one-shots ---
+    // 選択の移動: 短い木のような音。押すたび必ず鳴る
+    move()  { ensure(); blip(hz(3, 1), 0.07, LEAD, 0.12); },
+    /** 杼が通った音。口ごとに音程を変えて、4つの口が耳でも区別できるようにする */
+    pass(i) { ensure(); blip(hz(i, 0), 0.13, 'triangle', 0.22, null, hz(i + 2, 1)); },
+    land()  { ensure(); noise(0.06, 0.10, 500); },
+    /** 一枚織り上がった: 上がっていく三音 */
+    card()  { ensure(); [0, 80, 160].forEach((ms, i) =>
+                setTimeout(() => blip(hz(2 + i * 2, 0), 0.22, 'triangle', 0.22), ms)); },
+    event() { ensure(); [0, 90, 180].forEach((ms, i) =>
+                setTimeout(() => blip(hz(2 + i, 0), 0.18, 'sawtooth', 0.20), ms)); },
+    hit()   { ensure(); noise(0.35, 0.30, 200);
+              blip(180, 0.5, 'sawtooth', 0.28, null, 40); },
+    over()  { ensure(); [0, 140, 280, 460].forEach((ms, i) =>
+                setTimeout(() => blip(hz(-i, -1), 0.42, 'triangle', 0.26), ms)); },
+    recStart() { ensure(); recStart(); },
+    recStop() { return recStop(); },
+    toggle() { on = !on; if (!on) { this.stop(); } else { this.start(); } return on; },
+    get enabled() { return on; },
+  };
+})();
+
+// --- one place for every action, so touch and keyboard stay in step ---
+function startRun(){
+  titleEl.classList.add('hidden'); reset(); running=true;
+  if(!SILENT){ SND.unduck(); SND.start(); if(REC) SND.recStart(); }
+}
+
+/** move the highlight without committing to it (keyboard arrows, swipe) */
+function selectShed(i){
+  if(!running || dead) return;
+  i = Math.max(0, Math.min(SHEDS-1, i));
+  if(i === sel) return;
+  sel = i;
+  if(!SILENT) SND.move();
+}
+
+/**
+ * Commit: pass the shuttle through the selected shed.
+ * Right shed -> the card advances. Wrong shed -> the weave breaks.
+ * This is the single action of the game; every input path ends here.
+ */
+function passShuttle(i){
+  if(!running || dead) return;
+  if(throwT >= 0) return;             // one throw at a time
+  if(i !== undefined) sel = Math.max(0, Math.min(SHEDS-1, i));
+  const want = wanted();
+  // the shed parts, the shuttle flies, the row lands on the cloth
+  throwFrom = shuttle.group.position.x;
+  throwTo = SHED_X[sel] + (throwFrom < SHED_X[sel] ? 3.2 : -3.2);
+  throwT = 0;
+  throwCol = SHED_COL[sel];
+  sheds[sel].target = 1; sheds[sel].glow = 1;
+  if(sel === want){
+    if(!SILENT) SND.pass(sel);
+    addWeftRow(SHED_COL[sel]);
+    // marking the chip keeps the card honest: what is left is what is owed
+    chips[reverse ? pattern.length-1-step : step].done = true;
+    paintChips();
+    step++;
+    score += 40 + Math.floor(t);       // later rows are worth more
+    stepTime = 0;
+    if(step >= pattern.length){         // a card finished
+      cardsDone++;
+      score += 150;
+      if(!SILENT) SND.card();
+      flash('#ffd23b', .22, 320);
+      setTimeout(()=>{ if(running && !dead) newCard(); }, 260);
+    }
+  } else {
+    breakWeave();
+  }
+}
+
+/** the wrong shed, or the hourglass ran out: the pattern is ruined */
+function breakWeave(){
+  if(dead) return;
+  dead = true;
+  gameOver();
+}
+
+const muteBtn = document.getElementById('mute');
+function toggleMute(){ muteBtn.textContent = SND.toggle() ? '🔊' : '🔇'; }
+muteBtn.addEventListener('click', toggleMute);
+muteBtn.addEventListener('touchend', e=>{ e.preventDefault(); toggleMute(); },
+                         {passive:false});
+if(SILENT) muteBtn.style.display='none';   // automated modes have no audio
+addEventListener('keydown', e=>{ if(e.code==='KeyM') toggleMute(); });
+
+startBtn.addEventListener('click', startRun);
+// a touch on the button must start too — click alone is unreliable on touch
+startBtn.addEventListener('touchend', e=>{ e.preventDefault(); startRun(); },
+                          {passive:false});
+
+addEventListener('keydown', e=>{
+  if(!running){
+    if(e.code==='Space'||e.code==='Enter') startRun();
+    return;
+  }
+  // 1..4 are the direct route: pick a shed and pass in one key
+  if(e.code==='Digit1'||e.code==='Digit2'||e.code==='Digit3'||e.code==='Digit4'){
+    passShuttle(+e.code.slice(5) - 1); return;
+  }
+  if(e.code==='ArrowLeft' ||e.code==='KeyA') selectShed(sel-1);
+  if(e.code==='ArrowRight'||e.code==='KeyD') selectShed(sel+1);
+  if(e.code==='Space'||e.code==='Enter'||e.code==='ArrowUp'||e.code==='KeyW') passShuttle();
+});
+
+// --- touch: tap the shed you want, or swipe to move the highlight ---
+// Most viewers arrive from a phone, so the game has to be playable without
+// a keyboard. A tap is the whole game: the x of the tap picks the shed and
+// passes the shuttle, so there is nothing to learn.
+(function(){
+  let sx=0, sy=0, st=0, swiped=false;
+  const SWIPE = 34;          // px before a drag counts as a swipe
+  const canvas = renderer.domElement;
+
+  /** map a screen x to the shed under it, by projecting each shed centre */
+  function shedAtX(clientX){
+    let best = 0, bestD = Infinity;
+    const v = new THREE.Vector3();
+    for(let i=0;i<SHEDS;i++){
+      v.set(SHED_X[i], SHED_Y, 0).project(camera);
+      const px = (v.x*.5 + .5) * innerWidth;
+      const d = Math.abs(px - clientX);
+      if(d < bestD){ bestD = d; best = i; }
+    }
+    return best;
+  }
+
+  canvas.addEventListener('touchstart', e=>{
+    const p = e.changedTouches[0];
+    sx=p.clientX; sy=p.clientY; st=Date.now(); swiped=false;
+  }, {passive:true});
+
+  canvas.addEventListener('touchmove', e=>{
+    if(swiped || !running || dead) return;
+    const p = e.changedTouches[0];
+    const dx = p.clientX-sx, dy = p.clientY-sy;
+    if(Math.abs(dx) > SWIPE && Math.abs(dx) > Math.abs(dy)){
+      selectShed(sel + (dx < 0 ? -1 : 1));
+      sx = p.clientX;             // let a long drag step across several sheds
+      swiped = true;
+    }
+  }, {passive:true});
+
+  canvas.addEventListener('touchend', e=>{
+    if(dead){
+      // give the K.O. animation time to read, then a tap retries
+      if(!AUTO && Date.now()-deadAt > 1500) startRun();
+      return;
+    }
+    if(!running){ startRun(); return; }
+    const p = e.changedTouches[0];
+    if(swiped){
+      // a swipe only moved the highlight; lifting off commits it
+      passShuttle();
+      return;
+    }
+    // a plain tap: whichever shed is under the finger
+    if(Date.now()-st < 500) passShuttle(shedAtX(p.clientX));
+  }, {passive:true});
+
+  // desktop mouse gets the same one-click route as touch
+  canvas.addEventListener('pointerdown', e=>{
+    if(e.pointerType === 'touch') return;      // touch is handled above
+    if(dead){ if(!AUTO && Date.now()-deadAt > 1500) startRun(); return; }
+    if(!running){ startRun(); return; }
+    passShuttle(shedAtX(e.clientX));
+  });
+
+  // The title overlay sits above the canvas, so a tap anywhere on it never
+  // reaches the canvas handler. Start from the overlay itself.
+  titleEl.addEventListener('touchend', e=>{
+    if(!running){ e.preventDefault(); startRun(); }
+  }, {passive:false});
+
+  // stop the browser treating game taps as scroll / double-tap zoom
+  canvas.addEventListener('touchmove', e=>e.preventDefault(), {passive:false});
+})();
+
+// autoplay mode for recording: ?auto=1
+// recording holds the K.O. longer than play does: ?hold=9000
+const RETRY_MS = Math.max(1200, parseInt(QS.get('hold')||'4200', 10));
+// ?noev=1 records a calm run with no events, for narration beds
+const NOEV = QS.get('noev')==='1';
+if(AUTO){ setTimeout(startRun, 1200); }   // startRun 経由にする（音/録音も始まる）
+
+// The autopilot reads the card, not the screen, so 霧 (FOG) does not blind
+// it — but it deliberately waits a beat before each pass, so the footage
+// shows a human-looking rhythm rather than instant machine play.
+let autoWait = 0;
+function autoPilot(dt){
+  if(throwT >= 0) return;               // a throw is already in the air
+  autoWait -= dt;
+  if(autoWait > 0) return;
+  const want = wanted();
+  if(want < 0) return;                  // between cards
+  passShuttle(want);
+  // slower than the hourglass, but never so slow that it times out
+  autoWait = Math.min(stepLimit*0.55, 0.42);
+}
+
+// ---------- showcase mode ----------
+// Puts one object on a turntable against an empty stage so the video can
+// talk about it while the real thing is on screen. Uses the game's own
+// meshes, so what the narration describes is exactly what ships.
+const SHOWCASE = QS.get('showcase');
+const showcase = {group:null, spin:.55, label:''};
+// every valid ?showcase= name — the recording tooling reads this list
+window.__subjects = ['shuttle','shed','card','cloth','loom'];
+
+function buildShowcase(name){
+  const g = new THREE.Group();
+  let label = '', spin = .55, flat = false;
+  if(name==='shuttle'){
+    const s = buildShuttle();
+    s.group.scale.set(1.5,1.5,1.5);
+    g.add(s.group); label = '杼（ひ）'; spin = .6;
+  } else if(name==='shed'){
+    // one shed, held half-open so the gap the shuttle uses is visible
+    const col = SHED_COL[0];
+    const mat = new THREE.MeshStandardMaterial({color:col, roughness:.45,
+      emissive:col, emissiveIntensity:.18});
+    for(let k=0;k<6;k++){
+      const x = (k - 2.5) * .36;
+      const a = new THREE.Mesh(new THREE.BoxGeometry(.07, 5.6, .07), mat);
+      a.position.set(x, 2.8 + 1.1, 0); g.add(a);
+      const b = new THREE.Mesh(new THREE.BoxGeometry(.07, 5.6, .07), mat);
+      b.position.set(x, -2.8 - 1.1, 0); g.add(b);
+    }
+    const bar = new THREE.Mesh(new THREE.BoxGeometry(2.3, .34, .34),
+      new THREE.MeshStandardMaterial({color:col, roughness:.3,
+        emissive:col, emissiveIntensity:.5}));
+    bar.position.y = 6.8; g.add(bar);
+    label = '綜絖の口'; spin = .45;
+  } else if(name==='card'){
+    // a sample card: four chips in four colours, the thing you must read
+    for(let i=0;i<4;i++){
+      const col = SHED_COL[i];
+      const m = new THREE.Mesh(new THREE.BoxGeometry(1.12, 1.12, .22),
+        new THREE.MeshStandardMaterial({color:col, roughness:.4,
+          emissive:col, emissiveIntensity:.45}));
+      m.position.set((i - 1.5) * 1.5, 0, 0); g.add(m);
+    }
+    label = '柄の札'; spin = .5;
+  } else if(name==='cloth'){
+    // a slab of finished cloth with a few coloured rows laid into it
+    const base = new THREE.Mesh(new THREE.BoxGeometry(7.5, .3, 5.2), clothMat);
+    g.add(base);
+    for(let i=0;i<5;i++){
+      const col = SHED_COL[i%4];
+      const m = new THREE.Mesh(new THREE.BoxGeometry(7.2, .18, .5),
+        new THREE.MeshStandardMaterial({color:col, roughness:.55,
+          emissive:col, emissiveIntensity:.25}));
+      m.position.set(0, .2, (i-2)*.95); g.add(m);
+    }
+    label = '織り上がった布'; spin = .5;
+  } else if(name==='loom'){
+    // the whole machine in miniature: frame plus all four sheds
+    for(const sx of [-6.4, 6.4]){
+      const post = new THREE.Mesh(new THREE.BoxGeometry(.5, 11, .5), woodMat);
+      post.position.set(sx, 2.2, 0); g.add(post);
+    }
+    const bm = new THREE.Mesh(new THREE.BoxGeometry(13.6, .55, .55), woodMat);
+    bm.position.set(0, 7.5, 0); g.add(bm);
+    for(let i=0;i<SHEDS;i++){
+      const col = SHED_COL[i];
+      const mat = new THREE.MeshStandardMaterial({color:col, roughness:.45,
+        emissive:col, emissiveIntensity:.2});
+      for(let k=0;k<6;k++){
+        const x = SHED_X[i] + (k - 2.5) * .36;
+        const a = new THREE.Mesh(new THREE.BoxGeometry(.07, 5.2, .07), mat);
+        a.position.set(x, 4.2, 0); g.add(a);
+        const b = new THREE.Mesh(new THREE.BoxGeometry(.07, 5.2, .07), mat);
+        b.position.set(x, -1.0, 0); g.add(b);
+      }
+      const bar = new THREE.Mesh(new THREE.BoxGeometry(2.3, .34, .34),
+        new THREE.MeshStandardMaterial({color:col, roughness:.3,
+          emissive:col, emissiveIntensity:.5}));
+      bar.position.set(SHED_X[i], 7.0, 0); g.add(bar);
+    }
+    label = '織り機'; spin = .4;
+  }
+  g.traverse(o=>{ if(o.isMesh) o.castShadow = true; });
+  scene.add(g);
+
+  // Centre the subject on the origin and pull the camera back to fit it,
+  // so every object is framed the same way regardless of its size.
+  const box = new THREE.Box3().setFromObject(g);
+  const size = box.getSize(new THREE.Vector3());
+  const mid = box.getCenter(new THREE.Vector3());
+  g.position.sub(mid);                       // sit centred at the origin
+  // A turntable sweeps the object's footprint through every angle, so the
+  // frame has to hold its LONGEST horizontal extent, not the one it happens
+  // to present at rest — otherwise a long thin subject (the shuttle) is
+  // framed tiny end-on and then swings out of shot as it turns.
+  const spanXZ = Math.hypot(size.x, size.z);
+  const fov = THREE.MathUtils.degToRad(camera.fov);
+  // Solve BOTH axes and take whichever needs more room. A purely additive
+  // pad framed small subjects (the shuttle) at a fraction of the frame while
+  // big ones (the loom) filled it, so the padding is a plain multiplier.
+  const PAD = 1.25;                       // 25% air around the subject
+  const distV = (size.y*0.5) / Math.tan(fov/2);
+  const distH = (spanXZ*0.5) / (Math.tan(fov/2) * camera.aspect);
+  const dist = Math.max(distV, distH) * PAD;
+  const reach = Math.max(spanXZ, size.y) * 0.5;   // used to bias ?sx= sideways
+  camera.position.set(0, size.y*0.10, dist);
+
+  // Slide the subject sideways so a text panel can own the other half.
+  // The offset lives on a parent so the turntable still spins in place —
+  // rotating an offset group would make it orbit instead.
+  const bias = parseFloat(QS.get('sx') || '0');
+  const pivot = new THREE.Group();
+  pivot.position.x = -bias * reach * 1.15;
+  scene.add(pivot);
+  pivot.add(g);
+  showcase.group = g; showcase.pivot = pivot;
+  showcase.spin = spin; showcase.label = label; showcase.flat = flat;
+}
+
+fitCamera();          // SHOWCASE is known by here
+if(SHOWCASE){
+  titleEl.classList.add('hidden');
+  buildShowcase(SHOWCASE);
+  scoreEl.textContent = '';
+  msgEl.textContent = QS.get('nolabel')==='1' ? '' : showcase.label;
+  msgEl.style.fontSize = 'clamp(20px,5vw,30px)';
+  msgEl.style.letterSpacing = '6px';
+  // a plain dark stage: nothing on screen but the subject
+  cloth.visible = false;
+  shuttle.group.visible = false; trail.visible = false;
+  document.getElementById('cardWrap').style.display = 'none';
+  hgEl.style.display = 'none';
+  beam.visible = false;
+  for(const s of sheds) s.group.visible = false;
+  scene.traverse(o=>{ if(o.isMesh && o.material === woodMat) o.visible = false; });
+  scene.fog = null;
+  scene.background = new THREE.Color(0x0e0b14);
+  heroLight.position.set(2.6, 3.2, 5.0);
+  heroLight.intensity = 150;
+  hemi.intensity = 3.0;
+  sun.intensity = 3.6; sun.position.set(2.5, 6, 8);
+  // a second light from the other side so the far face is not pure black
+  const fill = new THREE.PointLight(0xffb070, 55, 30);
+  fill.position.set(-4.5, 2.4, 4.2); scene.add(fill);
+  // the showcase build re-adds meshes that share woodMat; keep those visible
+  if(showcase.group) showcase.group.traverse(o=>{ o.visible = true; });
+}
+// let the capture script drive the turntable and swap subjects
+window.__showcase = name => {
+  if(showcase.pivot) scene.remove(showcase.pivot);   // pivot owns the group
+  buildShowcase(name);
+  if(showcase.group) showcase.group.traverse(o=>{ o.visible = true; });
+  msgEl.textContent = showcase.label;
+};
+
+// ---------- loop ----------
+const clock = new THREE.Clock();
+function tick(){
+  requestAnimationFrame(tick);
+  const raw = Math.min(clock.getDelta(), .05);
+  const dt = raw * timeScale;
+
+  if(SHOWCASE){
+    if(showcase.group){
+      if(showcase.flat) showcase.group.rotation.z += raw*showcase.spin;
+      else showcase.group.rotation.y += raw*showcase.spin;
+    }
+    camera.lookAt(0, 0, 0);        // subject is offset, camera stays on axis
+    renderer.render(scene, camera);
+    return;
+  }
+
+  if(running && !dead){
+    t += dt;
+    score += dt*6;                       // a slow trickle just for surviving
+    scoreEl.textContent = Math.floor(score);
+    // the music keeps time with the hourglass, so a tight card sounds tight
+    if(!SILENT) SND.setPace(1 + cardsDone*0.06 + (rush>0 ? .5 : 0));
+    if(AUTO) autoPilot(dt);
+
+    // --- events ---
+    if(t > nextEventAt && !NOEV) triggerEvent();
+
+    // 逆織り (REVERSE): the card is read backwards until it wears off
+    if(reverse && t > nextEventAt - 5) reverse = false;
+
+    // 霧 (FOG): the chips go grey, so the order has to be held in the head
+    if(fog>0) fog -= dt;
+
+    // 早打ち (RUSH): half the hourglass, and the camera leans in
+    if(rush>0){
+      rush -= dt;
+      camera.fov += (camera.__base*0.93 - camera.fov)*Math.min(1,dt*4);
+      camera.updateProjectionMatrix();
+    } else if(Math.abs(camera.fov - camera.__base) > 0.05){
+      camera.fov += (camera.__base - camera.fov)*Math.min(1,dt*3);
+      camera.updateProjectionMatrix();
+    }
+
+    // --- the hourglass ---
+    // Only runs while a card is waiting on an input; a throw in flight
+    // must not be punished for the time it spends in the air.
+    if(throwT < 0 && step < pattern.length){
+      stepTime += dt * (rush>0 ? 2 : 1);
+      if(stepTime > stepLimit){ breakWeave(); }
+    }
+
+    // --- the throw ---
+    if(throwT >= 0){
+      throwT += dt*3.2;
+      const k = Math.min(1, throwT);
+      shuttle.group.position.x = throwFrom + (throwTo-throwFrom)*k;
+      // a low arc through the shed, so the flight reads as a pass not a slide
+      shuttle.group.position.y = SHED_Y + Math.sin(k*Math.PI)*0.5;
+      shuttle.group.position.z = 1.1 - Math.sin(k*Math.PI)*1.5;
+      shuttle.bobbin.rotation.x += dt*14;
+      if(throwT >= 1){
+        throwT = -1;
+        sheds[sel].target = 0;
+        if(!SILENT) SND.land();
+      }
+    }
+
+    // --- sheds open and close ---
+    for(let i=0;i<SHEDS;i++){
+      const s = sheds[i];
+      // the selected shed breathes open a little so the highlight is obvious
+      const want = s.target>0 ? 1 : (i===sel ? .28 : 0);
+      s.open += (want - s.open)*Math.min(1, dt*10);
+      s.upper.position.y =  s.open*1.35;
+      s.lower.position.y = -s.open*1.35;
+      s.glow = Math.max(0, s.glow - dt*1.6);
+      s.mat.emissiveIntensity = .18 + s.glow*.9 + (i===sel ? .22 : 0);
+      s.bar.scale.setScalar(1 + s.glow*.18 + (i===sel ? .06 : 0));
+    }
+
+    // --- the card: mark what is done, hide colours in the fog ---
+    // the card only needs repainting when its state changes, but it is four
+    // class toggles — cheap enough to just keep it in sync every frame
+    paintChips();
+
+    // --- the hourglass bar under the card ---
+    const urg = Math.min(1, stepTime/Math.max(.001, stepLimit));
+    const waiting = throwT < 0 && step < pattern.length;
+    hgEl.style.opacity = waiting ? 1 : 0;
+    hgFill.style.transform = `scaleX(${1-urg})`;
+    // it reddens as it drains, so running out is never a surprise
+    hgFill.style.background = urg > .7 ? '#ff3b2b' : (urg > .45 ? '#ffd23b' : '#ffa53b');
+    // the card leans as the clock runs down
+    cardEl.style.transform = `${reverse?'scaleX(-1) ':''}translateY(${urg*urg*6}px)`;
+
+    // --- woven rows slide down the cloth and fade out ---
+    for(let i=weftRows.length-1;i>=0;i--){
+      const w = weftRows[i];
+      w.age += dt;
+      w.mesh.position.z += dt*2.4;
+      w.mesh.position.y -= dt*1.75;
+      if(w.age > 7){ scene.remove(w.mesh); weftRows.splice(i,1); }
+    }
+
+    // the shuttle idles at the edge, bobbing, when nothing is in flight
+    if(throwT < 0){
+      shuttle.group.position.y += (SHED_Y + Math.sin(t*3)*.08 - shuttle.group.position.y)*Math.min(1,dt*6);
+      shuttle.group.position.z += (1.1 - shuttle.group.position.z)*Math.min(1,dt*6);
+    }
+    heroLight.position.set(shuttle.group.position.x, shuttle.group.position.y+1.6,
+                           shuttle.group.position.z+2.6);
+  }
+
+  // --- the trailing thread follows the shuttle at every frame ---
+  trailPts.pop();
+  trailPts.unshift(shuttle.group.position.clone());
+  const pos = trailGeo.attributes.position;
+  for(let i=0;i<TRAIL_N;i++) pos.setXYZ(i, trailPts[i].x, trailPts[i].y, trailPts[i].z);
+  pos.needsUpdate = true;
+
+  // --- death sequence: slow-mo unwinds, the shuttle drops and spins ---
+  if(dead){
+    timeScale += (0 - timeScale)*Math.min(1, raw*1.1);   // ease down to a near-freeze
+    shuttle.group.rotation.z += raw*3.4;
+    shuttle.group.rotation.x -= raw*1.4;
+    shuttle.group.position.y -= raw*2.6*Math.max(.15, timeScale);
+    // the warp goes slack: every shed sags shut
+    for(const s of sheds){
+      s.open = Math.max(0, s.open - raw*1.2);
+      s.upper.position.y = s.open*1.35 - raw*0.2;
+      s.lower.position.y = -s.open*1.35;
+    }
+    cardFall += raw*220;          // the card slides off the top of frame
+    cardEl.style.transform = `translateY(${-cardFall}px) rotate(${-cardFall*0.05}deg)`;
+    hgEl.style.opacity = 0;
+  }
+
+  // --- camera (runs even while dead, so the zoom and shake still play) ---
+  camDist += (camDistTarget - camDist)*Math.min(1, raw*2.4);
+  camera.position.z = camDist;
+  camera.position.y = CAM_REST_Y - (camRest-camDist)*.14;
+  const lookX = SHED_X[sel]*.25;
+  camera.position.x += (lookX - camera.position.x)*Math.min(1, raw*3);
+  if(shake>0){
+    shake = Math.max(0, shake - raw*.9);
+    camera.position.x += (Math.random()-.5)*shake;
+    camera.position.y += (Math.random()-.5)*shake;
+  }
+  camera.lookAt(lookX*.6, LOOK_Y, 0);
+
+  renderer.render(scene, camera);
+}
+
+function gameOver(){
+  running=false; deadAt=Date.now();
+  if(!SILENT){ SND.hit(); SND.duck(1.6); setTimeout(()=>SND.over(), 700); }
+  // hit feedback: red flash, red vignette, hard shake, camera punches in
+  flash('#ff2b3a', .8, 500);
+  vignetteEl.style.transition='opacity .5s'; vignetteEl.style.opacity=1;
+  shake = 1.0;
+  camDistTarget = camRest * 0.58;   // punch in, whatever the aspect ratio
+  const finalScore = Math.floor(score);
+  koScoreEl.textContent = finalScore;
+  msgEl.textContent = '';
+  setTimeout(()=>{ koEl.classList.add('on'); }, 620);   // K.O. lands after the slow-mo
+  if(AUTO){ setTimeout(()=>{ reset(); running=true;
+                             if(!SILENT) SND.unduck(); }, RETRY_MS); }
+  else setTimeout(()=>{
+    msgEl.textContent = matchMedia('(pointer:coarse)').matches
+      ? 'タップでもう一度' : 'スペースでもう一度';
+  }, 1800);
+}
+tick();
+
+// --- help (?) : ルールを見せる。録画中は出さない ---
+(function(){
+  const btn = document.getElementById('helpBtn');
+  const panel = document.getElementById('help');
+  if(!btn || !panel) return;
+  if(NOCHROME){                      // 録画・showcase では画面から消す
+    btn.style.display = 'none';
+    const back = document.getElementById('back');
+    if(back) back.style.display = 'none';
+    return;
+  }
+  const open = () => { panel.classList.add('on'); };
+  const close = () => { panel.classList.remove('on'); };
+  btn.addEventListener('click', open);
+  btn.addEventListener('touchend', e => { e.preventDefault(); open(); }, {passive:false});
+  panel.addEventListener('click', e => { if(e.target === panel) close(); });
+  panel.querySelector('.close').addEventListener('click', close);
+  panel.querySelector('.close').addEventListener('touchend',
+    e => { e.preventDefault(); close(); }, {passive:false});
+  addEventListener('keydown', e => {
+    if(e.code === 'Escape') close();
+    else if(e.key === '?' || (e.code === 'Slash' && e.shiftKey)) open();
+  });
+})();
+</script>
+</body>
+</html>

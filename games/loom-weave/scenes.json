@@ -1,0 +1,215 @@
+{
+  "id": "loom_weave",
+  "title": "ルーム・ウィーブ",
+  "video_title": "順番を一回まちがえると、布が全部ほどけます",
+  "lang": "ja",
+  "voice": "ja_female",
+  "scenes": [
+    {
+      "kind": "hook",
+      "clip": "reverse",
+      "narration": "順番を一回でも間違えると、布が全部ほどけます。"
+    },
+    {
+      "kind": "image",
+      "prompt": "an elderly weaver sitting at a large wooden floor loom in a small workshop, hands on the shuttle, warm afternoon light through a dusty window, spools of coloured thread on the shelf behind, photorealistic, cinematic, shallow depth of field, highly detailed",
+      "narration": "小さな織物の工房に、順子さんという織り手がいます。注文を受けて、布を織る仕事です。ある日、一枚の紙が届きました。"
+    },
+    {
+      "kind": "image",
+      "prompt": "a close-up of a hand-written order sheet on a workbench, a long column of coloured stripe marks in sequence, pencil and a wooden ruler beside it, warm side lighting, photorealistic, cinematic, highly detailed",
+      "narration": "柄の指定です。色の順番が、ぎっしり並んでいました。そうなんです。この順番を、一本ずつ守って織る。それが注文の内容でした。"
+    },
+    {
+      "kind": "image",
+      "prompt": "a weaver looking at a half-woven cloth on the loom, partly unravelled, loose coloured threads hanging down, workshop lit by a single window, quiet and tense mood, photorealistic, cinematic, highly detailed",
+      "narration": "順子さんは、順番を変えられないか聞きました。答えは、変えられません、でした。だから今日も、札のとおりに織ります。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "shuttle",
+      "kicker": "あなたの手",
+      "title": "杼（ひ）",
+      "bullets": [
+        "糸を通す道具。**持てるのは一本だけ**",
+        "通す口を選んで、投げる",
+        "投げたら、やり直しはききません"
+      ],
+      "narration": "これが杼です。糸を通すための道具ですね。あなたがやることは、ひとつだけ。通す口を選んで、投げる。それだけです。ただし、投げたら戻せません。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "card",
+      "kicker": "注文の紙",
+      "title": "柄の札",
+      "bullets": [
+        "これから通す順番が、**左から並ぶ**",
+        "一本通すたび、ひとつ減る",
+        "最後まで通せば、**一枚完成**"
+      ],
+      "narration": "画面の上に出るのが、柄の札です。これから通す順番が、左から並んでいます。見てください。ひとつ通すたびに、ひとつ減る。最後まで通せたら、一枚完成です。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "shed",
+      "kicker": "通す先",
+      "title": "綜絖（そうこう）の口",
+      "bullets": [
+        "糸が開いてできる**すきま**",
+        "選んだ口だけが開く",
+        "順番を外すと、**その場で糸が切れる**"
+      ],
+      "narration": "通す先が、この口です。糸が上下に開いて、すきまができる。選んだ口だけが開きます。口は四つ。手はひとつ。そして順番を外すと、その場で糸が切れます。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "cloth",
+      "kicker": "たまっていくもの",
+      "title": "織り上がった布",
+      "bullets": [
+        "通した色が、そのまま一段になる",
+        "正しく通した分だけ、布は伸びる",
+        "**間違えた瞬間、全部なくなります**"
+      ],
+      "narration": "正しく通すと、その色が一段そのまま布になります。積み上がっていくのが目に見えるんです。これがうれしい。ただし間違えた瞬間、全部なくなります。"
+    },
+    {
+      "kind": "showcase",
+      "subject": "loom",
+      "kicker": "仕事場",
+      "title": "織り機",
+      "bullets": [
+        "四つの口が、横に並んでいる",
+        "**一手ごとに持ち時間**がある（砂時計）",
+        "札が進むほど、時間は短くなる"
+      ],
+      "narration": "これが織り機まるごとです。四つの口が横に並んでいます。そしてここが大事なところ。一手ごとに、持ち時間があります。砂時計ですね。札が進むほど、その時間は短くなります。考え込む余裕はありません。"
+    },
+    {
+      "kind": "events",
+      "clip": "events",
+      "kicker": "工房で起こること",
+      "title": "静かには進みません",
+      "bullets": [
+        "**逆織り** — 札を右から読む羽目になる",
+        "**霧** — 札の色が隠れる。覚えておくこと",
+        "**早打ち** — 持ち時間が半分",
+        "**長札** — いつもより長い柄が一枚"
+      ],
+      "narration": "そしてここからが本題です。この工房、静かには進みません。逆織り。札を、右から読むことになります。霧。札の色が消えます。覚えておいてください。早打ち。持ち時間が半分です。長札。いつもより長い柄が、一枚だけ来ます。もちろん失敗します。"
+    },
+    {
+      "kind": "death",
+      "clip": "death",
+      "kicker": "終わりかた",
+      "title": "糸が切れると、こうなります",
+      "bullets": [
+        "時間が**ゆっくり止まる**。切り替わらない",
+        "四つの口が、順にたるんで閉じる",
+        "札が画面の外へすべり落ちていく"
+      ],
+      "narration": "失敗すると、こうなります。時間が、ゆっくり止まっていく。ぱっと切り替わりません。開いていた口が、順番にたるんで閉じます。札は、画面の外へすべり落ちていきます。順子さんは、この順番を毎日守って織っています。あなたは、たぶん十秒ももちません。"
+    },
+    {
+      "kind": "outro",
+      "title": "概要欄のリンクから遊べます",
+      "subtitle": "チャンネル登録もお願いします",
+      "narration": "ブラウザで、無料で遊べます。概要欄のリンクからどうぞ。チャンネル登録もお願いします。毎日、新しいゲームを出しています。"
+    }
+  ],
+  "slug": "loom-weave",
+  "channel": "Daily Arcade Studio",
+  "events": [
+    "reverse",
+    "fog",
+    "rush",
+    "longcard"
+  ],
+  "short": [
+    {
+      "mark": "reverse",
+      "lead": -0.3,
+      "dur": 9.0,
+      "headline": "札が逆になります"
+    },
+    {
+      "mark": "fog",
+      "lead": -0.5,
+      "dur": 8.0,
+      "headline": "色が消えた"
+    },
+    {
+      "mark": "rush",
+      "lead": -0.5,
+      "dur": 7.0,
+      "headline": "持ち時間、半分"
+    },
+    {
+      "mark": "longcard",
+      "lead": -0.5,
+      "dur": 7.0,
+      "headline": "長い柄が一枚"
+    },
+    {
+      "mark": "death",
+      "lead": -2.0,
+      "dur": 9.0,
+      "headline": "一回で、全部ほどける"
+    }
+  ],
+  "thumb": {
+    "hook": "順番を守れ",
+    "sub": "四つの口。一回まちがえたら終わり。ブラウザで無料。",
+    "frame_mark": "reverse",
+    "frame_lead": 1.0
+  },
+  "short_v2": {
+    "cuts": [
+      {
+        "kind": "clip",
+        "mark": "reverse",
+        "lead": -0.3,
+        "dur": 4.5,
+        "headline": "今日のゲーム",
+        "narration": "今日のゲームです。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "shuttle",
+        "dur": 5.0,
+        "headline": "ルーム・ウィーブ",
+        "narration": "あなたは織り手です。杼を、正しい順に通します。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "card",
+        "dur": 5.0,
+        "headline": "柄の札",
+        "narration": "上に出る札が、通す順番です。左から順に通します。"
+      },
+      {
+        "kind": "showcase",
+        "subject": "shed",
+        "dur": 5.0,
+        "headline": "四つの口",
+        "narration": "通す先は四つ。順番を外すと、その場で糸が切れます。"
+      },
+      {
+        "kind": "clip",
+        "mark": "death",
+        "lead": -2.0,
+        "dur": 6.0,
+        "headline": "",
+        "narration": "一回で、全部ほどけます。"
+      },
+      {
+        "kind": "clip",
+        "mark": "run2",
+        "lead": 1.0,
+        "dur": 4.5,
+        "cta": "概要欄のリンクから遊べます",
+        "narration": "ブラウザで無料で遊べます。リンクは概要欄です。"
+      }
+    ]
+  }
+}
