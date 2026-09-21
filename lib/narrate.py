@@ -51,6 +51,28 @@ def main(scenes_path, out_dir):
 
     parts, timing, cursor = [], [], 0.0
     for sc in data["scenes"]:
+        if sc["kind"] == "dialog":
+            # 2音声の対話。行ごとに話者を切り替えて合成する（dialog_common）。
+            import sys as _s
+            _s.path.insert(0, "/Users/fukushimatakumi/develop")
+            from dialog_common import synth_lines
+            def _sf(text, spk):
+                if _JA:
+                    from vv_tts import synth as _vs
+                    a, _ = _vs(text, speaker=spk)
+                    return a.astype(np.float32)
+                return synth(pipe, text, voice)
+            chunks, frame_durs = synth_lines(sc, _sf, SR)
+            start = cursor
+            for c in chunks:
+                parts.append(c)
+            cursor += sum(frame_durs)
+            parts.append(gap)
+            timing.append({"kind": "dialog", "clip": None, "start": round(start, 3),
+                           "frame_durs": frame_durs,
+                           "dur": round(cursor - start, 3)})
+            cursor += GAP
+            continue
         audio = synth(pipe, sc["narration"], voice)
         dur = len(audio) / SR
         timing.append({"kind": sc["kind"], "clip": sc.get("clip"),
